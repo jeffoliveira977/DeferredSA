@@ -71,7 +71,7 @@ void ShadowFrustum::DirectionalLightTransform(RwCamera* mainCam, const RW::V3d& 
             XMVECTOR minExtents;
             XMVECTOR maxExtents;
 
-            bool stabilizeCascades = true;
+            bool stabilizeCascades = false;
             if(stabilizeCascades)
             {
                 XMVECTOR radius = XMVectorSet(0.0f, 0.0f, 0.0f, 0.0f);
@@ -87,10 +87,10 @@ void ShadowFrustum::DirectionalLightTransform(RwCamera* mainCam, const RW::V3d& 
             }
             else
             {
-                minExtents = g_FltMax;
-                maxExtents = g_FltMin;
+                minExtents = g_XMFltMax;
+                maxExtents = g_XMFltMin;
 
-                for(uint32_t j = 0; j < 8; j++)
+                for(uint32_t j = 1; j < 8; j++)
                 {
                     corners[j] = XMVector3Transform(corners[j], lightRotation);
 
@@ -112,13 +112,16 @@ void ShadowFrustum::DirectionalLightTransform(RwCamera* mainCam, const RW::V3d& 
             XMFLOAT3 extents;
             XMStoreFloat3(&extents, maxExtents - minExtents);
 
+           CVector coors= FindPlayerCoors(0);
             float longEdge = max(extents.x, extents.y);
             longEdge *= 0.5;
-            Desc[i].NearClip = extents.z < 500.0 ? -500.0 : -extents.z;
-            Desc[i].FarClip = /*50.0f +*/ -Desc[i].NearClip;
+            Desc[i].NearClip = -(extents.z < 500.0 ? 500.0 : extents.z);
+            Desc[i].FarClip = 50.0f + -Desc[i].NearClip;
+
+            PrintMessage("%f", coors.z);
 
             // Get position of the shadow camera
-            XMVECTOR shadowPosition = frustumCenter + lightDirection * -XMVectorGetZ(minExtents);
+            XMVECTOR shadowPosition = frustumCenter + lightDirection /** -XMVectorGetZ(minExtents)*/;
 
             Desc[i].lightViewMatrix = XMMatrixLookAtRH(shadowPosition,  frustumCenter, cameraUpVector);
             Desc[i].lightOrthoMatrix = XMMatrixOrthographicRH(longEdge, longEdge, Desc[i].NearClip, Desc[i].FarClip);

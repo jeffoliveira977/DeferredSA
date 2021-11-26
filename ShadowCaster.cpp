@@ -17,118 +17,6 @@ ShadowCaster::ShadowCaster()
 ShadowCaster::~ShadowCaster()
 {}
 
-bool CheckForTrees(CEntity* entity)
-{
-    auto id = entity->m_nModelIndex;
-    return ((id > 614 && id < 793) ||
-           (id > 857 && id < 896) ||
-            (id > 18267 && id < 18274) ||
-            id == 3505 ||
-            id == 3507 ||
-            id == 3510 ||
-            id == 3511 ||
-            id == 3517 ||
-            id == 16060 ||
-            id == 16061 );
-}
-
-void ShadowCaster::AddShadowEntity(int i, CEntity* entity, float distace)
-{
-   /* for(size_t j = 0; j < m_castEntity[i].size(); j++)
-    {
-        if(m_castEntity[i][j] == entity)
-            return;
-    }*/
-
-    CBaseModelInfo* modelInfo = CModelInfo::GetModelInfo(entity->m_nModelIndex);
-    auto modelbb = entity->GetColModel()->m_boundBox;
-
-    auto entityPos = entity->GetPosition();
-    auto ext = ((modelbb.m_vecMax+ entityPos) - (modelbb.m_vecMin+ entityPos));
-    float renderDist = sqrt(ext.x * ext.x + ext.y * ext.y + ext.z * ext.z);
-
-
-  /*  if(renderDist > longEdge)
-        return;*/
-
-    if(distace > 50 && entity->m_nType == ENTITY_TYPE_PED)
-        return;
-
-
-    static float m = 0.0;
-
-    m = max(m, renderDist);
-
-    if(distace > renderDist && !CheckForTrees(entity) && entity->m_pLod != nullptr && !entity->GetIsOnScreen())
-    {
-        m_castEntity[i].push_back(entity->m_pLod);
-        return;
-    }
-
-    if(distace < 200 || CheckForTrees(entity))
-        m_castEntity[i].push_back(entity);
-    else if(entity->m_pLod != nullptr && distace < 600)
-        m_castEntity[i].push_back(entity->m_pLod);
-
-}
-
-bool PlaneIntersectAABB(XMVECTOR* p, XMVECTOR min, XMVECTOR max)
-{
-    bool intersect = true;
-
-    XMFLOAT3 mins;
-    XMStoreFloat3(&mins, min);
-
-    XMFLOAT3 maxs;
-    XMStoreFloat3(&maxs, max);
-    XMFLOAT3 vmin, vmax;
-
-    for(int i = 0; i < 6; ++i)
-    {
-        if(XMVectorGetX(p[i]) > 0.0)
-        {
-            vmin.x = mins.x;
-            vmax.x = maxs.x;
-        }
-        else
-        {
-            vmin.x = maxs.x;
-            vmax.x = mins.x;
-        }
-
-        if(XMVectorGetY(p[i]) > 0.0)
-        {
-            vmin.y = mins.y;
-            vmax.y = maxs.y;
-        }
-        else
-        {
-            vmin.y = maxs.y;
-            vmax.y = mins.y;
-        }
-
-        if(XMVectorGetZ(p[i]) > 0.0)
-        {
-            vmin.z = mins.z;
-            vmax.z = maxs.z;
-        }
-        else
-        {
-            vmin.z = maxs.z;
-            vmax.z = mins.z;
-        }
-
-        float  distance = XMVectorGetW(p[i]);
-        if(XMVectorGetW(XMPlaneDotNormal(p[i], XMLoadFloat3(&vmin))) - distance < 0.0 &&
-           XMVectorGetW(XMPlaneDotNormal(p[i], XMLoadFloat3(&vmax))) - distance < 0.0)
-        {
-            intersect = false;
-        }
-    }
-
-    return intersect;
-}
-
 void ShadowCaster::AddEntityToCullList(CEntity* entity)
 {
     if(entity == nullptr || entity->m_pRwObject == nullptr)
@@ -164,14 +52,14 @@ void ShadowCaster::AddEntityToCullList(CEntity* entity)
 
     bool isVehicle = entity->m_nType == ENTITY_TYPE_PED;
 
-    if(renderDistance > 20.0 && col->m_boundSphere.m_fRadius < 2.0f && !isVehicle && !entity->GetIsBoundingBoxOnScreen())
-        return;
+    //if(renderDistance > 20.0 && col->m_boundSphere.m_fRadius < 2.0f && !isVehicle && !entity->GetIsBoundingBoxOnScreen())
+    //    return;
 
-    if(renderDistance > 70.0 && col->m_boundSphere.m_fRadius < 5.0f && !isVehicle)
-        return;
+    //if(renderDistance > 70.0 && col->m_boundSphere.m_fRadius < 5.0f && !isVehicle)
+    //    return;
 
-    if(renderDistance > 100.0 && isVehicle)
-        return;
+    //if(renderDistance > 100.0 && isVehicle)
+    //    return;
 
     float sphereRadius = col->m_boundSphere.m_fRadius + CRenderer::ms_fFarClipPlane;
     float minDistance = min(TheCamera.m_fLODDistMultiplier * modelinfo->m_fDrawDistance, sphereRadius);
@@ -192,25 +80,16 @@ void ShadowCaster::AddEntityToCullList(CEntity* entity)
     if(renderDistance > 70.0 && isVehicle)
         useLod = true;
 
-    for(auto i = 0; i < CascadedShadowManagement->CascadeCount; i++)
+    for(size_t i = 0; i < CascadedShadowManagement->CascadeCount; i++)
     {
-        bool isInsideLightBBox;
+        bool intersects = CascadedShadowManagement->Desc[i].m_FrustumCulling.Intersects(aabb);
 
-        isInsideLightBBox = CascadedShadowManagement->Desc[i].m_FrustumCulling.Intersects(aabb);
-
-        auto it = std::find(m_castEntity[i].begin(), m_castEntity[i].end(), entity);
-        if(it != m_castEntity[i].end())
-            continue;
-       //     PrintMessage("found: %i", entity->m_nModelIndex);
-        //isInsideLightBBox = Collider::IsIntersectAABBWithFrustum(aabb, CascadedShadowManagement->m_frustum[i]);
-        // isInsideLightBBox |= PlaneIntersectAABB(CascadedShadowManagement->m_planes[i], min, max);
-
-        if(isInsideLightBBox)
+        if(intersects)
             ObjectInFrustum[i][entity] = true;
         else
             ObjectInFrustum[i][entity] = false;
 
-        if(isInsideLightBBox)
+        if(intersects)
         {
             if(useLod && entity->m_pLod)
                 m_castEntity[i].push_back(entity->m_pLod);
@@ -222,8 +101,8 @@ void ShadowCaster::AddEntityToCullList(CEntity* entity)
 
 void ShadowCaster::ClearCullList()
 {
-    for(size_t i = 0; i < 4; i++)
-        m_castEntity[i].clear();
+   /* for(size_t i = 0; i < 4; i++)
+        m_castEntity[i].clear();*/
 }
 
 void ShadowCaster::CastShadowSectorList(CPtrList& ptrList)
@@ -259,47 +138,75 @@ void ShadowCaster::ScanSectorList(int sectorX, int sectorY)
         //PrintMessage("%f %f", CRenderer::ms_vecCameraPosition.z, distanceToSector);
 
         CastShadowSectorList(sector->m_buildings);
-       /* CastShadowSectorList(sector->m_dummies);
+        CastShadowSectorList(sector->m_dummies);
         CastShadowSectorList(repeatSector->m_lists[REPEATSECTOR_VEHICLES]);
-        CastShadowSectorList(repeatSector->m_lists[REPEATSECTOR_PEDS]);*/
+        CastShadowSectorList(repeatSector->m_lists[REPEATSECTOR_PEDS]);
         CastShadowSectorList(repeatSector->m_lists[REPEATSECTOR_OBJECTS]);
     }
 }
 
 void ShadowCaster::Update(int x, int y)
 {
-    int sectorCount = 4;
+    for(size_t i = 0; i < 4; i++)
+        m_castEntity[i].clear();
+
+    SetNextScanCode();
+
+    x = GetSectorX(CRenderer::ms_vecCameraPosition.x);
+    y = GetSectorY(CRenderer::ms_vecCameraPosition.y);
+
+    int sectorCount = 10;
     for(int i = -sectorCount; i < sectorCount+1; i++)
         for(int j = -sectorCount; j < sectorCount+1; j++)
             ScanSectorList(x + i, y + j);
 
 }
 
+#include "CGame.h"
+#include "CVisibilityPlugins.h"
+#include "CScene.h"
+
 void ShadowCaster::Render(int i)
 {
+    RwRenderStateSet(rwRENDERSTATEVERTEXALPHAENABLE, (void*)TRUE);
+    RwRenderStateSet(rwRENDERSTATECULLMODE, (void*)rwCULLMODECULLNONE);
+    if(!CGame::currArea)
+        RwRenderStateSet(rwRENDERSTATEALPHATESTFUNCTIONREF, (void*)140);
+
+    RwRenderStateSet(rwRENDERSTATEZWRITEENABLE, (void*)TRUE);
+    RwRenderStateSet(rwRENDERSTATEZTESTENABLE, (void*)TRUE);
+  
     for(auto entity : m_castEntity[i])
     {
-        if(entity == nullptr || 
-           entity->m_pRwObject == nullptr)
+        if(entity == nullptr ||  entity->m_pRwObject == nullptr)
             continue;
 
         entity->m_bImBeingRendered = true;
-
-        // We need to render some sub-entities for peds
-        if(entity->m_nType == eEntityType::ENTITY_TYPE_PED)
+        CVehicle* pVehicle = static_cast<CVehicle*>(entity);
+        if(entity->m_nType == ENTITY_TYPE_VEHICLE)
         {
-            CPed* ped = (CPed*)entity;
-            auto jetPackTask = ped->m_pIntelligence->GetTaskJetPack();
-            if(jetPackTask && jetPackTask->m_pJetPackClump)
-                RpClumpRender(jetPackTask->m_pJetPackClump);
-            //CVisibilityPluginsRH::RenderWeaponsForPed(ped);
+            CVisibilityPlugins::SetupVehicleVariables(entity->m_pRwClump);
+            CVisibilityPlugins::InitAlphaAtomicList();  
+            pVehicle->SetupRender();
         }
+        entity->Render();
 
-        if(entity->m_pRwObject->type == rpATOMIC)
-           RpAtomicRender(entity->m_pRwAtomic);
-        else
-            RpClumpRender(entity->m_pRwClump);
+        if(entity->m_nType == ENTITY_TYPE_VEHICLE)
+        {   
+            CVisibilityPlugins::RenderAlphaAtomics();      
+            pVehicle->ResetAfterRender();
+        }
 
         entity->m_bImBeingRendered = false;
     }
+
+    CPlayerPed* ped = FindPlayerPed(0);
+    if(ped)
+    {
+        CTaskSimpleJetPack* jetPack = ped->m_pIntelligence->GetTaskJetPack();
+        if(jetPack && jetPack->m_pJetPackClump)
+            RpClumpRender(jetPack->m_pJetPackClump);
+    }
+
+    CVisibilityPlugins::RenderWeaponPedsForPC();
 }

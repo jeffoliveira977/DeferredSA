@@ -213,7 +213,7 @@ void RenderFrustum()
 	depth[0] = 1.0f;
 	depth[1] = CascadedShadowManagement->Desc[0].NearClip;
 	depth[2] = CascadedShadowManagement->Desc[0].FarClip;
-	PrintMessage("%f %f", longEdge,(box.Max.y));
+	//PrintMessage("%f %f", longEdge,(box.Max.y));
 	RwV2d offset = {0, 0};
 	RwV2d viewWindow = {longEdge, longEdge};
 

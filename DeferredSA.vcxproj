@@ -144,6 +144,7 @@
     <ClCompile Include="Renderer.cpp" />
     <ClCompile Include="RwMath.cpp" />
     <ClCompile Include="SkinnedMeshInstance.cpp" />
+    <ClCompile Include="VisibilityPlugins.cpp" />
     <ClCompile Include="Water.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -178,6 +179,7 @@
     <ClInclude Include="resource.h" />
     <ClInclude Include="RwMath.h" />
     <ClInclude Include="SkinnedMeshInstance.h" />
+    <ClInclude Include="VisibilityPlugins.h" />
     <ClInclude Include="Water.h" />
   </ItemGroup>
   <ItemGroup>

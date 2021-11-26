@@ -12,19 +12,11 @@ bool4 Info : register(b0);
 
 #define DNBalance MaterialProps.z
 
-VS_DeferredOutput VS_Deferred(VS_Input input)
-{
-    VS_DeferredOutput output;
-    VSFillGBuffer(input, output);
-    
-    return output;
-}
-
 sampler2D Diffuse : register(s0);
 sampler2D NormalMap : register(s1);
 sampler2D Reflection : register(s2);
 
-PS_DeferredOutput PS_Deferred(VS_DeferredOutput input)
+PS_DeferredOutput main(VS_DeferredOutput input)
 {
     float4 outColor;
     outColor.rgb = MaterialColor.rgb * input.Color.rgb;

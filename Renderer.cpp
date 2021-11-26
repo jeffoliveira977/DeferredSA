@@ -15,7 +15,7 @@
 #include "Water.h"
 #include "CGameIdle.h"
 #include "ShadowCaster.h"
-
+#include "DeferredRenderer.h"
 std::vector<CEntity*> Renderer::ms_aVisibleReflectionObjects{};
 
 void Renderer::RenderReflectionEntity(CEntity* entity)
@@ -148,55 +148,170 @@ void Renderer::PreRender()
 
 void Renderer::RenderOneRoad(CEntity* entity)
 {
-    if(entity->m_nType == eEntityType::ENTITY_TYPE_VEHICLE)
-        ((CVehicle*)entity)->SetupRender();
-
-    ((void(__cdecl*)(CEntity*))0x553230)(entity);
-    if(entity->m_nType == eEntityType::ENTITY_TYPE_VEHICLE)
-        ((CVehicle*)entity)->ResetAfterRender();
+    if(CPostEffects__IsVisionFXActive())
+    {
+        CPostEffects__FilterFX_StoreAndSetDayNightBalance();
+        entity->Render();
+        CPostEffects__FilterFX_RestoreDayNightBalance();
+        return;
+    }
+    entity->Render();
 }
 
 void Renderer::RenderRoads()
 {
+    RwRenderStateSet(rwRENDERSTATEFOGENABLE, (void*)TRUE);
+    RwRenderStateSet(rwRENDERSTATEVERTEXALPHAENABLE, (void*)TRUE);
+    RwRenderStateSet(rwRENDERSTATECULLMODE, (void*)rwCULLMODECULLBACK);
 
-    for(size_t i = 0; i < CRenderer::ms_nNoOfVisibleEntities; ++i)
+    for(std::int32_t i = 0; i < CRenderer::ms_nNoOfVisibleEntities; ++i)
     {
-        auto entity = CRenderer::ms_aVisibleEntityPtrs[i];
-        RenderOneNonRoad(CRenderer::ms_aVisibleEntityPtrs[i]);
+        CEntity* entity = CRenderer::ms_aVisibleEntityPtrs[i];
+        if(entity->m_nType == ENTITY_TYPE_BUILDING && CModelInfo::ms_modelInfoPtrs[entity->m_nModelIndex]->IsRoad())
+        {
+            if(CPostEffects__IsVisionFXActive())
+            {
+                CPostEffects__FilterFX_StoreAndSetDayNightBalance();
+                entity->Render();
+                CPostEffects__FilterFX_RestoreDayNightBalance();
+            }
+            else
+            {
+                entity->Render();
+            }
+        }
     }
-
-    for(size_t i = 0; i < CRenderer::ms_nNoOfVisibleLods; ++i)
-    {
-        auto entity = CRenderer::ms_aVisibleLodPtrs[i];
-        RenderOneNonRoad(CRenderer::ms_aVisibleLodPtrs[i]);
-    }
-    return;
 }
+
 #include "CScene.h"
+
+#define InsertSorted(alpha, info) ((CLink<CVisibilityPlugins::AlphaObjectInfo>* ( __thiscall*)(CLinkList<CVisibilityPlugins::AlphaObjectInfo>*, CVisibilityPlugins::AlphaObjectInfo*))0x733910)(alpha, info)
+
+bool InsertEntityIntoEntityList(CEntity* entity, float distance, void* callback)
+{
+    CVisibilityPlugins::AlphaObjectInfo info{};
+    info.m_entity = entity;
+    info.m_pCallback = callback;
+    info.m_distance = distance;
+    return InsertSorted(&CVisibilityPlugins::m_alphaEntityList, &info);
+}
+
+bool InsertEntityIntoUnderwaterEntities(CEntity* entity, float distance)
+{
+    CVisibilityPlugins::AlphaObjectInfo entityAlphaObjectInfo{};
+    entityAlphaObjectInfo.m_distance = distance;
+    entityAlphaObjectInfo.m_entity = entity;
+    entityAlphaObjectInfo.m_pCallback = CVisibilityPlugins__RenderEntityADDR;
+    return InsertSorted(&CVisibilityPlugins::m_alphaUnderwaterEntityList, &entityAlphaObjectInfo);
+}
 
 void Renderer::RenderEverythingBarRoads()
 {
-    return;
+    RwRenderStateSet(rwRENDERSTATEFOGENABLE, (void*)TRUE);
+    RwRenderStateSet(rwRENDERSTATEVERTEXALPHAENABLE, (void*)TRUE);
+    RwRenderStateSet(rwRENDERSTATECULLMODE, (void*)rwCULLMODECULLBACK);
+    if(!CGame::currArea)
+        RwRenderStateSet(rwRENDERSTATEALPHATESTFUNCTIONREF, (void*)140u);
+
+    for(std::int32_t i = 0; i < CRenderer::ms_nNoOfVisibleEntities; i++)
+    {
+        CEntity* entity = CRenderer::ms_aVisibleEntityPtrs[i];
+        CVehicle* pVehicle = static_cast<CVehicle*>(entity);
+        CPed* pPed = static_cast<CPed*>(entity);
+        if(entity->m_nType == ENTITY_TYPE_BUILDING && CModelInfo::ms_modelInfoPtrs[entity->m_nModelIndex]->IsRoad())
+            continue;
+
+        bool bInserted = false;
+        if(entity->m_nType == ENTITY_TYPE_VEHICLE || (entity->m_nType == ENTITY_TYPE_PED && CVisibilityPlugins::GetClumpAlpha(entity->m_pRwClump) != 255))
+        {
+            if(entity->m_nType == ENTITY_TYPE_VEHICLE)
+            {
+                bool bInsertIntoSortedList = false;
+                if(pVehicle->m_nVehicleClass == VEHICLE_BOAT)
+                {
+                    eCamMode camMode = TheCamera.m_aCams[TheCamera.m_nActiveCam].m_nMode;
+                    if(camMode == MODE_WHEELCAM || camMode == MODE_1STPERSON &&
+                       TheCamera.GetLookDirection() != 3 && TheCamera.GetLookDirection() ||
+                       CVisibilityPlugins::GetClumpAlpha(entity->m_pRwClump) != 255)
+                    {
+                        bInsertIntoSortedList = true;
+                    }
+                }
+                else if(!pVehicle->m_nPhysicalFlags.bTouchingWater)
+                {
+                    bInsertIntoSortedList = true;
+                }
+                const float fMagnitude = (CRenderer::ms_vecCameraPosition - entity->GetPosition()).Magnitude();
+                if(bInsertIntoSortedList)
+                    bInserted = CVisibilityPlugins::InsertEntityIntoSortedList(entity, fMagnitude);
+                else
+                    bInserted = InsertEntityIntoUnderwaterEntities(entity, fMagnitude);
+            }
+        }
+        if(!bInserted)
+            RenderOneNonRoad(entity);
+    }
+
+    float oldzShift = Scene.m_pRwCamera->zShift;
+    RwCameraEndUpdate(Scene.m_pRwCamera);
+    Scene.m_pRwCamera->zShift = Scene.m_pRwCamera->zShift - 100.0f;
+    RwCameraBeginUpdate(Scene.m_pRwCamera);
+    for(std::int32_t i = 0; i < CRenderer::ms_nNoOfVisibleLods; ++i)
+    {
+        RenderOneNonRoad(CRenderer::ms_aVisibleLodPtrs[i]);
+    }
+    RwCameraEndUpdate(Scene.m_pRwCamera);
+    Scene.m_pRwCamera->zShift = oldzShift;
+    RwCameraBeginUpdate(Scene.m_pRwCamera);
 }
 
 void Renderer::RenderOneNonRoad(CEntity* entity)
 {
-  
-    CVehicle* pVehicle = static_cast<CVehicle*>(entity);
-    if((entity->m_nType) == eEntityType::ENTITY_TYPE_VEHICLE)
-    {
-        pVehicle->SetupRender();
-    }
-    entity->Render();
-    if(entity->m_nType == eEntityType::ENTITY_TYPE_VEHICLE)
-    {
-        pVehicle->m_bImBeingRendered = true;
-       // CVisibilityPlugins::RenderAlphaAtomics();
-        pVehicle->m_bImBeingRendered = false;
-        pVehicle->ResetAfterRender();
-    }
-    return;
     CPed* pPed = static_cast<CPed*>(entity);
+    CVehicle* pVehicle = static_cast<CVehicle*>(entity);
+    if(entity->m_nType != ENTITY_TYPE_PED || pPed->m_nPedState != PEDSTATE_DRIVING)
+    {
+        bool bSetupLighting = entity->SetupLighting();
+        if(entity->m_nType == ENTITY_TYPE_VEHICLE)
+        {
+            CVisibilityPlugins::SetupVehicleVariables(entity->m_pRwClump);
+            CVisibilityPlugins::InitAlphaAtomicList();
+            pVehicle->RenderDriverAndPassengers();
+            pVehicle->SetupRender();
+        }
+        else if(!entity->m_bBackfaceCulled)
+        {
+            RwRenderStateSet(rwRENDERSTATECULLMODE, (void*)rwCULLMODECULLNONE);
+        }
+        if(CPostEffects__IsVisionFXActive())
+        {
+            if(CPostEffects__m_bNightVision)
+                CPostEffects__NightVisionSetLights();
+            if(CPostEffects__m_bInfraredVision)
+                CPostEffects__InfraredVisionSetLightsForDefaultObjects();
+            CPostEffects__FilterFX_StoreAndSetDayNightBalance();
+            entity->Render();
+            CPostEffects__FilterFX_RestoreDayNightBalance();
+        }
+        else
+        {
+            entity->Render();
+        }
+        if(entity->m_nType == ENTITY_TYPE_VEHICLE)
+        {
+            pVehicle->m_bImBeingRendered = true;
+            CVisibilityPlugins::RenderAlphaAtomics();
+            pVehicle->m_bImBeingRendered = false;
+            pVehicle->ResetAfterRender();
+            pVehicle->RemoveLighting(bSetupLighting);
+        }
+        else
+        {
+            if(!entity->m_bBackfaceCulled)
+                RwRenderStateSet(rwRENDERSTATECULLMODE, (void*)rwCULLMODECULLBACK);
+            entity->RemoveLighting(bSetupLighting);
+        }
+    }
 }
 
 void Renderer::AddEntityToRenderList(CEntity* pEntity, float fDistance)
@@ -226,7 +341,7 @@ void Renderer::AddEntityToRenderList(CEntity* pEntity, float fDistance)
         CRenderer::ms_nNoOfVisibleEntities++;
     }
 
-    ShadowCasterEntity->AddEntityToCullList(pEntity);
+   // ShadowCasterEntity->AddEntityToCullList(pEntity);
 }
 
 void Renderer::AddToLodRenderList(CEntity* entity, float distance)
@@ -236,26 +351,6 @@ void Renderer::AddToLodRenderList(CEntity* entity, float distance)
     ++CRenderer::ms_pLodRenderList;
 
     //ShadowCasterEntity->AddEntityToCullList(entity);
-}
-
-#define InsertSorted(alpha, info) ((CLink<CVisibilityPlugins::AlphaObjectInfo>* ( __thiscall*)(CLinkList<CVisibilityPlugins::AlphaObjectInfo>*, CVisibilityPlugins::AlphaObjectInfo*))0x733910)(alpha, info)
-
-bool InsertEntityIntoEntityList(CEntity* entity, float distance, void* callback)
-{
-    CVisibilityPlugins::AlphaObjectInfo info{};
-    info.m_entity = entity;
-    info.m_pCallback = callback;
-    info.m_distance = distance;
-    return InsertSorted(&CVisibilityPlugins::m_alphaEntityList, &info);
-}
-
-bool InsertEntityIntoUnderwaterEntities(CEntity* entity, float distance)
-{
-    CVisibilityPlugins::AlphaObjectInfo entityAlphaObjectInfo{};
-    entityAlphaObjectInfo.m_distance = distance;
-    entityAlphaObjectInfo.m_entity = entity;
-    entityAlphaObjectInfo.m_pCallback = CVisibilityPlugins__RenderEntityADDR;
-    return InsertSorted(&CVisibilityPlugins::m_alphaUnderwaterEntityList, &entityAlphaObjectInfo);
 }
 
 bool Renderer::InsertEntityIntoSortedList(CEntity* entity, float distance)
@@ -300,8 +395,8 @@ void Renderer::ScanSectorList(int sectorX, int sectorY)
                     bool bInvisibleEntity = false;
                     float fDistance = 0.0f;
                     int visibility = CRenderer::SetupEntityVisibility(entity, fDistance);
-                    if(visibility != RENDERER_STREAMME && !entity->IsEntityOccluded())
-                        ShadowCasterEntity->AddEntityToCullList(entity);
+                    //if(visibility != RENDERER_STREAMME && !entity->IsEntityOccluded())
+                    //     ShadowCasterEntity->AddEntityToCullList(entity);
 
                     switch(visibility)
                     {
@@ -500,7 +595,7 @@ void Renderer::ScanWorld()
 
     ms_aVisibleReflectionObjects.clear();
 
-    ShadowCasterEntity->ClearCullList();
+  //  ShadowCasterEntity->ClearCullList();
 
     auto camera = TheCamera.m_pRwCamera;
 
@@ -586,9 +681,10 @@ void Renderer::ScanWorld()
     CWorldScan__ScanWorld(points, 5, ScanBigBuildingList);
     if(CGame::currArea != 0 || (CGameIdle::m_fShadowDNBalance >= 1.0))
         return;
+
     //SetNextScanCode();
-    CRenderer::m_loadingPriority = 0;
-    ShadowCasterEntity->Update(GetSectorX(CRenderer::ms_vecCameraPosition.x), GetSectorY(CRenderer::ms_vecCameraPosition.y));
+    //CRenderer::m_loadingPriority = 0;
+   /* ShadowCasterEntity->Update(GetSectorX(CRenderer::ms_vecCameraPosition.x), GetSectorY(CRenderer::ms_vecCameraPosition.y));*/
 
     //EnvironmentMapping::SetRenderCallback(RenderCubemapEntities);
     EnvironmentMapping::SetRenderCallback(RenderShadowCascade2);

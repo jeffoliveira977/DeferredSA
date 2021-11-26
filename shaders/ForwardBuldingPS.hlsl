@@ -263,7 +263,7 @@ float4 main(VS_Output input, float2 vpos :VPOS) : COLOR
     
     
     
-    const float3 ViewPos = CameraPosition.xyz;
+    const float3 ViewPos = CameraPosition.xyz;  
     float3 WorldPos = input.WorldPosition.xyz;
     float3 Normals = (input.Normal.xyz * 0.5f + 0.5f) * 2.0f - 1.0f;
     Normals.z = sqrt(1.01 - dot(Normals.xy, Normals.xy));

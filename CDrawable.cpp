@@ -59,47 +59,42 @@ void CDrawable::cascadeShadowRendering(RwResEntry* entry, void* object, RwUInt32
 
 	LTM = RwFrameGetLTM(RpAtomicGetFrame(object));
 	worldMatrix = RwMatrixToXMMATRIX(LTM);
-	RwD3D9RenderStateReset();
 
-	RwEngineInstance->dOpenDevice.fpRenderStateSet(rwRENDERSTATETEXTUREADDRESS, (void*)1u);
+
+	/*RwEngineInstance->dOpenDevice.fpRenderStateSet(rwRENDERSTATETEXTUREADDRESS, (void*)1u);
 	RwEngineInstance->dOpenDevice.fpRenderStateSet(rwRENDERSTATETEXTUREPERSPECTIVE, (void*)1u);
 	RwEngineInstance->dOpenDevice.fpRenderStateSet(rwRENDERSTATEZTESTENABLE, (void*)1u);
 	RwEngineInstance->dOpenDevice.fpRenderStateSet(rwRENDERSTATEZWRITEENABLE, (void*)1u);
 	RwEngineInstance->dOpenDevice.fpRenderStateSet(rwRENDERSTATESHADEMODE, (void*)2u);
 	RwEngineInstance->dOpenDevice.fpRenderStateSet(rwRENDERSTATETEXTUREFILTER, (void*)2u);
 	RwEngineInstance->dOpenDevice.fpRenderStateSet(rwRENDERSTATEVERTEXALPHAENABLE, (void*)1);
-	//RwEngineInstance->dOpenDevice.fpRenderStateSet(rwRENDERSTATESRCBLEND, (void*)5u);
-	//RwEngineInstance->dOpenDevice.fpRenderStateSet(rwRENDERSTATEDESTBLEND, (void*)6u);
-	//RwEngineInstance->dOpenDevice.fpRenderStateSet(rwRENDERSTATEBORDERCOLOR, (void*)0xFF000000);
-	//RwEngineInstance->dOpenDevice.fpRenderStateSet(rwRENDERSTATEFOGENABLE, 0);
-	//RwEngineInstance->dOpenDevice.fpRenderStateSet(
-	//	rwRENDERSTATEFOGCOLOR, (void*)((unsigned __int16)CTimeCycle::m_CurrentColours.m_nSkyBottomBlue | (((unsigned __int16)CTimeCycle::m_CurrentColours.m_nSkyBottomGreen | ((LOBYTE(CTimeCycle::m_CurrentColours.m_nSkyBottomRed) | 0xFFFFFF00) << 8)) << 8)));
+	RwEngineInstance->dOpenDevice.fpRenderStateSet(rwRENDERSTATESRCBLEND, (void*)5u);
+	RwEngineInstance->dOpenDevice.fpRenderStateSet(rwRENDERSTATEDESTBLEND, (void*)6u);
 
-	//RwEngineInstance->dOpenDevice.fpRenderStateSet(rwRENDERSTATEFOGTYPE, (void*)1u);
-	//RwEngineInstance->dOpenDevice.fpRenderStateSet(rwRENDERSTATECULLMODE, (void*)1u);
-	RwEngineInstance->dOpenDevice.fpRenderStateSet(rwRENDERSTATEALPHATESTFUNCTION, (void*)rwALPHATESTFUNCTIONGREATEREQUAL);
+	RwEngineInstance->dOpenDevice.fpRenderStateSet(rwRENDERSTATECULLMODE, (void*)1u);*/
+	//RwEngineInstance->dOpenDevice.fpRenderStateSet(rwRENDERSTATEALPHATESTFUNCTION, (void*)rwALPHATESTFUNCTIONGREATEREQUAL);
 	//RwEngineInstance->dOpenDevice.fpRenderStateSet(rwRENDERSTATEALPHATESTFUNCTIONREF, (void*)2u);
 
 	_rwD3D9SetVertexShaderConstant(0, &worldMatrix, 4);
 	
 	//RwRenderStateSet(rwRENDERSTATEFOGENABLE, FALSE);
-	RwD3D9SetRenderState(D3DRS_ALPHABLENDENABLE, FALSE);
-	RwD3D9SetRenderState(D3DRS_ALPHATESTENABLE, TRUE);
+	//RwD3D9SetRenderState(D3DRS_ALPHABLENDENABLE, FALSE);
+	//RwD3D9SetRenderState(D3DRS_ALPHATESTENABLE, TRUE);
 	// RwRenderStateSet(rwRENDERSTATECULLMODE, (void*)rwCULLMODECULLNONE);
 	//RwRenderStateSet(rwRENDERSTATEZWRITEENABLE, (void*)TRUE);
 	//RwRenderStateSet(rwRENDERSTATEZTESTENABLE, (void*)TRUE);
 	_rwD3D9SetVertexShader(VS_shadow);
 	_rwD3D9SetPixelShader(PS_shadow);
-	RwRenderStateSet(rwRENDERSTATEALPHATESTFUNCTIONREF, (void*)0);
+	//RwRenderStateSet(rwRENDERSTATEALPHATESTFUNCTIONREF, (void*)20);
 	//RwRenderStateSet(rwRENDERSTATESRCBLEND, (void*)rwBLENDSRCALPHA);
 	//RwRenderStateSet(rwRENDERSTATEDESTBLEND, (void*)rwBLENDINVSRCALPHA);
 
-	rwD3D9SetSamplerState(0, D3DSAMP_MINFILTER, D3DTEXF_LINEAR);
-	rwD3D9SetSamplerState(0, D3DSAMP_MAGFILTER, D3DTEXF_LINEAR);
-	rwD3D9SetSamplerState(0, D3DSAMP_MIPFILTER, D3DTEXF_LINEAR);
-	rwD3D9SetSamplerState(0, D3DSAMP_ADDRESSU, D3DTADDRESS_WRAP);
-	rwD3D9SetSamplerState(0, D3DSAMP_ADDRESSV, D3DTADDRESS_WRAP);
-	rwD3D9SetSamplerState(0, D3DSAMP_ADDRESSW, D3DTADDRESS_WRAP);
+	//rwD3D9SetSamplerState(0, D3DSAMP_MINFILTER, D3DTEXF_LINEAR);
+	//rwD3D9SetSamplerState(0, D3DSAMP_MAGFILTER, D3DTEXF_LINEAR);
+	//rwD3D9SetSamplerState(0, D3DSAMP_MIPFILTER, D3DTEXF_LINEAR);
+	//rwD3D9SetSamplerState(0, D3DSAMP_ADDRESSU, D3DTADDRESS_WRAP);
+	//rwD3D9SetSamplerState(0, D3DSAMP_ADDRESSV, D3DTADDRESS_WRAP);
+	//rwD3D9SetSamplerState(0, D3DSAMP_ADDRESSW, D3DTADDRESS_WRAP);
 
 	int numMeshes = header->numMeshes;
 	while(numMeshes--)
@@ -121,13 +116,12 @@ void CDrawable::cascadeShadowRendering(RwResEntry* entry, void* object, RwUInt32
 		//	RwRenderStateSet(rwRENDERSTATEALPHATESTFUNCTIONREF, (void*)0);
 
 		//hasAlpha = hasAlpha || instance->vertexAlpha || matcolor->alpha != 255;
-
 		RwRGBAReal colorValue;
 		RwRGBARealFromRwRGBA(&colorValue, matcolor);
 		_rwD3D9SetPixelShaderConstant(0, &colorValue, 1);
-
+		
 		hasAlpha = instance->vertexAlpha || matcolor->alpha != 255;
-		//RwRenderStateSet(rwRENDERSTATEVERTEXALPHAENABLE, (void*)hasAlpha);
+		RwRenderStateSet(rwRENDERSTATEVERTEXALPHAENABLE, (void*)hasAlpha);
 		_rwD3D9SetPixelShaderConstant(1, &CTimeCycle::m_CurrentColours.m_fFarClip, 1);
 		D3D9Render(header, instance, texture, flags);
 		instance++;

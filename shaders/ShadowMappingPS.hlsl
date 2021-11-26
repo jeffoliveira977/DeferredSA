@@ -1,6 +1,5 @@
 
-float FarClip : register(c1);
-static float4 Diffuse : register(c0);
+float4 Diffuse : register(c0);
 
 sampler2D DiffuseSampler : register(s0);
 

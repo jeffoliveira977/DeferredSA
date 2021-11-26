@@ -156,8 +156,8 @@ float4 main(float2 texCoord : TEXCOORD0, float2 vpos:VPOS) : COLOR
     float fadefact = (FarClip2 - depth) / (FarClip2 - FogStart2);
     fadefact = saturate(1.0 - fadefact);
     
-    Shadow = lerp(Shadow, 1.0, fadefact); //reduce based on fog, guess not required becaose of defog code
-    Shadow = lerp(1.0, Shadow, 0.7); //reduce in general
+    //Shadow = lerp(Shadow, 1.0, fadefact); //reduce based on fog, guess not required becaose of defog code
+    //Shadow = lerp(1.0, Shadow, 0.7); //reduce in general
     //FadeOutShadow(Value, depth, 300);
     float3 lightDir = normalize(sunDir);
     float3 ViewDir = normalize(worldPosition.xyz - ViewInverseMatrix[3].xyz); // View direction vector
