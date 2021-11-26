@@ -61,7 +61,7 @@ void CDrawable::cascadeShadowRendering(RwResEntry* entry, void* object, RwUInt32
 	worldMatrix = RwMatrixToXMMATRIX(LTM);
 
 
-	/*RwEngineInstance->dOpenDevice.fpRenderStateSet(rwRENDERSTATETEXTUREADDRESS, (void*)1u);
+	RwEngineInstance->dOpenDevice.fpRenderStateSet(rwRENDERSTATETEXTUREADDRESS, (void*)1u);
 	RwEngineInstance->dOpenDevice.fpRenderStateSet(rwRENDERSTATETEXTUREPERSPECTIVE, (void*)1u);
 	RwEngineInstance->dOpenDevice.fpRenderStateSet(rwRENDERSTATEZTESTENABLE, (void*)1u);
 	RwEngineInstance->dOpenDevice.fpRenderStateSet(rwRENDERSTATEZWRITEENABLE, (void*)1u);
@@ -71,9 +71,9 @@ void CDrawable::cascadeShadowRendering(RwResEntry* entry, void* object, RwUInt32
 	RwEngineInstance->dOpenDevice.fpRenderStateSet(rwRENDERSTATESRCBLEND, (void*)5u);
 	RwEngineInstance->dOpenDevice.fpRenderStateSet(rwRENDERSTATEDESTBLEND, (void*)6u);
 
-	RwEngineInstance->dOpenDevice.fpRenderStateSet(rwRENDERSTATECULLMODE, (void*)1u);*/
-	//RwEngineInstance->dOpenDevice.fpRenderStateSet(rwRENDERSTATEALPHATESTFUNCTION, (void*)rwALPHATESTFUNCTIONGREATEREQUAL);
-	//RwEngineInstance->dOpenDevice.fpRenderStateSet(rwRENDERSTATEALPHATESTFUNCTIONREF, (void*)2u);
+	RwEngineInstance->dOpenDevice.fpRenderStateSet(rwRENDERSTATECULLMODE, (void*)1u);
+	RwEngineInstance->dOpenDevice.fpRenderStateSet(rwRENDERSTATEALPHATESTFUNCTION, (void*)rwALPHATESTFUNCTIONGREATEREQUAL);
+	RwEngineInstance->dOpenDevice.fpRenderStateSet(rwRENDERSTATEALPHATESTFUNCTIONREF, (void*)2u);
 
 	_rwD3D9SetVertexShaderConstant(0, &worldMatrix, 4);
 	
@@ -81,13 +81,13 @@ void CDrawable::cascadeShadowRendering(RwResEntry* entry, void* object, RwUInt32
 	//RwD3D9SetRenderState(D3DRS_ALPHABLENDENABLE, FALSE);
 	//RwD3D9SetRenderState(D3DRS_ALPHATESTENABLE, TRUE);
 	// RwRenderStateSet(rwRENDERSTATECULLMODE, (void*)rwCULLMODECULLNONE);
-	//RwRenderStateSet(rwRENDERSTATEZWRITEENABLE, (void*)TRUE);
-	//RwRenderStateSet(rwRENDERSTATEZTESTENABLE, (void*)TRUE);
+	RwRenderStateSet(rwRENDERSTATEZWRITEENABLE, (void*)TRUE);
+	RwRenderStateSet(rwRENDERSTATEZTESTENABLE, (void*)TRUE);
 	_rwD3D9SetVertexShader(VS_shadow);
 	_rwD3D9SetPixelShader(PS_shadow);
-	//RwRenderStateSet(rwRENDERSTATEALPHATESTFUNCTIONREF, (void*)20);
-	//RwRenderStateSet(rwRENDERSTATESRCBLEND, (void*)rwBLENDSRCALPHA);
-	//RwRenderStateSet(rwRENDERSTATEDESTBLEND, (void*)rwBLENDINVSRCALPHA);
+	RwRenderStateSet(rwRENDERSTATEALPHATESTFUNCTIONREF, (void*)20);
+	RwRenderStateSet(rwRENDERSTATESRCBLEND, (void*)rwBLENDSRCALPHA);
+	RwRenderStateSet(rwRENDERSTATEDESTBLEND, (void*)rwBLENDINVSRCALPHA);
 
 	//rwD3D9SetSamplerState(0, D3DSAMP_MINFILTER, D3DTEXF_LINEAR);
 	//rwD3D9SetSamplerState(0, D3DSAMP_MAGFILTER, D3DTEXF_LINEAR);
@@ -121,7 +121,7 @@ void CDrawable::cascadeShadowRendering(RwResEntry* entry, void* object, RwUInt32
 		_rwD3D9SetPixelShaderConstant(0, &colorValue, 1);
 		
 		hasAlpha = instance->vertexAlpha || matcolor->alpha != 255;
-		RwRenderStateSet(rwRENDERSTATEVERTEXALPHAENABLE, (void*)hasAlpha);
+		//RwRenderStateSet(rwRENDERSTATEVERTEXALPHAENABLE, (void*)hasAlpha);
 		_rwD3D9SetPixelShaderConstant(1, &CTimeCycle::m_CurrentColours.m_fFarClip, 1);
 		D3D9Render(header, instance, texture, flags);
 		instance++;
