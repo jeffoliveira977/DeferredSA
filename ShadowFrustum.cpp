@@ -90,7 +90,7 @@ void ShadowFrustum::DirectionalLightTransform(RwCamera* mainCam, const RW::V3d& 
                 minExtents = g_XMFltMax;
                 maxExtents = g_XMFltMin;
 
-                for(uint32_t j = 1; j < 8; j++)
+                for(uint32_t j = 0; j < 8; j++)
                 {
                     corners[j] = XMVector3Transform(corners[j], lightRotation);
 
@@ -145,8 +145,8 @@ void ShadowFrustum::DirectionalLightTransform(RwCamera* mainCam, const RW::V3d& 
             }
 
             XMMATRIX projection = Desc[i].lightOrthoMatrix;
-            //projection.r[0] *= 0.5;
-            //projection.r[1] *= 0.5;
+            projection.r[0] *= 0.5;
+            projection.r[1] *= 0.5;
             Desc[i].m_FrustumCulling.SetMatrix(Desc[i].lightViewMatrix * projection);
         }
         #else

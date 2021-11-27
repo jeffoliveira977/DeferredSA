@@ -61,7 +61,7 @@ RwBool DefaultMeshPipeline::initGraphics()
 	}
 }
 
-void DefaultMeshPipeline::reflectionRendering(RwResEntry* entry, void* object, RwUInt32 flags)
+void DefaultMeshPipeline::ReflectionRendering(RwResEntry* entry, void* object, RwUInt32 flags)
 {
 	XMMATRIX				worldMatrix;
 	RwMatrix* LTM;
@@ -139,7 +139,7 @@ void DefaultMeshPipeline::reflectionRendering(RwResEntry* entry, void* object, R
 #include "CTimeCycle.h"
 #include "PBSMaterial.h"
 #include "EnvironmentMapping.h"
-void DefaultMeshPipeline::deferredRendering(RwResEntry* entry, void* object, RwUInt32 flags)
+void DefaultMeshPipeline::DeferredRendering(RwResEntry* entry, void* object, RwUInt32 flags)
 {
 	RxD3D9ResEntryHeader* header;
 	RxD3D9InstanceData* instance;
@@ -150,7 +150,7 @@ void DefaultMeshPipeline::deferredRendering(RwResEntry* entry, void* object, RwU
 	_rwD3D9SetVertexShader(VS_deferred);
 	_rwD3D9SetPixelShader(PS_deferred);
 
-	CDrawable::deferredRendering(entry, object, flags);
+	MeshRenderingMode::DeferredRendering(entry, object, flags);
 
 	RwMatrix* LTM = RwFrameGetLTM(RpAtomicGetFrame(object));
 	XMMATRIX worldMatrix = RwMatrixToXMMATRIX(LTM);
@@ -260,7 +260,7 @@ void DefaultMeshPipeline::deferredRendering(RwResEntry* entry, void* object, RwU
 	//_rwD3D9SetVertexShader(VS_deferred);
 	//_rwD3D9SetPixelShader(PS_deferred);
 
-	//CDrawable::deferredRendering(entry, object, flags);
+	//MeshRenderingMode::DeferredRendering(entry, object, flags);
 
 	//RwMatrix* LTM = RwFrameGetLTM(RpAtomicGetFrame(object));
 	//XMMATRIX worldMatrix = RwMatrixToXMMATRIX(LTM);
@@ -329,7 +329,7 @@ void DefaultMeshPipeline::deferredRendering(RwResEntry* entry, void* object, RwU
 	//}
 }
 
-void DefaultMeshPipeline::forwardRendering(RwResEntry* entry, void* object, RwUInt32 flags)
+void DefaultMeshPipeline::ForwardRendering(RwResEntry* entry, void* object, RwUInt32 flags)
 {
 	RxD3D9ResEntryHeader* header;
 	RxD3D9InstanceData* instance;

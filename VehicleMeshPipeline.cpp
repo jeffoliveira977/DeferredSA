@@ -80,13 +80,13 @@ void VehicleMeshPipeline::hook()
 	patch::RedirectJump(0x005D9F80, CCustomCarEnvMapPipeline__CreateCustomOpenGLObjPipe);
 }
 
-void VehicleMeshPipeline::reflectionRendering(RwResEntry* entry, void* object, RwUInt32 flags)
+void VehicleMeshPipeline::ReflectionRendering(RwResEntry* entry, void* object, RwUInt32 flags)
 {
 
-	//CVehicleDrawable::deferredRendering(entry, object, flags);
+	//CVehicleDrawable::DeferredRendering(entry, object, flags);
 }
 
-void VehicleMeshPipeline::deferredRendering(RwResEntry* entry, void* object, RwUInt32 flags)
+void VehicleMeshPipeline::DeferredRendering(RwResEntry* entry, void* object, RwUInt32 flags)
 {
 	RxD3D9ResEntryHeader* header;
 	RxD3D9InstanceData* instance;
@@ -94,7 +94,7 @@ void VehicleMeshPipeline::deferredRendering(RwResEntry* entry, void* object, RwU
 	header = (RxD3D9ResEntryHeader*)(entry + 1);
 	instance = (RxD3D9InstanceData*)(header + 1);
 
-	CDrawable::deferredRendering(entry, object, flags);
+	MeshRenderingMode::DeferredRendering(entry, object, flags);
 
 	RwMatrix* LTM = RwFrameGetLTM(RpAtomicGetFrame(object));
 	XMMATRIX worldMatrix = RwMatrixToXMMATRIX(LTM);
@@ -182,7 +182,7 @@ void VehicleMeshPipeline::deferredRendering(RwResEntry* entry, void* object, RwU
 	}
 }
 
-void VehicleMeshPipeline::forwardRendering(RwResEntry* entry, void* object, RwUInt32 flags)
+void VehicleMeshPipeline::ForwardRendering(RwResEntry* entry, void* object, RwUInt32 flags)
 {
 	RxD3D9ResEntryHeader* header;
 	RxD3D9InstanceData* instance;
@@ -190,7 +190,7 @@ void VehicleMeshPipeline::forwardRendering(RwResEntry* entry, void* object, RwUI
 	header = (RxD3D9ResEntryHeader*)(entry + 1);
 	instance = (RxD3D9InstanceData*)(header + 1);
 
-	CDrawable::forwardRendering(entry, object, flags);
+	MeshRenderingMode::ForwardRendering(entry, object, flags);
 
 	RwMatrix* LTM = RwFrameGetLTM(RpAtomicGetFrame(object));
 	XMMATRIX worldMatrix = RwMatrixToXMMATRIX(LTM);

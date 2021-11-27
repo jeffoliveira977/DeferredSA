@@ -93,7 +93,7 @@ RxPipeline* BuldingMeshPipeline::initGraphics()
 	return NULL;
 }
 
-void BuldingMeshPipeline::reflectionRendering(RwResEntry* entry, void* object, RwUInt32 flags)
+void BuldingMeshPipeline::ReflectionRendering(RwResEntry* entry, void* object, RwUInt32 flags)
 {
 	XMMATRIX				worldMatrix;
 	RwMatrix* LTM;
@@ -187,7 +187,7 @@ void BuldingMeshPipeline::reflectionRendering(RwResEntry* entry, void* object, R
 #include "CascadedShadowRendering.h"
 #include "CGameIdle.h"
 
-void BuldingMeshPipeline::deferredRendering(RwResEntry* entry, void* object, RwUInt32 flags)
+void BuldingMeshPipeline::DeferredRendering(RwResEntry* entry, void* object, RwUInt32 flags)
 {
 	RxD3D9ResEntryHeader* header;
 	RxD3D9InstanceData* instance;
@@ -198,7 +198,7 @@ void BuldingMeshPipeline::deferredRendering(RwResEntry* entry, void* object, RwU
 	_rwD3D9SetVertexShader(VS_deferred);
 	_rwD3D9SetPixelShader(PS_deferred);
 
-	CDrawable::deferredRendering(entry, object, flags);
+	MeshRenderingMode::DeferredRendering(entry, object, flags);
 
 	RwMatrix* LTM= RwFrameGetLTM(RpAtomicGetFrame(object));
 	XMMATRIX worldMatrix = RwMatrixToXMMATRIX(LTM);
@@ -301,7 +301,7 @@ void BuldingMeshPipeline::deferredRendering(RwResEntry* entry, void* object, RwU
 	}
 }
 
-void BuldingMeshPipeline::forwardRendering(RwResEntry* entry, void* object, RwUInt32 flags)
+void BuldingMeshPipeline::ForwardRendering(RwResEntry* entry, void* object, RwUInt32 flags)
 {
 	RxD3D9ResEntryHeader* header;
 	RxD3D9InstanceData* instance;

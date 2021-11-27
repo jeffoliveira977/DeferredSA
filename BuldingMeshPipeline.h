@@ -1,7 +1,7 @@
 #pragma once
 #include "CDrawable.h"
 
-class BuldingMeshPipeline : virtual public CDrawable
+class BuldingMeshPipeline : virtual public MeshRenderingMode
 {
 	void* VS_dualParaboloidMap;
 	void* PS_dualParaboloidMap;
@@ -17,9 +17,9 @@ class BuldingMeshPipeline : virtual public CDrawable
 	void* VS_waterReflection;
 	void* PS_waterReflection;
 
-	 void reflectionRendering(RwResEntry* entry, void* object, RwUInt32 flags);
-	 void deferredRendering(RwResEntry* entry, void* object, RwUInt32 flags);
-	 void forwardRendering(RwResEntry* entry, void* object, RwUInt32 flags);
+	 void ReflectionRendering(RwResEntry* entry, void* object, RwUInt32 flags);
+	 void DeferredRendering(RwResEntry* entry, void* object, RwUInt32 flags);
+	 void ForwardRendering(RwResEntry* entry, void* object, RwUInt32 flags);
 public:
 	RxPipeline* initGraphics();
 	static void hook();

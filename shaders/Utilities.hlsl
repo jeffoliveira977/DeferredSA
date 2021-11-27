@@ -216,9 +216,9 @@ float DecodeFloatRGB(float4 color)
 inline float DecodeDepth(float2 texCoord, float farPlane)
 {
     float2 depth = TEXTURE2D_DEPTH(texCoord);
-    depth = DecodeFloatRG(depth);
-    depth = depth < 0 ? 1.0 : depth;
-    return depth * farPlane;
+    depth.x = DecodeFloatRG(depth);
+    depth.x = depth.x < 0.0 ? 1.0 : depth.x;
+    return depth.x * farPlane;
 }
 
 inline float DecodeDepth(sampler2D samplerDepth, float2 texCoord)
@@ -393,7 +393,7 @@ float Beckmann_Specular(in float m, in float3 n, in float3 h, in float3 v, in fl
     return d * g * (1.0f / (4.0f * nDotL * nDotV));
 }
 
-float DistanceBetweenPoints(float3 a, float3 b)
+float3 DistanceBetweenPoints(float3 a, float3 b)
 {
     return sqrt(pow(a, 2) + pow(b, 2) * 1.0);
 }

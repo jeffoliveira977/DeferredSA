@@ -57,6 +57,8 @@
     <ClCompile Include="AABB.cpp" />
     <ClCompile Include="Collider.cpp" />
     <ClCompile Include="VisibilityPlugins.cpp" />
+    <ClCompile Include="ShaderState.cpp" />
+    <ClCompile Include="PixelShaderState.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="GTADef.h" />
@@ -92,6 +94,8 @@
     <ClInclude Include="AABB.h" />
     <ClInclude Include="Collider.h" />
     <ClInclude Include="VisibilityPlugins.h" />
+    <ClInclude Include="ShaderState.h" />
+    <ClInclude Include="PixelShaderState.h" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="imgui">

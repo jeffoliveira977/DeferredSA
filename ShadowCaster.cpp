@@ -17,7 +17,7 @@ ShadowCaster::ShadowCaster()
 ShadowCaster::~ShadowCaster()
 {}
 
-void ShadowCaster::AddEntityToCullList(CEntity* entity)
+void ShadowCaster::AddObject(CEntity* entity)
 {
     if(entity == nullptr || entity->m_pRwObject == nullptr)
         return;
@@ -62,10 +62,10 @@ void ShadowCaster::AddEntityToCullList(CEntity* entity)
     //    return;
 
     float sphereRadius = col->m_boundSphere.m_fRadius + CRenderer::ms_fFarClipPlane;
-    float minDistance = min(TheCamera.m_fLODDistMultiplier * modelinfo->m_fDrawDistance, sphereRadius);
+    float minDistance = std::min(TheCamera.m_fLODDistMultiplier * modelinfo->m_fDrawDistance, sphereRadius);
 
     float fadingDistance = MAX_FADING_DISTANCE;
-    float d = min(modelinfo->m_fDrawDistance, minDistance);
+    float d = std::min(modelinfo->m_fDrawDistance, minDistance);
     if(d > MAX_LOWLOD_DISTANCE)
         fadingDistance = d / 15.0f + 10.0f;
     if(entity->m_bIsBIGBuilding)
@@ -113,7 +113,7 @@ void ShadowCaster::CastShadowSectorList(CPtrList& ptrList)
         if(entity->m_nScanCode != CWorld::ms_nCurrentScanCode)
         {
             entity->m_nScanCode = CWorld::ms_nCurrentScanCode;
-            AddEntityToCullList(entity);
+            AddObject(entity);
         }
     }
 }
@@ -121,27 +121,28 @@ void ShadowCaster::CastShadowSectorList(CPtrList& ptrList)
 #include "CGeneral.h"
 void ShadowCaster::ScanSectorList(int sectorX, int sectorY)
 {
-   // CRenderer::SetupScanLists(sectorX, sectorY);
     if(sectorX >= 0 && sectorY >= 0 && sectorX < MAX_SECTORS_X && sectorY < MAX_SECTORS_Y)
     {
-        CSector* sector = GetSector(sectorX, sectorY);
-        CRepeatSector* repeatSector = GetRepeatSector(sectorX, sectorY);
-        
-        float sectorPosX = (sectorX - 60) * 50.0f;
-        float sectorPosY = (sectorY - 60) * 50.0f;
-        float camDistX = sectorPosX - CRenderer::ms_vecCameraPosition.x;
-        float camDistY = sectorPosY - CRenderer::ms_vecCameraPosition.y;
-        float d = sqrt(camDistY * camDistY + camDistX * camDistX);
-
-        //if(d >= CRenderer::ms_fFarClipPlane / 2)
-        //    return;
-        //PrintMessage("%f %f", CRenderer::ms_vecCameraPosition.z, distanceToSector);
-
-        CastShadowSectorList(sector->m_buildings);
-        CastShadowSectorList(sector->m_dummies);
-        CastShadowSectorList(repeatSector->m_lists[REPEATSECTOR_VEHICLES]);
-        CastShadowSectorList(repeatSector->m_lists[REPEATSECTOR_PEDS]);
-        CastShadowSectorList(repeatSector->m_lists[REPEATSECTOR_OBJECTS]);
+        CRenderer::SetupScanLists(sectorX, sectorY);
+        CPtrListDoubleLink** pScanLists = reinterpret_cast<CPtrListDoubleLink**>(&PC_Scratch);
+        for(std::int32_t scanListIndex = 0; scanListIndex < TOTAL_ENTITY_SCAN_LISTS; scanListIndex++)
+        {
+            CPtrListDoubleLink* pDoubleLinkList = pScanLists[scanListIndex];
+            if(pDoubleLinkList)
+            {
+                CPtrNodeDoubleLink* pDoubleLinkNode = pDoubleLinkList->GetNode();
+                while(pDoubleLinkNode)
+                {
+                    CEntity* entity = reinterpret_cast<CEntity*>(pDoubleLinkNode->pItem);
+                    pDoubleLinkNode = pDoubleLinkNode->pNext;
+                    if(entity->m_nScanCode != CWorld::ms_nCurrentScanCode)
+                    {
+                        entity->m_nScanCode = CWorld::ms_nCurrentScanCode;
+                        AddObject(entity);
+                    }
+                }
+            }
+        }
     }
 }
 
@@ -156,10 +157,13 @@ void ShadowCaster::Update(int x, int y)
     y = GetSectorY(CRenderer::ms_vecCameraPosition.y);
 
     int sectorCount = 10;
-    for(int i = -sectorCount; i < sectorCount+1; i++)
-        for(int j = -sectorCount; j < sectorCount+1; j++)
+    for(int i = -sectorCount; i < sectorCount; i++)
+    {
+        for(int j = -sectorCount; j < sectorCount; j++)
+        {
             ScanSectorList(x + i, y + j);
-
+        }
+    }
 }
 
 #include "CGame.h"
@@ -181,31 +185,33 @@ void ShadowCaster::Render(int i)
         if(entity == nullptr ||  entity->m_pRwObject == nullptr)
             continue;
 
+        if(entity->m_nType == ENTITY_TYPE_PED)
+        {
+            CPed* ped = static_cast<CPed*>(entity);
+            CTaskSimpleJetPack* jetPack = ped->m_pIntelligence->GetTaskJetPack();
+            if(jetPack && jetPack->m_pJetPackClump)
+                RpClumpRender(jetPack->m_pJetPackClump);
+        }
+
         entity->m_bImBeingRendered = true;
-        CVehicle* pVehicle = static_cast<CVehicle*>(entity);
+
+        CVehicle* vehicle = static_cast<CVehicle*>(entity);
         if(entity->m_nType == ENTITY_TYPE_VEHICLE)
         {
             CVisibilityPlugins::SetupVehicleVariables(entity->m_pRwClump);
             CVisibilityPlugins::InitAlphaAtomicList();  
-            pVehicle->SetupRender();
+            vehicle->SetupRender();
         }
+
         entity->Render();
 
         if(entity->m_nType == ENTITY_TYPE_VEHICLE)
         {   
             CVisibilityPlugins::RenderAlphaAtomics();      
-            pVehicle->ResetAfterRender();
+            vehicle->ResetAfterRender();
         }
 
         entity->m_bImBeingRendered = false;
-    }
-
-    CPlayerPed* ped = FindPlayerPed(0);
-    if(ped)
-    {
-        CTaskSimpleJetPack* jetPack = ped->m_pIntelligence->GetTaskJetPack();
-        if(jetPack && jetPack->m_pJetPackClump)
-            RpClumpRender(jetPack->m_pJetPackClump);
     }
 
     CVisibilityPlugins::RenderWeaponPedsForPC();

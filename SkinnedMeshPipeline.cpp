@@ -95,7 +95,7 @@ void _rpSkinMatrixUpdating(XMFLOAT4X3* boneMat, RpAtomic* atomic, RpSkin* skin)
 	}
 }
 
-void SkinnedMeshPipeline::cascadeShadowRendering(RwResEntry* entry, void* object, RwUInt32 flags)
+void SkinnedMeshPipeline::ShadowRendering(RwResEntry* entry, void* object, RwUInt32 flags)
 {
 	XMMATRIX  worldMatrix, viewMatrix, projectionMatrix;
 
@@ -159,7 +159,7 @@ void SkinnedMeshPipeline::cascadeShadowRendering(RwResEntry* entry, void* object
 	}
 }
 
-void SkinnedMeshPipeline::reflectionRendering(RwResEntry* entry, void* object, RwUInt32 flags)
+void SkinnedMeshPipeline::ReflectionRendering(RwResEntry* entry, void* object, RwUInt32 flags)
 {
 	XMMATRIX				worldMatrix;
 	RwMatrix* LTM;
@@ -230,7 +230,7 @@ void SkinnedMeshPipeline::reflectionRendering(RwResEntry* entry, void* object, R
 }
 
 #include "CScene.h"
-void SkinnedMeshPipeline::deferredRendering(RwResEntry* entry, void* object, RwUInt32 flags)
+void SkinnedMeshPipeline::DeferredRendering(RwResEntry* entry, void* object, RwUInt32 flags)
 {
 	RxD3D9ResEntryHeader* header;
 	RxD3D9InstanceData* instance;
@@ -341,5 +341,5 @@ void SkinnedMeshPipeline::deferredRendering(RwResEntry* entry, void* object, RwU
 	}
 }
 
-void SkinnedMeshPipeline::forwardRendering(RwResEntry* entry, void* object, RwUInt32 flags)
+void SkinnedMeshPipeline::ForwardRendering(RwResEntry* entry, void* object, RwUInt32 flags)
 {}

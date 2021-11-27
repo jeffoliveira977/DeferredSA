@@ -70,9 +70,9 @@ namespace Math
 
 	bool AABB::Intersects(XMFLOAT4 plane)
 	{
-		float d = max(Min.x * plane.x, Max.x * plane.x)
-				+ max(Min.y * plane.y, Max.y * plane.y)
-				+ max(Min.z * plane.z, Max.z * plane.z)
+		float d = std::max(Min.x * plane.x, Max.x * plane.x)
+				+ std::max(Min.y * plane.y, Max.y * plane.y)
+				+ std::max(Min.z * plane.z, Max.z * plane.z)
 				+ plane.w;
 
 		return d > 0.0;

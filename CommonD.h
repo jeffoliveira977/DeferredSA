@@ -1,4 +1,5 @@
 #pragma once
+#define NOMINMAX
 #include <string>
 #include <algorithm>
 #include <vector>
@@ -362,6 +363,8 @@ constexpr float RadiansToDegrees(float angleInRadians)
 {
     return angleInRadians * 180.0F / PI;
 }
+void _rwD3D9GetVertexShaderConstant(RwUInt32 registerAddress, void* constantData, RwUInt32 constantCount);
+void _rwD3D9GetPixelShaderConstant(RwUInt32 registerAddress, void* constantData, RwUInt32 constantCount);
 void rwD3D9RWSetRasterStage(RwRaster* raster, RwUInt32 stage);
 void rwD3D9SetSamplerState(RwUInt32 stage, RwUInt32 type, RwUInt32 value);
 void rwD3D9SetDepthStencil(RwRaster* depthStencil);

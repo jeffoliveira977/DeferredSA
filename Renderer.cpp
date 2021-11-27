@@ -341,7 +341,7 @@ void Renderer::AddEntityToRenderList(CEntity* pEntity, float fDistance)
         CRenderer::ms_nNoOfVisibleEntities++;
     }
 
-   // ShadowCasterEntity->AddEntityToCullList(pEntity);
+   // ShadowCasterEntity->AddObject(pEntity);
 }
 
 void Renderer::AddToLodRenderList(CEntity* entity, float distance)
@@ -350,7 +350,7 @@ void Renderer::AddToLodRenderList(CEntity* entity, float distance)
     CRenderer::ms_pLodRenderList->distance = distance;
     ++CRenderer::ms_pLodRenderList;
 
-    //ShadowCasterEntity->AddEntityToCullList(entity);
+    //ShadowCasterEntity->AddObject(entity);
 }
 
 bool Renderer::InsertEntityIntoSortedList(CEntity* entity, float distance)
@@ -360,7 +360,7 @@ bool Renderer::InsertEntityIntoSortedList(CEntity* entity, float distance)
     if(entity->m_bUnderwater)
         return  InsertEntityIntoUnderwaterEntities(entity, distance);
 
-    //ShadowCasterEntity->AddEntityToCullList(entity);
+    //ShadowCasterEntity->AddObject(entity);
     return InsertEntityIntoEntityList(entity, distance, CVisibilityPlugins__RenderEntityADDR);
 }
 
@@ -396,13 +396,13 @@ void Renderer::ScanSectorList(int sectorX, int sectorY)
                     float fDistance = 0.0f;
                     int visibility = CRenderer::SetupEntityVisibility(entity, fDistance);
                     //if(visibility != RENDERER_STREAMME && !entity->IsEntityOccluded())
-                    //     ShadowCasterEntity->AddEntityToCullList(entity);
+                    //     ShadowCasterEntity->AddObject(entity);
 
                     switch(visibility)
                     {
                         case RENDERER_INVISIBLE:
                         {
-                            ShadowCasterEntity->AddEntityToCullList(entity);
+                            ShadowCasterEntity->AddObject(entity);
 
                             if(entity->m_nType == ENTITY_TYPE_OBJECT)
                             {

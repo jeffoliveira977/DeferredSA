@@ -1,7 +1,7 @@
 #pragma once
 #include "CDrawable.h"
 
-class DefaultMeshPipeline : virtual public CDrawable
+class DefaultMeshPipeline : virtual public MeshRenderingMode
 {
 	void* reflectionParaboloidVS;
 	void* reflectionSphericalVS;
@@ -12,9 +12,9 @@ class DefaultMeshPipeline : virtual public CDrawable
 	void* VS_simple;
 	void* PS_simple;
 
-	void reflectionRendering(RwResEntry* entry, void* object, RwUInt32 flags);
-	void deferredRendering(RwResEntry* entry, void* object, RwUInt32 flags);
-	void forwardRendering(RwResEntry* entry, void* object, RwUInt32 flags);
+	void ReflectionRendering(RwResEntry* entry, void* object, RwUInt32 flags);
+	void DeferredRendering(RwResEntry* entry, void* object, RwUInt32 flags);
+	void ForwardRendering(RwResEntry* entry, void* object, RwUInt32 flags);
 public:
 	static void hook();
 	RwBool initGraphics();
