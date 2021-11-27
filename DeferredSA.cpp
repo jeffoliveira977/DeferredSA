@@ -382,8 +382,8 @@ void RenderRealTimeShadows(const RwV3d& sundir)
 
 void CRealTimeShadowManager__Update()
 {
-	ShadowCasterEntity->ClearCullList();
-	ShadowCasterEntity->Update(GetSectorX(CRenderer::ms_vecCameraPosition.x), GetSectorY(CRenderer::ms_vecCameraPosition.y));
+	//ShadowCasterEntity->ClearCullList();
+	//ShadowCasterEntity->Update(GetSectorX(CRenderer::ms_vecCameraPosition.x), GetSectorY(CRenderer::ms_vecCameraPosition.y));
 	//CVector g_vSunPosition;
 	//GetSunPosn(&g_vSunPosition, CTimeCycle::m_CurrentColours.m_fFarClip);
 	//const auto sunDirs = reinterpret_cast<RwV3d*>(0xB7CA50);
