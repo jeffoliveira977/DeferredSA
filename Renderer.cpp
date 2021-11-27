@@ -350,7 +350,7 @@ void Renderer::AddToLodRenderList(CEntity* entity, float distance)
     CRenderer::ms_pLodRenderList->distance = distance;
     ++CRenderer::ms_pLodRenderList;
 
-    ShadowCasterEntity->AddObject(entity);
+    //ShadowCasterEntity->AddObject(entity);
 }
 
 bool Renderer::InsertEntityIntoSortedList(CEntity* entity, float distance)
@@ -682,7 +682,7 @@ void Renderer::ScanWorld()
     if(CGame::currArea != 0 || (CGameIdle::m_fShadowDNBalance >= 1.0))
         return;
 
-    SetNextScanCode();
+    //SetNextScanCode();
     ShadowCasterEntity->Update(GetSectorX(CRenderer::ms_vecCameraPosition.x), GetSectorY(CRenderer::ms_vecCameraPosition.y));
 
     //EnvironmentMapping::SetRenderCallback(RenderCubemapEntities);

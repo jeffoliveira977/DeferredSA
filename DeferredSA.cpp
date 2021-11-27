@@ -393,7 +393,7 @@ void CRealTimeShadowManager__Update()
 	//RenderRealTimeShadows(*(RwV3d*)&g_vSunPosition);
 	// EnvironmentMapping::CubeMap();
 	CascadedShadowManagement->Update();
-	SpotShadow->Update();
+	//SpotShadow->Update();
 	EnvironmentMapping::SphericalMap();
 }
 
@@ -544,12 +544,12 @@ void Hook()
 	Immediate3D__Hook();
 	//SoftParticlesContext->hook();
 
-	plugin::patch::RedirectJump(0x00734570, Renderer::InsertEntityIntoSortedList);
+	//plugin::patch::RedirectJump(0x00734570, Renderer::InsertEntityIntoSortedList);
 	plugin::patch::RedirectJump(0x005534B0, Renderer::AddEntityToRenderList);
 	plugin::patch::RedirectJump(0x00553710, Renderer::AddToLodRenderList);
-	plugin::patch::RedirectJump(0x00553260, Renderer::RenderOneNonRoad);
-	plugin::patch::RedirectJump(0x00553AA0, Renderer::RenderEverythingBarRoads);
-	plugin::patch::RedirectJump(0x00553A10, Renderer::RenderRoads);
+	//plugin::patch::RedirectJump(0x00553260, Renderer::RenderOneNonRoad);
+	//plugin::patch::RedirectJump(0x00553AA0, Renderer::RenderEverythingBarRoads);
+	//plugin::patch::RedirectJump(0x00553A10, Renderer::RenderRoads);
 	plugin::patch::RedirectJump(0x005556E0, Renderer::ConstructRenderList);
 	plugin::patch::RedirectJump(0x00553910, Renderer::PreRender);
 	plugin::patch::RedirectCall(0x0053E9F1, RsMouseSetPos_hook);
