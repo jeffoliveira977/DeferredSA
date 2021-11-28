@@ -206,7 +206,11 @@ void VehicleMeshPipeline::ForwardRendering(RwResEntry* entry, void* object, RwUI
 	fog[1] = CTimeCycle::m_CurrentColours.m_fFarClip;
 	_rwD3D9SetPixelShaderConstant(12, fog, 1);
 	_rwD3D9SetPixelShaderConstant(13, &TheCamera.GetPosition(), 1);
+	RwRenderStateSet(rwRENDERSTATESRCBLEND, (void*)rwBLENDSRCALPHA);
+	RwRenderStateSet(rwRENDERSTATEDESTBLEND, (void*)rwBLENDINVSRCALPHA);
 
+	RwD3D9SetRenderState(D3DRS_ALPHABLENDENABLE, TRUE);
+	RwD3D9SetRenderState(D3DRS_ALPHATESTENABLE, TRUE);
 
 	int numMeshes = header->numMeshes;
 	while(numMeshes--)
@@ -223,9 +227,9 @@ void VehicleMeshPipeline::ForwardRendering(RwResEntry* entry, void* object, RwUI
 		hasAlpha = material->texture && RwD3D9TextureHasAlpha(material->texture);
 
 		if(hasAlpha)
-			RwRenderStateSet(rwRENDERSTATEALPHATESTFUNCTIONREF, (void*)120);
+			RwRenderStateSet(rwRENDERSTATEALPHATESTFUNCTIONREF, (void*)40);
 		else
-			RwRenderStateSet(rwRENDERSTATEALPHATESTFUNCTIONREF, 0);
+			RwRenderStateSet(rwRENDERSTATEALPHATESTFUNCTIONREF, (void*)0);
 
 		if(hasAlpha || instance->vertexAlpha || matcolor->alpha != 255)
 		{

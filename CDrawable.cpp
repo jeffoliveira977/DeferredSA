@@ -20,7 +20,6 @@ void MeshRenderingMode::createShaders()
 
 void MeshRenderingMode::RenderCallBack(RwResEntry* entry, void* object, RwUInt8 type, RwUInt32 flags)
 {
-	//RwD3D9EnableClippingIfNeeded(object, type);
 
 	RxD3D9ResEntryHeader* header;
 	RxD3D9InstanceData* instance;

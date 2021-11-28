@@ -341,7 +341,7 @@ void Renderer::AddEntityToRenderList(CEntity* pEntity, float fDistance)
         CRenderer::ms_nNoOfVisibleEntities++;
     }
 
-    ShadowCasterEntity->AddObject(pEntity);
+   // ShadowCasterEntity->AddObject(pEntity);
 }
 
 void Renderer::AddToLodRenderList(CEntity* entity, float distance)
@@ -395,8 +395,8 @@ void Renderer::ScanSectorList(int sectorX, int sectorY)
                     bool bInvisibleEntity = false;
                     float fDistance = 0.0f;
                     int visibility = CRenderer::SetupEntityVisibility(entity, fDistance);
-                    if(visibility != RENDERER_STREAMME && !entity->IsEntityOccluded())
-                         ShadowCasterEntity->AddObject(entity);
+                    //if(visibility != RENDERER_STREAMME && !entity->IsEntityOccluded())
+                    //        ShadowCasterEntity->AddObject(entity);
 
                     switch(visibility)
                     {
@@ -595,7 +595,7 @@ void Renderer::ScanWorld()
 
     ms_aVisibleReflectionObjects.clear();
 
-    ShadowCasterEntity->ClearCullList();
+   // ShadowCasterEntity->ClearCullList();
 
     auto camera = TheCamera.m_pRwCamera;
 
@@ -683,7 +683,7 @@ void Renderer::ScanWorld()
         return;
 
     //SetNextScanCode();
-    ShadowCasterEntity->Update(GetSectorX(CRenderer::ms_vecCameraPosition.x), GetSectorY(CRenderer::ms_vecCameraPosition.y));
+    // ShadowCasterEntity->Update(GetSectorX(CRenderer::ms_vecCameraPosition.x), GetSectorY(CRenderer::ms_vecCameraPosition.y));
 
     //EnvironmentMapping::SetRenderCallback(RenderCubemapEntities);
     EnvironmentMapping::SetRenderCallback(RenderShadowCascade2);

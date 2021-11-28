@@ -383,7 +383,7 @@ void RenderRealTimeShadows(const RwV3d& sundir)
 void CRealTimeShadowManager__Update()
 {
 	//ShadowCasterEntity->ClearCullList();
-	//ShadowCasterEntity->Update(GetSectorX(CRenderer::ms_vecCameraPosition.x), GetSectorY(CRenderer::ms_vecCameraPosition.y));
+	ShadowCasterEntity->Update(GetSectorX(CRenderer::ms_vecCameraPosition.x), GetSectorY(CRenderer::ms_vecCameraPosition.y));
 	//CVector g_vSunPosition;
 	//GetSunPosn(&g_vSunPosition, CTimeCycle::m_CurrentColours.m_fFarClip);
 	//const auto sunDirs = reinterpret_cast<RwV3d*>(0xB7CA50);
@@ -441,64 +441,6 @@ void ShutdowRenderware()
 using namespace plugin;
 HINSTANCE dllModule;
 
-
-void CShadows__AddPermanentShadow(unsigned char type, RwTexture* texture, CVector* posn, 
-								  float topX, float topY, float rightX, float rightY, short intensity,
-								  unsigned char red, unsigned char greeb, unsigned char blue, 
-								  float drawDistance, unsigned int time, float upDistance)
-{
-}
-void CShadows__StoreShadowForPedObject(CEntity* ped, float displacementX, float displacementY, 
-									   float frontX, float frontY, float sideX, float sideY)
-{
-	
-}
-
-void CShadows__StoreShadowToBeRendered(unsigned char type, RwTexture* texture, CVector* posn, 
-									   float topX, float topY, float rightX, float rightY, short intensity, 
-									   unsigned char red, unsigned char green, unsigned char blue, 
-									   float zDistance, bool drawOnWater, float scale, CRealTimeShadow* realTimeShadow, bool drawOnBuildings)
-{
-}
-
-void CShadows__CalcPedShadowValues(CVector sunPosn, float* displacementX, float* displacementY, 
-								   float* frontX, float* frontY, float* sideX, float* sideY)
-{
-}
-bool CShadows__StoreStaticShadow(unsigned int id, unsigned char type, RwTexture* texture, CVector* posn, 
-								 float frontX, float frontY, float sideX, float sideY, short intensity, 
-								 unsigned char red, unsigned char green, unsigned char blue, float zDistane, 
-								 float scale, float drawDistance, bool temporaryShadow, float upDistance)
-{
-	return true;
-}
-
-void CShadows__StoreShadowForVehicle(CVehicle* vehicle, int vehShadowType)
-{
-}
-
-void CShadows__StoreCarLightShadow(CVehicle* vehicle, int id, RwTexture* texture, CVector* posn, 
-								   float frontX, float frontY, float sideX, float sideY, 
-								   unsigned char red, unsigned char green, unsigned char blue, float maxViewAngle)
-{
-}
-
-void CShadows__StoreShadowForPole(CEntity* entity, float offsetX, float offsetY, float offsetZ, 
-								  float poleHeight, float poleWidth, unsigned int localId)
-{
-}
-
-void CShadows__RenderIndicatorShadow(unsigned int id, unsigned char shadowType, RwTexture* texture, 
-									 CVector* posn, float frontX, float frontY, float sideX, float sideY, short intensity)
-{
-}
-
-struct shadw
-{
-	static void __thiscall CRealTimeShadowManager__DoShadowThisFrame(void*, CEntity* pEntity)
-	{}
-};
-
 RwUInt32& SelectedMultisamplingLevels = *(RwUInt32*)0x008E2430;
 RwUInt32& SelectedMultisamplingLevelsNonMask = *(RwUInt32*)0x008E2438;
 
@@ -515,6 +457,7 @@ void RwD3D9EngineSetMultiSamplingLevels2(RwUInt32 numLevels)
 	SelectedMultisamplingLevelsNonMask = 0;
 }
 
+
 void Hook()
 {
 	//CImmediateRender__Patch();
@@ -530,7 +473,6 @@ void Hook()
 	plugin::Events::d3dLostEvent += LostDevice;
 	plugin::Events::d3dResetEvent += ResetDevice;
 
-
 	// Deferred shading don't work with multi sampling, so disable it.
 	patch::RedirectJump(0x007F8A90, RwD3D9ChangeMultiSamplingLevels2);
 	patch::RedirectJump(0x007F84F0, RwD3D9EngineSetMultiSamplingLevels2);
@@ -545,8 +487,8 @@ void Hook()
 	//SoftParticlesContext->hook();
 
 	//plugin::patch::RedirectJump(0x00734570, Renderer::InsertEntityIntoSortedList);
-	plugin::patch::RedirectJump(0x005534B0, Renderer::AddEntityToRenderList);
-	plugin::patch::RedirectJump(0x00553710, Renderer::AddToLodRenderList);
+	//plugin::patch::RedirectJump(0x005534B0, Renderer::AddEntityToRenderList);
+	//plugin::patch::RedirectJump(0x00553710, Renderer::AddToLodRenderList);
 	//plugin::patch::RedirectJump(0x00553260, Renderer::RenderOneNonRoad);
 	//plugin::patch::RedirectJump(0x00553AA0, Renderer::RenderEverythingBarRoads);
 	//plugin::patch::RedirectJump(0x00553A10, Renderer::RenderRoads);

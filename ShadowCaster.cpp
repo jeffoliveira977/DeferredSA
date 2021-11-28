@@ -52,11 +52,11 @@ void ShadowCaster::AddObject(CEntity* entity)
 
     bool isVehicle = entity->m_nType == ENTITY_TYPE_PED;
 
-    //if(renderDistance > 20.0 && col->m_boundSphere.m_fRadius < 2.0f && !isVehicle && !entity->GetIsBoundingBoxOnScreen())
-    //    return;
+    if(renderDistance > 20.0 && col->m_boundSphere.m_fRadius < 2.0f && !isVehicle && !entity->GetIsBoundingBoxOnScreen())
+        return;
 
-    //if(renderDistance > 70.0 && col->m_boundSphere.m_fRadius < 5.0f && !isVehicle)
-    //    return;
+    if(renderDistance > 70.0 && col->m_boundSphere.m_fRadius < 5.0f && !isVehicle)
+        return;
 
     //if(renderDistance > 100.0 && isVehicle)
     //    return;
@@ -118,32 +118,31 @@ void ShadowCaster::CastShadowSectorList(CPtrList& ptrList)
     }
 }
 
-#include "CGeneral.h"
 void ShadowCaster::ScanSectorList(int sectorX, int sectorY)
 {
+    //if(sectorX >= 0 && sectorY >= 0 && sectorX < MAX_SECTORS_X && sectorY < MAX_SECTORS_Y)
+    //{
+    //    CSector* sector = GetSector(sectorX, sectorY);
+    //    CRepeatSector* repeatSector = GetRepeatSector(sectorX, sectorY);
+
+    //    float sectorPosX = (sectorX - 60) * 50.0f;
+    //    float sectorPosY = (sectorY - 60) * 50.0f;
+    //    float camDistX = sectorPosX - CRenderer::ms_vecCameraPosition.x;
+    //    float camDistY = sectorPosY - CRenderer::ms_vecCameraPosition.y;
+    //    float d = sqrt(camDistY * camDistY + camDistX * camDistX);
+
+    //    //if(d >= CRenderer::ms_fFarClipPlane / 2)
+    //    //    return;
+    //    //PrintMessage("%f %f", CRenderer::ms_vecCameraPosition.z, distanceToSector);
+
+    //    CastShadowSectorList(sector->m_buildings);
+    //    /* CastShadowSectorList(sector->m_dummies);
+    //     CastShadowSectorList(repeatSector->m_lists[REPEATSECTOR_VEHICLES]);
+    //     CastShadowSectorList(repeatSector->m_lists[REPEATSECTOR_PEDS]);*/
+    //    CastShadowSectorList(repeatSector->m_lists[REPEATSECTOR_OBJECTS]);
+    //}
+
     if(sectorX >= 0 && sectorY >= 0 && sectorX < MAX_SECTORS_X && sectorY < MAX_SECTORS_Y)
-    {
-        CSector* sector = GetSector(sectorX, sectorY);
-        CRepeatSector* repeatSector = GetRepeatSector(sectorX, sectorY);
-
-        float sectorPosX = (sectorX - 60) * 50.0f;
-        float sectorPosY = (sectorY - 60) * 50.0f;
-        float camDistX = sectorPosX - CRenderer::ms_vecCameraPosition.x;
-        float camDistY = sectorPosY - CRenderer::ms_vecCameraPosition.y;
-        float d = sqrt(camDistY * camDistY + camDistX * camDistX);
-
-        //if(d >= CRenderer::ms_fFarClipPlane / 2)
-        //    return;
-        //PrintMessage("%f %f", CRenderer::ms_vecCameraPosition.z, distanceToSector);
-
-        CastShadowSectorList(sector->m_buildings);
-        /* CastShadowSectorList(sector->m_dummies);
-         CastShadowSectorList(repeatSector->m_lists[REPEATSECTOR_VEHICLES]);
-         CastShadowSectorList(repeatSector->m_lists[REPEATSECTOR_PEDS]);*/
-        CastShadowSectorList(repeatSector->m_lists[REPEATSECTOR_OBJECTS]);
-    }
-
-   /* if(sectorX >= 0 && sectorY >= 0 && sectorX < MAX_SECTORS_X && sectorY < MAX_SECTORS_Y)
     {
         CRenderer::SetupScanLists(sectorX, sectorY);
         CPtrListDoubleLink** pScanLists = reinterpret_cast<CPtrListDoubleLink**>(&PC_Scratch);
@@ -165,18 +164,18 @@ void ShadowCaster::ScanSectorList(int sectorX, int sectorY)
                 }
             }
         }
-    }*/
+    }
 }
 
 void ShadowCaster::Update(int x, int y)
 {
-   /* for(size_t i = 0; i < 4; i++)
+    for(size_t i = 0; i < 4; i++)
         m_castEntity[i].clear();
 
-    SetNextScanCode();*/
+    SetNextScanCode();
 
-  /*  x = GetSectorX(CRenderer::ms_vecCameraPosition.x);
-    y = GetSectorY(CRenderer::ms_vecCameraPosition.y);*/
+    x = GetSectorX(CRenderer::ms_vecCameraPosition.x);
+    y = GetSectorY(CRenderer::ms_vecCameraPosition.y);
 
     int sectorCount = 10;
     for(int i = -sectorCount; i < sectorCount; i++)
