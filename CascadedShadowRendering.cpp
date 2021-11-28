@@ -11,7 +11,6 @@
 CascadedShadowRendering* CascadedShadowManagement;
 char cPath[MAX_PATH];
 
-
 CascadedShadowRendering::CascadedShadowRendering()
 {
     ShadowSize = 1024 * 2;

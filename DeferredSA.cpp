@@ -442,63 +442,6 @@ using namespace plugin;
 HINSTANCE dllModule;
 
 
-void CShadows__AddPermanentShadow(unsigned char type, RwTexture* texture, CVector* posn, 
-								  float topX, float topY, float rightX, float rightY, short intensity,
-								  unsigned char red, unsigned char greeb, unsigned char blue, 
-								  float drawDistance, unsigned int time, float upDistance)
-{
-}
-void CShadows__StoreShadowForPedObject(CEntity* ped, float displacementX, float displacementY, 
-									   float frontX, float frontY, float sideX, float sideY)
-{
-	
-}
-
-void CShadows__StoreShadowToBeRendered(unsigned char type, RwTexture* texture, CVector* posn, 
-									   float topX, float topY, float rightX, float rightY, short intensity, 
-									   unsigned char red, unsigned char green, unsigned char blue, 
-									   float zDistance, bool drawOnWater, float scale, CRealTimeShadow* realTimeShadow, bool drawOnBuildings)
-{
-}
-
-void CShadows__CalcPedShadowValues(CVector sunPosn, float* displacementX, float* displacementY, 
-								   float* frontX, float* frontY, float* sideX, float* sideY)
-{
-}
-bool CShadows__StoreStaticShadow(unsigned int id, unsigned char type, RwTexture* texture, CVector* posn, 
-								 float frontX, float frontY, float sideX, float sideY, short intensity, 
-								 unsigned char red, unsigned char green, unsigned char blue, float zDistane, 
-								 float scale, float drawDistance, bool temporaryShadow, float upDistance)
-{
-	return true;
-}
-
-void CShadows__StoreShadowForVehicle(CVehicle* vehicle, int vehShadowType)
-{
-}
-
-void CShadows__StoreCarLightShadow(CVehicle* vehicle, int id, RwTexture* texture, CVector* posn, 
-								   float frontX, float frontY, float sideX, float sideY, 
-								   unsigned char red, unsigned char green, unsigned char blue, float maxViewAngle)
-{
-}
-
-void CShadows__StoreShadowForPole(CEntity* entity, float offsetX, float offsetY, float offsetZ, 
-								  float poleHeight, float poleWidth, unsigned int localId)
-{
-}
-
-void CShadows__RenderIndicatorShadow(unsigned int id, unsigned char shadowType, RwTexture* texture, 
-									 CVector* posn, float frontX, float frontY, float sideX, float sideY, short intensity)
-{
-}
-
-struct shadw
-{
-	static void __thiscall CRealTimeShadowManager__DoShadowThisFrame(void*, CEntity* pEntity)
-	{}
-};
-
 RwUInt32& SelectedMultisamplingLevels = *(RwUInt32*)0x008E2430;
 RwUInt32& SelectedMultisamplingLevelsNonMask = *(RwUInt32*)0x008E2438;
 
@@ -525,7 +468,7 @@ void Hook()
 	plugin::Events::shutdownRwEvent += ShutdowRenderware;
 
 	//plugin::Events::processScriptsEvent += GameProcess;
-	plugin::Events::drawingEvent += Render;
+	//plugin::Events::drawingEvent += Render;
 
 	plugin::Events::d3dLostEvent += LostDevice;
 	plugin::Events::d3dResetEvent += ResetDevice;
@@ -538,20 +481,20 @@ void Hook()
 	// Remove stencil shadows and sets new shadow mapping
 	plugin::patch::Nop(0x0053C1AB, 5); // CStencilShadows::Process
 
-	plugin::patch::RedirectJump(0x00706AB0, CRealTimeShadowManager__Update);
-	plugin::patch::RedirectCall(0x0053EA12, CMirrors__BeforeMainRender);
+	//plugin::patch::RedirectJump(0x00706AB0, CRealTimeShadowManager__Update);
+	//plugin::patch::RedirectCall(0x0053EA12, CMirrors__BeforeMainRender);
 
-	Immediate3D__Hook();
-	//SoftParticlesContext->hook();
+	//Immediate3D__Hook();
+	SoftParticlesContext->hook();
 
-	plugin::patch::RedirectJump(0x00734570, Renderer::InsertEntityIntoSortedList);
+	/*plugin::patch::RedirectJump(0x00734570, Renderer::InsertEntityIntoSortedList);
 	plugin::patch::RedirectJump(0x005534B0, Renderer::AddEntityToRenderList);
 	plugin::patch::RedirectJump(0x00553710, Renderer::AddToLodRenderList);
 	plugin::patch::RedirectJump(0x00553260, Renderer::RenderOneNonRoad);
 	plugin::patch::RedirectJump(0x00553AA0, Renderer::RenderEverythingBarRoads);
 	plugin::patch::RedirectJump(0x00553A10, Renderer::RenderRoads);
 	plugin::patch::RedirectJump(0x005556E0, Renderer::ConstructRenderList);
-	plugin::patch::RedirectJump(0x00553910, Renderer::PreRender);
+	plugin::patch::RedirectJump(0x00553910, Renderer::PreRender);*/
 	plugin::patch::RedirectCall(0x0053E9F1, RsMouseSetPos_hook);
 
 	Lights::Patch();
