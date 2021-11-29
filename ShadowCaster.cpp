@@ -122,7 +122,7 @@ void ShadowCaster::ScanSectorList(int sectorX, int sectorY)
 {
     //if(sectorX >= 0 && sectorY >= 0 && sectorX < MAX_SECTORS_X && sectorY < MAX_SECTORS_Y)
     //{
-    //    CSector* sector = GetSector(sectorX, sectorY);
+      //  CSector* sector = GetSector(sectorX, sectorY);
     //    CRepeatSector* repeatSector = GetRepeatSector(sectorX, sectorY);
 
     //    float sectorPosX = (sectorX - 60) * 50.0f;
@@ -177,19 +177,28 @@ void ShadowCaster::Update(int x, int y)
     x = GetSectorX(CRenderer::ms_vecCameraPosition.x);
     y = GetSectorY(CRenderer::ms_vecCameraPosition.y);
 
+    CVector centre = CRenderer::ms_vecCameraPosition;
+    CRect rect(centre.x - 20.0f,
+               centre.y - 20.0f,
+               centre.x + 20.0f,
+               centre.y + 20.0f);
+    int xstart = GetSectorX(rect.left);
+    int ystart = GetSectorY(rect.top);
+    int xend = GetSectorX(rect.right);
+    int yend = GetSectorY(rect.bottom);
+   // PrintMessage("%i %i", xstart, xend);
     int sectorCount = 10;
+    for(int j = -sectorCount; j < sectorCount; j++)
     for(int i = -sectorCount; i < sectorCount; i++)
-    {
-        for(int j = -sectorCount; j < sectorCount; j++)
-        {
-            ScanSectorList(x + i, y + j);
-        }
-    }
+            ScanSectorList( x+i,y+  j);
+        
+    
 }
 
 #include "CGame.h"
 #include "CVisibilityPlugins.h"
 #include "CScene.h"
+#include "VisibilityPlugins.h"
 
 void ShadowCaster::Render(int i)
 {
@@ -234,6 +243,6 @@ void ShadowCaster::Render(int i)
 
         entity->m_bImBeingRendered = false;
     }
-
-    CVisibilityPlugins::RenderWeaponPedsForPC();
+    VisibilityPlugins::RenderWeaponPedsNoMuzzleFlash();
+    // CVisibilityPlugins::RenderWeaponPedsForPC();
 }

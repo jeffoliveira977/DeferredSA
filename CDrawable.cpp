@@ -128,7 +128,7 @@ void MeshRenderingMode::ShadowRendering(RwResEntry* entry, void* object, RwUInt3
 		_rwD3D9SetPixelShaderConstant(0, &colorValue, 1);
 		
 		hasAlpha = instance->vertexAlpha || matcolor->alpha != 255;
-		//RwRenderStateSet(rwRENDERSTATEVERTEXALPHAENABLE, (void*)hasAlpha);
+		RwRenderStateSet(rwRENDERSTATEVERTEXALPHAENABLE, (void*)hasAlpha);
 		_rwD3D9SetPixelShaderConstant(1, &CTimeCycle::m_CurrentColours.m_fFarClip, 1);
 		D3D9Render(header, instance, texture, flags);
 		instance++;

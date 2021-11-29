@@ -22,18 +22,18 @@ inline bool exists_test0(const std::string& name)
 void rwD3D9SetSamplerState(RwUInt32 stage, RwUInt32 type, RwUInt32 value)
 {
 	// Renderware has 8 sample state limit
-	//if(stage < 8)
-	//	RwD3D9SetSamplerState(stage, type, value);
-	//else
+	if(stage < 8)
+		RwD3D9SetSamplerState(stage, type, value);
+	else
 		RwD3DDevice->SetSamplerState(stage, (D3DSAMPLERSTATETYPE)type, value);
 }
 
 void rwD3D9RWSetRasterStage(RwRaster *raster, RwUInt32 stage)
 {
 	// Renderware has 8 sample state limit
-	//if(stage < 8)
-	//	_rwD3D9RWSetRasterStage(raster, stage);
-	//else
+	if(stage < 8)
+		_rwD3D9RWSetRasterStage(raster, stage);
+	else
 	{
 		auto rasExt = RASTEREXTFROMRASTER(raster);
 		RwD3DDevice->SetTexture(stage, rasExt->texture);

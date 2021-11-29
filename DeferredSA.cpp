@@ -456,7 +456,7 @@ void RwD3D9EngineSetMultiSamplingLevels2(RwUInt32 numLevels)
 	SelectedMultisamplingLevels = 0;
 	SelectedMultisamplingLevelsNonMask = 0;
 }
-
+#include "VisibilityPlugins.h"
 
 void Hook()
 {
@@ -482,9 +482,9 @@ void Hook()
 
 	plugin::patch::RedirectJump(0x00706AB0, CRealTimeShadowManager__Update);
 	plugin::patch::RedirectCall(0x0053EA12, CMirrors__BeforeMainRender);
-
+	VisibilityPlugins::Patch();
 	Immediate3D__Hook();
-	//SoftParticlesContext->hook();
+	 SoftParticlesContext->hook();
 
 	//plugin::patch::RedirectJump(0x00734570, Renderer::InsertEntityIntoSortedList);
 	//plugin::patch::RedirectJump(0x005534B0, Renderer::AddEntityToRenderList);

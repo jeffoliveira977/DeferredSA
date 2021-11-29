@@ -328,9 +328,10 @@ void DefaultMeshPipeline::DeferredRendering(RwResEntry* entry, void* object, RwU
 	//	instance++;	
 	//}
 }
-
+#include "ShaderManager.h"
 void DefaultMeshPipeline::ForwardRendering(RwResEntry* entry, void* object, RwUInt32 flags)
 {
+
 	RxD3D9ResEntryHeader* header;
 	RxD3D9InstanceData* instance;
 
@@ -340,6 +341,7 @@ void DefaultMeshPipeline::ForwardRendering(RwResEntry* entry, void* object, RwUI
 	RwMatrix* LTM = RwFrameGetLTM(RpAtomicGetFrame(object));
 	XMMATRIX worldMatrix = RwMatrixToXMMATRIX(LTM);
 	_rwD3D9SetVertexShaderConstant(0, &worldMatrix, 4);
+	ShaderContext->SetViewProjectionMatrix(4, true);
 	_rwD3D9SetVertexShaderConstant(12, &EnvironmentMapping::m_paraboloidBasis, 4);
 
 	_rwD3D9SetPixelShaderConstant(8, &GetSkyTopColor(), 1);
@@ -353,26 +355,27 @@ void DefaultMeshPipeline::ForwardRendering(RwResEntry* entry, void* object, RwUI
 	fog[2] = CTimeCycle::m_CurrentColours.m_fFarClip - CTimeCycle::m_CurrentColours.m_fFogStart;
 	_rwD3D9SetPixelShaderConstant(12, fog, 1);
 	_rwD3D9SetPixelShaderConstant(13, &TheCamera.GetPosition(), 1);
-
+	
 	_rwD3D9SetVertexShader(VS_forward);
 	_rwD3D9SetPixelShader(PS_forward);
 
-	RwRenderStateSet(rwRENDERSTATESRCBLEND, (void*)rwBLENDSRCALPHA);
-	RwRenderStateSet(rwRENDERSTATEDESTBLEND, (void*)rwBLENDINVSRCALPHA);
-
-	RwD3D9SetRenderState(D3DRS_ALPHABLENDENABLE, TRUE);
-	RwD3D9SetRenderState(D3DRS_ALPHATESTENABLE, TRUE);
+	RwRenderStateSet(rwRENDERSTATETEXTUREFILTER, (void*)rwFILTERLINEAR);
+	RwRenderStateSet(rwRENDERSTATETEXTUREADDRESS, (void*)rwTEXTUREADDRESSWRAP);
+	RwRenderStateSet(rwRENDERSTATEVERTEXALPHAENABLE, (void*)TRUE);
+	RwRenderStateSet(rwRENDERSTATESRCBLEND, (void*)5);
+	RwRenderStateSet(rwRENDERSTATEDESTBLEND, (void*)6);
+	
 
 	for(size_t i = 0; i < CascadedShadowManagement->CascadeCount; i++)
 	{
-		RwD3DDevice->SetSamplerState(i + 2, D3DSAMP_MINFILTER, D3DTEXF_LINEAR);
-		RwD3DDevice->SetSamplerState(i + 2, D3DSAMP_MAGFILTER, D3DTEXF_LINEAR);
-		RwD3DDevice->SetSamplerState(i + 2, D3DSAMP_MIPFILTER, D3DTEXF_LINEAR);
-		RwD3DDevice->SetSamplerState(i + 2, D3DSAMP_ADDRESSU, D3DTADDRESS_CLAMP);
-		RwD3DDevice->SetSamplerState(i + 2, D3DSAMP_ADDRESSV, D3DTADDRESS_CLAMP);
-		RwD3DDevice->SetSamplerState(i + 2, D3DSAMP_BORDERCOLOR, 0xFFFFFFFF);
+		rwD3D9SetSamplerState(i + 2, D3DSAMP_MINFILTER, D3DTEXF_LINEAR);
+		rwD3D9SetSamplerState(i + 2, D3DSAMP_MAGFILTER, D3DTEXF_LINEAR);
+		rwD3D9SetSamplerState(i + 2, D3DSAMP_MIPFILTER, D3DTEXF_LINEAR);
+		rwD3D9SetSamplerState(i + 2, D3DSAMP_ADDRESSU, D3DTADDRESS_CLAMP);
+		rwD3D9SetSamplerState(i + 2, D3DSAMP_ADDRESSV, D3DTADDRESS_CLAMP);
+		rwD3D9SetSamplerState(i + 2, D3DSAMP_BORDERCOLOR, 0xFFFFFFFF);
 
-		_rwD3D9RWSetRasterStage(CascadedShadowManagement->m_shadowColorRaster[i], i + 2);
+		rwD3D9RWSetRasterStage(CascadedShadowManagement->m_shadowColorRaster[i], i + 2);
 	}
 
 	_rwD3D9SetPixelShaderConstant(16, &CascadedShadowManagement->m_shadowBuffer,
@@ -392,7 +395,7 @@ void DefaultMeshPipeline::ForwardRendering(RwResEntry* entry, void* object, RwUI
 		hasAlpha = material->texture && RwD3D9TextureHasAlpha(material->texture);
 
 		if(hasAlpha)
-			RwRenderStateSet(rwRENDERSTATEALPHATESTFUNCTIONREF, (void*)100);
+			RwRenderStateSet(rwRENDERSTATEALPHATESTFUNCTIONREF, (void*)50);
 		else
 			RwRenderStateSet(rwRENDERSTATEALPHATESTFUNCTIONREF, (void*)0);
 

@@ -337,14 +337,14 @@ void BuldingMeshPipeline::ForwardRendering(RwResEntry* entry, void* object, RwUI
 
 	for(size_t i = 0; i < CascadedShadowManagement->CascadeCount; i++)
 	{
-		RwD3DDevice->SetSamplerState(i + 2, D3DSAMP_MINFILTER, D3DTEXF_LINEAR);
-		RwD3DDevice->SetSamplerState(i + 2, D3DSAMP_MAGFILTER, D3DTEXF_LINEAR);
-		RwD3DDevice->SetSamplerState(i + 2, D3DSAMP_MIPFILTER, D3DTEXF_LINEAR);
-		RwD3DDevice->SetSamplerState(i + 2, D3DSAMP_ADDRESSU, D3DTADDRESS_CLAMP);
-		RwD3DDevice->SetSamplerState(i + 2, D3DSAMP_ADDRESSV, D3DTADDRESS_CLAMP);
-		RwD3DDevice->SetSamplerState(i + 2, D3DSAMP_BORDERCOLOR, 0xFFFFFFFF);
+		rwD3D9SetSamplerState(i + 2, D3DSAMP_MINFILTER, D3DTEXF_LINEAR);
+		rwD3D9SetSamplerState(i + 2, D3DSAMP_MAGFILTER, D3DTEXF_LINEAR);
+		rwD3D9SetSamplerState(i + 2, D3DSAMP_MIPFILTER, D3DTEXF_LINEAR);
+		rwD3D9SetSamplerState(i + 2, D3DSAMP_ADDRESSU, D3DTADDRESS_CLAMP);
+		rwD3D9SetSamplerState(i + 2, D3DSAMP_ADDRESSV, D3DTADDRESS_CLAMP);
+		rwD3D9SetSamplerState(i + 2, D3DSAMP_BORDERCOLOR, 0xFFFFFFFF);
 
-		_rwD3D9RWSetRasterStage(CascadedShadowManagement->m_shadowColorRaster[i], i + 2);
+		rwD3D9RWSetRasterStage(CascadedShadowManagement->m_shadowColorRaster[i], i + 2);
 	}
 
 	_rwD3D9SetPixelShaderConstant(16, &CascadedShadowManagement->m_shadowBuffer,
@@ -364,7 +364,7 @@ void BuldingMeshPipeline::ForwardRendering(RwResEntry* entry, void* object, RwUI
 		hasAlpha = material->texture && RwD3D9TextureHasAlpha(material->texture);
 
 		if(hasAlpha)
-			RwRenderStateSet(rwRENDERSTATEALPHATESTFUNCTIONREF, (void*)100);
+			RwRenderStateSet(rwRENDERSTATEALPHATESTFUNCTIONREF, (void*)10);
 		else
 			RwRenderStateSet(rwRENDERSTATEALPHATESTFUNCTIONREF, (void*)0);
 

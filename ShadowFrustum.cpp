@@ -118,7 +118,7 @@ void ShadowFrustum::DirectionalLightTransform(RwCamera* mainCam, const RW::V3d& 
             Desc[i].NearClip = -(extents.z < 500.0 ? 500.0 : extents.z);
             Desc[i].FarClip = 50.0f + -Desc[i].NearClip;
 
-            PrintMessage("%f", coors.z);
+           // PrintMessage("%f", coors.z);
 
             // Get position of the shadow camera
             XMVECTOR shadowPosition = frustumCenter + lightDirection /** -XMVectorGetZ(minExtents)*/;

@@ -251,7 +251,7 @@ void RenderEffects()
 #include "CHud.h"
 #include "CascadedShadowRendering.h"
 #include "CClouds.h"
-
+#include "VisibilityPlugins.h"
 void RenderDeferred()
 {
 	Renderer::RenderRoads();
@@ -263,7 +263,8 @@ void RenderDeferred()
 	CRenderer::RenderFadingInEntities();
 
 	BreakManager_c__Render(g_breakMan, 1);
-	CVisibilityPlugins__RenderWeaponPedsForPC();
+	//CVisibilityPlugins__RenderWeaponPedsForPC();
+	VisibilityPlugins::RenderWeaponPedsNoMuzzleFlash();
 }
 
 float CGameIdle::m_fShadowDNBalance=1.0;
@@ -322,6 +323,7 @@ void CGameIdle::RenderScene(){
 	}
 
 	gRenderState = stageForward;
+	RwD3D9RenderStateReset();
 	DefinedState();
 	RenderDeferred();
 	sub_707F40();
@@ -332,7 +334,7 @@ void CGameIdle::RenderScene(){
 	DefinedState();
 	
 	CWaterLevel::SetupWaterShader(); 
-	DeferredContext->RenderPostProcessing();
+	//DeferredContext->RenderPostProcessing();
 	//SoftParticlesContext->SetupParams();
 }
 

@@ -94,14 +94,14 @@ void DeferredRendering::BindLastPass()
 
 	//for(size_t i = 0; i < 4; i++)
 	//{
-	//	/*RwD3DDevice->SetSamplerState(i, D3DSAMP_MAGFILTER, D3DTEXF_LINEAR);
-	//	RwD3DDevice->SetSamplerState(i, D3DSAMP_MINFILTER, D3DTEXF_LINEAR);
-	//	RwD3DDevice->SetSamplerState(i, D3DSAMP_MIPFILTER, D3DTEXF_LINEAR);
-	//	RwD3DDevice->SetSamplerState(i, D3DSAMP_ADDRESSU, D3DTADDRESS_WRAP);
-	//	RwD3DDevice->SetSamplerState(i, D3DSAMP_ADDRESSV, D3DTADDRESS_WRAP);
-	//	RwD3DDevice->SetSamplerState(i, D3DSAMP_ADDRESSW, D3DTADDRESS_WRAP);*/
-	//	auto rasExt = RASTEREXTFROMRASTER(m_graphicsBuffer[i]);
-	//	RwD3DDevice->SetTexture(i + 1, rasExt->texture);
+	//	rwD3D9SetSamplerState(i, D3DSAMP_MAGFILTER, D3DTEXF_LINEAR);
+	//	rwD3D9SetSamplerState(i, D3DSAMP_MINFILTER, D3DTEXF_LINEAR);
+	//	rwD3D9SetSamplerState(i, D3DSAMP_MIPFILTER, D3DTEXF_LINEAR);
+	//	rwD3D9SetSamplerState(i, D3DSAMP_ADDRESSU, D3DTADDRESS_WRAP);
+	//	rwD3D9SetSamplerState(i, D3DSAMP_ADDRESSV, D3DTADDRESS_WRAP);
+	//	//rwD3D9SetSamplerState(i, D3DSAMP_ADDRESSW, D3DTADDRESS_WRAP);
+	//	//auto rasExt = RASTEREXTFROMRASTER(m_graphicsBuffer[i]);
+	//	//RwD3DDevice->SetTexture(i + 1, rasExt->texture);
 
 	//}
 
@@ -142,15 +142,15 @@ void DeferredRendering::BindLastPass()
 
 void DeferredRendering::RenderPostProcessing()
 {
-	//DefinedState();
-	//RwRenderStateSet(rwRENDERSTATEZWRITEENABLE, FALSE);
-	//RwRenderStateSet(rwRENDERSTATEZTESTENABLE, FALSE);
-	//RwD3D9SetRenderState(D3DRS_ALPHATESTENABLE, FALSE);
-	//RwRenderStateSet(rwRENDERSTATECULLMODE, (void*)rwCULLMODECULLNONE);
-	//RwD3D9SetRenderState(D3DRS_ALPHABLENDENABLE, TRUE);
-	//ShaderContext->SetInverseViewMatrix(0);
-	//ShaderContext->SetProjectionMatrix(4);
-	//VolumetricLight();
+	DefinedState();
+	RwRenderStateSet(rwRENDERSTATEZWRITEENABLE, FALSE);
+	RwRenderStateSet(rwRENDERSTATEZTESTENABLE, FALSE);
+	RwD3D9SetRenderState(D3DRS_ALPHATESTENABLE, FALSE);
+	RwRenderStateSet(rwRENDERSTATECULLMODE, (void*)rwCULLMODECULLNONE);
+	RwD3D9SetRenderState(D3DRS_ALPHABLENDENABLE, TRUE);
+	ShaderContext->SetInverseViewMatrix(0);
+	ShaderContext->SetProjectionMatrix(4);
+	VolumetricLight();
 }
 
 void DeferredRendering::DirectLight()
