@@ -10,8 +10,8 @@ constexpr int32_t TOTAL_TEMP_BUFFER_INDICES = 4096;
 constexpr int32_t TOTAL_TEMP_BUFFER_VERTICES = 2048;
 RxObjSpace3DVertex(&aTempBufferVertices)[TOTAL_TEMP_BUFFER_VERTICES] = *(RxObjSpace3DVertex(*)[TOTAL_TEMP_BUFFER_VERTICES])0xC4D958;
 
-void *IndexBuffer;
-void *VertexBuffer;
+void *IndexBuffer2;
+LPDIRECT3DVERTEXBUFFER9 VertexBuffer2;
 
 SoftParticles::SoftParticles()
 {
@@ -37,10 +37,10 @@ void SoftParticles::initGraphicsBuffer()
     VS_softParticles = RwCreateCompiledVertexShader("SoftParticlesVS");
     PS_softParticles = RwCreateCompiledPixelShader("SoftParticlesPS");
 
-    //RwUInt32 offset;
-    //_rwD3D9IndexBufferCreate(TOTAL_TEMP_BUFFER_INDICES, &IndexBuffer);
-    //RwD3D9CreateVertexBuffer(sizeof(RxD3D9Im3DVertex), TOTAL_TEMP_BUFFER_VERTICES * sizeof(RxD3D9Im3DVertex), (void**)&VertexBuffer, &offset);
-   // RwD3D9DynamicVertexBufferCreate(TOTAL_TEMP_BUFFER_VERTICES * sizeof(RxD3D9Im3DVertex), &VertexBuffer);
+    RwUInt32 offset;
+  //  _rwD3D9IndexBufferCreate(TOTAL_TEMP_BUFFER_INDICES, &IndexBuffer);
+   // RwD3D9CreateVertexBuffer(sizeof(RxD3D9Im3DVertex), TOTAL_TEMP_BUFFER_VERTICES * sizeof(RxD3D9Im3DVertex), &VertexBuffer2, &offset);
+      RwD3D9DynamicVertexBufferCreate(TOTAL_TEMP_BUFFER_VERTICES * sizeof(RxD3D9Im3DVertex), &VertexBuffer2);
 }
 
 void SoftParticles::SetupParams()
@@ -99,8 +99,11 @@ void SoftParticles::RenderEnd()
 
     RwUInt32 CurrentBaseIndex3D;
     LPDIRECT3DVERTEXBUFFER9 CurrentVertexBuffer3D;
-    if(RwD3D9DynamicVertexBufferLock(stride, numVerts, (void**)&CurrentVertexBuffer3D, &bufferMem, &CurrentBaseIndex3D))
-    {
+
+    VertexBuffer2->Lock(stride, numVerts, &bufferMem, D3DLOCK_DISCARD | D3DLOCK_NOSYSLOCK);
+
+   // if(RwD3D9DynamicVertexBufferLock(stride, numVerts, (void**)&CurrentVertexBuffer3D, &bufferMem, &CurrentBaseIndex3D))
+   // {
         RxD3D9Im3DVertex* desVerts = (RxD3D9Im3DVertex*)bufferMem;
         RwUInt32 i = numVerts;
         do
@@ -118,14 +121,16 @@ void SoftParticles::RenderEnd()
         }
         while(i);
 
-        RwD3D9DynamicVertexBufferUnlock(CurrentVertexBuffer3D);
-        RwD3D9SetStreamSource(0, CurrentVertexBuffer3D, 0, stride);
+        VertexBuffer2->Unlock();
+
+        // RwD3D9DynamicVertexBufferUnlock(CurrentVertexBuffer3D);
+         RwD3D9SetStreamSource(0, VertexBuffer2, 0, stride);
 
         SoftParticlesContext->SetupParams();
-        rwD3D9DrawPrimitive(D3DPT_TRIANGLELIST, CurrentBaseIndex3D, numVerts / 3);
+        rwD3D9DrawPrimitive(D3DPT_TRIANGLELIST, 0, numVerts / 3);
         _rwD3D9SetVertexShader(NULL);
         _rwD3D9SetPixelShader(NULL);
-    }
+  //  }
 
     g_fx.m_pVerts = aTempBufferVertices;
     g_fx.m_nVerticesCount2 = 0;
