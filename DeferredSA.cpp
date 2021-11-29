@@ -458,6 +458,9 @@ void RwD3D9EngineSetMultiSamplingLevels2(RwUInt32 numLevels)
 	SelectedMultisamplingLevelsNonMask = 0;
 }
 
+void fuc()
+{}
+
 void Hook()
 {
 	//CImmediateRender__Patch();
@@ -477,7 +480,7 @@ void Hook()
 	// Deferred shading don't work with multi sampling, so disable it.
 	patch::RedirectJump(0x007F8A90, RwD3D9ChangeMultiSamplingLevels2);
 	patch::RedirectJump(0x007F84F0, RwD3D9EngineSetMultiSamplingLevels2);
-
+	patch::RedirectJump(0X00732F30, fuc);
 	// Remove stencil shadows and sets new shadow mapping
 	plugin::patch::Nop(0x0053C1AB, 5); // CStencilShadows::Process
 
