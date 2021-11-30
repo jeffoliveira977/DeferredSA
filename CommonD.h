@@ -308,7 +308,6 @@ typedef void cDMAudio;
 #define RwResourcesFreeResEntry(entry) ((RwBool ( __cdecl*)(RwResEntry*))0x807DE0)(entry)
 #define RxPipelineDestroy(pipeline) ((void ( __cdecl*)(RxPipeline*))0x805820)(pipeline) 
 
-
 #define DEFERREDSHADERPATH "DeferredSA/shaders/binary/"
 
 void RwD3D9RestoreRenderTargets(int count);

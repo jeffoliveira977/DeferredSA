@@ -23,6 +23,7 @@
 #include "imgui_internal.h"
 #include "ShaderManager.h"
 #include "SoftParticles.h"
+#include "RenderableScene.h"
 void PipelinePlugins()
 {
 	SkinnedMeshPipe = new SkinnedMeshPipeline();
@@ -31,69 +32,6 @@ void PipelinePlugins()
 	VehicleMeshPipe = new VehicleMeshPipeline();
 }
 #include "PBSMaterial.h"
-
-HRESULT __fastcall CImmediateRender__DrawPrimitive_1(int _ecx, int _edx, IDirect3DDevice9* device, D3DPRIMITIVETYPE PrimitiveType, UINT StartVertex,
-													 UINT PrimitiveCount)
-{
-	HRESULT result;
-
-	SoftParticlesContext->SetupParams();
-	result = device->DrawPrimitive(PrimitiveType, StartVertex, PrimitiveCount);
-	return result;
-}
-
-HRESULT __fastcall CImmediateRender__DrawPrimitive_2(int _ecx, int _edx, IDirect3DDevice9* device, D3DPRIMITIVETYPE PrimitiveType, UINT StartVertex,
-													 UINT PrimitiveCount)
-{
-	HRESULT result;
-	SoftParticlesContext->SetupParams();
-	result = device->DrawPrimitive(PrimitiveType, StartVertex, PrimitiveCount);
-	return result;
-}
-
-HRESULT __fastcall CImmediateRender__DrawPrimitiveUp(int _ecx, int _edx, IDirect3DDevice9* device, D3DPRIMITIVETYPE PrimitiveType, UINT PrimitiveCount,
-													 const void* pVertexStreamZeroData, UINT VertexStreamZeroStride)
-{
-	HRESULT result;
-	SoftParticlesContext->SetupParams();
-	result = device->DrawPrimitiveUP(PrimitiveType, PrimitiveCount, pVertexStreamZeroData, VertexStreamZeroStride);
-
-	return result;
-}
-
-HRESULT __fastcall CImmediateRender__DrawIndexedPrimitive(int _ecx, int _edx, IDirect3DDevice9* device, D3DPRIMITIVETYPE Type, INT BaseVertexIndex,
-														  UINT MinIndex, UINT NumVertices, UINT StartIndex, UINT PrimitiveCount)
-{
-	HRESULT result;
-	SoftParticlesContext->SetupParams();
-	result = device->DrawIndexedPrimitive(Type, BaseVertexIndex, MinIndex, NumVertices, StartIndex, PrimitiveCount);
-	return result;
-}
-
-HRESULT __fastcall CImmediateRender__DrawIndexedPrimitiveUp(int _ecx, int _edx, IDirect3DDevice9* device, D3DPRIMITIVETYPE PrimitiveType,
-															UINT MinVertexIndex, UINT NumVertices, UINT PrimitiveCount, const void* pIndexData, D3DFORMAT IndexDataFormat, const void* pVertexStreamZeroData,
-															UINT VertexStreamZeroStride)
-{
-	HRESULT result;
-	SoftParticlesContext->SetupParams();
-	result = device->DrawIndexedPrimitiveUP(PrimitiveType, MinVertexIndex, NumVertices, PrimitiveCount, pIndexData, IndexDataFormat, pVertexStreamZeroData,
-											VertexStreamZeroStride);
-	return result;
-}
-
-void CImmediateRender__Patch()
-{
-	plugin::patch::Nop(0x80E560, 1);
-	plugin::patch::RedirectCall(0x80E561, CImmediateRender__DrawPrimitive_1);
-	plugin::patch::Nop(0x80E8D3, 1);
-	plugin::patch::RedirectCall(0x80E8D4, CImmediateRender__DrawPrimitive_2);
-	plugin::patch::Nop(0x80E931, 1);
-	plugin::patch::RedirectCall(0x80E932, CImmediateRender__DrawPrimitiveUp);
-	plugin::patch::Nop(0x80E707, 1);
-	plugin::patch::RedirectCall(0x80E708, CImmediateRender__DrawIndexedPrimitive);
-	plugin::patch::Nop(0x80E7B2, 1);
-	plugin::patch::RedirectCall(0x80E7B3, CImmediateRender__DrawIndexedPrimitiveUp);
-}
 
 #include "SpotlightShadow.h"
 void Initialize()
@@ -117,6 +55,8 @@ void Initialize()
 	SoftParticlesContext = new SoftParticles();
 	SoftParticlesContext->initGraphicsBuffer();
 	PBSMaterialMgr::LoadMaterials();
+
+	RenderableScene::InitGraphicsBuffer();
 
 	// Setup Dear ImGui context
 	IMGUI_CHECKVERSION();
@@ -268,17 +208,17 @@ void Render()
 	
 	int weight = 512;
 	MakeScreenQuad(0, 0, weight, weight);
-	RwRenderStateSet(rwRENDERSTATETEXTURERASTER, (void*)EnvironmentMapping::m_sphericalRaster);
+	RwRenderStateSet(rwRENDERSTATETEXTURERASTER, (void*)RenderableScene::m_raster);
 	RwIm2DRenderIndexedPrimitive(rwPRIMTYPETRILIST, screenQuad, 4, screenindices, 6);
-
+//	int weight = 512;
 	//MakeScreenQuad(weight, 0, weight, weight);
 	//RwRenderStateSet(rwRENDERSTATETEXTURERASTER, (void*)EnvironmentMapping::m_paraboloidRaster[1]);
 	//RwIm2DRenderIndexedPrimitive(rwPRIMTYPETRILIST, screenQuad, 4, screenindices, 6);
-	/*int weight = 512;
-	SetSurfaceD(0);
-	MakeScreenQuad(0, 0, weight, weight);
-	RwRenderStateSet(rwRENDERSTATETEXTURERASTER, (void*)EnvironmentMapping::m_paraboloidRaster[1]);
-	RwIm2DRenderIndexedPrimitive(rwPRIMTYPETRILIST, screenQuad, 4, screenindices, 6);*/
+	//int weight = 512;
+	//SetSurfaceD(0);
+	//MakeScreenQuad(0, 0, weight, weight);
+	//RwRenderStateSet(rwRENDERSTATETEXTURERASTER, (void*)EnvironmentMapping::m_paraboloidRaster[1]);
+	//RwIm2DRenderIndexedPrimitive(rwPRIMTYPETRILIST, screenQuad, 4, screenindices, 6);
 	//SetSurfaceD(1);
 	//MakeScreenQuad(weight, 0, weight, weight);
 	//RwRenderStateSet(rwRENDERSTATETEXTURERASTER, (void*)EnvironmentMapping::m_paraboloidRaster[1]);
@@ -378,8 +318,9 @@ void RenderRealTimeShadows(const RwV3d& sundir)
 	}
 }
 
+#include "GTADef.h"
 #include "CTimeCycle.h"
-
+#include "RenderableReflectionObjects.h"
 void CRealTimeShadowManager__Update()
 {
 	//ShadowCasterEntity->ClearCullList();
@@ -391,10 +332,33 @@ void CRealTimeShadowManager__Update()
 	//const auto curr_sun_dirvec = &sunDirs[curr_sun_dir];
 	////PrepareRealTimeShadows(sunDirs[curr_sun_dir]);
 	//RenderRealTimeShadows(*(RwV3d*)&g_vSunPosition);
-	// EnvironmentMapping::CubeMap();
+	
+
 	CascadedShadowManagement->Update();
 	//SpotShadow->Update();
-	EnvironmentMapping::SphericalMap();
+//	EnvironmentMapping::SphericalMap();
+	XMVECTOR minExtents, maxExtents;
+	minExtents = XMLoadFloat3(&CascadedShadowManagement->Desc[0].m_AABB.Min);
+	maxExtents = XMLoadFloat3(&CascadedShadowManagement->Desc[0].m_AABB.Max);
+
+	XMFLOAT3 extents;
+	XMStoreFloat3(&extents, maxExtents - minExtents);
+
+	float longEdge = max(extents.x, extents.y);
+	longEdge *= 0.5;
+	float nearClip = extents.z < 500.0 ? 500.0 : extents.z;
+	float farClip = nearClip;
+	RwV2d viewWindow = {longEdge, longEdge};
+	RwCamera* camera = Scene.m_pRwCamera;
+	RenderableReflectionObjects::Update();
+	 EnvironmentMapping::CubeMap();
+	 RenderableScene::m_list = RenderableReflectionObjects::GetRenderList();
+	 RenderableScene::m_frustumRenderable->m_viewWindow = viewWindow;
+	 RenderableScene::m_frustumRenderable->m_farPlane = CascadedShadowManagement->Desc[0].FarClip;
+	 RenderableScene::m_frustumRenderable->m_nearPlane = CascadedShadowManagement->Desc[0].NearClip;
+	// RenderableScene::m_frustumRenderable->LTM = RwFrameGetLTM(RwCameraGetFrame(camera));
+	 RenderableScene::m_frustumRenderable->LTM = (RwMatrix*)&XMMatrixInverse(0, CascadedShadowManagement->Desc[0].lightViewMatrix);
+	 RenderableScene::Render();
 }
 
 #include "CMirrors.h"
@@ -434,6 +398,7 @@ void ShutdowRenderware()
 	delete BuldingMeshPipe;
 	delete DefaultMeshPipe;
 	delete VehicleMeshPipe;
+	delete SoftParticlesContext;
 }
 
 #include "Immediate3D.h"

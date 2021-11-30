@@ -128,6 +128,10 @@
     <ClCompile Include="Mesh.cpp" />
     <ClCompile Include="PBSMaterial.cpp" />
     <ClCompile Include="PixelShaderState.cpp" />
+    <ClCompile Include="RenderableFrustum.cpp" />
+    <ClCompile Include="RenderableReflectionObjects.cpp" />
+    <ClCompile Include="RenderableScene.cpp" />
+    <ClCompile Include="RwIndexBuffer.cpp" />
     <ClCompile Include="ShaderManager.cpp" />
     <ClCompile Include="ShaderState.cpp" />
     <ClCompile Include="ShadowCaster.cpp" />
@@ -146,6 +150,7 @@
     <ClCompile Include="Renderer.cpp" />
     <ClCompile Include="RwMath.cpp" />
     <ClCompile Include="SkinnedMeshInstance.cpp" />
+    <ClCompile Include="VertexBuffer.cpp" />
     <ClCompile Include="VisibilityPlugins.cpp" />
     <ClCompile Include="Water.cpp" />
   </ItemGroup>
@@ -164,6 +169,10 @@
     <ClInclude Include="Mesh.h" />
     <ClInclude Include="PBSMaterial.h" />
     <ClInclude Include="PixelShaderState.h" />
+    <ClInclude Include="RenderableFrustum.h" />
+    <ClInclude Include="RenderableReflectionObjects.h" />
+    <ClInclude Include="RenderableScene.h" />
+    <ClInclude Include="RwIndexBuffer.h" />
     <ClInclude Include="ShaderManager.h" />
     <ClInclude Include="ShaderState.h" />
     <ClInclude Include="ShadowCaster.h" />
@@ -183,6 +192,7 @@
     <ClInclude Include="resource.h" />
     <ClInclude Include="RwMath.h" />
     <ClInclude Include="SkinnedMeshInstance.h" />
+    <ClInclude Include="VertexBuffer.h" />
     <ClInclude Include="VisibilityPlugins.h" />
     <ClInclude Include="Water.h" />
   </ItemGroup>

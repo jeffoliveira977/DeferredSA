@@ -4,32 +4,39 @@
 #include "DeferredRenderer.h"
 #include "Fx_c.h"
 #include "ShaderManager.h"
-
+#include "VertexBuffer.h"
 SoftParticles* SoftParticlesContext;
 constexpr int32_t TOTAL_TEMP_BUFFER_INDICES = 4096;
 constexpr int32_t TOTAL_TEMP_BUFFER_VERTICES = 2048;
 RxObjSpace3DVertex(&aTempBufferVertices)[TOTAL_TEMP_BUFFER_VERTICES] = *(RxObjSpace3DVertex(*)[TOTAL_TEMP_BUFFER_VERTICES])0xC4D958;
 
-void *IndexBuffer2;
-LPDIRECT3DVERTEXBUFFER9 VertexBuffer2;
-
 SoftParticles::SoftParticles()
 {
     VS_softParticles = nullptr;
     PS_softParticles = nullptr;
+    m_vertexBuffer = nullptr;
 }
 
 SoftParticles::~SoftParticles()
 {
     RwD3D9DeleteVertexShader(VS_softParticles);
-    RwD3D9DeletePixelShader(PS_softParticles);
+    RwD3D9DeletePixelShader(PS_softParticles); 
 }
 
 void SoftParticles::hook()
 {
-    plugin::patch::RedirectJump(0x004A1410, RenderAddTri);
-    plugin::patch::RedirectJump(0x004A13B0, RenderBegin);
-    plugin::patch::RedirectJump(0x004A1600, RenderEnd);
+    plugin::patch::RedirectCall(0x004A19A6, RenderBegin);
+    plugin::patch::RedirectCall(0x004A1EAC, RenderBegin);
+    plugin::patch::RedirectCall(0x004A2D7F, RenderBegin);
+    plugin::patch::RedirectCall(0x004A3B4B, RenderBegin);
+    plugin::patch::RedirectCall(0x004A20AE, RenderAddTri);
+    plugin::patch::RedirectCall(0x004A21AA, RenderAddTri);
+    plugin::patch::RedirectCall(0x004A3D74, RenderAddTri);
+    plugin::patch::RedirectCall(0x004A3E73, RenderAddTri);
+    plugin::patch::RedirectCall(0x004A1E9F, RenderEnd);
+    plugin::patch::RedirectCall(0x004A21BD, RenderEnd);
+    plugin::patch::RedirectCall(0x004A3B3A, RenderEnd);
+    plugin::patch::RedirectCall(0x004A3E87, RenderEnd);
 }
 
 void SoftParticles::initGraphicsBuffer()
@@ -37,16 +44,25 @@ void SoftParticles::initGraphicsBuffer()
     VS_softParticles = RwCreateCompiledVertexShader("SoftParticlesVS");
     PS_softParticles = RwCreateCompiledPixelShader("SoftParticlesPS");
 
-    RwUInt32 offset;
-  //  _rwD3D9IndexBufferCreate(TOTAL_TEMP_BUFFER_INDICES, &IndexBuffer);
-   // RwD3D9CreateVertexBuffer(sizeof(RxD3D9Im3DVertex), TOTAL_TEMP_BUFFER_VERTICES * sizeof(RxD3D9Im3DVertex), &VertexBuffer2, &offset);
-      RwD3D9DynamicVertexBufferCreate(TOTAL_TEMP_BUFFER_VERTICES * sizeof(RxD3D9Im3DVertex), &VertexBuffer2);
+    m_vertexBuffer = std::unique_ptr<VertexBuffer>(new VertexBuffer());
+    try
+    {
+        m_vertexBuffer->Allocate(TOTAL_TEMP_BUFFER_VERTICES, sizeof(RwIm3DVertex));
+    }
+    catch(const std::exception&e)
+    {
+        MessageBox(0, e.what(), "Error", MB_OK);
+        return;
+    }
 }
 
-void SoftParticles::SetupParams()
+void SoftParticles::Render()
 {
+    if(m_vertexBuffer == nullptr)
+        return;
+
     RwRenderStateSet(rwRENDERSTATETEXTUREFILTER, (void*)rwFILTERLINEAR);
-	RwRenderStateSet(rwRENDERSTATETEXTUREADDRESS, (void*)rwTEXTUREADDRESSWRAP);
+    RwRenderStateSet(rwRENDERSTATETEXTUREADDRESS, (void*)rwTEXTUREADDRESSWRAP);
 
     rwD3D9SetSamplerState(2, D3DSAMP_MAGFILTER, D3DTEXF_LINEAR);
     rwD3D9SetSamplerState(2, D3DSAMP_MINFILTER, D3DTEXF_LINEAR);
@@ -54,6 +70,7 @@ void SoftParticles::SetupParams()
     rwD3D9SetSamplerState(2, D3DSAMP_ADDRESSU, D3DTADDRESS_WRAP);
     rwD3D9SetSamplerState(2, D3DSAMP_ADDRESSV, D3DTADDRESS_WRAP);
     rwD3D9SetSamplerState(2, D3DSAMP_ADDRESSW, D3DTADDRESS_WRAP);
+    _rwD3D9RWSetRasterStage(DeferredContext->m_graphicsBuffer[1], 2);
 
     XMMATRIX worldMatrix = RwMatrixToXMMATRIX(g_fx.m_pTransformLTM);
     _rwD3D9SetVertexShaderConstant(0, &worldMatrix, 4);
@@ -61,10 +78,15 @@ void SoftParticles::SetupParams()
     _rwD3D9SetVertexShaderConstant(12, &TheCamera.GetPosition(), 1);
 
     ShaderContext->SetFogParams(0);
-    _rwD3D9RWSetRasterStage(DeferredContext->m_graphicsBuffer[1], 2);
     _rwD3D9SetVertexShader(VS_softParticles);
     _rwD3D9SetPixelShader(PS_softParticles);
 
+    _rwD3D9SetVertexDeclaration(VertexDeclIm3DOld);
+ 
+    m_vertexBuffer->Copy(3 * g_fx.m_nVerticesCount, aTempBufferVertices);
+    m_vertexBuffer->Set();
+
+    rwD3D9DrawPrimitive(D3DPT_TRIANGLELIST, 0, g_fx.m_nVerticesCount);
 }
 
 void SoftParticles::RenderBegin(RwRaster* raster, RwMatrix* transformLTM, unsigned int transformRenderFlags)
@@ -76,65 +98,7 @@ void SoftParticles::RenderBegin(RwRaster* raster, RwMatrix* transformLTM, unsign
     g_fx.m_nTransformRenderFlags = transformRenderFlags;
     g_fx.m_pVerts = aTempBufferVertices;
 
-    RwRaster* currRaster{};
-    RwRenderStateGet(rwRENDERSTATETEXTURERASTER, &currRaster);
-    if(currRaster != raster)
-        RwRenderStateSet(rwRENDERSTATETEXTURERASTER, (void*)raster);
-}
-
-void SoftParticles::RenderEnd()
-{
-    if(!g_fx.m_nVerticesCount)
-        return;
-
-    void* bufferMem = NULL;
-    RwUInt32 baseIndex = 0;
-
-    RwInt32 numVerts = 3 * g_fx.m_nVerticesCount;
-    RwIm3DVertex* verts = aTempBufferVertices;
-
-    _rwD3D9SetVertexDeclaration(VertexDeclIm3D);
-
-    RwInt32 stride = sizeof(RxD3D9Im3DVertex);
-
-    RwUInt32 CurrentBaseIndex3D;
-    LPDIRECT3DVERTEXBUFFER9 CurrentVertexBuffer3D;
-
-    VertexBuffer2->Lock(stride, numVerts, &bufferMem, D3DLOCK_DISCARD | D3DLOCK_NOSYSLOCK);
-
-   // if(RwD3D9DynamicVertexBufferLock(stride, numVerts, (void**)&CurrentVertexBuffer3D, &bufferMem, &CurrentBaseIndex3D))
-   // {
-        RxD3D9Im3DVertex* desVerts = (RxD3D9Im3DVertex*)bufferMem;
-        RwUInt32 i = numVerts;
-        do
-        {
-            desVerts->x = verts->objVertex.x;
-            desVerts->y = verts->objVertex.y;
-            desVerts->z = verts->objVertex.z;
-            desVerts->color = verts->color;
-            desVerts->u = verts->u;
-            desVerts->v = verts->v;
-
-            desVerts++;
-            verts++;
-            i--;
-        }
-        while(i);
-
-        VertexBuffer2->Unlock();
-
-        // RwD3D9DynamicVertexBufferUnlock(CurrentVertexBuffer3D);
-         RwD3D9SetStreamSource(0, VertexBuffer2, 0, stride);
-
-        SoftParticlesContext->SetupParams();
-        rwD3D9DrawPrimitive(D3DPT_TRIANGLELIST, 0, numVerts / 3);
-        _rwD3D9SetVertexShader(NULL);
-        _rwD3D9SetPixelShader(NULL);
-  //  }
-
-    g_fx.m_pVerts = aTempBufferVertices;
-    g_fx.m_nVerticesCount2 = 0;
-    g_fx.m_nVerticesCount = 0;
+    RwRenderStateSet(rwRENDERSTATETEXTURERASTER, (void*)raster);
 }
 
 void SoftParticles::RenderAddTri(float x1, float y1, float z1,
@@ -176,4 +140,16 @@ void SoftParticles::RenderAddTri(float x1, float y1, float z1,
     {
         RenderEnd();
     }
+}
+
+void SoftParticles::RenderEnd()
+{
+    if(!g_fx.m_nVerticesCount)
+        return;
+
+    SoftParticlesContext->Render();
+
+    g_fx.m_pVerts = aTempBufferVertices;
+    g_fx.m_nVerticesCount2 = 0;
+    g_fx.m_nVerticesCount = 0;
 }

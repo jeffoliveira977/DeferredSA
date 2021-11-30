@@ -200,23 +200,29 @@ void RenderFrustum()
 	XMFLOAT3 extents;
 	XMStoreFloat3(&extents, maxExtents - minExtents);
 
-	float longEdge = max(extents.x, extents.y);
-	longEdge *= 0.5;
-	float nearClip = extents.z < 500.0 ? 500.0 : extents.z;
-	float farClip = nearClip;
+	//float longEdge = max(extents.x, extents.y);
+	//longEdge *= 0.5;
+	//float nearClip = extents.z < 500.0 ? 500.0 : extents.z;
+	//float farClip = nearClip;
 
-	Math::AABB box = CascadedShadowManagement->Desc[0].m_FrustumCulling.GetBoundingBox();
+	//Math::AABB box = CascadedShadowManagement->Desc[0].m_FrustumCulling.GetBoundingBox();
 
-	float e = (box.Max.z - abs(box.Min.z)) * 0.5;
-	float c = (box.Max.z + abs(box.Min.z) * 2);
+	//float e = (box.Max.z - abs(box.Min.z)) * 0.5;
+	//float c = (box.Max.z + abs(box.Min.z) * 2);
+	//RwReal depth[3];
+	//depth[0] = 1.0f;
+	//depth[1] = CascadedShadowManagement->Desc[0].NearClip;
+	//depth[2] = CascadedShadowManagement->Desc[0].FarClip;
+	//
+	////PrintMessage("%f %f", longEdge,(box.Max.y));
+	RwV2d offset = {0, 0};
+	//RwV2d viewWindow = {longEdge, longEdge};
+
 	RwReal depth[3];
 	depth[0] = 1.0f;
-	depth[1] = CascadedShadowManagement->Desc[0].NearClip;
-	depth[2] = CascadedShadowManagement->Desc[0].FarClip;
-	//PrintMessage("%f %f", longEdge,(box.Max.y));
-	RwV2d offset = {0, 0};
-	RwV2d viewWindow = {longEdge, longEdge};
-
+	depth[1] = EnvironmentMapping::m_envCamera->nearPlane;
+	depth[2] = EnvironmentMapping::m_envCamera->farPlane;
+	RwV2d viewWindow = {EnvironmentMapping::m_envCamera->viewWindow.x, EnvironmentMapping::m_envCamera->viewWindow.y};
 	 /* Origin */
 	RwIm3DVertexSetPos(&frustum[k],0, 0, 0.0f);
 	k++;
@@ -268,8 +274,8 @@ void RenderFrustum()
 	RwRenderStateSet(rwRENDERSTATESHADEMODE, (void*)rwSHADEMODEFLAT);
 	RwRenderStateSet(rwRENDERSTATETEXTURERASTER, (void*)NULL);
 
-	// LTM = RwFrameGetLTM(RwCameraGetFrame(CascadedShadowManagement->m_pShadowCamera[0]));
-	LTM = (RwMatrix*)&XMMatrixInverse(0, CascadedShadowManagement->Desc[0].lightViewMatrix);
+	 LTM = RwFrameGetLTM(RwCameraGetFrame(EnvironmentMapping::m_envCamera));
+	//LTM = (RwMatrix*)&XMMatrixInverse(0, CascadedShadowManagement->Desc[0].lightViewMatrix);
 
 	/*
 	 * Draw Lines...
@@ -1048,7 +1054,47 @@ void EnvironmentMapping::RenderOneFace(
 	m_renderCallback();
 	RwCameraEndUpdate(m_envCamera);
 }
+D3DXMATRIX WINAPI DXUTGetCubeMapViewMatrix(DWORD dwFace)
+{
+	D3DXVECTOR3 vEyePt = D3DXVECTOR3(0.0f, 0.0f, 0.0f);
+	D3DXVECTOR3 vLookDir;
+	D3DXVECTOR3 vUpDir;
 
+	switch(dwFace)
+	{
+		case D3DCUBEMAP_FACE_POSITIVE_X:
+			vLookDir = D3DXVECTOR3(1.0f, 0.0f, 0.0f);
+			vUpDir = D3DXVECTOR3(0.0f, 1.0f, 0.0f);
+			break;
+		case D3DCUBEMAP_FACE_NEGATIVE_X:
+			vLookDir = D3DXVECTOR3(-1.0f, 0.0f, 0.0f);
+			vUpDir = D3DXVECTOR3(0.0f, 1.0f, 0.0f);
+			break;
+		case D3DCUBEMAP_FACE_POSITIVE_Y:
+			vLookDir = D3DXVECTOR3(0.0f, 1.0f, 0.0f);
+			vUpDir = D3DXVECTOR3(0.0f, 0.0f, -1.0f);
+			break;
+		case D3DCUBEMAP_FACE_NEGATIVE_Y:
+			vLookDir = D3DXVECTOR3(0.0f, -1.0f, 0.0f);
+			vUpDir = D3DXVECTOR3(0.0f, 0.0f, 1.0f);
+			break;
+		case D3DCUBEMAP_FACE_POSITIVE_Z:
+			vLookDir = D3DXVECTOR3(0.0f, 0.0f, 1.0f);
+			vUpDir = D3DXVECTOR3(0.0f, 1.0f, 0.0f);
+			break;
+		case D3DCUBEMAP_FACE_NEGATIVE_Z:
+			vLookDir = D3DXVECTOR3(0.0f, 0.0f, -1.0f);
+			vUpDir = D3DXVECTOR3(0.0f, 1.0f, 0.0f);
+			break;
+	}
+
+	// Set the view transform for this cubemap surface
+	D3DXMATRIXA16 mView;
+	D3DXMatrixLookAtLH(&mView, &vEyePt, &vLookDir, &vUpDir);
+	return mView;
+}
+
+#include "RenderableReflectionObjects.h"
 void EnvironmentMapping::CubeMap()
 {
 	if(m_renderCallback == nullptr)
@@ -1062,6 +1108,8 @@ void EnvironmentMapping::CubeMap()
 	RwV2d view;
 	view.x = view.y = 0.4;
 	RwCameraSetViewWindow(m_envCamera, &view);
+	D3DXMATRIXA16 mProj;
+	D3DXMatrixPerspectiveFovLH(&mProj, D3DX_PI * 0.5f, 1.0f, 0.05f, 1000.0f);
 
 	for(int i = 0; i < 6; i++)
 	{
@@ -1092,6 +1140,12 @@ void EnvironmentMapping::CubeMap()
 				RwFrameRotate(m_envFrame, &Yaxis, 180, rwCOMBINEPOSTCONCAT);
 				break;
 		}
+		auto view = DXUTGetCubeMapViewMatrix(i);
+
+		D3DXMATRIX outtrans;
+		D3DXMatrixTranslation(&outtrans, pos.x, pos.y, pos.z);
+		view *= outtrans;
+		D3DXMatrixInverse(&view, 0, &view);
 		RwFrameTranslate(m_envFrame, (RwV3d*)&pos, rwCOMBINEPOSTCONCAT);
 		RwFrameUpdateObjects(m_envFrame);
 
@@ -1099,8 +1153,29 @@ void EnvironmentMapping::CubeMap()
 		RwCameraSetRaster(m_envCamera, m_cubeRaster);
 		RwCameraClear(m_envCamera, &ambient, rwCAMERACLEARIMAGE | rwCAMERACLEARZ);
 		RwCameraBeginUpdate(m_envCamera);
+		//RwD3D9SetTransform(D3DTS_VIEW, &view);
+		//RwD3D9SetTransform(D3DTS_PROJECTION, &mProj);
+
 		ShaderContext->SetViewProjectionMatrix(4, true);
-		m_renderCallback();
+
+		
+		//m_renderCallback();
+		auto renderList = RenderableReflectionObjects::GetRenderList();
+		for(auto& entity : renderList)
+		{
+			if(entity->m_pRwObject)
+			{
+				entity->m_bImBeingRendered = true;
+
+				if(entity->m_pRwObject->type == rpATOMIC)
+					RpAtomicRender(entity->m_pRwAtomic);
+				else
+					RpClumpRender(entity->m_pRwClump);
+
+				entity->m_bImBeingRendered = false;
+			}
+		}
+
 		RwCameraEndUpdate(m_envCamera);
 	}
 }
