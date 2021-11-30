@@ -14,7 +14,7 @@ char cPath[MAX_PATH];
 CascadedShadowRendering::CascadedShadowRendering()
 {
     ShadowSize = 1024 * 2;
-    CascadeCount = 4;
+    CascadeCount = 3;
     FilterSize = 40.0f;
      MinDistance = 2.0;
      MaxDistance = 100.0;
@@ -194,20 +194,21 @@ void CascadedShadowRendering::Update()
         extents.z = Desc[i].m_AABB.Max.z - Desc[i].m_AABB.Min.z;
 
         RwV2d viewWindow;
-        viewWindow.x = viewWindow.y = max(extents.x, extents.y);
-          RwV2dScaleMacro(&viewWindow, &viewWindow, 0.5/2.0);
+        viewWindow.x = viewWindow.y = std::max(extents.x, extents.y);
+        RwV2dScaleMacro(&viewWindow, &viewWindow, 0.5);
         RwCameraSetViewWindow(m_pShadowCamera[i], &viewWindow);
 
-        float nearClip = extents.z < 500.0 ? 500.0 : extents.z;
-        float farClip = 50.0 + extents.z;
-        RwCameraSetNearClipPlane(m_pShadowCamera[i], -nearClip);
-        RwCameraSetFarClipPlane(m_pShadowCamera[i], farClip);
+        Desc[i].NearClip = -(extents.z < 500.0 ? 500.0 : extents.z);
+        Desc[i].FarClip = 50.0f + -Desc[i].NearClip;
+
+        RwCameraSetNearClipPlane(m_pShadowCamera[i], Desc[i].NearClip);
+        RwCameraSetFarClipPlane(m_pShadowCamera[i], Desc[i].FarClip);
 
         RwCameraSetProjection(m_pShadowCamera[i], rwPARALLEL);
         RwCameraClear(m_pShadowCamera[i], gColourTop, rwCAMERACLEARIMAGE | rwCAMERACLEARZ);
         RwCameraBeginUpdate(m_pShadowCamera[i]);
 
-        RwD3D9SetTransform(D3DTS_VIEW, &Desc[i].lightViewMatrix);
+          RwD3D9SetTransform(D3DTS_VIEW, &Desc[i].lightViewMatrix);
         RwD3D9SetTransform(D3DTS_PROJECTION, &Desc[i].lightOrthoMatrix);
 
         // Render entities

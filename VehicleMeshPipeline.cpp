@@ -80,13 +80,13 @@ void VehicleMeshPipeline::hook()
 	patch::RedirectJump(0x005D9F80, CCustomCarEnvMapPipeline__CreateCustomOpenGLObjPipe);
 }
 
-void VehicleMeshPipeline::reflectionRendering(RwResEntry* entry, void* object, RwUInt32 flags)
+void VehicleMeshPipeline::ReflectionRendering(RwResEntry* entry, void* object, RwUInt32 flags)
 {
 
-	//CVehicleDrawable::deferredRendering(entry, object, flags);
+	//CVehicleDrawable::DeferredRendering(entry, object, flags);
 }
 
-void VehicleMeshPipeline::deferredRendering(RwResEntry* entry, void* object, RwUInt32 flags)
+void VehicleMeshPipeline::DeferredRendering(RwResEntry* entry, void* object, RwUInt32 flags)
 {
 	RxD3D9ResEntryHeader* header;
 	RxD3D9InstanceData* instance;
@@ -94,7 +94,7 @@ void VehicleMeshPipeline::deferredRendering(RwResEntry* entry, void* object, RwU
 	header = (RxD3D9ResEntryHeader*)(entry + 1);
 	instance = (RxD3D9InstanceData*)(header + 1);
 
-	CDrawable::deferredRendering(entry, object, flags);
+	MeshRenderingMode::DeferredRendering(entry, object, flags);
 
 	RwMatrix* LTM = RwFrameGetLTM(RpAtomicGetFrame(object));
 	XMMATRIX worldMatrix = RwMatrixToXMMATRIX(LTM);
@@ -182,7 +182,7 @@ void VehicleMeshPipeline::deferredRendering(RwResEntry* entry, void* object, RwU
 	}
 }
 
-void VehicleMeshPipeline::forwardRendering(RwResEntry* entry, void* object, RwUInt32 flags)
+void VehicleMeshPipeline::ForwardRendering(RwResEntry* entry, void* object, RwUInt32 flags)
 {
 	RxD3D9ResEntryHeader* header;
 	RxD3D9InstanceData* instance;
@@ -190,7 +190,7 @@ void VehicleMeshPipeline::forwardRendering(RwResEntry* entry, void* object, RwUI
 	header = (RxD3D9ResEntryHeader*)(entry + 1);
 	instance = (RxD3D9InstanceData*)(header + 1);
 
-	CDrawable::forwardRendering(entry, object, flags);
+	MeshRenderingMode::ForwardRendering(entry, object, flags);
 
 	RwMatrix* LTM = RwFrameGetLTM(RpAtomicGetFrame(object));
 	XMMATRIX worldMatrix = RwMatrixToXMMATRIX(LTM);
@@ -206,7 +206,11 @@ void VehicleMeshPipeline::forwardRendering(RwResEntry* entry, void* object, RwUI
 	fog[1] = CTimeCycle::m_CurrentColours.m_fFarClip;
 	_rwD3D9SetPixelShaderConstant(12, fog, 1);
 	_rwD3D9SetPixelShaderConstant(13, &TheCamera.GetPosition(), 1);
+	RwRenderStateSet(rwRENDERSTATESRCBLEND, (void*)rwBLENDSRCALPHA);
+	RwRenderStateSet(rwRENDERSTATEDESTBLEND, (void*)rwBLENDINVSRCALPHA);
 
+	RwD3D9SetRenderState(D3DRS_ALPHABLENDENABLE, TRUE);
+	RwD3D9SetRenderState(D3DRS_ALPHATESTENABLE, TRUE);
 
 	int numMeshes = header->numMeshes;
 	while(numMeshes--)
@@ -223,9 +227,9 @@ void VehicleMeshPipeline::forwardRendering(RwResEntry* entry, void* object, RwUI
 		hasAlpha = material->texture && RwD3D9TextureHasAlpha(material->texture);
 
 		if(hasAlpha)
-			RwRenderStateSet(rwRENDERSTATEALPHATESTFUNCTIONREF, (void*)120);
+			RwRenderStateSet(rwRENDERSTATEALPHATESTFUNCTIONREF, (void*)40);
 		else
-			RwRenderStateSet(rwRENDERSTATEALPHATESTFUNCTIONREF, 0);
+			RwRenderStateSet(rwRENDERSTATEALPHATESTFUNCTIONREF, (void*)0);
 
 		if(hasAlpha || instance->vertexAlpha || matcolor->alpha != 255)
 		{

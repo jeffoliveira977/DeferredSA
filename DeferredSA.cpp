@@ -32,69 +32,6 @@ void PipelinePlugins()
 }
 #include "PBSMaterial.h"
 
-HRESULT __fastcall CImmediateRender__DrawPrimitive_1(int _ecx, int _edx, IDirect3DDevice9* device, D3DPRIMITIVETYPE PrimitiveType, UINT StartVertex,
-													 UINT PrimitiveCount)
-{
-	HRESULT result;
-
-	SoftParticlesContext->SetupParams();
-	result = device->DrawPrimitive(PrimitiveType, StartVertex, PrimitiveCount);
-	return result;
-}
-
-HRESULT __fastcall CImmediateRender__DrawPrimitive_2(int _ecx, int _edx, IDirect3DDevice9* device, D3DPRIMITIVETYPE PrimitiveType, UINT StartVertex,
-													 UINT PrimitiveCount)
-{
-	HRESULT result;
-	SoftParticlesContext->SetupParams();
-	result = device->DrawPrimitive(PrimitiveType, StartVertex, PrimitiveCount);
-	return result;
-}
-
-HRESULT __fastcall CImmediateRender__DrawPrimitiveUp(int _ecx, int _edx, IDirect3DDevice9* device, D3DPRIMITIVETYPE PrimitiveType, UINT PrimitiveCount,
-													 const void* pVertexStreamZeroData, UINT VertexStreamZeroStride)
-{
-	HRESULT result;
-	SoftParticlesContext->SetupParams();
-	result = device->DrawPrimitiveUP(PrimitiveType, PrimitiveCount, pVertexStreamZeroData, VertexStreamZeroStride);
-
-	return result;
-}
-
-HRESULT __fastcall CImmediateRender__DrawIndexedPrimitive(int _ecx, int _edx, IDirect3DDevice9* device, D3DPRIMITIVETYPE Type, INT BaseVertexIndex,
-														  UINT MinIndex, UINT NumVertices, UINT StartIndex, UINT PrimitiveCount)
-{
-	HRESULT result;
-	SoftParticlesContext->SetupParams();
-	result = device->DrawIndexedPrimitive(Type, BaseVertexIndex, MinIndex, NumVertices, StartIndex, PrimitiveCount);
-	return result;
-}
-
-HRESULT __fastcall CImmediateRender__DrawIndexedPrimitiveUp(int _ecx, int _edx, IDirect3DDevice9* device, D3DPRIMITIVETYPE PrimitiveType,
-															UINT MinVertexIndex, UINT NumVertices, UINT PrimitiveCount, const void* pIndexData, D3DFORMAT IndexDataFormat, const void* pVertexStreamZeroData,
-															UINT VertexStreamZeroStride)
-{
-	HRESULT result;
-	SoftParticlesContext->SetupParams();
-	result = device->DrawIndexedPrimitiveUP(PrimitiveType, MinVertexIndex, NumVertices, PrimitiveCount, pIndexData, IndexDataFormat, pVertexStreamZeroData,
-											VertexStreamZeroStride);
-	return result;
-}
-
-void CImmediateRender__Patch()
-{
-	plugin::patch::Nop(0x80E560, 1);
-	plugin::patch::RedirectCall(0x80E561, CImmediateRender__DrawPrimitive_1);
-	plugin::patch::Nop(0x80E8D3, 1);
-	plugin::patch::RedirectCall(0x80E8D4, CImmediateRender__DrawPrimitive_2);
-	plugin::patch::Nop(0x80E931, 1);
-	plugin::patch::RedirectCall(0x80E932, CImmediateRender__DrawPrimitiveUp);
-	plugin::patch::Nop(0x80E707, 1);
-	plugin::patch::RedirectCall(0x80E708, CImmediateRender__DrawIndexedPrimitive);
-	plugin::patch::Nop(0x80E7B2, 1);
-	plugin::patch::RedirectCall(0x80E7B3, CImmediateRender__DrawIndexedPrimitiveUp);
-}
-
 #include "SpotlightShadow.h"
 void Initialize()
 {
@@ -382,7 +319,7 @@ void RenderRealTimeShadows(const RwV3d& sundir)
 
 void CRealTimeShadowManager__Update()
 {
-	ShadowCasterEntity->ClearCullList();
+	//ShadowCasterEntity->ClearCullList();
 	ShadowCasterEntity->Update(GetSectorX(CRenderer::ms_vecCameraPosition.x), GetSectorY(CRenderer::ms_vecCameraPosition.y));
 	//CVector g_vSunPosition;
 	//GetSunPosn(&g_vSunPosition, CTimeCycle::m_CurrentColours.m_fFarClip);
@@ -393,7 +330,7 @@ void CRealTimeShadowManager__Update()
 	//RenderRealTimeShadows(*(RwV3d*)&g_vSunPosition);
 	// EnvironmentMapping::CubeMap();
 	CascadedShadowManagement->Update();
-	SpotShadow->Update();
+	//SpotShadow->Update();
 	EnvironmentMapping::SphericalMap();
 }
 
@@ -441,7 +378,6 @@ void ShutdowRenderware()
 using namespace plugin;
 HINSTANCE dllModule;
 
-
 RwUInt32& SelectedMultisamplingLevels = *(RwUInt32*)0x008E2430;
 RwUInt32& SelectedMultisamplingLevelsNonMask = *(RwUInt32*)0x008E2438;
 
@@ -457,9 +393,7 @@ void RwD3D9EngineSetMultiSamplingLevels2(RwUInt32 numLevels)
 	SelectedMultisamplingLevels = 0;
 	SelectedMultisamplingLevelsNonMask = 0;
 }
-
-void fuc()
-{}
+#include "VisibilityPlugins.h"
 
 void Hook()
 {
@@ -476,28 +410,27 @@ void Hook()
 	plugin::Events::d3dLostEvent += LostDevice;
 	plugin::Events::d3dResetEvent += ResetDevice;
 
-
 	// Deferred shading don't work with multi sampling, so disable it.
 	patch::RedirectJump(0x007F8A90, RwD3D9ChangeMultiSamplingLevels2);
 	patch::RedirectJump(0x007F84F0, RwD3D9EngineSetMultiSamplingLevels2);
-	patch::RedirectJump(0X00732F30, fuc);
+
 	// Remove stencil shadows and sets new shadow mapping
 	plugin::patch::Nop(0x0053C1AB, 5); // CStencilShadows::Process
 
 	//plugin::patch::RedirectJump(0x00706AB0, CRealTimeShadowManager__Update);
 	//plugin::patch::RedirectCall(0x0053EA12, CMirrors__BeforeMainRender);
+	VisibilityPlugins::Patch();
+	Immediate3D__Hook();
+	 SoftParticlesContext->hook();
 
-	//Immediate3D__Hook();
-	SoftParticlesContext->hook();
-
-	/*plugin::patch::RedirectJump(0x00734570, Renderer::InsertEntityIntoSortedList);
-	plugin::patch::RedirectJump(0x005534B0, Renderer::AddEntityToRenderList);
-	plugin::patch::RedirectJump(0x00553710, Renderer::AddToLodRenderList);
-	plugin::patch::RedirectJump(0x00553260, Renderer::RenderOneNonRoad);
-	plugin::patch::RedirectJump(0x00553AA0, Renderer::RenderEverythingBarRoads);
-	plugin::patch::RedirectJump(0x00553A10, Renderer::RenderRoads);
+	//plugin::patch::RedirectJump(0x00734570, Renderer::InsertEntityIntoSortedList);
+	//plugin::patch::RedirectJump(0x005534B0, Renderer::AddEntityToRenderList);
+	//plugin::patch::RedirectJump(0x00553710, Renderer::AddToLodRenderList);
+	//plugin::patch::RedirectJump(0x00553260, Renderer::RenderOneNonRoad);
+	//plugin::patch::RedirectJump(0x00553AA0, Renderer::RenderEverythingBarRoads);
+	//plugin::patch::RedirectJump(0x00553A10, Renderer::RenderRoads);
 	plugin::patch::RedirectJump(0x005556E0, Renderer::ConstructRenderList);
-	plugin::patch::RedirectJump(0x00553910, Renderer::PreRender);*/
+	plugin::patch::RedirectJump(0x00553910, Renderer::PreRender);
 	plugin::patch::RedirectCall(0x0053E9F1, RsMouseSetPos_hook);
 
 	Lights::Patch();

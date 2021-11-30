@@ -1,7 +1,7 @@
 #pragma once
 #include "CDrawable.h"
 
-class SkinnedMeshPipeline : public CDrawable
+class SkinnedMeshPipeline : public MeshRenderingMode
 {
 protected:
 	void* reflectionParaboloidVS;
@@ -13,10 +13,10 @@ protected:
 	void* VS_waterReflection;
 	void* PS_waterReflection;
 
-	void SkinnedMeshPipeline::cascadeShadowRendering(RwResEntry* entry, void* object, RwUInt32 flags);
-	void reflectionRendering(RwResEntry* entry, void* object, RwUInt32 flags);
-	void deferredRendering(RwResEntry* entry, void* object, RwUInt32 flags);
-	void forwardRendering(RwResEntry* entry, void* object, RwUInt32 flags);
+	void ShadowRendering(RwResEntry* entry, void* object, RwUInt32 flags);
+	void ReflectionRendering(RwResEntry* entry, void* object, RwUInt32 flags);
+	void DeferredRendering(RwResEntry* entry, void* object, RwUInt32 flags);
+	void ForwardRendering(RwResEntry* entry, void* object, RwUInt32 flags);
 public:
 	static void hook();
 	RxPipeline* initGraphics();

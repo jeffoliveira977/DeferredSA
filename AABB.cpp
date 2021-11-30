@@ -70,46 +70,47 @@ namespace Math
 
 	bool AABB::Intersects(XMFLOAT4 plane)
 	{
-		float d = max(Min.x * plane.x, Max.x * plane.x)
-				+ max(Min.y * plane.y, Max.y * plane.y)
-				+ max(Min.z * plane.z, Max.z * plane.z)
+		bool falseNegative = false;
+		float d = std::max(Min.x * plane.x, Max.x * plane.x)
+				+ std::max(Min.y * plane.y, Max.y * plane.y)
+				+ std::max(Min.z * plane.z, Max.z * plane.z)
 				+ plane.w;
 
 		return d > 0.0;
 
-		/*bool intersect = false;
-		if(plane.x * Min.x + plane.y * Min.y + plane.z * Min.z + plane.w > 0.0)
-			intersect = true;
-		if(plane.x * Max.x + plane.y * Min.y + plane.z * Min.z + plane.w > 0.0)
-			intersect = true;
-		if(plane.x * Min.x + plane.y * Max.y + plane.z * Min.z + plane.w > 0.0)
-			intersect = true;
-		if(plane.x * Max.x + plane.y * Max.y + plane.z * Min.z + plane.w > 0.0)
-			intersect = true;
-		if(plane.x * Min.x + plane.y * Min.y + plane.z * Max.z + plane.w > 0.0)
-			intersect = true;
-		if(plane.x * Max.x + plane.y * Min.y + plane.z * Max.z + plane.w > 0.0)
-			intersect = true;
-		if(plane.x * Min.x + plane.y * Max.y + plane.z * Max.z + plane.w > 0.0)
-			intersect = true;
-		if(plane.x * Max.x + plane.y * Max.y + plane.z * Max.z + plane.w > 0.0)
-			intersect = true;
+		//bool intersect = false;
+		//if(plane.x * Min.x + plane.y * Min.y + plane.z * Min.z + plane.w > 0.0)
+		//	intersect = true;
+		//if(plane.x * Max.x + plane.y * Min.y + plane.z * Min.z + plane.w > 0.0)
+		//	intersect = true;
+		//if(plane.x * Min.x + plane.y * Max.y + plane.z * Min.z + plane.w > 0.0)
+		//	intersect = true;
+		//if(plane.x * Max.x + plane.y * Max.y + plane.z * Min.z + plane.w > 0.0)
+		//	intersect = true;
+		//if(plane.x * Min.x + plane.y * Min.y + plane.z * Max.z + plane.w > 0.0)
+		//	intersect = true;
+		//if(plane.x * Max.x + plane.y * Min.y + plane.z * Max.z + plane.w > 0.0)
+		//	intersect = true;
+		//if(plane.x * Min.x + plane.y * Max.y + plane.z * Max.z + plane.w > 0.0)
+		//	intersect = true;
+		//if(plane.x * Max.x + plane.y * Max.y + plane.z * Max.z + plane.w > 0.0)
+		//	intersect = true;
 
-		return intersect;*/
+		//return intersect;
 
-		/*XMFLOAT3 PP = Min; 
-		if(plane.x >= 0)
-			PP.x = Max.x;
-		if(plane.y >= 0)
-			PP.y = Max.y;
-		if(plane.z >= 0)
-			PP.z = Max.z;
+		//XMFLOAT3 PP = Min; 
+		//if(plane.x >= 0)
+		//	PP.x = Max.x;
+		//if(plane.y >= 0)
+		//	PP.y = Max.y;
+		//if(plane.z >= 0)
+		//	PP.z = Max.z;
 
-		XMVECTOR V = XMLoadFloat3(&PP);
-		XMVECTOR P = XMLoadFloat4(&plane);
+		//XMVECTOR V = XMLoadFloat3(&PP);
+		//XMVECTOR P = XMLoadFloat4(&plane);
 
-		float d = XMVectorGetX(XMPlaneDotCoord(P, V));
-		return d > 0.0;*/
+		//float d = XMVectorGetX(XMPlaneDotCoord(P, V));
+		//return d > 0.0;
 	}
 
 	bool AABB::Contains(Frustum frustum)

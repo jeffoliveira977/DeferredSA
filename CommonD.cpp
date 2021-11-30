@@ -22,22 +22,32 @@ inline bool exists_test0(const std::string& name)
 void rwD3D9SetSamplerState(RwUInt32 stage, RwUInt32 type, RwUInt32 value)
 {
 	// Renderware has 8 sample state limit
-	//if(stage < 8)
-	//	RwD3D9SetSamplerState(stage, type, value);
-	//else
+	if(stage < 8)
+		RwD3D9SetSamplerState(stage, type, value);
+	else
 		RwD3DDevice->SetSamplerState(stage, (D3DSAMPLERSTATETYPE)type, value);
 }
 
 void rwD3D9RWSetRasterStage(RwRaster *raster, RwUInt32 stage)
 {
 	// Renderware has 8 sample state limit
-	//if(stage < 8)
-	//	_rwD3D9RWSetRasterStage(raster, stage);
-	//else
+	if(stage < 8)
+		_rwD3D9RWSetRasterStage(raster, stage);
+	else
 	{
 		auto rasExt = RASTEREXTFROMRASTER(raster);
 		RwD3DDevice->SetTexture(stage, rasExt->texture);
 	}
+}
+
+void _rwD3D9GetVertexShaderConstant(RwUInt32 registerAddress, void* constantData, RwUInt32 constantCount)
+{
+	RwD3DDevice->GetVertexShaderConstantF(registerAddress, (float*)constantData, constantCount);
+}
+
+void _rwD3D9GetPixelShaderConstant(RwUInt32 registerAddress, void* constantData, RwUInt32 constantCount)
+{
+	RwD3DDevice->GetPixelShaderConstantF(registerAddress, (float*)constantData, constantCount);
 }
 
 void RwD3D9RestoreRenderTargets(int count)
@@ -183,13 +193,13 @@ std::vector<BYTE> readFile(const char* filename)
 	return vec;
 }
 
+#include <d3dcompiler.h>
 IDirect3DVertexShader9* CreateVertexShader(string path, string profile)
 {
 	if(!exists_test0(path))
 		MessageBox(0, path.c_str(), "Error", MB_OK);
 
-	ID3DXBuffer* buffer;
-	ID3DXBuffer* error;
+
 	void* shader;
 
 	std::string version;
@@ -198,45 +208,85 @@ IDirect3DVertexShader9* CreateVertexShader(string path, string profile)
 	else
 		version = "vs_2_0";
 
-	if(FAILED(D3DXCompileShaderFromFile(path.c_str(), NULL, NULL,
-										profile.c_str(), version.c_str(), 0,
-										&buffer, &error, NULL)))
+	// thanks to LINK/2012 for this
+	HMODULE hMyModule;
+	char shaderPath[MAX_PATH];
+	if(GetModuleHandleEx(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS | GET_MODULE_HANDLE_EX_FLAG_UNCHANGED_REFCOUNT,
+		(LPCTSTR)&CreateVertexShader, &hMyModule))
 	{
-		MessageBox(0, (LPCSTR)error->GetBufferPointer(), "Error", MB_OK);
-		ExitProcess(0);
+		GetModuleFileName(hMyModule, shaderPath, sizeof(shaderPath));
+		*strrchr(shaderPath, '\\') = '\0';	// remove asi name
+	}
+	else
+		strcpy(shaderPath, ".");
+
+	strcat(shaderPath, string("\\" + path).c_str());	// append shader name
+
+	wchar_t shaderPathWide[MAX_PATH];
+	mbstowcs(shaderPathWide, shaderPath, _countof(shaderPathWide));
+
+	ID3DBlob* vsCodeBlob;
+	ID3DBlob* vsErrorBlob;
+
+	const D3D_SHADER_MACRO defines[] =
+	{
+		"EXAMPLE_DEFINE", "1",
+		NULL, NULL
+	};
+	D3DCompileFromFile(shaderPathWide, NULL, D3D_COMPILE_STANDARD_FILE_INCLUDE, profile.c_str(), version.c_str(), D3DCOMPILE_DEBUG, 0, &vsCodeBlob, &vsErrorBlob);
+
+	if(vsErrorBlob && vsErrorBlob->GetBufferPointer())
+	{
+		MessageBox(0, (char*)vsErrorBlob->GetBufferPointer(), "Error", MB_OK);
 	}
 
-	RwD3D9CreateVertexShader((RwUInt32*)buffer->GetBufferPointer(), &shader);
 
-	return (LPDIRECT3DVERTEXSHADER9)shader;
+	RwD3D9CreateVertexShader((RwUInt32*)vsCodeBlob->GetBufferPointer(), &shader);
+
+	return (IDirect3DVertexShader9*)shader;
 }
 
 IDirect3DPixelShader9* CreatePixelShader(string path, string profile)
 {
 	if(!exists_test0(path))
 		MessageBox(0, path.c_str(), "Error", MB_OK);
+	
 	void* shader;
-	ID3DXBuffer* buffer;
-	ID3DXBuffer* error;
-
 
 	std::string version;
 	if(std::string::npos == profile.find("PS2"))
 		version = "ps_3_0";
 	else
 		version = "ps_2_0";
-
-	if(FAILED(D3DXCompileShaderFromFile(path.c_str(), NULL, NULL,
-										profile.c_str(), version.c_str(), 0,
-										&buffer, &error, NULL)))
+	// thanks to LINK/2012 for this
+	HMODULE hMyModule;
+	char shaderPath[MAX_PATH];
+	if(GetModuleHandleEx(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS | GET_MODULE_HANDLE_EX_FLAG_UNCHANGED_REFCOUNT,
+		(LPCTSTR)&CreateVertexShader, &hMyModule))
 	{
-		MessageBox(0, (LPCSTR)error->GetBufferPointer(), "Error", MB_OK);
-		ExitProcess(0);
+		GetModuleFileName(hMyModule, shaderPath, sizeof(shaderPath));
+		*strrchr(shaderPath, '\\') = '\0';	// remove asi name
 	}
+	else
+		strcpy(shaderPath, ".");
+	strcat(shaderPath, string("/" + path).c_str());	// append shader name
 
-	RwD3D9CreatePixelShader((RwUInt32*)buffer->GetBufferPointer(), &shader);
 
-	return (LPDIRECT3DPIXELSHADER9)shader;
+	wchar_t shaderPathWide[MAX_PATH];
+	mbstowcs(shaderPathWide, shaderPath, _countof(shaderPathWide));
+
+	ID3DBlob* vsCodeBlob;
+	ID3DBlob* vsErrorBlob;
+	const D3D_SHADER_MACRO defines[] =
+	{
+		"EXAMPLE_DEFINE", "1",
+		NULL, NULL
+	};
+	D3DCompileFromFile(shaderPathWide, NULL, D3D_COMPILE_STANDARD_FILE_INCLUDE, profile.c_str(), version.c_str(), D3DCOMPILE_DEBUG, 0, &vsCodeBlob, &vsErrorBlob);
+
+	RwD3D9CreatePixelShader((RwUInt32*)vsCodeBlob->GetBufferPointer(), &shader);
+
+	return (IDirect3DPixelShader9*)shader;
 }
 
 void RwD3D9SetPixelShaderConstantB(RwUInt32 registerAddress, const void* constantData, RwUInt32 constantCount)

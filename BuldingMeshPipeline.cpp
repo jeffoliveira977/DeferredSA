@@ -93,7 +93,7 @@ RxPipeline* BuldingMeshPipeline::initGraphics()
 	return NULL;
 }
 
-void BuldingMeshPipeline::reflectionRendering(RwResEntry* entry, void* object, RwUInt32 flags)
+void BuldingMeshPipeline::ReflectionRendering(RwResEntry* entry, void* object, RwUInt32 flags)
 {
 	XMMATRIX				worldMatrix;
 	RwMatrix* LTM;
@@ -187,7 +187,7 @@ void BuldingMeshPipeline::reflectionRendering(RwResEntry* entry, void* object, R
 #include "CascadedShadowRendering.h"
 #include "CGameIdle.h"
 
-void BuldingMeshPipeline::deferredRendering(RwResEntry* entry, void* object, RwUInt32 flags)
+void BuldingMeshPipeline::DeferredRendering(RwResEntry* entry, void* object, RwUInt32 flags)
 {
 	RxD3D9ResEntryHeader* header;
 	RxD3D9InstanceData* instance;
@@ -198,7 +198,7 @@ void BuldingMeshPipeline::deferredRendering(RwResEntry* entry, void* object, RwU
 	_rwD3D9SetVertexShader(VS_deferred);
 	_rwD3D9SetPixelShader(PS_deferred);
 
-	CDrawable::deferredRendering(entry, object, flags);
+	MeshRenderingMode::DeferredRendering(entry, object, flags);
 
 	RwMatrix* LTM= RwFrameGetLTM(RpAtomicGetFrame(object));
 	XMMATRIX worldMatrix = RwMatrixToXMMATRIX(LTM);
@@ -301,7 +301,7 @@ void BuldingMeshPipeline::deferredRendering(RwResEntry* entry, void* object, RwU
 	}
 }
 
-void BuldingMeshPipeline::forwardRendering(RwResEntry* entry, void* object, RwUInt32 flags)
+void BuldingMeshPipeline::ForwardRendering(RwResEntry* entry, void* object, RwUInt32 flags)
 {
 	RxD3D9ResEntryHeader* header;
 	RxD3D9InstanceData* instance;
@@ -337,14 +337,14 @@ void BuldingMeshPipeline::forwardRendering(RwResEntry* entry, void* object, RwUI
 
 	for(size_t i = 0; i < CascadedShadowManagement->CascadeCount; i++)
 	{
-		RwD3DDevice->SetSamplerState(i + 2, D3DSAMP_MINFILTER, D3DTEXF_LINEAR);
-		RwD3DDevice->SetSamplerState(i + 2, D3DSAMP_MAGFILTER, D3DTEXF_LINEAR);
-		RwD3DDevice->SetSamplerState(i + 2, D3DSAMP_MIPFILTER, D3DTEXF_LINEAR);
-		RwD3DDevice->SetSamplerState(i + 2, D3DSAMP_ADDRESSU, D3DTADDRESS_CLAMP);
-		RwD3DDevice->SetSamplerState(i + 2, D3DSAMP_ADDRESSV, D3DTADDRESS_CLAMP);
-		RwD3DDevice->SetSamplerState(i + 2, D3DSAMP_BORDERCOLOR, 0xFFFFFFFF);
+		rwD3D9SetSamplerState(i + 2, D3DSAMP_MINFILTER, D3DTEXF_LINEAR);
+		rwD3D9SetSamplerState(i + 2, D3DSAMP_MAGFILTER, D3DTEXF_LINEAR);
+		rwD3D9SetSamplerState(i + 2, D3DSAMP_MIPFILTER, D3DTEXF_LINEAR);
+		rwD3D9SetSamplerState(i + 2, D3DSAMP_ADDRESSU, D3DTADDRESS_CLAMP);
+		rwD3D9SetSamplerState(i + 2, D3DSAMP_ADDRESSV, D3DTADDRESS_CLAMP);
+		rwD3D9SetSamplerState(i + 2, D3DSAMP_BORDERCOLOR, 0xFFFFFFFF);
 
-		_rwD3D9RWSetRasterStage(CascadedShadowManagement->m_shadowColorRaster[i], i + 2);
+		rwD3D9RWSetRasterStage(CascadedShadowManagement->m_shadowColorRaster[i], i + 2);
 	}
 
 	_rwD3D9SetPixelShaderConstant(16, &CascadedShadowManagement->m_shadowBuffer,
@@ -364,7 +364,7 @@ void BuldingMeshPipeline::forwardRendering(RwResEntry* entry, void* object, RwUI
 		hasAlpha = material->texture && RwD3D9TextureHasAlpha(material->texture);
 
 		if(hasAlpha)
-			RwRenderStateSet(rwRENDERSTATEALPHATESTFUNCTIONREF, (void*)100);
+			RwRenderStateSet(rwRENDERSTATEALPHATESTFUNCTIONREF, (void*)10);
 		else
 			RwRenderStateSet(rwRENDERSTATEALPHATESTFUNCTIONREF, (void*)0);
 

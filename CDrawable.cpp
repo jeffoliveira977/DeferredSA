@@ -5,7 +5,7 @@
 #include "CTimeCycle.h"
 #include "DeferredSA.h"
 
-void CDrawable::createShaders()
+void MeshRenderingMode::createShaders()
 {
 	//VS_shadow = CreateVertexShader("DeferredSA/shaders/ShadowMapping.hlsl", "VS_Shadow");
 	//PS_shadow = CreatePixelShader("DeferredSA/shaders/ShadowMappingPS.hlsl", "main");
@@ -18,9 +18,8 @@ void CDrawable::createShaders()
 	RwD3D9CreatePixelShader((RwUInt32*)bytes.data(), &PS_shadow);
 }
 
-void CDrawable::RenderCallBack(RwResEntry* entry, void* object, RwUInt8 type, RwUInt32 flags)
+void MeshRenderingMode::RenderCallBack(RwResEntry* entry, void* object, RwUInt8 type, RwUInt32 flags)
 {
-	//RwD3D9EnableClippingIfNeeded(object, type);
 
 	RxD3D9ResEntryHeader* header;
 	RxD3D9InstanceData* instance;
@@ -33,20 +32,28 @@ void CDrawable::RenderCallBack(RwResEntry* entry, void* object, RwUInt8 type, Rw
 	_rwD3D9SetStreams(header->vertexStream, header->useOffsets);
 	_rwD3D9SetVertexDeclaration(header->vertexDeclaration);
 
-
-	if(gRenderState == stageDeferred)
-		deferredRendering(entry, object, flags);
-	else if(gRenderState == stageForward)
+	switch(gRenderState)
 	{
-		forwardRendering(entry, object, flags);
+		case stageDeferred:
+			DeferredRendering(entry, object, flags);
+			break;
+		case stageForward:
+			ForwardRendering(entry, object, flags);
+			break;
+		case stageDualParaboloidMap:
+		case stageSphereMap:
+		case stageReflectionCubemap:
+		case stageReflection:
+		case stageRefraction:
+			ReflectionRendering(entry, object, flags);
+			break;
+		case stageCascadeShadow:
+			ShadowRendering(entry, object, flags);
+			break;
 	}
-	else if(gRenderState == stageCascadeShadow)
-		cascadeShadowRendering(entry, object, flags);
-	else
-		reflectionRendering(entry, object, flags);
 }
 
-void CDrawable::cascadeShadowRendering(RwResEntry* entry, void* object, RwUInt32 flags)
+void MeshRenderingMode::ShadowRendering(RwResEntry* entry, void* object, RwUInt32 flags)
 {
 	XMMATRIX  worldMatrix, viewMatrix, projectionMatrix;
 
@@ -121,14 +128,14 @@ void CDrawable::cascadeShadowRendering(RwResEntry* entry, void* object, RwUInt32
 		_rwD3D9SetPixelShaderConstant(0, &colorValue, 1);
 		
 		hasAlpha = instance->vertexAlpha || matcolor->alpha != 255;
-		//RwRenderStateSet(rwRENDERSTATEVERTEXALPHAENABLE, (void*)hasAlpha);
+		RwRenderStateSet(rwRENDERSTATEVERTEXALPHAENABLE, (void*)hasAlpha);
 		_rwD3D9SetPixelShaderConstant(1, &CTimeCycle::m_CurrentColours.m_fFarClip, 1);
 		D3D9Render(header, instance, texture, flags);
 		instance++;
 	}
 }
 
-void CDrawable::reflectionRendering(RwResEntry* entry, void* object, RwUInt32 flags)
+void MeshRenderingMode::ReflectionRendering(RwResEntry* entry, void* object, RwUInt32 flags)
 {
 	D3DXMATRIX           viewMatrix;
 	RwD3D9GetTransform(D3DTS_VIEW, &viewMatrix);
@@ -158,7 +165,7 @@ void CDrawable::reflectionRendering(RwResEntry* entry, void* object, RwUInt32 fl
 	_rwD3D9SetPixelShader(PS_forward);
 }
 
-void CDrawable::deferredRendering(RwResEntry * entry, void* object, RwUInt32 flags)
+void MeshRenderingMode::DeferredRendering(RwResEntry * entry, void* object, RwUInt32 flags)
 {
 	RwD3D9SetRenderState(D3DRS_ALPHABLENDENABLE, FALSE);
 	RwD3D9SetRenderState(D3DRS_ALPHATESTENABLE, TRUE);
@@ -166,7 +173,7 @@ void CDrawable::deferredRendering(RwResEntry * entry, void* object, RwUInt32 fla
 	_rwD3D9SetPixelShaderConstant(0, &CTimeCycle::m_CurrentColours.m_fFarClip, 1);
 }
 
-void CDrawable::forwardRendering(RwResEntry * entry, void* object, RwUInt32 flags)
+void MeshRenderingMode::ForwardRendering(RwResEntry * entry, void* object, RwUInt32 flags)
 {
 	RwRenderStateSet(rwRENDERSTATESRCBLEND, (void*)rwBLENDSRCALPHA);
 	RwRenderStateSet(rwRENDERSTATEDESTBLEND, (void*)rwBLENDINVSRCALPHA);
@@ -188,7 +195,7 @@ void CDrawable::forwardRendering(RwResEntry * entry, void* object, RwUInt32 flag
 	_rwD3D9SetPixelShader(PS_forward);
 }
 
-void CDrawable::D3D9Render(RxD3D9ResEntryHeader* header, RxD3D9InstanceData* instance, RwTexture* texture, RwUInt32 flags)
+void MeshRenderingMode::D3D9Render(RxD3D9ResEntryHeader* header, RxD3D9InstanceData* instance, RwTexture* texture, RwUInt32 flags)
 {
 	if(flags & (rxGEOMETRY_TEXTURED2 | rxGEOMETRY_TEXTURED))
 		RwD3D9SetTexture(instance->material->texture, 0);

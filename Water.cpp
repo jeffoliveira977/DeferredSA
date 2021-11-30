@@ -35,7 +35,7 @@ RwTexture* CloudyHillsCubemap2 = 0;
 RwRaster* CWaterLevel::m_zRaster;
 void CWaterLevel::InitShaders()
 {
-    pWaterVSCode = CreateVertexShader("DeferredSA/shaders/WaterEffects.hlsl", "WaterVS");
+    pWaterVSCode = CreateVertexShader("DeferredSA\\shaders\\WaterEffects.hlsl", "WaterVS");
    
   //  pWaterVSCode = CreateVertexShader("DeferredSA/water.hlsl", "VertexShaderFunction");
     //pWaterVSCode = CreateVertexShader("DeferredSA/water_ref.hlsl", "VertexShaderSB");
@@ -43,7 +43,7 @@ void CWaterLevel::InitShaders()
    // pWaterPSCode = CreatePixelShader("DeferredSA/water.hlsl", "PixelShaderFunction");
   //  pWaterPSCode = CreatePixelShader("DeferredSA/water_ref.hlsl", "PixelShaderSB");
  //  pWaterPSCode = CreatePixelShader("DeferredSA/Ocean.hlsl", "OceanPS");
-     pWaterPSCode = CreatePixelShader("DeferredSA/shaders/WaterEffects.hlsl", "WaterPS");
+     pWaterPSCode = CreatePixelShader("DeferredSA\\shaders\\WaterEffects.hlsl", "WaterPS");
 
      
 

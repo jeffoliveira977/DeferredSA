@@ -90,7 +90,7 @@ void ShadowFrustum::DirectionalLightTransform(RwCamera* mainCam, const RW::V3d& 
                 minExtents = g_XMFltMax;
                 maxExtents = g_XMFltMin;
 
-                for(uint32_t j = 1; j < 8; j++)
+                for(uint32_t j = 0; j < 8; j++)
                 {
                     corners[j] = XMVector3Transform(corners[j], lightRotation);
 
@@ -118,7 +118,7 @@ void ShadowFrustum::DirectionalLightTransform(RwCamera* mainCam, const RW::V3d& 
             Desc[i].NearClip = -(extents.z < 500.0 ? 500.0 : extents.z);
             Desc[i].FarClip = 50.0f + -Desc[i].NearClip;
 
-            PrintMessage("%f", coors.z);
+           // PrintMessage("%f", coors.z);
 
             // Get position of the shadow camera
             XMVECTOR shadowPosition = frustumCenter + lightDirection /** -XMVectorGetZ(minExtents)*/;
@@ -145,8 +145,8 @@ void ShadowFrustum::DirectionalLightTransform(RwCamera* mainCam, const RW::V3d& 
             }
 
             XMMATRIX projection = Desc[i].lightOrthoMatrix;
-            //projection.r[0] *= 0.5;
-            //projection.r[1] *= 0.5;
+            projection.r[0] *= 0.5;
+            projection.r[1] *= 0.5;
             Desc[i].m_FrustumCulling.SetMatrix(Desc[i].lightViewMatrix * projection);
         }
         #else
@@ -154,7 +154,7 @@ void ShadowFrustum::DirectionalLightTransform(RwCamera* mainCam, const RW::V3d& 
             XMVECTOR right;
             XMVECTOR up;
             RwMatrix* cameraMatrix = RwFrameGetMatrix(RwCameraGetFrame(mainCam));
-
+            lightDirection = XMVectorSet(-lightDir.getX(), -lightDir.getY(), -lightDir.getZ(), 1.0);
             lightDirection = XMVector3Normalize(lightDirection);
             right = XMVector3Cross(XMVectorSet(0, 1, 0, 0.0f), lightDirection);
             right = XMVector3Normalize(right);
@@ -181,24 +181,9 @@ void ShadowFrustum::DirectionalLightTransform(RwCamera* mainCam, const RW::V3d& 
             XMVECTOR minExtents;
             XMVECTOR maxExtents;
 
-            bool stabilizeCascades = true;
+            bool stabilizeCascades = false;
 
             if(stabilizeCascades)
-            {
-                minExtents = g_FltMax;
-                maxExtents = g_FltMin;
-
-                for(int j = 0; j < 8; j++)
-                {
-                    // Transform the AABB to Light space.
-                    XMVECTOR frustumTranslation = XMVector3Transform(corners[j], m_LightSpaceMatrix);
-
-                    //Calculates the min and max values of AABB.
-                    minExtents = XMVectorMin(minExtents, frustumTranslation);
-                    maxExtents = XMVectorMax(maxExtents, frustumTranslation);
-                }
-            }
-            else
             {
                 XMVECTOR radius = XMVectorSet(0.0f, 0.0f, 0.0f, 0.0f);
                 for(uint32_t j = 0; j < 8; j++)
@@ -211,9 +196,24 @@ void ShadowFrustum::DirectionalLightTransform(RwCamera* mainCam, const RW::V3d& 
                 maxExtents = radius;
                 minExtents = -maxExtents;
             }
+            else
+            {
+                minExtents = g_FltMax;
+                maxExtents = g_FltMin;
+
+                for(int j = 0; j < 8; j++)
+                {
+                    // Transform the AABB to Light space.
+                    corners[j] = XMVector3Transform(corners[j], m_LightSpaceMatrix);
+
+                    //Calculates the min and max values of AABB.
+                    minExtents = XMVectorMin(minExtents, corners[j]);
+                    maxExtents = XMVectorMax(maxExtents, corners[j]);
+                }
+            }
 
             // Adjust the min/max to accommodate the filtering size
-            float texels = (static_cast<float>(ShadowSize) + 9.0f) / static_cast<float>(ShadowSize);
+            float texels = (static_cast<float>(ShadowSize) + FilterSize) / static_cast<float>(ShadowSize);
             XMVECTOR scale = XMVectorSet(texels, texels, 1.0f, 1.0f);
             minExtents *= scale;
             maxExtents *= scale;
