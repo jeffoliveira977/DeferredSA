@@ -112,6 +112,7 @@ void CubemapReflection::Update()
 		m_frustum[i].SetMatrix(m_viewMatrix[i] * m_projectionMatrix);
 	}
 
+	// Scan entity list
 	SetNextScanCode();
 
 	int x = GetSectorX(CRenderer::ms_vecCameraPosition.x);
@@ -126,6 +127,7 @@ void CubemapReflection::Update()
 		}
 	}
 }
+
 
 void CubemapReflection::SectorList(CPtrList& ptrList)
 {

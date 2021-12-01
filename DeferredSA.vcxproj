@@ -124,6 +124,7 @@
     <ClCompile Include="DefaultMeshPipeline.cpp" />
     <ClCompile Include="CommonD.cpp" />
     <ClCompile Include="CascadedShadowRendering.cpp" />
+    <ClCompile Include="DualParaboloidReflection.cpp" />
     <ClCompile Include="Frustum.cpp" />
     <ClCompile Include="Immediate3D.cpp" />
     <ClCompile Include="Mesh.cpp" />
@@ -166,6 +167,7 @@
     <ClInclude Include="DefaultMeshPipeline.h" />
     <ClInclude Include="CommonD.h" />
     <ClInclude Include="CascadedShadowRendering.h" />
+    <ClInclude Include="DualParaboloidReflection.h" />
     <ClInclude Include="Frustum.h" />
     <ClInclude Include="Immediate3D.h" />
     <ClInclude Include="Mesh.h" />
