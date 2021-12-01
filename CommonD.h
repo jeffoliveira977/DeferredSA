@@ -347,6 +347,10 @@ constexpr float SQRT_2 = 1.41421356237309504880f;
 constexpr float SIN_PI = 0.0f; // std::sin(PI);
 constexpr float COS_PI = -1.0f; // std::cos(PI);
 
+constexpr RwV3d Xaxis = {1.0f, 0.0f, 0.0f};
+constexpr RwV3d Yaxis = {0.0f, 1.0f, 0.0f};
+constexpr RwV3d Zaxis = {0.0f, 0.0f, 1.0f};
+
 template <typename T>
 T clamp(T value, T low, T high)
 {

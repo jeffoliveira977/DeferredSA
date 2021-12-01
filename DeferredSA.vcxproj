@@ -120,6 +120,7 @@
     <ClCompile Include="CDrawable.cpp" />
     <ClCompile Include="CGameIdle.cpp" />
     <ClCompile Include="Collider.cpp" />
+    <ClCompile Include="CubemapReflection.cpp" />
     <ClCompile Include="DefaultMeshPipeline.cpp" />
     <ClCompile Include="CommonD.cpp" />
     <ClCompile Include="CascadedShadowRendering.cpp" />
@@ -161,6 +162,7 @@
     <ClInclude Include="CDrawable.h" />
     <ClInclude Include="CGameIdle.h" />
     <ClInclude Include="Collider.h" />
+    <ClInclude Include="CubemapReflection.h" />
     <ClInclude Include="DefaultMeshPipeline.h" />
     <ClInclude Include="CommonD.h" />
     <ClInclude Include="CascadedShadowRendering.h" />

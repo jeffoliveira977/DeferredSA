@@ -98,19 +98,19 @@ namespace Math
 
 		//return intersect;
 
-		//XMFLOAT3 PP = Min; 
-		//if(plane.x >= 0)
-		//	PP.x = Max.x;
-		//if(plane.y >= 0)
-		//	PP.y = Max.y;
-		//if(plane.z >= 0)
-		//	PP.z = Max.z;
+		/*XMFLOAT3 PP = Min; 
+		if(plane.x >= 0)
+			PP.x = Max.x;
+		if(plane.y >= 0)
+			PP.y = Max.y;
+		if(plane.z >= 0)
+			PP.z = Max.z;
 
-		//XMVECTOR V = XMLoadFloat3(&PP);
-		//XMVECTOR P = XMLoadFloat4(&plane);
+		XMVECTOR V = XMLoadFloat3(&PP);
+		XMVECTOR P = XMLoadFloat4(&plane);
 
-		//float d = XMVectorGetX(XMPlaneDotCoord(P, V));
-		//return d > 0.0;
+		float d = XMVectorGetX(XMPlaneDotCoord(P, V));
+		return d > 0.0;*/
 	}
 
 	bool AABB::Contains(Frustum frustum)

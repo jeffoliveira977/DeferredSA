@@ -76,6 +76,7 @@
     </ClCompile>
     <ClCompile Include="RenderableFrustum.cpp" />
     <ClCompile Include="RenderableScene.cpp" />
+    <ClCompile Include="CubemapReflection.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="GTADef.h" />
@@ -130,6 +131,7 @@
     </ClInclude>
     <ClInclude Include="RenderableFrustum.h" />
     <ClInclude Include="RenderableScene.h" />
+    <ClInclude Include="CubemapReflection.h" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="imgui">

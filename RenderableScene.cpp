@@ -31,6 +31,9 @@ void RenderableScene::InitGraphicsBuffer()
 
 	RpWorldAddCamera(Scene.m_pRpWorld, m_camera);
 }
+#include "EnvironmentMapping.h"
+#include "Frustum.h"
+#include "AABB.h"
 
 void RenderableScene::Render()
 {
@@ -38,8 +41,20 @@ void RenderableScene::Render()
 	RwCameraSetViewWindow(m_camera, &camera->viewWindow);
 	RwFrameTransform(m_frame, &RwCameraGetFrame(camera)->ltm, rwCOMBINEREPLACE);
 
-	TranslateCameraZ(m_camera, -1600);
+
+	RwV2d view;
+	view.x = view.y = 0.4;
+	RwCameraSetViewWindow(m_camera, &view);
+	RwFrameRotate(m_frame, &Yaxis, 90, rwCOMBINEREPLACE);
+	RwFrameRotate(m_frame, &Xaxis, 90, rwCOMBINEPOSTCONCAT);
+	CVector pos = FindPlayerCoors(0);
+	RwFrameTranslate(m_frame, (RwV3d*)&pos, rwCOMBINEREPLACE);
 	RwFrameUpdateObjects(m_frame);
+
+	CameraTilt(m_camera, 0, 110.0);
+	TranslateCameraZ(m_camera, -300);
+	RwFrameUpdateObjects(m_frame);
+
 	RwRGBA ambient = {CTimeCycle::m_CurrentColours.m_nSkyTopRed, CTimeCycle::m_CurrentColours.m_nSkyTopGreen, CTimeCycle::m_CurrentColours.m_nSkyTopBlue, 255};
 
 	RwCameraClear(m_camera, &ambient, rwCAMERACLEARIMAGE | rwCAMERACLEARZ);
@@ -49,21 +64,39 @@ void RenderableScene::Render()
 	DefinedState();
 	for(auto& entity : m_list)
 	{
-		if(entity->m_pRwObject)
+		CColModel* col = entity->GetColModel();
+		if(col == nullptr)
+			continue;
+
+		XMMATRIX world = RwMatrixToXMMATRIX(reinterpret_cast<RwMatrix*>(entity->GetMatrix()));
+		CBoundingBox modelAABB = col->m_boundBox;
+
+		XMVECTOR min, max;
+		min = XMLoadFloat3(reinterpret_cast<XMFLOAT3*>(&modelAABB.m_vecMin));
+		max = XMLoadFloat3(reinterpret_cast<XMFLOAT3*>(&modelAABB.m_vecMax));
+		min = XMVector3Transform(min, world);
+		max = XMVector3Transform(max, world);
+
+		Math::AABB aabb;
+		XMStoreFloat3(&aabb.Min, min);
+		XMStoreFloat3(&aabb.Max, max);
+		if(EnvironmentMapping::m_frustum[5].Intersects(aabb))
 		{
-			entity->m_bImBeingRendered = true;
+			if(entity->m_pRwObject)
+			{
+				entity->m_bImBeingRendered = true;
 
-			if(entity->m_pRwObject->type == rpATOMIC)
-				RpAtomicRender(entity->m_pRwAtomic);
-			else
-				RpClumpRender(entity->m_pRwClump);
+				if(entity->m_pRwObject->type == rpATOMIC)
+					RpAtomicRender(entity->m_pRwAtomic);
+				else
+					RpClumpRender(entity->m_pRwClump);
 
-			entity->m_bImBeingRendered = false;
+				entity->m_bImBeingRendered = false;
+			}
 		}
 	}
-	m_frustumRenderable->RenderFrustum(true);
+	m_frustumRenderable->RenderFrustum(false);
 	RwCameraEndUpdate(m_camera);
-	
 }
 
 void RenderableScene::SetRenderList(std::vector<CEntity*> list)

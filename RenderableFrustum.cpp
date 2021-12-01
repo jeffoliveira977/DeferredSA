@@ -12,6 +12,23 @@ RenderableFrustum::~RenderableFrustum()
 {
 }
 
+void RenderableFrustum::SetViewMatrix(RwMatrix* LTM)
+{
+	this->LTM = LTM;
+}
+
+void RenderableFrustum::SetViewWindow(float x, float y)
+{
+	m_viewWindow.x = x;
+	m_viewWindow.y = y;
+}
+
+void RenderableFrustum::SetClipPlane(float nearPlane, float farPlane)
+{
+	m_nearPlane = nearPlane;
+	m_farPlane = farPlane;
+}
+
 void RenderableFrustum::InitGraphicsBuffer()
 {
 	/*m_vertexBuffer = new VertexBuffer();
