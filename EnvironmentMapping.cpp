@@ -22,9 +22,6 @@ float EnvironmentMapping::m_direction;
 D3DXMATRIX EnvironmentMapping::m_paraboloidBasis;
 
 int EnvironmentMapping::m_weight;
-RwV3d& Xaxis = *(RwV3d*)0x8D2E00;
-RwV3d& Yaxis = *(RwV3d*)0x8D2E0C;
-RwV3d& Zaxis = *(RwV3d*)0x8D2E18;
 
 void EnvironmentMapping::SetRenderCallback(RenderCallback callback)
 {
@@ -200,23 +197,29 @@ void RenderFrustum()
 	XMFLOAT3 extents;
 	XMStoreFloat3(&extents, maxExtents - minExtents);
 
-	float longEdge = max(extents.x, extents.y);
-	longEdge *= 0.5;
-	float nearClip = extents.z < 500.0 ? 500.0 : extents.z;
-	float farClip = nearClip;
+	//float longEdge = max(extents.x, extents.y);
+	//longEdge *= 0.5;
+	//float nearClip = extents.z < 500.0 ? 500.0 : extents.z;
+	//float farClip = nearClip;
 
-	Math::AABB box = CascadedShadowManagement->Desc[0].m_FrustumCulling.GetBoundingBox();
+	//Math::AABB box = CascadedShadowManagement->Desc[0].m_FrustumCulling.GetBoundingBox();
 
-	float e = (box.Max.z - abs(box.Min.z)) * 0.5;
-	float c = (box.Max.z + abs(box.Min.z) * 2);
+	//float e = (box.Max.z - abs(box.Min.z)) * 0.5;
+	//float c = (box.Max.z + abs(box.Min.z) * 2);
+	//RwReal depth[3];
+	//depth[0] = 1.0f;
+	//depth[1] = CascadedShadowManagement->Desc[0].NearClip;
+	//depth[2] = CascadedShadowManagement->Desc[0].FarClip;
+	//
+	////PrintMessage("%f %f", longEdge,(box.Max.y));
+	RwV2d offset = {0, 0};
+	//RwV2d viewWindow = {longEdge, longEdge};
+
 	RwReal depth[3];
 	depth[0] = 1.0f;
-	depth[1] = CascadedShadowManagement->Desc[0].NearClip;
-	depth[2] = CascadedShadowManagement->Desc[0].FarClip;
-	//PrintMessage("%f %f", longEdge,(box.Max.y));
-	RwV2d offset = {0, 0};
-	RwV2d viewWindow = {longEdge, longEdge};
-
+	depth[1] = EnvironmentMapping::m_envCamera->nearPlane;
+	depth[2] = EnvironmentMapping::m_envCamera->farPlane;
+	RwV2d viewWindow = {EnvironmentMapping::m_envCamera->viewWindow.x, EnvironmentMapping::m_envCamera->viewWindow.y};
 	 /* Origin */
 	RwIm3DVertexSetPos(&frustum[k],0, 0, 0.0f);
 	k++;
@@ -268,8 +271,8 @@ void RenderFrustum()
 	RwRenderStateSet(rwRENDERSTATESHADEMODE, (void*)rwSHADEMODEFLAT);
 	RwRenderStateSet(rwRENDERSTATETEXTURERASTER, (void*)NULL);
 
-	// LTM = RwFrameGetLTM(RwCameraGetFrame(CascadedShadowManagement->m_pShadowCamera[0]));
-	LTM = (RwMatrix*)&XMMatrixInverse(0, CascadedShadowManagement->Desc[0].lightViewMatrix);
+	 LTM = RwFrameGetLTM(RwCameraGetFrame(EnvironmentMapping::m_envCamera));
+	//LTM = (RwMatrix*)&XMMatrixInverse(0, CascadedShadowManagement->Desc[0].lightViewMatrix);
 
 	/*
 	 * Draw Lines...
@@ -984,6 +987,7 @@ void EnvironmentMapping::SphericalMap()
 	RwCameraEndUpdate(m_envCamera);
 }
 
+
 void EnvironmentMapping::DualParaboloidMap()
 {
 	RwV2d view;
@@ -1026,81 +1030,151 @@ void EnvironmentMapping::DualParaboloidMap()
 	RwD3D9GetTransform(D3DTS_VIEW, &m_paraboloidBasis);
 }
 
-void EnvironmentMapping::RenderOneFace(
-	void (*renderCB)(),
-	int id, float angleA, RwV3d axisA, float angleB, RwV3d axisB, RwV3d camPos)
+std::vector<CEntity*> EnvironmentMapping::m_renderableList[6];
+
+void EnvironmentMapping::AddObject(int i, CEntity* entity, float distance)
 {
-	RwRGBA ambient = {CTimeCycle::m_CurrentColours.m_nSkyTopRed, CTimeCycle::m_CurrentColours.m_nSkyTopGreen, CTimeCycle::m_CurrentColours.m_nSkyTopBlue, 255};
-
-	RwFrameSetIdentity(m_envFrame);
-	RwFrameRotate(m_envFrame, &axisA, angleA, rwCOMBINEREPLACE);
-	RwFrameRotate(m_envFrame, &axisB, angleB, rwCOMBINEPOSTCONCAT);
-	RwFrameTranslate(m_envFrame, &camPos, rwCOMBINEPOSTCONCAT);
-	RwFrameUpdateObjects(m_envFrame);
-	RwCameraSetNearClipPlane(m_envCamera, 0.1f);
-	RwCameraSetFarClipPlane(m_envCamera, 100.0f);
-	_rwD3D9CubeRasterSelectFace(m_cubeRaster, id);
-	RwCameraSetRaster(m_envCamera, m_cubeRaster);
-	RwCameraClear(m_envCamera, &ambient, rwCAMERACLEARIMAGE | rwCAMERACLEARZ);
-
-	RwCameraBeginUpdate(m_envCamera);
-	ShaderContext->SetViewProjectionMatrix(4, true);
-	m_renderCallback();
-	RwCameraEndUpdate(m_envCamera);
-}
-
-void EnvironmentMapping::CubeMap()
-{
-	if(m_renderCallback == nullptr)
+	if(distance > 400)
 		return;
 
-	gRenderState = stageReflectionCubemap;
-
-	CVector pos = FindPlayerCoors(0);
-	RwRGBA ambient = {CTimeCycle::m_CurrentColours.m_nSkyTopRed, CTimeCycle::m_CurrentColours.m_nSkyTopGreen, CTimeCycle::m_CurrentColours.m_nSkyTopBlue, 255};
-
-	RwV2d view;
-	view.x = view.y = 0.4;
-	RwCameraSetViewWindow(m_envCamera, &view);
-
-	for(int i = 0; i < 6; i++)
-	{
-		switch(i)
-		{
-			case D3DCUBEMAP_FACE_POSITIVE_X:
-				RwFrameRotate(m_envFrame, &Xaxis, 0, rwCOMBINEREPLACE);
-				RwFrameRotate(m_envFrame, &Yaxis, 270, rwCOMBINEPOSTCONCAT); 
-				break;
-			case D3DCUBEMAP_FACE_NEGATIVE_X:
-				RwFrameRotate(m_envFrame, &Zaxis, 0, rwCOMBINEREPLACE);
-				RwFrameRotate(m_envFrame, &Yaxis, 90, rwCOMBINEPOSTCONCAT); 
-				break;
-			case D3DCUBEMAP_FACE_POSITIVE_Y:
-				RwFrameRotate(m_envFrame, &Xaxis, 270, rwCOMBINEREPLACE); 
-				RwFrameRotate(m_envFrame, &Yaxis, 0, rwCOMBINEPOSTCONCAT); 
-				break;
-			case D3DCUBEMAP_FACE_NEGATIVE_Y:
-				RwFrameRotate(m_envFrame, &Xaxis, 90, rwCOMBINEREPLACE);
-				RwFrameRotate(m_envFrame, &Yaxis, 0, rwCOMBINEPOSTCONCAT);
-				break;
-			case D3DCUBEMAP_FACE_POSITIVE_Z:
-				RwFrameRotate(m_envFrame, &Xaxis, 0, rwCOMBINEREPLACE); 
-				RwFrameRotate(m_envFrame, &Yaxis, 0, rwCOMBINEPOSTCONCAT);
-				break;
-			case D3DCUBEMAP_FACE_NEGATIVE_Z:
-				RwFrameRotate(m_envFrame, &Xaxis, 0, rwCOMBINEREPLACE);
-				RwFrameRotate(m_envFrame, &Yaxis, 180, rwCOMBINEPOSTCONCAT);
-				break;
-		}
-		RwFrameTranslate(m_envFrame, (RwV3d*)&pos, rwCOMBINEPOSTCONCAT);
-		RwFrameUpdateObjects(m_envFrame);
-
-		_rwD3D9CubeRasterSelectFace(m_cubeRaster, i);
-		RwCameraSetRaster(m_envCamera, m_cubeRaster);
-		RwCameraClear(m_envCamera, &ambient, rwCAMERACLEARIMAGE | rwCAMERACLEARZ);
-		RwCameraBeginUpdate(m_envCamera);
-		ShaderContext->SetViewProjectionMatrix(4, true);
-		m_renderCallback();
-		RwCameraEndUpdate(m_envCamera);
-	}
+	if(distance < 100)
+		m_renderableList[i].push_back(entity);
+	else if(entity->m_pLod != NULL)
+		m_renderableList[i].push_back(entity->m_pLod);
 }
+
+void EnvironmentMapping::SectorList(CPtrList& ptrList)
+{
+	int count[6] = {0,0,0,0,0};
+	for(size_t i = 0; i < 6; i++)
+	{
+		for(auto node = ptrList.GetNode(); node; node = node->pNext)
+		{
+			CEntity* entity = reinterpret_cast<CEntity*>(node->pItem);
+			if(entity->m_nScanCode != CWorld::ms_nCurrentScanCode)
+			{
+				entity->m_nScanCode = CWorld::ms_nCurrentScanCode;
+
+				CColModel* col = entity->GetColModel();
+				if(col == nullptr)
+					continue;
+
+				CVector position = entity->GetPosition();
+				if(entity->m_pLod)
+					position = entity->m_pLod->GetPosition();
+
+				float distance = (position - CRenderer::ms_vecCameraPosition).Magnitude();
+
+				XMMATRIX world = RwMatrixToXMMATRIX(reinterpret_cast<RwMatrix*>(entity->GetMatrix()));
+
+				CBoundingBox modelAABB = col->m_boundBox;
+
+				XMVECTOR min, max;
+				min = XMLoadFloat3(reinterpret_cast<XMFLOAT3*>(&modelAABB.m_vecMin));
+				max = XMLoadFloat3(reinterpret_cast<XMFLOAT3*>(&modelAABB.m_vecMax));
+				min = XMVector3Transform(min, world);
+				max = XMVector3Transform(max, world);
+
+				Math::AABB aabb;
+				XMStoreFloat3(&aabb.Min, min);
+				XMStoreFloat3(&aabb.Max, max);
+
+				if(EnvironmentMapping::m_frustum[i].Intersects(aabb))
+				{
+					AddObject(i, entity, distance);
+					count[i]++;
+				}
+			}
+		}
+	}
+	PrintMessage("%i %i %i %i %i %i", count[0], count[1], count[2], count[3], count[4], count[5]);
+}
+ Math::Frustum EnvironmentMapping::m_frustum[6];
+ RwMatrix EnvironmentMapping::m_ltm[6];
+#include "RenderableReflectionObjects.h"
+#include "Frustum.h"
+#include "AABB.h"
+  XMMATRIX EnvironmentMapping::m_projectionMatrix;
+  XMMATRIX EnvironmentMapping::m_viewMatrix[6];
+
+ void EnvironmentMapping::UpdateCubeMap()
+ {
+	 m_projectionMatrix = XMMatrixPerspectiveFovRH(tanf(3.14f / 4.0f), 1.0f, 0.01f, 3000.0f);
+	 CVector pos = FindPlayerCoors(0);
+	 for(int i = 0; i < 6; i++)
+	 {
+		 XMVECTOR lookAt;
+		 XMVECTOR up;
+
+		 switch((D3DCUBEMAP_FACES)i)
+		 {
+			 case D3DCUBEMAP_FACE_POSITIVE_X:
+				 lookAt = g_XMIdentityR0;
+				 up = g_XMIdentityR1;
+				 break;
+			 case D3DCUBEMAP_FACE_NEGATIVE_X:
+				 lookAt = -g_XMIdentityR0;
+				 up = g_XMIdentityR1;
+				 break;
+			 case D3DCUBEMAP_FACE_POSITIVE_Y:
+				 lookAt = g_XMIdentityR1;
+				 up = -g_XMIdentityR2;
+				 break;
+			 case D3DCUBEMAP_FACE_NEGATIVE_Y:
+				 lookAt = -g_XMIdentityR1;
+				 up = g_XMIdentityR2;
+				 break;
+			 case D3DCUBEMAP_FACE_POSITIVE_Z:
+				 lookAt = g_XMIdentityR2;
+				 up = g_XMIdentityR1;
+				 break;
+			 case D3DCUBEMAP_FACE_NEGATIVE_Z:
+				 lookAt = -g_XMIdentityR2;
+				 up = g_XMIdentityR1;
+				 break;
+		 }
+
+		 XMMATRIX translation = XMMatrixTranslation(pos.x, pos.y, pos.z);
+		 m_viewMatrix[i] = XMMatrixLookAtRH(XMVectorZero(), lookAt, up);
+		 m_viewMatrix[i] = XMMatrixInverse(nullptr, m_viewMatrix[i] * translation);
+		 m_frustum[i].SetMatrix(m_viewMatrix[i] * m_projectionMatrix);
+	 }
+ }
+
+ void EnvironmentMapping::CubeMap()
+ {
+	 //if(m_renderCallback == nullptr)
+		// return;
+
+	 //gRenderState = stageReflectionCubemap;
+	 //RwRGBA ambient = {CTimeCycle::m_CurrentColours.m_nSkyTopRed, CTimeCycle::m_CurrentColours.m_nSkyTopGreen, CTimeCycle::m_CurrentColours.m_nSkyTopBlue, 255};
+
+	 //for(int i = 0; i < 6; i++)
+	 //{
+		// _rwD3D9CubeRasterSelectFace(m_cubeRaster, i);
+		// RwCameraSetRaster(m_envCamera, m_cubeRaster);
+		// RwCameraClear(m_envCamera, &ambient, rwCAMERACLEARIMAGE | rwCAMERACLEARZ);
+		// RwCameraBeginUpdate(m_envCamera);
+
+		// RwD3D9SetTransform(D3DTS_VIEW, &m_viewMatrix[i]);
+		// RwD3D9SetTransform(D3DTS_PROJECTION, &m_projectionMatrix);
+
+		// ShaderContext->SetViewProjectionMatrix(4, true);
+
+		// auto renderList = RenderableReflectionObjects::GetRenderList();
+		// for(auto& entity : renderList)
+		// {
+		//	 if(entity->m_pRwObject == nullptr)
+		//		 continue;
+
+		//	 entity->m_bImBeingRendered = true;
+		//	 if(entity->m_pRwObject->type == rpATOMIC)
+		//		 RpAtomicRender(entity->m_pRwAtomic);
+		//	 else
+		//		 RpClumpRender(entity->m_pRwClump);
+		//	 entity->m_bImBeingRendered = false;
+
+		// }
+		// RwCameraEndUpdate(m_envCamera);
+	 //}
+ }

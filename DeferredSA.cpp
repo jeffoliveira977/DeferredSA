@@ -14,6 +14,8 @@
 #include "Renderer.h"
 #include "CascadedShadowRendering.h"
 #include "ShadowCaster.h"
+#include "CubemapReflection.h"
+#include "DualParaboloidReflection.h"
 
 //imgui
 #include "imgui.h"
@@ -23,6 +25,7 @@
 #include "imgui_internal.h"
 #include "ShaderManager.h"
 #include "SoftParticles.h"
+#include "RenderableScene.h"
 void PipelinePlugins()
 {
 	SkinnedMeshPipe = new SkinnedMeshPipeline();
@@ -45,6 +48,8 @@ void Initialize()
 
 	CWaterLevel::InitShaders();
 	EnvironmentMapping::InitializeGraphics();
+	CubemapReflection::Initialize();
+	DualParaboloidReflection::Initialize();
 
 	//CreateQuadRender();
 	DeferredContext = new DeferredRendering();
@@ -54,6 +59,8 @@ void Initialize()
 	SoftParticlesContext = new SoftParticles();
 	SoftParticlesContext->initGraphicsBuffer();
 	PBSMaterialMgr::LoadMaterials();
+
+	RenderableScene::InitGraphicsBuffer();
 
 	// Setup Dear ImGui context
 	IMGUI_CHECKVERSION();
@@ -74,7 +81,7 @@ void Initialize()
 
 void SetSurfaceD(int id)
 {
-	auto rasterCube = RASTEREXTFROMCONSTRASTER(EnvironmentMapping::m_cubeRaster);
+	auto rasterCube = RASTEREXTFROMCONSTRASTER(CubemapReflection::m_cubeRaster);
 	auto rasterTex = RASTEREXTFROMCONSTRASTER(EnvironmentMapping::m_paraboloidRaster[1]);
 
 	LPDIRECT3DCUBETEXTURE9 cube = (LPDIRECT3DCUBETEXTURE9)rasterCube->texture;
@@ -203,39 +210,39 @@ void Render()
 	//ImGui_ImplDX9_RenderDrawData(ImGui::GetDrawData());
 	ImGui_ImplRW_RenderDrawData(ImGui::GetDrawData());
 	
-	int weight = 512;
+	int weight = 256;
 	MakeScreenQuad(0, 0, weight, weight);
-	RwRenderStateSet(rwRENDERSTATETEXTURERASTER, (void*)EnvironmentMapping::m_sphericalRaster);
+	RwRenderStateSet(rwRENDERSTATETEXTURERASTER, (void*)DualParaboloidReflection::m_raster[0]);
 	RwIm2DRenderIndexedPrimitive(rwPRIMTYPETRILIST, screenQuad, 4, screenindices, 6);
-
-	//MakeScreenQuad(weight, 0, weight, weight);
-	//RwRenderStateSet(rwRENDERSTATETEXTURERASTER, (void*)EnvironmentMapping::m_paraboloidRaster[1]);
-	//RwIm2DRenderIndexedPrimitive(rwPRIMTYPETRILIST, screenQuad, 4, screenindices, 6);
-	/*int weight = 512;
-	SetSurfaceD(0);
+	MakeScreenQuad(weight, 0, weight, weight);
+	RwRenderStateSet(rwRENDERSTATETEXTURERASTER, (void*)DualParaboloidReflection::m_raster[1]);
+	RwIm2DRenderIndexedPrimitive(rwPRIMTYPETRILIST, screenQuad, 4, screenindices, 6);
+//	int weight = 512;
+	
+	/*SetSurfaceD(0);
 	MakeScreenQuad(0, 0, weight, weight);
 	RwRenderStateSet(rwRENDERSTATETEXTURERASTER, (void*)EnvironmentMapping::m_paraboloidRaster[1]);
+	RwIm2DRenderIndexedPrimitive(rwPRIMTYPETRILIST, screenQuad, 4, screenindices, 6);
+	SetSurfaceD(1);
+	MakeScreenQuad(weight, 0, weight, weight);
+	RwRenderStateSet(rwRENDERSTATETEXTURERASTER, (void*)EnvironmentMapping::m_paraboloidRaster[1]);
+	RwIm2DRenderIndexedPrimitive(rwPRIMTYPETRILIST, screenQuad, 4, screenindices, 6);
+	SetSurfaceD(2);
+	MakeScreenQuad(weight *2, 0, weight, weight);
+	RwRenderStateSet(rwRENDERSTATETEXTURERASTER, (void*)EnvironmentMapping::m_paraboloidRaster[1]);
+	RwIm2DRenderIndexedPrimitive(rwPRIMTYPETRILIST, screenQuad, 4, screenindices, 6);
+	SetSurfaceD(3);
+	MakeScreenQuad(0, weight, weight, weight);
+	RwRenderStateSet(rwRENDERSTATETEXTURERASTER, (void*)EnvironmentMapping::m_paraboloidRaster[1]);
+	RwIm2DRenderIndexedPrimitive(rwPRIMTYPETRILIST, screenQuad, 4, screenindices, 6);
+	SetSurfaceD(4);
+	MakeScreenQuad(weight, weight, weight, weight);
+	RwRenderStateSet(rwRENDERSTATETEXTURERASTER, (void*)EnvironmentMapping::m_paraboloidRaster[1]);
+	RwIm2DRenderIndexedPrimitive(rwPRIMTYPETRILIST, screenQuad, 4, screenindices, 6);
+	SetSurfaceD(5);
+	MakeScreenQuad(weight * 2, weight, weight, weight);
+	RwRenderStateSet(rwRENDERSTATETEXTURERASTER, (void*)EnvironmentMapping::m_paraboloidRaster[1]);
 	RwIm2DRenderIndexedPrimitive(rwPRIMTYPETRILIST, screenQuad, 4, screenindices, 6);*/
-	//SetSurfaceD(1);
-	//MakeScreenQuad(weight, 0, weight, weight);
-	//RwRenderStateSet(rwRENDERSTATETEXTURERASTER, (void*)EnvironmentMapping::m_paraboloidRaster[1]);
-	//RwIm2DRenderIndexedPrimitive(rwPRIMTYPETRILIST, screenQuad, 4, screenindices, 6);
-	//SetSurfaceD(2);
-	//MakeScreenQuad(weight *2, 0, weight, weight);
-	//RwRenderStateSet(rwRENDERSTATETEXTURERASTER, (void*)EnvironmentMapping::m_paraboloidRaster[1]);
-	//RwIm2DRenderIndexedPrimitive(rwPRIMTYPETRILIST, screenQuad, 4, screenindices, 6);
-	//SetSurfaceD(3);
-	//MakeScreenQuad(0, weight, weight, weight);
-	//RwRenderStateSet(rwRENDERSTATETEXTURERASTER, (void*)EnvironmentMapping::m_paraboloidRaster[1]);
-	//RwIm2DRenderIndexedPrimitive(rwPRIMTYPETRILIST, screenQuad, 4, screenindices, 6);
-	//SetSurfaceD(4);
-	//MakeScreenQuad(weight, weight, weight, weight);
-	//RwRenderStateSet(rwRENDERSTATETEXTURERASTER, (void*)EnvironmentMapping::m_paraboloidRaster[1]);
-	//RwIm2DRenderIndexedPrimitive(rwPRIMTYPETRILIST, screenQuad, 4, screenindices, 6);
-	//SetSurfaceD(5);
-	//MakeScreenQuad(weight * 2, weight, weight, weight);
-	//RwRenderStateSet(rwRENDERSTATETEXTURERASTER, (void*)EnvironmentMapping::m_paraboloidRaster[1]);
-	//RwIm2DRenderIndexedPrimitive(rwPRIMTYPETRILIST, screenQuad, 4, screenindices, 6);
 
 	//DrawDebug();
 }
@@ -315,12 +322,13 @@ void RenderRealTimeShadows(const RwV3d& sundir)
 	}
 }
 
+#include "GTADef.h"
 #include "CTimeCycle.h"
-
+#include "RenderableReflectionObjects.h"
 void CRealTimeShadowManager__Update()
 {
 	//ShadowCasterEntity->ClearCullList();
-	ShadowCasterEntity->Update(GetSectorX(CRenderer::ms_vecCameraPosition.x), GetSectorY(CRenderer::ms_vecCameraPosition.y));
+	//ShadowCasterEntity->Update(GetSectorX(CRenderer::ms_vecCameraPosition.x), GetSectorY(CRenderer::ms_vecCameraPosition.y));
 	//CVector g_vSunPosition;
 	//GetSunPosn(&g_vSunPosition, CTimeCycle::m_CurrentColours.m_fFarClip);
 	//const auto sunDirs = reinterpret_cast<RwV3d*>(0xB7CA50);
@@ -328,10 +336,47 @@ void CRealTimeShadowManager__Update()
 	//const auto curr_sun_dirvec = &sunDirs[curr_sun_dir];
 	////PrepareRealTimeShadows(sunDirs[curr_sun_dir]);
 	//RenderRealTimeShadows(*(RwV3d*)&g_vSunPosition);
-	// EnvironmentMapping::CubeMap();
-	CascadedShadowManagement->Update();
+
+
+	//CascadedShadowManagement->Update();
 	//SpotShadow->Update();
-	EnvironmentMapping::SphericalMap();
+//	EnvironmentMapping::SphericalMap();
+	XMVECTOR minExtents, maxExtents;
+	minExtents = XMLoadFloat3(&CascadedShadowManagement->Desc[0].m_AABB.Min);
+	maxExtents = XMLoadFloat3(&CascadedShadowManagement->Desc[0].m_AABB.Max);
+
+	XMFLOAT3 extents;
+	XMStoreFloat3(&extents, maxExtents - minExtents);
+
+	float longEdge = max(extents.x, extents.y);
+	longEdge *= 0.5;
+	float nearClip = extents.z < 500.0 ? 500.0 : extents.z;
+	float farClip = nearClip;
+	RwV2d viewWindow = {longEdge, longEdge};
+	RwCamera* camera = Scene.m_pRwCamera;
+
+
+
+	//CubemapReflection::Update();
+	//CubemapReflection::RenderScene();
+
+	DualParaboloidReflection::Update();
+	DualParaboloidReflection::RenderScene();
+
+	// EnvironmentMapping::UpdateCubeMap();
+	//RenderableReflectionObjects::Update();
+
+	//EnvironmentMapping::CubeMap();
+	//RenderableScene::m_list = RenderableReflectionObjects::GetRenderList();
+	//RenderableScene::m_frustumRenderable->SetViewWindow(EnvironmentMapping::m_envCamera->viewWindow.x, EnvironmentMapping::m_envCamera->viewWindow.y);
+	//RenderableScene::m_frustumRenderable->SetClipPlane(EnvironmentMapping::m_envCamera->nearPlane, EnvironmentMapping::m_envCamera->farPlane);
+	//RenderableScene::m_frustumRenderable->SetViewMatrix(&EnvironmentMapping::m_ltm[4]);
+
+	RenderableScene::m_frustumRenderable->SetViewWindow(camera->viewWindow.x, camera->viewWindow.y);
+	RenderableScene::m_frustumRenderable->SetClipPlane(camera->nearPlane, camera->farPlane);
+	RenderableScene::m_frustumRenderable->SetViewMatrix(&RwCameraGetFrame(camera)->ltm);
+	
+	RenderableScene::Render();
 }
 
 #include "CMirrors.h"
@@ -371,6 +416,7 @@ void ShutdowRenderware()
 	delete BuldingMeshPipe;
 	delete DefaultMeshPipe;
 	delete VehicleMeshPipe;
+	delete SoftParticlesContext;
 }
 
 #include "Immediate3D.h"
@@ -405,7 +451,7 @@ void Hook()
 	plugin::Events::shutdownRwEvent += ShutdowRenderware;
 
 	//plugin::Events::processScriptsEvent += GameProcess;
-	//plugin::Events::drawingEvent += Render;
+	plugin::Events::drawingEvent += Render;
 
 	plugin::Events::d3dLostEvent += LostDevice;
 	plugin::Events::d3dResetEvent += ResetDevice;
@@ -417,8 +463,8 @@ void Hook()
 	// Remove stencil shadows and sets new shadow mapping
 	plugin::patch::Nop(0x0053C1AB, 5); // CStencilShadows::Process
 
-	//plugin::patch::RedirectJump(0x00706AB0, CRealTimeShadowManager__Update);
-	//plugin::patch::RedirectCall(0x0053EA12, CMirrors__BeforeMainRender);
+	plugin::patch::RedirectJump(0x00706AB0, CRealTimeShadowManager__Update);
+	plugin::patch::RedirectCall(0x0053EA12, CMirrors__BeforeMainRender);
 	VisibilityPlugins::Patch();
 	Immediate3D__Hook();
 	 SoftParticlesContext->hook();

@@ -70,8 +70,8 @@
       <LanguageStandard>stdcpp17</LanguageStandard>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WholeProgramOptimization>false</WholeProgramOptimization>
-      <LanguageStandard_C>stdc17</LanguageStandard_C>
       <ConformanceMode>false</ConformanceMode>
+      <LanguageStandard_C>stdc17</LanguageStandard_C>
     </ClCompile>
     <Link>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
@@ -80,7 +80,7 @@
       <LinkTimeCodeGeneration>
       </LinkTimeCodeGeneration>
       <AdditionalLibraryDirectories>$(PLUGIN_SDK_DIR)\output\lib\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>plugin.lib;d3d9.lib;d3dx9.lib;winmm.lib;d3dcompiler.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>plugin.lib;d3d9.lib;d3dx9.lib;winmm.lib;D3DCompiler.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <SubSystem>Windows</SubSystem>
     </Link>
     <FxCompile>
@@ -122,14 +122,22 @@
     <ClCompile Include="CDrawable.cpp" />
     <ClCompile Include="CGameIdle.cpp" />
     <ClCompile Include="Collider.cpp" />
+    <ClCompile Include="CubemapReflection.cpp" />
     <ClCompile Include="DefaultMeshPipeline.cpp" />
     <ClCompile Include="CommonD.cpp" />
     <ClCompile Include="CascadedShadowRendering.cpp" />
+    <ClCompile Include="DualParaboloidReflection.cpp" />
     <ClCompile Include="Frustum.cpp" />
     <ClCompile Include="Immediate3D.cpp" />
     <ClCompile Include="Mesh.cpp" />
     <ClCompile Include="PBSMaterial.cpp" />
+    <ClCompile Include="PixelShaderState.cpp" />
+    <ClCompile Include="RenderableFrustum.cpp" />
+    <ClCompile Include="RenderableReflectionObjects.cpp" />
+    <ClCompile Include="RenderableScene.cpp" />
+    <ClCompile Include="RwIndexBuffer.cpp" />
     <ClCompile Include="ShaderManager.cpp" />
+    <ClCompile Include="ShaderState.cpp" />
     <ClCompile Include="ShadowCaster.cpp" />
     <ClCompile Include="ShadowFrustum.cpp" />
     <ClCompile Include="SkinnedMeshPipeline.cpp" />
@@ -146,6 +154,7 @@
     <ClCompile Include="Renderer.cpp" />
     <ClCompile Include="RwMath.cpp" />
     <ClCompile Include="SkinnedMeshInstance.cpp" />
+    <ClCompile Include="VertexBuffer.cpp" />
     <ClCompile Include="VisibilityPlugins.cpp" />
     <ClCompile Include="Water.cpp" />
   </ItemGroup>
@@ -156,14 +165,22 @@
     <ClInclude Include="CDrawable.h" />
     <ClInclude Include="CGameIdle.h" />
     <ClInclude Include="Collider.h" />
+    <ClInclude Include="CubemapReflection.h" />
     <ClInclude Include="DefaultMeshPipeline.h" />
     <ClInclude Include="CommonD.h" />
     <ClInclude Include="CascadedShadowRendering.h" />
+    <ClInclude Include="DualParaboloidReflection.h" />
     <ClInclude Include="Frustum.h" />
     <ClInclude Include="Immediate3D.h" />
     <ClInclude Include="Mesh.h" />
     <ClInclude Include="PBSMaterial.h" />
+    <ClInclude Include="PixelShaderState.h" />
+    <ClInclude Include="RenderableFrustum.h" />
+    <ClInclude Include="RenderableReflectionObjects.h" />
+    <ClInclude Include="RenderableScene.h" />
+    <ClInclude Include="RwIndexBuffer.h" />
     <ClInclude Include="ShaderManager.h" />
+    <ClInclude Include="ShaderState.h" />
     <ClInclude Include="ShadowCaster.h" />
     <ClInclude Include="ShadowFrustum.h" />
     <ClInclude Include="SkinnedMeshPipeline.h" />
@@ -181,6 +198,7 @@
     <ClInclude Include="resource.h" />
     <ClInclude Include="RwMath.h" />
     <ClInclude Include="SkinnedMeshInstance.h" />
+    <ClInclude Include="VertexBuffer.h" />
     <ClInclude Include="VisibilityPlugins.h" />
     <ClInclude Include="Water.h" />
   </ItemGroup>

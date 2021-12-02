@@ -11,7 +11,6 @@
     <ClCompile Include="CDrawable.cpp" />
     <ClCompile Include="CGameIdle.cpp" />
     <ClCompile Include="dllmain.cpp" />
-    <ClCompile Include="DefaultPipeline.cpp" />
     <ClCompile Include="..\imgui\imgui.cpp">
       <Filter>imgui</Filter>
     </ClCompile>
@@ -38,11 +37,6 @@
     </ClCompile>
     <ClCompile Include="Renderer.cpp" />
     <ClCompile Include="RwMath.cpp" />
-    <ClCompile Include="BuldingMeshPipeline.cpp" />
-    <ClCompile Include="SkinnedMeshInstance.cpp" />
-    <ClCompile Include="DefaultMeshPipeline.cpp" />
-    <ClCompile Include="VehicleMeshPipeline.cpp" />
-    <ClCompile Include="SkinnedMeshPipeline.cpp" />
     <ClCompile Include="CascadedShadowRendering.cpp" />
     <ClCompile Include="ShadowFrustum.cpp" />
     <ClCompile Include="ShaderManager.cpp" />
@@ -57,6 +51,33 @@
     <ClCompile Include="AABB.cpp" />
     <ClCompile Include="Collider.cpp" />
     <ClCompile Include="VisibilityPlugins.cpp" />
+    <ClCompile Include="ShaderState.cpp" />
+    <ClCompile Include="PixelShaderState.cpp" />
+    <ClCompile Include="VertexBuffer.cpp" />
+    <ClCompile Include="RwIndexBuffer.cpp" />
+    <ClCompile Include="RenderableReflectionObjects.cpp" />
+    <ClCompile Include="BuldingMeshPipeline.cpp">
+      <Filter>Pipeline</Filter>
+    </ClCompile>
+    <ClCompile Include="DefaultMeshPipeline.cpp">
+      <Filter>Pipeline</Filter>
+    </ClCompile>
+    <ClCompile Include="DefaultPipeline.cpp">
+      <Filter>Pipeline</Filter>
+    </ClCompile>
+    <ClCompile Include="SkinnedMeshInstance.cpp">
+      <Filter>Pipeline</Filter>
+    </ClCompile>
+    <ClCompile Include="SkinnedMeshPipeline.cpp">
+      <Filter>Pipeline</Filter>
+    </ClCompile>
+    <ClCompile Include="VehicleMeshPipeline.cpp">
+      <Filter>Pipeline</Filter>
+    </ClCompile>
+    <ClCompile Include="RenderableFrustum.cpp" />
+    <ClCompile Include="RenderableScene.cpp" />
+    <ClCompile Include="CubemapReflection.cpp" />
+    <ClCompile Include="DualParaboloidReflection.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="GTADef.h" />
@@ -69,15 +90,9 @@
     <ClInclude Include="CDrawable.h" />
     <ClInclude Include="CGameIdle.h" />
     <ClInclude Include="DeferredSA.h" />
-    <ClInclude Include="DefaultPipeline.h" />
     <ClInclude Include="Renderer.h" />
     <ClInclude Include="RwMath.h" />
     <ClInclude Include="resource.h" />
-    <ClInclude Include="BuldingMeshPipeline.h" />
-    <ClInclude Include="SkinnedMeshInstance.h" />
-    <ClInclude Include="DefaultMeshPipeline.h" />
-    <ClInclude Include="VehicleMeshPipeline.h" />
-    <ClInclude Include="SkinnedMeshPipeline.h" />
     <ClInclude Include="CascadedShadowRendering.h" />
     <ClInclude Include="ShadowFrustum.h" />
     <ClInclude Include="ShaderManager.h" />
@@ -92,6 +107,33 @@
     <ClInclude Include="AABB.h" />
     <ClInclude Include="Collider.h" />
     <ClInclude Include="VisibilityPlugins.h" />
+    <ClInclude Include="ShaderState.h" />
+    <ClInclude Include="PixelShaderState.h" />
+    <ClInclude Include="VertexBuffer.h" />
+    <ClInclude Include="RwIndexBuffer.h" />
+    <ClInclude Include="RenderableReflectionObjects.h" />
+    <ClInclude Include="BuldingMeshPipeline.h">
+      <Filter>Pipeline</Filter>
+    </ClInclude>
+    <ClInclude Include="DefaultMeshPipeline.h">
+      <Filter>Pipeline</Filter>
+    </ClInclude>
+    <ClInclude Include="DefaultPipeline.h">
+      <Filter>Pipeline</Filter>
+    </ClInclude>
+    <ClInclude Include="SkinnedMeshInstance.h">
+      <Filter>Pipeline</Filter>
+    </ClInclude>
+    <ClInclude Include="SkinnedMeshPipeline.h">
+      <Filter>Pipeline</Filter>
+    </ClInclude>
+    <ClInclude Include="VehicleMeshPipeline.h">
+      <Filter>Pipeline</Filter>
+    </ClInclude>
+    <ClInclude Include="RenderableFrustum.h" />
+    <ClInclude Include="RenderableScene.h" />
+    <ClInclude Include="CubemapReflection.h" />
+    <ClInclude Include="DualParaboloidReflection.h" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="imgui">
@@ -99,6 +141,9 @@
     </Filter>
     <Filter Include="shaders">
       <UniqueIdentifier>{ffe65f58-a716-4279-917b-72de1db4eccd}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Pipeline">
+      <UniqueIdentifier>{7db76db8-2c71-4179-b66d-c15caee0dfab}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>

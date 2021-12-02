@@ -335,7 +335,7 @@ void CGameIdle::RenderScene(){
 	
 	CWaterLevel::SetupWaterShader(); 
 	//DeferredContext->RenderPostProcessing();
-	//SoftParticlesContext->Render();
+	//SoftParticlesContext->SetupParams();
 }
 
 void Idle_hook()

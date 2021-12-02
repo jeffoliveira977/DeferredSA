@@ -3,6 +3,7 @@
 #include "DeferredRenderer.h"
 #include "EnvironmentMapping.h"
 #include "VehicleMeshPipeline.h"
+#include "CubemapReflection.h"
 #include "CommonD.h"
 #include "CCamera.h"
 #include "CTimeCycle.h"
@@ -303,7 +304,7 @@ void VehicleMeshPipeline::ForwardRendering(RwResEntry* entry, void* object, RwUI
 			RwD3D9SetSamplerState(3, D3DSAMP_MIPFILTER, D3DTEXF_LINEAR);
 			RwD3D9SetSamplerState(3, D3DSAMP_ADDRESSU, D3DTADDRESS_BORDER);
 			RwD3D9SetSamplerState(3, D3DSAMP_ADDRESSV, D3DTADDRESS_BORDER);
-			_rwD3D9RWSetRasterStage(EnvironmentMapping::m_cubeRaster, 3);
+			_rwD3D9RWSetRasterStage(CubemapReflection::m_cubeRaster, 3);
 
 			D3D9Render(header, instance, texture, flags);
 		}

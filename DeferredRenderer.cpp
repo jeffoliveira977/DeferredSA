@@ -1,5 +1,7 @@
 #include "DeferredRenderer.h"
 #include "EnvironmentMapping.h"
+#include "CubemapReflection.h"
+#include "DualParaboloidReflection.h"
 #include "Lights.h"
 #include "Quad.h"
 #include "CTimeCycle.h"
@@ -198,10 +200,10 @@ void DeferredRendering::FinalPass()
 
 	ShaderContext->SetTimecyProps(12);
 
-	RwRaster* reflectionRasters[] = {EnvironmentMapping::m_cubeRaster,
+	RwRaster* reflectionRasters[] = {CubemapReflection::m_cubeRaster,
 									 EnvironmentMapping::m_sphericalRaster,
-									 EnvironmentMapping::m_paraboloidRaster[0],
-									 EnvironmentMapping::m_paraboloidRaster[1]};
+									 DualParaboloidReflection::m_raster[0],
+									 DualParaboloidReflection::m_raster[1]};
 
 	float fMipMapLODBias = -1000;
 	for(size_t i = 0; i < 4; i++)

@@ -308,7 +308,6 @@ typedef void cDMAudio;
 #define RwResourcesFreeResEntry(entry) ((RwBool ( __cdecl*)(RwResEntry*))0x807DE0)(entry)
 #define RxPipelineDestroy(pipeline) ((void ( __cdecl*)(RxPipeline*))0x805820)(pipeline) 
 
-
 #define DEFERREDSHADERPATH "DeferredSA/shaders/binary/"
 
 void RwD3D9RestoreRenderTargets(int count);
@@ -347,6 +346,10 @@ constexpr float LOG10_2 = 0.30102999566398119802f; // log10(2)
 constexpr float SQRT_2 = 1.41421356237309504880f;
 constexpr float SIN_PI = 0.0f; // std::sin(PI);
 constexpr float COS_PI = -1.0f; // std::cos(PI);
+
+constexpr RwV3d Xaxis = {1.0f, 0.0f, 0.0f};
+constexpr RwV3d Yaxis = {0.0f, 1.0f, 0.0f};
+constexpr RwV3d Zaxis = {0.0f, 0.0f, 1.0f};
 
 template <typename T>
 T clamp(T value, T low, T high)
