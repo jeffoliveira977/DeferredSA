@@ -2,6 +2,7 @@
 #include "CommonD.h"
 #include "VertexBuffer.h"
 #include "RwIndexBuffer.h"
+#include "Frustum.h"
 
 class RenderableFrustum
 {
@@ -12,8 +13,9 @@ private:
 	RwMatrix* LTM;
 	VertexBuffer* m_vertexBuffer;
 	RwIndexBuffer* m_indexBuffer;
-public:
 
+public:
+	Math::Frustum m_frustum;
 	RenderableFrustum();
 	~RenderableFrustum();
 

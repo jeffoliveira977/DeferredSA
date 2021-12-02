@@ -7,6 +7,7 @@
 #include "CCamera.h"
 #include "CTimeCycle.h"
 #include "PBSMaterial.h"
+#include "DualParaboloidReflection.h"
 
 using namespace plugin;
 
@@ -107,15 +108,16 @@ void BuldingMeshPipeline::ReflectionRendering(RwResEntry* entry, void* object, R
 	worldMatrix = RwMatrixToXMMATRIX(LTM);
 	_rwD3D9SetVertexShaderConstant(0, &worldMatrix, 4);
 
-	if(gRenderState == RenderingStage::stageReflection || (gRenderState == RenderingStage::stageDualParaboloidMap && EnvironmentMapping::m_direction == -1))
+	if(gRenderState == RenderingStage::stageReflection)
 		RwRenderStateSet(rwRENDERSTATECULLMODE, (void*)rwCULLMODECULLFRONT);
-	else
-		RwRenderStateSet(rwRENDERSTATECULLMODE, (void*)rwCULLMODECULLBACK);
 
 	RwRenderStateSet(rwRENDERSTATEZWRITEENABLE, (void*)TRUE);
 	RwRenderStateSet(rwRENDERSTATEZTESTENABLE, (void*)TRUE);
 
-	/*if(gRenderState == RenderingStage::stageSphereMap)
+	RwRenderStateSet(rwRENDERSTATESRCBLEND, (void*)rwBLENDSRCALPHA);
+	RwRenderStateSet(rwRENDERSTATEDESTBLEND, (void*)rwBLENDINVSRCALPHA);
+
+	if(gRenderState == RenderingStage::stageSphereMap)
 	{
 		float fog[2];
 		fog[0] = CTimeCycle::m_CurrentColours.m_fFogStart;
@@ -131,7 +133,6 @@ void BuldingMeshPipeline::ReflectionRendering(RwResEntry* entry, void* object, R
 		float fog[4];
 		fog[0] = 0.1;
 		fog[1] = 300.0;
-		fog[2] = EnvironmentMapping::m_direction;
 		_rwD3D9SetVertexShaderConstant(12, fog, 1);
 
 		_rwD3D9SetVertexShader(VS_dualParaboloidMap);
@@ -150,7 +151,7 @@ void BuldingMeshPipeline::ReflectionRendering(RwResEntry* entry, void* object, R
 		_rwD3D9SetVertexShader(VS_waterReflection);
 		_rwD3D9SetPixelShader(PS_waterReflection);
 	}
-	else*/
+	else
 	{
 		_rwD3D9SetVertexShader(VS_simple);
 		_rwD3D9SetPixelShader(PS_simple);

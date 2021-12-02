@@ -5,7 +5,6 @@ float4 FogData : register(c12);
 
 #define NearPlane FogData.x
 #define FarPlane  FogData.y
-#define Direction FogData.z
 
 struct VS_DualInput
 {
@@ -29,7 +28,6 @@ VS_DualOutput main(VS_DualInput input)
     output.Position = mul(input.Position, World);
     output.Position = mul(output.Position, View);
     output.Position = mul(output.Position, Projection);
-    output.Position.z *= Direction;
     
     float L = length(output.Position.xyz);
     output.Position = output.Position / L;

@@ -40,6 +40,25 @@ void RenderableFrustum::InitGraphicsBuffer()
 
 void RenderableFrustum::RenderFrustum(bool ortho)
 {
+	 RwImVertexIndex FrustumIndices[] = {
+		// Near plane lines
+		0, 1,
+		1, 2,
+		2, 3,
+		3, 0,
+
+		// Sides
+		0, 4,
+		1, 5,
+		2, 6,
+		3, 7,
+
+		// Far plane lines
+		4, 5,
+		5, 6,
+		6, 7,
+		7, 4
+	};
 	static RwRGBA yellow = {255, 255, 0,  65};
 	static RwRGBA red = {255,   0, 0, 255};
 
@@ -61,8 +80,8 @@ void RenderableFrustum::RenderFrustum(bool ortho)
 		0,  0
 	};
 
-	/* Triangle index */
-	static RwImVertexIndex indicesT[] =
+	///* Triangle index */
+	 RwImVertexIndex indicesT[] =
 	{
 		 5,  6, 10,
 		10,  9,  5,
@@ -92,20 +111,29 @@ void RenderableFrustum::RenderFrustum(bool ortho)
 	RwInt32 k = 0;
 
 
+	Math::AABB box = m_frustum.GetBoundingBox();
+
 
 	RwReal depth[3];
 	depth[0] = 1.0f;
-	depth[1] = m_nearPlane;
-	depth[2] = m_farPlane;
+	depth[1] = -0.01;
+	depth[2] = -3000.0;
 
 
 	/* Origin */
 	RwIm3DVertexSetPos(&frustum[k], 0, 0, 0.0f);
 	k++;
 
-	RwV2d offset = {0, 0};
-	RwV2d viewWindow = {m_viewWindow.x, m_viewWindow.y};
+	float    SinFov;
+	float    CosFov;
+	XMScalarSinCos(&SinFov, &CosFov, 0.5f * XMConvertToRadians(90.0f));
 
+	float Height = CosFov / SinFov;
+	float Width = Height / 1.0;
+
+	RwV2d offset = {0, 0};
+	RwV2d viewWindow = { XMConvertToRadians(90.0f),  XMConvertToRadians(90.0f)};
+	//PrintMessage("%f %f", viewWindow.x, viewWindow.y);
 	/* View Window */
 	for(i = 0; i < 3; i++)
 	{
@@ -183,4 +211,25 @@ void RenderableFrustum::RenderFrustum(bool ortho)
 	}
 
 	RwRenderStateSet(rwRENDERSTATESHADEMODE, (void*)rwSHADEMODEGOURAUD);
+
+	/*XMFLOAT3* corners = m_frustum.GetCorners();
+
+	RwIm3DVertex verts[8];
+	for(UINT i = 0; i < 8; i++)
+	{
+		RwIm3DVertexSetPos(&verts[i], corners[i].x, corners[i].y, corners[i].z);
+		RxObjSpace3DLitVertexSetColor(&verts[i], &yellow);
+	}
+
+	if(RwIm3DTransform(verts, 8, 0, rwIM3D_ALLOPAQUE))
+	{
+		RwIm3DRenderIndexedPrimitive(rwPRIMTYPELINELIST, FrustumIndices, 24);
+		RwIm3DEnd();
+	}
+
+	if(RwIm3DTransform(verts, 8, 0, 0))
+	{
+		RwIm3DRenderIndexedPrimitive(rwPRIMTYPETRISTRIP, FrustumIndices, 24);
+		RwIm3DEnd();
+	}*/
 }

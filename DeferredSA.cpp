@@ -15,6 +15,8 @@
 #include "CascadedShadowRendering.h"
 #include "ShadowCaster.h"
 #include "CubemapReflection.h"
+#include "DualParaboloidReflection.h"
+
 //imgui
 #include "imgui.h"
 #include "imgui_impl_rw.h"
@@ -47,6 +49,8 @@ void Initialize()
 	CWaterLevel::InitShaders();
 	EnvironmentMapping::InitializeGraphics();
 	CubemapReflection::Initialize();
+	DualParaboloidReflection::Initialize();
+
 	//CreateQuadRender();
 	DeferredContext = new DeferredRendering();
 	DeferredContext->initGraphicsBuffer();
@@ -206,16 +210,20 @@ void Render()
 	//ImGui_ImplDX9_RenderDrawData(ImGui::GetDrawData());
 	ImGui_ImplRW_RenderDrawData(ImGui::GetDrawData());
 	
-	/*int weight = 512;
+	int weight = 512;
 	MakeScreenQuad(0, 0, weight, weight);
 	RwRenderStateSet(rwRENDERSTATETEXTURERASTER, (void*)RenderableScene::m_raster);
-	RwIm2DRenderIndexedPrimitive(rwPRIMTYPETRILIST, screenQuad, 4, screenindices, 6);*/
-	int weight = 512;
-	MakeScreenQuad(weight, 0, weight, weight);
-	RwRenderStateSet(rwRENDERSTATETEXTURERASTER, (void*)EnvironmentMapping::m_paraboloidRaster[1]);
 	RwIm2DRenderIndexedPrimitive(rwPRIMTYPETRILIST, screenQuad, 4, screenindices, 6);
+
+	/*MakeScreenQuad(0, 0, weight, weight);
+	RwRenderStateSet(rwRENDERSTATETEXTURERASTER, (void*)DualParaboloidReflection::m_raster[0]);
+	RwIm2DRenderIndexedPrimitive(rwPRIMTYPETRILIST, screenQuad, 4, screenindices, 6);
+	MakeScreenQuad(weight, 0, weight, weight);
+	RwRenderStateSet(rwRENDERSTATETEXTURERASTER, (void*)DualParaboloidReflection::m_raster[1]);
+	RwIm2DRenderIndexedPrimitive(rwPRIMTYPETRILIST, screenQuad, 4, screenindices, 6);*/
 //	int weight = 512;
-	SetSurfaceD(0);
+	
+	/*SetSurfaceD(0);
 	MakeScreenQuad(0, 0, weight, weight);
 	RwRenderStateSet(rwRENDERSTATETEXTURERASTER, (void*)EnvironmentMapping::m_paraboloidRaster[1]);
 	RwIm2DRenderIndexedPrimitive(rwPRIMTYPETRILIST, screenQuad, 4, screenindices, 6);
@@ -238,7 +246,7 @@ void Render()
 	SetSurfaceD(5);
 	MakeScreenQuad(weight * 2, weight, weight, weight);
 	RwRenderStateSet(rwRENDERSTATETEXTURERASTER, (void*)EnvironmentMapping::m_paraboloidRaster[1]);
-	RwIm2DRenderIndexedPrimitive(rwPRIMTYPETRILIST, screenQuad, 4, screenindices, 6);
+	RwIm2DRenderIndexedPrimitive(rwPRIMTYPETRILIST, screenQuad, 4, screenindices, 6);*/
 
 	//DrawDebug();
 }
@@ -355,18 +363,32 @@ void CRealTimeShadowManager__Update()
 
 	CubemapReflection::Update();
 	CubemapReflection::RenderScene();
+
+	//DualParaboloidReflection::Update();
+	//DualParaboloidReflection::RenderScene();
+
 	// EnvironmentMapping::UpdateCubeMap();
 	//RenderableReflectionObjects::Update();
 
+	Math::AABB box = CubemapReflection::m_frustum[2].GetBoundingBox();
+	RwBBox bb;
+	bb.inf = {box.Min.x,box.Min.y,box.Min.z};
+	bb.sup = {box.Max.x,box.Max.y,box.Max.z};
+	
+	RwV3d ot;
+	RwV3dSubMacro(&ot, &bb.sup, &bb.inf);
+	float longs = std::max(ot.x * 0.5f, ot.y * 0.5f);
+	
+	//float e = (box.Max.z - abs(box.Min.z)) * 0.5;
+	//float c = (box.Max.z + abs(box.Min.z) * 2);
 	//EnvironmentMapping::CubeMap();
-	//RenderableScene::m_list = RenderableReflectionObjects::GetRenderList();
-	//RenderableScene::m_frustumRenderable->SetViewWindow(EnvironmentMapping::m_envCamera->viewWindow.x, EnvironmentMapping::m_envCamera->viewWindow.y);
-	//RenderableScene::m_frustumRenderable->SetClipPlane(EnvironmentMapping::m_envCamera->nearPlane, EnvironmentMapping::m_envCamera->farPlane);
-	//RenderableScene::m_frustumRenderable->SetViewMatrix(&EnvironmentMapping::m_ltm[4]);
-
-	RenderableScene::m_frustumRenderable->SetViewWindow(camera->viewWindow.x, camera->viewWindow.y);
-	RenderableScene::m_frustumRenderable->SetClipPlane(camera->nearPlane, camera->farPlane);
-	RenderableScene::m_frustumRenderable->SetViewMatrix(&RwCameraGetFrame(camera)->ltm);
+	RenderableScene::m_frustumRenderable->SetViewWindow(ot.x * 0.5f, ot.x * 0.5f);
+	RenderableScene::m_frustumRenderable->SetClipPlane(0.01, 3000.0);
+	RenderableScene::m_frustumRenderable->SetViewMatrix((RwMatrix*)&XMMatrixInverse(0, CubemapReflection::m_viewMatrix[2]));
+	RenderableScene::m_frustumRenderable->m_frustum = CubemapReflection::m_frustum[2];
+	//RenderableScene::m_frustumRenderable->SetViewWindow(camera->viewWindow.x, camera->viewWindow.y);
+	//RenderableScene::m_frustumRenderable->SetClipPlane(camera->nearPlane, camera->farPlane);
+	//RenderableScene::m_frustumRenderable->SetViewMatrix(&RwCameraGetFrame(camera)->ltm);
 	
 	RenderableScene::Render();
 }
