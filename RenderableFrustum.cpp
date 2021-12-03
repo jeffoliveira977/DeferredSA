@@ -124,14 +124,23 @@ void RenderableFrustum::RenderFrustum(bool ortho)
 
 	auto C = m.m[2][2];
 	auto D = m.m[2][3];
-	float nearClip = D / (C - 1.0f);
-	float farClip = D / (C + 1.0f);
+	//float nearClip = D / (C - 1.0f);
+	//float farClip = D / (C + 1.0f);
 
 	// get clip planes
-	//float nearClip = -m.m[3][2] / m.m[2][2];
-	//float farClip = m.m[3][2] / (1- m.m[2][2]);
+	float nearClip, farClip;
+	if(ortho)
+	{
+		nearClip = -m.m[3][2] / m.m[2][2];
+		farClip = m.m[3][2] / ( m.m[2][2]);
+	}
+	else
+	{
+		nearClip = m.m[3][2] / m.m[2][2];
+		farClip = m.m[3][2] / (1.0f + m.m[2][2]);
+	}
 
-	PrintMessage("%f %f %f %f", fov, aspect, C, D);
+	PrintMessage("%f %f %f %f", fov, aspect, nearClip, farClip);
 	RwReal depth[3];
 	depth[0] = 1.0f;
 	depth[1] = nearClip;
@@ -148,7 +157,7 @@ void RenderableFrustum::RenderFrustum(bool ortho)
 	float Width = Height / 1.0;
 
 	RwV2d offset = {0, 0};
-	RwV2d viewWindow = {fov, fov};
+	RwV2d viewWindow = {(fov), (fov)};
 	//PrintMessage("%f %f", viewWindow.x, viewWindow.y);
 	/* View Window */
 	for(i = 0; i < 3; i++)
