@@ -15,7 +15,7 @@ public:
 	static RwRaster* m_depthRaster;
 	static RwFrame* m_frame;
 	static float m_direction;
-
+	static std::unordered_map<CEntity*, bool> mObjectsCulled[2];
 	static void Initialize();
 	static void Release();
 	static void AddObject(int i, CEntity* entity, float distance);

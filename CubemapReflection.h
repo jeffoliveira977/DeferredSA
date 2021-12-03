@@ -16,7 +16,7 @@ public:
 	static RwRaster* m_cubeRaster;
 	static RwRaster* m_depthRaster;
 	static RwFrame* m_frame;
-
+	static std::unordered_map<CEntity*, bool> mObjectsCulled[6];
 
 	static void Initialize();
 	static void Release();

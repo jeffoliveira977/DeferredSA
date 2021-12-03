@@ -15,6 +15,8 @@ private:
 	RwIndexBuffer* m_indexBuffer;
 
 public:
+	XMMATRIX mView;
+	XMMATRIX mProj;
 	Math::Frustum m_frustum;
 	RenderableFrustum();
 	~RenderableFrustum();

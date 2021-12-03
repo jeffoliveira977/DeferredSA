@@ -2,9 +2,11 @@
 #include "CommonD.h"
 #include "RenderableFrustum.h"
 #include "RenderableAABB.h"
+
 class RenderableScene
 {
 public:
+
 	static void InitGraphicsBuffer();
 	static void Render();
 	static void SetRenderList(std::vector<CEntity*>list);
@@ -16,6 +18,6 @@ public:
 	static std::vector<CEntity*> m_list;
 	static RenderableFrustum *m_frustumRenderable;
 	static RenderCallback m_renderCallback;
-
+	static int mRenderStage;
 };
 

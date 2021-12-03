@@ -177,11 +177,6 @@ namespace Math
 
 	bool Frustum::Intersects(AABB aabb)
 	{
-		/*if(aabb.Contains(*this))
-			return true;
-
-		return false;*/
-
 		for(auto& plane : Planes)
 		{
 			if(aabb.Intersects(plane))

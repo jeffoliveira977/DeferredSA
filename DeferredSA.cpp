@@ -79,6 +79,7 @@ void Initialize()
 	ImGui_ImplDX9_Init(GetD3DDevice());
 }
 
+
 void SetSurfaceD(int id)
 {
 	auto rasterCube = RASTEREXTFROMCONSTRASTER(CubemapReflection::m_cubeRaster);
@@ -378,13 +379,20 @@ void CRealTimeShadowManager__Update()
 	RwV3d ot;
 	RwV3dSubMacro(&ot, &bb.sup, &bb.inf);
 	float longs = std::max(ot.x * 0.5f, ot.y * 0.5f);
-	
+	//PrintMessage("%f", longEdge);
 	//float e = (box.Max.z - abs(box.Min.z)) * 0.5;
 	//float c = (box.Max.z + abs(box.Min.z) * 2);
 	//EnvironmentMapping::CubeMap();
+
+	//RenderableScene::m_frustumRenderable->mView = CascadedShadowManagement->Desc[0].lightViewMatrix;
+	//RenderableScene::m_frustumRenderable->mProj = CascadedShadowManagement->Desc[0].lightOrthoMatrix;
+	RenderableScene::m_frustumRenderable->mView = CubemapReflection::m_viewMatrix[2];
+	RenderableScene::m_frustumRenderable->mProj = CubemapReflection::m_projectionMatrix;
 	RenderableScene::m_frustumRenderable->SetViewWindow(ot.x * 0.5f, ot.x * 0.5f);
 	RenderableScene::m_frustumRenderable->SetClipPlane(0.01, 3000.0);
 	RenderableScene::m_frustumRenderable->SetViewMatrix((RwMatrix*)&XMMatrixInverse(0, CubemapReflection::m_viewMatrix[2]));
+	//RenderableScene::m_frustumRenderable->SetViewMatrix((RwMatrix*)&XMMatrixInverse(0, CascadedShadowManagement->Desc[0].lightViewMatrix));
+
 	RenderableScene::m_frustumRenderable->m_frustum = CubemapReflection::m_frustum[2];
 	//RenderableScene::m_frustumRenderable->SetViewWindow(camera->viewWindow.x, camera->viewWindow.y);
 	//RenderableScene::m_frustumRenderable->SetClipPlane(camera->nearPlane, camera->farPlane);

@@ -6,6 +6,7 @@
 #include "ShaderManager.h"
 #include "CTimeCycle.h"
 #include "GTADef.h"
+#include "RenderableScene.h"
 
 std::vector<CEntity*> CubemapReflection::m_renderableList[6];
  int CubemapReflection::m_size;
@@ -17,6 +18,7 @@ std::vector<CEntity*> CubemapReflection::m_renderableList[6];
  RwRaster* CubemapReflection::m_cubeRaster;
  RwRaster* CubemapReflection::m_depthRaster;
  RwFrame* CubemapReflection::m_frame;
+ std::unordered_map<CEntity*, bool> CubemapReflection::mObjectsCulled[6];
 
 void CubemapReflection::Initialize()
 {
@@ -49,6 +51,51 @@ void CubemapReflection::AddObject(int i, CEntity* entity, float distance)
 		m_renderableList[i].push_back(entity->m_pLod);
 }
 
+void CubemapReflection::SectorList(CPtrList& ptrList)
+{
+	for(auto node = ptrList.GetNode(); node; node = node->pNext)
+	{
+		CEntity* entity = reinterpret_cast<CEntity*>(node->pItem);
+		if(entity->m_nScanCode != CWorld::ms_nCurrentScanCode)
+		{
+			entity->m_nScanCode = CWorld::ms_nCurrentScanCode;
+
+			CColModel* col = entity->GetColModel();
+			if(col == nullptr)
+				continue;
+
+			CVector position = entity->GetPosition();
+			if(entity->m_pLod)
+				position = entity->m_pLod->GetPosition();
+
+			float distance = (position - CRenderer::ms_vecCameraPosition).Magnitude();
+			XMMATRIX world = RwMatrixToXMMATRIX(reinterpret_cast<RwMatrix*>(entity->GetMatrix()));
+
+			CBoundingBox modelAABB = col->m_boundBox;
+
+			XMFLOAT3 min, max;
+			min = *reinterpret_cast<XMFLOAT3*>(&modelAABB.m_vecMin);
+			max = *reinterpret_cast<XMFLOAT3*>(&modelAABB.m_vecMax);
+
+			Math::AABB aabb(min, max);
+			aabb.Transform(world);
+
+			// For every cubemap faces...
+			for(size_t i = 0; i < 6; i++)
+			{
+				if(m_frustum[i].Intersects(aabb))
+				{
+					mObjectsCulled[i][entity] = true;
+					AddObject(i, entity, distance);
+				}
+			}
+		}
+	}
+
+	//PrintMessage("Renderable list: %i %i %i %i %i %i", m_renderableList[0].size(), m_renderableList[1].size(), m_renderableList[2].size(), 
+	//												   m_renderableList[3].size(), m_renderableList[4].size(), m_renderableList[5].size());
+}
+
 void CubemapReflection::ScanSectorList(int sectorX, int sectorY)
 {
 	if(sectorX >= 0 && sectorY >= 0 && sectorX < MAX_SECTORS_X && sectorY < MAX_SECTORS_Y)
@@ -66,8 +113,6 @@ void CubemapReflection::ScanSectorList(int sectorX, int sectorY)
 
 void CubemapReflection::Update()
 {
-
-	// Update matrices
 	m_projectionMatrix = XMMatrixPerspectiveFovRH(XMConvertToRadians(90.0f), 1.0f, 0.01f, 3000.0f);
 	CVector pos = FindPlayerCoors(0);
 
@@ -78,7 +123,7 @@ void CubemapReflection::Update()
 		XMVECTOR lookAt;
 		XMVECTOR up;
 
-		switch((D3DCUBEMAP_FACES)i)
+		switch(static_cast<D3DCUBEMAP_FACES>(i))
 		{
 			case D3DCUBEMAP_FACE_POSITIVE_X:
 				lookAt = g_XMIdentityR0;
@@ -128,53 +173,6 @@ void CubemapReflection::Update()
 	}
 }
 
-
-void CubemapReflection::SectorList(CPtrList& ptrList)
-{
-	for(auto node = ptrList.GetNode(); node; node = node->pNext)
-	{
-		CEntity* entity = reinterpret_cast<CEntity*>(node->pItem);
-		if(entity->m_nScanCode != CWorld::ms_nCurrentScanCode)
-		{
-			entity->m_nScanCode = CWorld::ms_nCurrentScanCode;
-
-			CColModel* col = entity->GetColModel();
-			if(col == nullptr)
-				continue;
-
-			CVector position = entity->GetPosition();
-			if(entity->m_pLod)
-				position = entity->m_pLod->GetPosition();
-
-			float distance = (position - CRenderer::ms_vecCameraPosition).Magnitude();
-			XMMATRIX world = RwMatrixToXMMATRIX(reinterpret_cast<RwMatrix*>(entity->GetMatrix()));
-
-			CBoundingBox modelAABB = col->m_boundBox;
-
-			XMVECTOR min, max;
-			min = XMLoadFloat3(reinterpret_cast<XMFLOAT3*>(&modelAABB.m_vecMin));
-			max = XMLoadFloat3(reinterpret_cast<XMFLOAT3*>(&modelAABB.m_vecMax));
-			min = XMVector3Transform(min, world);
-			max = XMVector3Transform(max, world);
-
-			Math::AABB aabb;
-			XMStoreFloat3(&aabb.Min, min);
-			XMStoreFloat3(&aabb.Max, max);
-
-			for(size_t i = 0; i < 6; i++)
-			{
-				if(m_frustum[i].Intersects(aabb))
-				{
-					AddObject(i, entity, distance);
-				}
-			}
-		}
-	}
-
-	//PrintMessage("Renderable list: %i %i %i %i %i %i", m_renderableList[0].size(), m_renderableList[1].size(), m_renderableList[2].size(), 
-	//												   m_renderableList[3].size(), m_renderableList[4].size(), m_renderableList[5].size());
-}
-
 void CubemapReflection::RenderScene()
 {
 	gRenderState = stageReflectionCubemap;
@@ -196,6 +194,11 @@ void CubemapReflection::RenderScene()
 		{
 			if(entity->m_pRwObject == nullptr)
 				continue;
+
+			if(!entity->m_bBackfaceCulled)
+			{
+				RwRenderStateSet(rwRENDERSTATECULLMODE, (void*)rwCULLMODECULLNONE);
+			}
 
 			entity->m_bImBeingRendered = true;
 			entity->Render();

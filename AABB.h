@@ -16,6 +16,8 @@ namespace Math
 		void CreateFromPoints(XMFLOAT3 points[], size_t count);
 		XMFLOAT3* GetCorners();
 
+		void Transform(XMMATRIX matrix);
+		void Transform(AABB &aabb, XMMATRIX matrix);
 		bool Contains(Frustum frustum);
 		bool Intersects(XMFLOAT3 point);
 		bool Intersects(XMFLOAT4 plane);

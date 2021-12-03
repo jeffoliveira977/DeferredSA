@@ -1,4 +1,5 @@
 #include "RenderableFrustum.h"
+#include "CCamera.h"
 
 RenderableFrustum::RenderableFrustum()
 {
@@ -59,7 +60,7 @@ void RenderableFrustum::RenderFrustum(bool ortho)
 		6, 7,
 		7, 4
 	};
-	static RwRGBA yellow = {255, 255, 0,  65};
+	static RwRGBA yellow = {0, 255, 0,  95};
 	static RwRGBA red = {255,   0, 0, 255};
 
 	/*
@@ -110,30 +111,43 @@ void RenderableFrustum::RenderFrustum(bool ortho)
 	RwInt32 j = 0;
 	RwInt32 k = 0;
 
+	XMFLOAT4X4 m;
+	XMStoreFloat4x4(&m, mProj);
 
-	Math::AABB box = m_frustum.GetBoundingBox();
+	float viewLeft, viewRight;
+	float nearClip, farClip;
 
+	if(ortho)
+	{
+		viewLeft = 2 / m.m[0][0];
+		viewRight = 2 / m.m[1][1];
+		nearClip = m.m[3][2] / m.m[2][2];
+		farClip = m.m[3][2] / (1+ m.m[2][2]);
+	}
+	else
+	{
+		float fov = atan(1.0f / m.m[1][1]) ;
+		float aspect = m.m[1][1] / m.m[0][0];
+		viewLeft = fov;
+		viewRight = fov / aspect;
+		nearClip = m.m[3][2] / m.m[2][2];
+		farClip = -m.m[3][2] / (1.0f + m.m[2][2]);
+	}
 
+	//PrintMessage("%f %f %f %f", m.m[3][2], m.m[2][2], nearClip, farClip);
+	
 	RwReal depth[3];
 	depth[0] = 1.0f;
-	depth[1] = -0.01;
-	depth[2] = -3000.0;
-
+	depth[1] = nearClip;
+	depth[2] = farClip;
 
 	/* Origin */
 	RwIm3DVertexSetPos(&frustum[k], 0, 0, 0.0f);
 	k++;
 
-	float    SinFov;
-	float    CosFov;
-	XMScalarSinCos(&SinFov, &CosFov, 0.5f * XMConvertToRadians(90.0f));
-
-	float Height = CosFov / SinFov;
-	float Width = Height / 1.0;
-
 	RwV2d offset = {0, 0};
-	RwV2d viewWindow = { XMConvertToRadians(90.0f),  XMConvertToRadians(90.0f)};
-	//PrintMessage("%f %f", viewWindow.x, viewWindow.y);
+	RwV2d viewWindow = {viewLeft, viewRight};
+	
 	/* View Window */
 	for(i = 0; i < 3; i++)
 	{
@@ -212,24 +226,4 @@ void RenderableFrustum::RenderFrustum(bool ortho)
 
 	RwRenderStateSet(rwRENDERSTATESHADEMODE, (void*)rwSHADEMODEGOURAUD);
 
-	/*XMFLOAT3* corners = m_frustum.GetCorners();
-
-	RwIm3DVertex verts[8];
-	for(UINT i = 0; i < 8; i++)
-	{
-		RwIm3DVertexSetPos(&verts[i], corners[i].x, corners[i].y, corners[i].z);
-		RxObjSpace3DLitVertexSetColor(&verts[i], &yellow);
-	}
-
-	if(RwIm3DTransform(verts, 8, 0, rwIM3D_ALLOPAQUE))
-	{
-		RwIm3DRenderIndexedPrimitive(rwPRIMTYPELINELIST, FrustumIndices, 24);
-		RwIm3DEnd();
-	}
-
-	if(RwIm3DTransform(verts, 8, 0, 0))
-	{
-		RwIm3DRenderIndexedPrimitive(rwPRIMTYPETRISTRIP, FrustumIndices, 24);
-		RwIm3DEnd();
-	}*/
 }

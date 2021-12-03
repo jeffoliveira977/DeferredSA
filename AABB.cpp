@@ -51,6 +51,18 @@ namespace Math
 		return corners;
 	}
 
+	void AABB::Transform(XMMATRIX matrix)
+	{
+		XMStoreFloat3(&Min, XMVector3Transform(XMLoadFloat3(&Min), matrix));
+		XMStoreFloat3(&Max, XMVector3Transform(XMLoadFloat3(&Max), matrix));
+	}
+
+	void AABB::Transform(AABB &aabb, XMMATRIX matrix)
+	{
+		XMStoreFloat3(&aabb.Min, XMVector3Transform(XMLoadFloat3(&Min), matrix));
+		XMStoreFloat3(&aabb.Max, XMVector3Transform(XMLoadFloat3(&Max), matrix));
+	}
+
 	bool AABB::Intersects(XMFLOAT3 point)
 	{
 		if(point.x < Min.x ||

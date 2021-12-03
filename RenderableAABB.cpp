@@ -56,23 +56,15 @@ void RenderableAABB::Render(Math::AABB aabb, XMMATRIX matrix)
 	mVertices.push_back(Vertex(+w2, -h2, +d2, mColor[5]));*/
 
 	int n = 0;
-	for(size_t i = 0; i < 24; i++)
+	for(size_t i = 0; i < mVertices.size(); i++)
 	{
-		
+		if(i % 5 == 0 && n < 6)
+			n++;
 
-	if(i < 4)
-			RwIm3DVertexSetRGBA(&mVertices[i], mColor[0].x, mColor[0].y, mColor[0].z, mColor[0].w);
-		else if(i > 4)
-			RwIm3DVertexSetRGBA(&mVertices[i], mColor[1].x, mColor[1].y, mColor[1].z, mColor[1].w);
-		else if(i > 8)
-			RwIm3DVertexSetRGBA(&mVertices[i], mColor[2].x, mColor[2].y, mColor[2].z, mColor[2].w);
-		else if(i > 12)
-			RwIm3DVertexSetRGBA(&mVertices[i], mColor[3].x, mColor[3].y, mColor[3].z, mColor[3].w);
-		else if(i > 16)
-			RwIm3DVertexSetRGBA(&mVertices[i], mColor[4].x, mColor[4].y, mColor[4].z, mColor[4].w);
-		else if(i > 20)
-			RwIm3DVertexSetRGBA(&mVertices[i], mColor[5].x, mColor[5].y, mColor[5].z, mColor[5].w);
+		RwIm3DVertexSetRGBA(&mVertices[i], mColor[n].x, mColor[n].y, mColor[n].z, mColor[n].w);
 	}
+
+	PrintMessage("%i", n);
 
 	RwImVertexIndex indices[] =
 	{
