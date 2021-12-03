@@ -18,15 +18,15 @@ void RwIndexBuffer::Allocate(RwUInt32 size)
         throw std::runtime_error("RwIndexBuffer::Allocate");
 }
 
-void RwIndexBuffer::Copy(RwUInt32 size, void* in, void* out)
+void RwIndexBuffer::Copy(RwUInt32 size, void* in)
 {
     if(m_buffer == nullptr ||
-       in == nullptr ||
-       out == nullptr)
+       in == nullptr)
         return;
 
-    m_buffer->Lock(0, size, &out, D3DLOCK_DISCARD);
-    memcpy(out, in, size);
+    void* bufferMem = NULL;
+    m_buffer->Lock(0, size, &bufferMem, D3DLOCK_DISCARD);
+    memcpy(bufferMem, in, size);
     m_buffer->Unlock();
 }
 

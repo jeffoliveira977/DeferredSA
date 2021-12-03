@@ -232,13 +232,20 @@ void ShadowCaster::Render(int i)
             CVisibilityPlugins::InitAlphaAtomicList();  
             vehicle->SetupRender();
         }
-
+        else if(!entity->m_bBackfaceCulled)
+        {
+            RwRenderStateSet(rwRENDERSTATECULLMODE, (void*)rwCULLMODECULLNONE);
+        }
         entity->Render();
 
         if(entity->m_nType == ENTITY_TYPE_VEHICLE)
         {   
             CVisibilityPlugins::RenderAlphaAtomics();      
             vehicle->ResetAfterRender();
+        }
+        else if(!entity->m_bBackfaceCulled)
+        {
+            RwRenderStateSet(rwRENDERSTATECULLMODE, (void*)rwCULLMODECULLBACK);
         }
 
         entity->m_bImBeingRendered = false;

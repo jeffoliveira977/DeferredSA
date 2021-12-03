@@ -75,30 +75,30 @@ void DefaultMeshPipeline::ReflectionRendering(RwResEntry* entry, void* object, R
 	worldMatrix = RwMatrixToXMMATRIX(LTM);
 	_rwD3D9SetVertexShaderConstant(0, &worldMatrix, 4);
 
-	///*if(gRenderState == RenderingStage::stageSphereMap)
-	//{
-	//	_rwD3D9SetVertexShaderConstant(0, &worldMatrix, 4);
-	//	_rwD3D9SetVertexShaderConstant(4, &TheCamera.GetPosition(), 1);
+	/*if(gRenderState == RenderingStage::stageSphereMap)
+	{
+		RwD3D9SetVertexShaderConstant(0, &worldMatrix, 4);
+		RwD3D9SetVertexShaderConstant(4, &TheCamera->GetPosition(), 1);
 
-	//	float fog[2];
-	//	fog[0] = Timecycle->m_fCurrentFogStart;
-	//	fog[1] = Timecycle->m_fCurrentFarClip;
-	//	_rwD3D9SetVertexShaderConstant(5, fog, 1);
-	//	_rwD3D9SetVertexShader(VS_sphereMap);
-	//	_rwD3D9SetPixelShader(PS_simple);
-	//}
-	//else*/ if(gRenderState == RenderingStage::stageDualParaboloidMap)
-	//{
-	//	float fog[3];
-	//	fog[0] = 0.1;
-	//	fog[1] = 310.0;
-	//	fog[2] = EnvironmentMapping::m_direction;
-	//	_rwD3D9SetVertexShaderConstant(4, fog, 1);
+		float fog[2];
+		fog[0] = Timecycle->m_fCurrentFogStart;
+		fog[1] = Timecycle->m_fCurrentFarClip;
+		RwD3D9SetVertexShaderConstant(5, fog, 1);
+		rwD3D9SetVertexShader(VS_sphereMap);
+		rwD3D9SetPixelShader(PS_simple);
+	}
+	else if(gRenderState == RenderingStage::stageDualParaboloidMap)
+	{
+		float fog[3];
+		fog[0] = 0.1;
+		fog[1] = 310.0;
+		fog[2] = EnvironmentMapping::m_direction;
+		RwD3D9SetVertexShaderConstant(4, fog, 1);
 
-	//	_rwD3D9SetVertexShader(VS_dualParaboloidMap);
-	//	_rwD3D9SetPixelShader(PS_dualParaboloidMap);
-	//}
-	//else
+		rwD3D9SetVertexShader(VS_dualParaboloidMap);
+		rwD3D9SetPixelShader(PS_dualParaboloidMap);
+	}
+	else*/
 	{
 		_rwD3D9SetVertexShader(VS_simple);
 		_rwD3D9SetPixelShader(PS_simple);

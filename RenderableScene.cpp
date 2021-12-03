@@ -3,7 +3,12 @@
 #include "GTADef.h"
 #include "ShaderManager.h"
 #include "CTimeCycle.h"
-
+#include "DualParaboloidReflection.h"
+#include "CubemapReflection.h"
+#include "Frustum.h"
+#include "AABB.h"
+#include "CRenderer.h"
+#include "RenderableAABB.h"
 RwFrame* RenderableScene::m_frame;
 RwRaster* RenderableScene::m_raster;
 RwRaster* RenderableScene::m_depthRaster;
@@ -11,9 +16,13 @@ RwCamera* RenderableScene::m_camera;
 std::vector<CEntity*> RenderableScene::m_list;
 RenderableFrustum* RenderableScene::m_frustumRenderable;
 RenderCallback RenderableScene::m_renderCallback;
+RenderableAABB *RenderableScene::mRenderableAABB;
 
 void RenderableScene::InitGraphicsBuffer()
 {
+	mRenderableAABB = new RenderableAABB();
+	mRenderableAABB->Initialize();
+
 	m_frustumRenderable = new RenderableFrustum();
 	m_raster = RwRasterCreate(1024, 1024, 32, rwRASTERTYPECAMERATEXTURE);
 	m_depthRaster = RwRasterCreate(1024, 1024, 32, rwRASTERTYPEZBUFFER);
@@ -31,9 +40,6 @@ void RenderableScene::InitGraphicsBuffer()
 
 	RpWorldAddCamera(Scene.m_pRpWorld, m_camera);
 }
-#include "EnvironmentMapping.h"
-#include "Frustum.h"
-#include "AABB.h"
 
 void RenderableScene::Render()
 {
@@ -42,17 +48,17 @@ void RenderableScene::Render()
 	RwFrameTransform(m_frame, &RwCameraGetFrame(camera)->ltm, rwCOMBINEREPLACE);
 
 
-	RwV2d view;
-	view.x = view.y = 0.4;
-	RwCameraSetViewWindow(m_camera, &view);
-	RwFrameRotate(m_frame, &Yaxis, 90, rwCOMBINEREPLACE);
-	RwFrameRotate(m_frame, &Xaxis, 90, rwCOMBINEPOSTCONCAT);
-	CVector pos = FindPlayerCoors(0);
-	RwFrameTranslate(m_frame, (RwV3d*)&pos, rwCOMBINEREPLACE);
-	RwFrameUpdateObjects(m_frame);
+	//RwV2d view;
+	//view.x = view.y = 0.4;
+	//RwCameraSetViewWindow(m_camera, &view);
+	//RwFrameRotate(m_frame, &Yaxis, 90, rwCOMBINEREPLACE);
+	//RwFrameRotate(m_frame, &Xaxis, 90, rwCOMBINEPOSTCONCAT);
+	//CVector pos = FindPlayerCoors(0);
+	//RwFrameTranslate(m_frame, (RwV3d*)&pos, rwCOMBINEREPLACE);
+	//RwFrameUpdateObjects(m_frame);
 
-	CameraTilt(m_camera, 0, 110.0);
-	TranslateCameraZ(m_camera, -300);
+	//CameraTilt(m_camera, 0, 110.0);
+	TranslateCameraZ(m_camera, -340);
 	RwFrameUpdateObjects(m_frame);
 
 	RwRGBA ambient = {CTimeCycle::m_CurrentColours.m_nSkyTopRed, CTimeCycle::m_CurrentColours.m_nSkyTopGreen, CTimeCycle::m_CurrentColours.m_nSkyTopBlue, 255};
@@ -62,8 +68,15 @@ void RenderableScene::Render()
 	ShaderContext->SetViewProjectionMatrix(4, true);
 	//m_renderCallback();
 	DefinedState();
-	for(auto& entity : m_list)
+
+	XMINT4 SolidGreen = {64, 200,  64, 255}; 
+	XMINT4 SolidRed = {200,  64,  64, 255}; 
+	XMINT4 SolidWhite = {255, 255, 255, 255};
+	XMINT4 SolidBlack = {0,   0,   0, 255};
+
+	for(int i = 0; i < CRenderer::ms_nNoOfVisibleEntities; ++i)
 	{
+		CEntity* entity = CRenderer::ms_aVisibleEntityPtrs[i];
 		CColModel* col = entity->GetColModel();
 		if(col == nullptr)
 			continue;
@@ -80,8 +93,9 @@ void RenderableScene::Render()
 		Math::AABB aabb;
 		XMStoreFloat3(&aabb.Min, min);
 		XMStoreFloat3(&aabb.Max, max);
-		if(EnvironmentMapping::m_frustum[5].Intersects(aabb))
+		if(CubemapReflection::m_frustum[2].Intersects(aabb))
 		{
+			mRenderableAABB->SetColor(SolidGreen, SolidRed, SolidBlack);
 			if(entity->m_pRwObject)
 			{
 				entity->m_bImBeingRendered = true;
@@ -94,6 +108,12 @@ void RenderableScene::Render()
 				entity->m_bImBeingRendered = false;
 			}
 		}
+		else
+		{
+			mRenderableAABB->SetColor(SolidRed, SolidBlack, SolidBlack);
+		}
+		mRenderableAABB->SetAABB(aabb);
+		mRenderableAABB->Render(aabb, world);
 	}
 	m_frustumRenderable->RenderFrustum(false);
 	RwCameraEndUpdate(m_camera);

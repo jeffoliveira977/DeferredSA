@@ -1,5 +1,4 @@
 #include "DualParaboloidReflection.h"
-
 #include "CubemapReflection.h"
 #include "CWorld.h"
 #include "CRenderer.h"
@@ -8,6 +7,7 @@
 #include "ShaderManager.h"
 #include "CTimeCycle.h"
 #include "GTADef.h"
+#include "CGame.h"
 
 std::vector<CEntity*> DualParaboloidReflection::m_renderableList[2];
 int DualParaboloidReflection::m_size;
@@ -22,14 +22,16 @@ float DualParaboloidReflection::m_direction;
 
 void DualParaboloidReflection::Initialize()
 {
-	m_size = 512;
+	m_size = 1024;
 	m_raster[0] = RwRasterCreate(m_size, m_size, 32, rwRASTERTYPECAMERATEXTURE);
 	m_raster[1] = RwRasterCreate(m_size, m_size, 32, rwRASTERTYPECAMERATEXTURE);
 	m_depthRaster = RwRasterCreate(m_size, m_size, 32, rwRASTERTYPEZBUFFER);
 
 	m_camera = RwCameraCreate();
 	RwCameraSetZRaster(m_camera, m_depthRaster);
-	RwCameraSetFrame(m_camera, RwFrameCreate());
+	RwCameraSetRaster(m_camera, m_raster[0]);
+	m_frame = RwFrameCreate();
+	RwCameraSetFrame(m_camera, m_frame);
 }
 
 void DualParaboloidReflection::Release()
@@ -43,7 +45,7 @@ void DualParaboloidReflection::Release()
 
 void DualParaboloidReflection::AddObject(int i, CEntity* entity, float distance)
 {
-	if(distance > 400)
+	if(distance > 300)
 		return;
 
 	if(distance < 100)
@@ -72,22 +74,17 @@ void DualParaboloidReflection::Update()
 	CVector pos = FindPlayerCoors(0);
 	XMMATRIX translation = XMMatrixTranslation(pos.x, pos.y, pos.z);
 
-
-	XMMATRIX XRot = XMMatrixRotationY(180.0f);
-	XMMATRIX YRot = XMMatrixRotationX(90.0f);
-	m_viewMatrix[0] = XRot * YRot;
-
 	// front face
-	//m_viewMatrix[0] = XMMatrixLookAtRH(g_XMIdentityR1, g_XMIdentityR0, g_XMIdentityR1);
+	m_viewMatrix[0] = XMMatrixLookAtRH(XMVectorZero(), -g_XMIdentityR1, -g_XMIdentityR2);
 	m_viewMatrix[0] = XMMatrixInverse(nullptr, m_viewMatrix[0] * translation);
 	m_frustum[0].SetMatrix(m_viewMatrix[0] * m_projectionMatrix);
 	
 	// back face
-	m_viewMatrix[1] = XMMatrixLookAtRH(XMVectorZero(), -g_XMIdentityR0, g_XMIdentityR1);
+	m_viewMatrix[1] = XMMatrixLookAtRH(XMVectorZero(), -g_XMIdentityR1, g_XMIdentityR2);
 	m_viewMatrix[1] = XMMatrixInverse(nullptr, m_viewMatrix[1] * translation);
 	m_frustum[1].SetMatrix(m_viewMatrix[1] * m_projectionMatrix);
 
-	m_projectionMatrix = XMMatrixPerspectiveFovRH(tanf(3.14f / 4.0f), 1.0f, 0.01f, 3000.0f);
+	m_projectionMatrix = XMMatrixPerspectiveFovRH(XMConvertToRadians(90.0f), 1.7777f, 0.01f, 3000.0f);
 
 	for(size_t i = 0; i < 2; i++)
 		m_renderableList[i].clear();
@@ -159,7 +156,6 @@ void DualParaboloidReflection::RenderScene()
 
 	gRenderState = stageDualParaboloidMap;
 
-	m_direction = 1.0;
 	RwCameraSetRaster(m_camera, m_raster[0]);
 	RwCameraClear(m_camera, &ambient, rwCAMERACLEARIMAGE | rwCAMERACLEARZ);
 	RwCameraBeginUpdate(m_camera);
@@ -169,11 +165,10 @@ void DualParaboloidReflection::RenderScene()
 	RenderEntities(0);	
 	RwCameraEndUpdate(m_camera);
 
-	m_direction = -1.0;
 	RwCameraSetRaster(m_camera, m_raster[1]);
 	RwCameraClear(m_camera, &ambient, rwCAMERACLEARIMAGE | rwCAMERACLEARZ);
 	RwCameraBeginUpdate(m_camera);
-	RwD3D9SetTransform(D3DTS_VIEW, &m_viewMatrix[0]);
+	RwD3D9SetTransform(D3DTS_VIEW, &m_viewMatrix[1]);
 	RwD3D9SetTransform(D3DTS_PROJECTION, &m_projectionMatrix);
 	ShaderContext->SetViewProjectionMatrix(4, true);
 	RenderEntities(1);
@@ -182,10 +177,20 @@ void DualParaboloidReflection::RenderScene()
 
 void DualParaboloidReflection::RenderEntities(int i)
 {
+	if(!CGame::currArea)
+		RwRenderStateSet(rwRENDERSTATEALPHATESTFUNCTIONREF, (void*)140);
+
+	RwRenderStateSet(rwRENDERSTATECULLMODE, (void*)rwCULLMODECULLBACK);
+
 	for(auto& entity : m_renderableList[i])
 	{
 		if(entity->m_pRwObject == nullptr)
 			continue;
+
+		if(!entity->m_bBackfaceCulled)
+		{
+			RwRenderStateSet(rwRENDERSTATECULLMODE, (void*)rwCULLMODECULLNONE);
+		}
 
 		entity->m_bImBeingRendered = true;
 		entity->Render();

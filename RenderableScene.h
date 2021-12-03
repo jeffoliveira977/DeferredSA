@@ -1,13 +1,14 @@
 #pragma once
 #include "CommonD.h"
 #include "RenderableFrustum.h"
-
+#include "RenderableAABB.h"
 class RenderableScene
 {
 public:
 	static void InitGraphicsBuffer();
 	static void Render();
 	static void SetRenderList(std::vector<CEntity*>list);
+	static RenderableAABB *mRenderableAABB;
 	static RwFrame* m_frame;
 	static RwRaster* m_raster;
 	static RwRaster* m_depthRaster;

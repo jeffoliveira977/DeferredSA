@@ -78,6 +78,7 @@
     <ClCompile Include="RenderableScene.cpp" />
     <ClCompile Include="CubemapReflection.cpp" />
     <ClCompile Include="DualParaboloidReflection.cpp" />
+    <ClCompile Include="RenderableAABB.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="GTADef.h" />
@@ -134,6 +135,7 @@
     <ClInclude Include="RenderableScene.h" />
     <ClInclude Include="CubemapReflection.h" />
     <ClInclude Include="DualParaboloidReflection.h" />
+    <ClInclude Include="RenderableAABB.h" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="imgui">

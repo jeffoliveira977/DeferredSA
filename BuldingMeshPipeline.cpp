@@ -108,13 +108,14 @@ void BuldingMeshPipeline::ReflectionRendering(RwResEntry* entry, void* object, R
 	worldMatrix = RwMatrixToXMMATRIX(LTM);
 	_rwD3D9SetVertexShaderConstant(0, &worldMatrix, 4);
 
-	if(gRenderState == RenderingStage::stageReflection || (gRenderState == RenderingStage::stageDualParaboloidMap && EnvironmentMapping::m_direction == -1))
+	if(gRenderState == RenderingStage::stageReflection)
 		RwRenderStateSet(rwRENDERSTATECULLMODE, (void*)rwCULLMODECULLFRONT);
-	else
-		RwRenderStateSet(rwRENDERSTATECULLMODE, (void*)rwCULLMODECULLBACK);
 
 	RwRenderStateSet(rwRENDERSTATEZWRITEENABLE, (void*)TRUE);
 	RwRenderStateSet(rwRENDERSTATEZTESTENABLE, (void*)TRUE);
+
+	RwRenderStateSet(rwRENDERSTATESRCBLEND, (void*)rwBLENDSRCALPHA);
+	RwRenderStateSet(rwRENDERSTATEDESTBLEND, (void*)rwBLENDINVSRCALPHA);
 
 	if(gRenderState == RenderingStage::stageSphereMap)
 	{
@@ -132,7 +133,6 @@ void BuldingMeshPipeline::ReflectionRendering(RwResEntry* entry, void* object, R
 		float fog[4];
 		fog[0] = 0.1;
 		fog[1] = 300.0;
-		fog[2] = DualParaboloidReflection::m_direction;
 		_rwD3D9SetVertexShaderConstant(12, fog, 1);
 
 		_rwD3D9SetVertexShader(VS_dualParaboloidMap);

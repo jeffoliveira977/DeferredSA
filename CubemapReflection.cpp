@@ -20,11 +20,11 @@ std::vector<CEntity*> CubemapReflection::m_renderableList[6];
 
 void CubemapReflection::Initialize()
 {
-	m_size = 512;
-	m_cubeRaster = RwRasterCreate(m_size, m_size, 32, rwRASTERTYPECAMERATEXTURE);
+	m_size = 1024;
+	m_cubeRaster = RwRasterCreate(1024, 1024, 32, rwRASTERTYPECAMERATEXTURE);
 	rwD3D9CubeRasterCreate(m_cubeRaster, D3DFMT_A8R8G8B8, 1);
-	m_depthRaster = RwRasterCreate(m_size, m_size, 32, rwRASTERTYPEZBUFFER);
 
+	m_depthRaster = RwRasterCreate(1024, 1024, 32, rwRASTERTYPEZBUFFER); 
 	m_camera = RwCameraCreate(); 
 	RwCameraSetZRaster(m_camera, m_depthRaster);
 	RwCameraSetFrame(m_camera, RwFrameCreate());
@@ -68,7 +68,7 @@ void CubemapReflection::Update()
 {
 
 	// Update matrices
-	m_projectionMatrix = XMMatrixPerspectiveFovRH(tanf(3.14f / 4.0f), 1.0f, 0.01f, 3000.0f);
+	m_projectionMatrix = XMMatrixPerspectiveFovRH(XMConvertToRadians(90.0f), 1.0f, 0.01f, 3000.0f);
 	CVector pos = FindPlayerCoors(0);
 
 	for(size_t i = 0; i < 6; i++)
@@ -128,6 +128,7 @@ void CubemapReflection::Update()
 	}
 }
 
+
 void CubemapReflection::SectorList(CPtrList& ptrList)
 {
 	for(auto node = ptrList.GetNode(); node; node = node->pNext)
@@ -170,8 +171,8 @@ void CubemapReflection::SectorList(CPtrList& ptrList)
 		}
 	}
 
-	PrintMessage("Renderable list: %i %i %i %i %i %i", m_renderableList[0].size(), m_renderableList[1].size(), m_renderableList[2].size(), 
-													   m_renderableList[3].size(), m_renderableList[4].size(), m_renderableList[5].size());
+	//PrintMessage("Renderable list: %i %i %i %i %i %i", m_renderableList[0].size(), m_renderableList[1].size(), m_renderableList[2].size(), 
+	//												   m_renderableList[3].size(), m_renderableList[4].size(), m_renderableList[5].size());
 }
 
 void CubemapReflection::RenderScene()
