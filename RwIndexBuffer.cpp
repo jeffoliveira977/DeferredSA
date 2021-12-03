@@ -11,11 +11,11 @@ RwIndexBuffer::~RwIndexBuffer()
     D3DResourceSystem::DestroyIndexBuffer(m_buffer);
 }
 
-void RwIndexBuffer::Allocate(RwUInt32 size)
+void RwIndexBuffer::Initialize(RwUInt32 size)
 {
 	auto result =_rwD3D9IndexBufferCreate(size, &m_buffer);  
     if(!result)
-        throw std::runtime_error("RwIndexBuffer::Allocate");
+        throw std::runtime_error("RwIndexBuffer::Initialize");
 }
 
 void RwIndexBuffer::Copy(RwUInt32 size, void* in)

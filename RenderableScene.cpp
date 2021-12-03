@@ -18,12 +18,15 @@ RenderableFrustum* RenderableScene::m_frustumRenderable;
 RenderCallback RenderableScene::m_renderCallback;
 RenderableAABB *RenderableScene::mRenderableAABB;
 int RenderableScene::mRenderStage;
+
 void RenderableScene::InitGraphicsBuffer()
 {
 	mRenderableAABB = new RenderableAABB();
 	mRenderableAABB->Initialize();
 
 	m_frustumRenderable = new RenderableFrustum();
+	m_frustumRenderable->InitGraphicsBuffer();
+
 	m_raster = RwRasterCreate(1024, 1024, 32, rwRASTERTYPECAMERATEXTURE);
 	m_depthRaster = RwRasterCreate(1024, 1024, 32, rwRASTERTYPEZBUFFER);
 
@@ -74,6 +77,8 @@ void RenderableScene::Render()
 	XMINT4 SolidRed = {200,  64,  64, 255};
 	XMINT4 SolidWhite = {255, 255, 255, 255};
 	XMINT4 SolidBlack = {0,   0,   0, 255};
+	XMINT4 SolidBlue = {64,  64, 200, 95};
+	XMINT4 SolidYellow = {200, 200,  64, 255};
 
 	for(int i = 0; i < CRenderer::ms_nNoOfVisibleEntities; ++i)
 	{
@@ -120,7 +125,8 @@ void RenderableScene::Render()
 		mRenderableAABB->Render(aabb, world);
 	}
 
-	m_frustumRenderable->RenderFrustum(false);
+	m_frustumRenderable->SetColor(SolidBlue);
+	m_frustumRenderable->RenderFrustum(true);
 	RwCameraEndUpdate(m_camera);
 }
 

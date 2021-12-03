@@ -20,7 +20,7 @@ private:
 	void* VS_softParticles;
 	void* PS_softParticles;
 	//IDirect3DVertexBuffer9* VertexBuffer;
-	std::unique_ptr<VertexBuffer> m_vertexBuffer;
+	std::unique_ptr<VertexBuffer> mVertexBuffer;
 };
 
 extern SoftParticles* SoftParticlesContext;

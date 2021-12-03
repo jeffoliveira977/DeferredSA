@@ -14,7 +14,7 @@ SoftParticles::SoftParticles()
 {
     VS_softParticles = nullptr;
     PS_softParticles = nullptr;
-    m_vertexBuffer = nullptr;
+    mVertexBuffer = nullptr;
 }
 
 SoftParticles::~SoftParticles()
@@ -44,10 +44,10 @@ void SoftParticles::initGraphicsBuffer()
     VS_softParticles = RwCreateCompiledVertexShader("SoftParticlesVS");
     PS_softParticles = RwCreateCompiledPixelShader("SoftParticlesPS");
 
-    m_vertexBuffer = std::unique_ptr<VertexBuffer>(new VertexBuffer());
+    mVertexBuffer = std::unique_ptr<VertexBuffer>(new VertexBuffer());
     try
     {
-        m_vertexBuffer->Allocate(TOTAL_TEMP_BUFFER_VERTICES, sizeof(RwIm3DVertex));
+        mVertexBuffer->Initialize(TOTAL_TEMP_BUFFER_VERTICES, sizeof(RwIm3DVertex));
     }
     catch(const std::exception&e)
     {
@@ -58,7 +58,7 @@ void SoftParticles::initGraphicsBuffer()
 
 void SoftParticles::Render()
 {
-    if(m_vertexBuffer == nullptr)
+    if(mVertexBuffer == nullptr)
         return;
 
     RwRenderStateSet(rwRENDERSTATETEXTUREFILTER, (void*)rwFILTERLINEAR);
@@ -83,8 +83,8 @@ void SoftParticles::Render()
 
     _rwD3D9SetVertexDeclaration(VertexDeclIm3DOld);
  
-    m_vertexBuffer->Copy(3 * g_fx.m_nVerticesCount, aTempBufferVertices);
-    m_vertexBuffer->Set();
+    mVertexBuffer->Copy(3 * g_fx.m_nVerticesCount, aTempBufferVertices);
+    mVertexBuffer->Set();
 
     rwD3D9DrawPrimitive(D3DPT_TRIANGLELIST, 0, g_fx.m_nVerticesCount);
 }

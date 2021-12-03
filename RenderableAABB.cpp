@@ -14,9 +14,9 @@ RenderableAABB::~RenderableAABB()
 void RenderableAABB::Initialize()
 {
 	mVertexBuffer = new VertexBuffer();
-	mVertexBuffer->Allocate(24, sizeof(_rxD3D9Im3DVertexNoTex));
+	mVertexBuffer->Initialize(24, sizeof(_rxD3D9Im3DVertexNoTex));
 	mIndexBuffer = new RwIndexBuffer();
-	mIndexBuffer->Allocate(36);
+	mIndexBuffer->Initialize(36);
 
 	mVertexShader = RwCreateCompiledVertexShader("Im3dVS");
 	mPixelShader = RwCreateCompiledPixelShader("Im3dPS");
@@ -24,37 +24,38 @@ void RenderableAABB::Initialize()
 
 void RenderableAABB::Render(Math::AABB aabb, XMMATRIX matrix)
 {
-	/*mVertices.clear();
+	//mVertices.clear();
 
-	float w2 = 0.5f * (aabb.Max.x - aabb.Min.x);
-	float h2 = 0.5f * (aabb.Max.y - aabb.Min.y);
-	float d2 = 0.5f * (aabb.Max.z - aabb.Min.z);
+	//float w2 = 0.5f * (aabb.Max.x - aabb.Min.x);
+	//float h2 = 0.5f * (aabb.Max.y - aabb.Min.y);
+	//float d2 = 0.5f * (aabb.Max.z - aabb.Min.z);
 
-	mVertices.push_back(Vertex(-w2, -h2, -d2, mColor[0]));
-	mVertices.push_back(Vertex(-w2, +h2, -d2, mColor[0]));
-	mVertices.push_back(Vertex(+w2, +h2, -d2, mColor[0]));
-	mVertices.push_back(Vertex(+w2, -h2, -d2, mColor[0]));
-	mVertices.push_back(Vertex(-w2, -h2, +d2, mColor[1]));
-	mVertices.push_back(Vertex(+w2, -h2, +d2, mColor[1]));
-	mVertices.push_back(Vertex(+w2, +h2, +d2, mColor[1]));
-	mVertices.push_back(Vertex(-w2, +h2, +d2, mColor[1]));
-	mVertices.push_back(Vertex(-w2, +h2, -d2, mColor[2]));
-	mVertices.push_back(Vertex(-w2, +h2, +d2, mColor[2]));
-	mVertices.push_back(Vertex(+w2, +h2, +d2, mColor[2]));
-	mVertices.push_back(Vertex(+w2, +h2, -d2, mColor[2]));
-	mVertices.push_back(Vertex(-w2, -h2, -d2, mColor[3]));
-	mVertices.push_back(Vertex(+w2, -h2, -d2, mColor[3]));
-	mVertices.push_back(Vertex(+w2, -h2, +d2, mColor[3]));
-	mVertices.push_back(Vertex(-w2, -h2, +d2, mColor[3]));
-	mVertices.push_back(Vertex(-w2, -h2, +d2, mColor[4]));
-	mVertices.push_back(Vertex(-w2, +h2, +d2, mColor[4]));
-	mVertices.push_back(Vertex(-w2, +h2, -d2, mColor[4]));
-	mVertices.push_back(Vertex(-w2, -h2, -d2, mColor[4]));
-	mVertices.push_back(Vertex(+w2, -h2, -d2, mColor[5]));
-	mVertices.push_back(Vertex(+w2, +h2, -d2, mColor[5]));
-	mVertices.push_back(Vertex(+w2, +h2, +d2, mColor[5]));
-	mVertices.push_back(Vertex(+w2, -h2, +d2, mColor[5]));*/
-
+	//mVertices.push_back(Vertex(-w2, -h2, -d2, mColor[0]));
+	//mVertices.push_back(Vertex(-w2, +h2, -d2, mColor[0]));
+	//mVertices.push_back(Vertex(+w2, +h2, -d2, mColor[0]));
+	//mVertices.push_back(Vertex(+w2, -h2, -d2, mColor[0]));
+	//mVertices.push_back(Vertex(-w2, -h2, +d2, mColor[1]));
+	//mVertices.push_back(Vertex(+w2, -h2, +d2, mColor[1]));
+	//mVertices.push_back(Vertex(+w2, +h2, +d2, mColor[1]));
+	//mVertices.push_back(Vertex(-w2, +h2, +d2, mColor[1]));
+	//mVertices.push_back(Vertex(-w2, +h2, -d2, mColor[2]));
+	//mVertices.push_back(Vertex(-w2, +h2, +d2, mColor[2]));
+	//mVertices.push_back(Vertex(+w2, +h2, +d2, mColor[2]));
+	//mVertices.push_back(Vertex(+w2, +h2, -d2, mColor[2]));
+	//mVertices.push_back(Vertex(-w2, -h2, -d2, mColor[3]));
+	//mVertices.push_back(Vertex(+w2, -h2, -d2, mColor[3]));
+	//mVertices.push_back(Vertex(+w2, -h2, +d2, mColor[3]));
+	//mVertices.push_back(Vertex(-w2, -h2, +d2, mColor[3]));
+	//mVertices.push_back(Vertex(-w2, -h2, +d2, mColor[4]));
+	//mVertices.push_back(Vertex(-w2, +h2, +d2, mColor[4]));
+	//mVertices.push_back(Vertex(-w2, +h2, -d2, mColor[4]));
+	//mVertices.push_back(Vertex(-w2, -h2, -d2, mColor[4]));
+	//mVertices.push_back(Vertex(+w2, -h2, -d2, mColor[5]));
+	//mVertices.push_back(Vertex(+w2, +h2, -d2, mColor[5]));
+	//mVertices.push_back(Vertex(+w2, +h2, +d2, mColor[5]));
+	//mVertices.push_back(Vertex(+w2, -h2, +d2, mColor[5]));
+	//_rwD3D9RenderStateVertexAlphaEnable(TRUE);
+	RwRenderStateSet(rwRENDERSTATEVERTEXALPHAENABLE, (void*)TRUE);
 	int n = 0;
 	for(size_t i = 0; i < mVertices.size(); i++)
 	{
@@ -64,7 +65,7 @@ void RenderableAABB::Render(Math::AABB aabb, XMMATRIX matrix)
 		RwIm3DVertexSetRGBA(&mVertices[i], mColor[n].x, mColor[n].y, mColor[n].z, mColor[n].w);
 	}
 
-	PrintMessage("%i", n);
+	//PrintMessage("%i", n);
 
 	RwImVertexIndex indices[] =
 	{
