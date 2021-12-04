@@ -11,11 +11,11 @@ RwIndexBuffer::~RwIndexBuffer()
     D3DResourceSystem::DestroyIndexBuffer(m_buffer);
 }
 
-void RwIndexBuffer::Allocate(RwUInt32 size)
+void RwIndexBuffer::Initialize(RwUInt32 size)
 {
 	auto result =_rwD3D9IndexBufferCreate(size, &m_buffer);  
     if(!result)
-        throw std::runtime_error("RwIndexBuffer::Allocate");
+        throw std::runtime_error("RwIndexBuffer::Initialize");
 }
 
 void RwIndexBuffer::Copy(RwUInt32 size, void* in)
@@ -27,6 +27,22 @@ void RwIndexBuffer::Copy(RwUInt32 size, void* in)
     void* bufferMem = NULL;
     m_buffer->Lock(0, size, &bufferMem, D3DLOCK_DISCARD);
     memcpy(bufferMem, in, size);
+    m_buffer->Unlock();
+}
+
+void RwIndexBuffer::Map(RwUInt32 size, void** data)
+{
+    if(m_buffer == nullptr || data == nullptr)
+        return;
+
+    m_buffer->Lock(0, size, data, D3DLOCK_DISCARD);
+}
+
+void RwIndexBuffer::Unmap()
+{
+    if(m_buffer == nullptr)
+        return;
+
     m_buffer->Unlock();
 }
 

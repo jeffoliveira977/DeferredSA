@@ -19,6 +19,7 @@ RwRaster* DualParaboloidReflection::m_raster[2];
 RwRaster* DualParaboloidReflection::m_depthRaster;
 RwFrame* DualParaboloidReflection::m_frame;
 float DualParaboloidReflection::m_direction;
+std::unordered_map<CEntity*, bool> DualParaboloidReflection::mObjectsCulled[2];
 
 void DualParaboloidReflection::Initialize()
 {
@@ -30,6 +31,7 @@ void DualParaboloidReflection::Initialize()
 	m_camera = RwCameraCreate();
 	RwCameraSetZRaster(m_camera, m_depthRaster);
 	RwCameraSetRaster(m_camera, m_raster[0]);
+
 	m_frame = RwFrameCreate();
 	RwCameraSetFrame(m_camera, m_frame);
 }
@@ -52,6 +54,50 @@ void DualParaboloidReflection::AddObject(int i, CEntity* entity, float distance)
 		m_renderableList[i].push_back(entity);
 	else if(entity->m_pLod != NULL)
 		m_renderableList[i].push_back(entity->m_pLod);
+}
+
+void DualParaboloidReflection::SectorList(CPtrList& ptrList)
+{
+	for(auto node = ptrList.GetNode(); node; node = node->pNext)
+	{
+		CEntity* entity = reinterpret_cast<CEntity*>(node->pItem);
+		if(entity->m_nScanCode != CWorld::ms_nCurrentScanCode)
+		{
+			entity->m_nScanCode = CWorld::ms_nCurrentScanCode;
+
+			CColModel* col = entity->GetColModel();
+			if(col == nullptr)
+				continue;
+
+			CVector position = entity->GetPosition();
+			if(entity->m_pLod)
+				position = entity->m_pLod->GetPosition();
+
+			float distance = (position - CRenderer::ms_vecCameraPosition).Magnitude();
+			XMMATRIX world = RwMatrixToXMMATRIX(reinterpret_cast<RwMatrix*>(entity->GetMatrix()));
+
+			CBoundingBox modelAABB = col->m_boundBox;
+
+			XMFLOAT3 min, max;
+			min = *reinterpret_cast<XMFLOAT3*>(&modelAABB.m_vecMin);
+			max = *reinterpret_cast<XMFLOAT3*>(&modelAABB.m_vecMax);
+
+			Math::AABB aabb(min, max);
+			aabb.Transform(world);
+
+			// front and back face
+			for(size_t i = 0; i < 2; i++)
+			{
+				if(m_frustum[i].Intersects(aabb))
+				{
+					mObjectsCulled[i][entity] = true;
+					AddObject(i, entity, distance);
+				}
+			}
+		}
+	}
+
+	//PrintMessage("Renderable list: %i %i", m_renderableList[0].size(), m_renderableList[1].size());
 }
 
 void DualParaboloidReflection::ScanSectorList(int sectorX, int sectorY)
@@ -78,7 +124,7 @@ void DualParaboloidReflection::Update()
 	m_viewMatrix[0] = XMMatrixLookAtRH(XMVectorZero(), -g_XMIdentityR1, -g_XMIdentityR2);
 	m_viewMatrix[0] = XMMatrixInverse(nullptr, m_viewMatrix[0] * translation);
 	m_frustum[0].SetMatrix(m_viewMatrix[0] * m_projectionMatrix);
-	
+
 	// back face
 	m_viewMatrix[1] = XMMatrixLookAtRH(XMVectorZero(), -g_XMIdentityR1, g_XMIdentityR2);
 	m_viewMatrix[1] = XMMatrixInverse(nullptr, m_viewMatrix[1] * translation);
@@ -103,51 +149,6 @@ void DualParaboloidReflection::Update()
 			ScanSectorList(x + i, y + j);
 		}
 	}
-}
-
-void DualParaboloidReflection::SectorList(CPtrList& ptrList)
-{
-	for(auto node = ptrList.GetNode(); node; node = node->pNext)
-	{
-		CEntity* entity = reinterpret_cast<CEntity*>(node->pItem);
-		if(entity->m_nScanCode != CWorld::ms_nCurrentScanCode)
-		{
-			entity->m_nScanCode = CWorld::ms_nCurrentScanCode;
-
-			CColModel* col = entity->GetColModel();
-			if(col == nullptr)
-				continue;
-
-			CVector position = entity->GetPosition();
-			if(entity->m_pLod)
-				position = entity->m_pLod->GetPosition();
-
-			float distance = (position - CRenderer::ms_vecCameraPosition).Magnitude();
-			XMMATRIX world = RwMatrixToXMMATRIX(reinterpret_cast<RwMatrix*>(entity->GetMatrix()));
-
-			CBoundingBox modelAABB = col->m_boundBox;
-
-			XMVECTOR min, max;
-			min = XMLoadFloat3(reinterpret_cast<XMFLOAT3*>(&modelAABB.m_vecMin));
-			max = XMLoadFloat3(reinterpret_cast<XMFLOAT3*>(&modelAABB.m_vecMax));
-			min = XMVector3Transform(min, world);
-			max = XMVector3Transform(max, world);
-
-			Math::AABB aabb;
-			XMStoreFloat3(&aabb.Min, min);
-			XMStoreFloat3(&aabb.Max, max);
-
-			for(size_t i = 0; i < 2; i++)
-			{
-				if(m_frustum[i].Intersects(aabb))
-				{
-					AddObject(i, entity, distance);
-				}
-			}
-		}
-	}
-
-	PrintMessage("Renderable list: %i %i", m_renderableList[0].size(), m_renderableList[1].size());
 }
 
 void DualParaboloidReflection::RenderScene()

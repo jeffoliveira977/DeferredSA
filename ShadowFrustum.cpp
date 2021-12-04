@@ -125,7 +125,6 @@ void ShadowFrustum::DirectionalLightTransform(RwCamera* mainCam, const RW::V3d& 
 
             Desc[i].lightViewMatrix = XMMatrixLookAtRH(shadowPosition,  frustumCenter, cameraUpVector);
             Desc[i].lightOrthoMatrix = XMMatrixOrthographicRH(longEdge, longEdge, Desc[i].NearClip, Desc[i].FarClip);
-            
             if(stabilizeCascades)
             {
                 // Create the rounding matrix, by projecting the world-space origin and determining

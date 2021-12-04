@@ -17,6 +17,7 @@ std::vector<CEntity*> RenderableScene::m_list;
 RenderableFrustum* RenderableScene::m_frustumRenderable;
 RenderCallback RenderableScene::m_renderCallback;
 RenderableAABB *RenderableScene::mRenderableAABB;
+int RenderableScene::mRenderStage;
 
 void RenderableScene::InitGraphicsBuffer()
 {
@@ -24,6 +25,8 @@ void RenderableScene::InitGraphicsBuffer()
 	mRenderableAABB->Initialize();
 
 	m_frustumRenderable = new RenderableFrustum();
+	m_frustumRenderable->InitGraphicsBuffer();
+
 	m_raster = RwRasterCreate(1024, 1024, 32, rwRASTERTYPECAMERATEXTURE);
 	m_depthRaster = RwRasterCreate(1024, 1024, 32, rwRASTERTYPEZBUFFER);
 
@@ -39,6 +42,7 @@ void RenderableScene::InitGraphicsBuffer()
 	CameraSize(m_camera, nullptr, tanf(3.14f / 4), 1.0f);
 
 	RpWorldAddCamera(Scene.m_pRpWorld, m_camera);
+	mRenderStage = 0;
 }
 
 void RenderableScene::Render()
@@ -69,10 +73,12 @@ void RenderableScene::Render()
 	//m_renderCallback();
 	DefinedState();
 
-	XMINT4 SolidGreen = {64, 200,  64, 255}; 
-	XMINT4 SolidRed = {200,  64,  64, 255}; 
+	XMINT4 SolidGreen = {64, 200,  64, 255};
+	XMINT4 SolidRed = {200,  64,  64, 255};
 	XMINT4 SolidWhite = {255, 255, 255, 255};
 	XMINT4 SolidBlack = {0,   0,   0, 255};
+	XMINT4 SolidBlue = {64,  64, 200, 95};
+	XMINT4 SolidYellow = {200, 200,  64, 255};
 
 	for(int i = 0; i < CRenderer::ms_nNoOfVisibleEntities; ++i)
 	{
@@ -84,38 +90,43 @@ void RenderableScene::Render()
 		XMMATRIX world = RwMatrixToXMMATRIX(reinterpret_cast<RwMatrix*>(entity->GetMatrix()));
 		CBoundingBox modelAABB = col->m_boundBox;
 
-		XMVECTOR min, max;
-		min = XMLoadFloat3(reinterpret_cast<XMFLOAT3*>(&modelAABB.m_vecMin));
-		max = XMLoadFloat3(reinterpret_cast<XMFLOAT3*>(&modelAABB.m_vecMax));
-		min = XMVector3Transform(min, world);
-		max = XMVector3Transform(max, world);
+		XMFLOAT3 min, max;
+		min = *reinterpret_cast<XMFLOAT3*>(&modelAABB.m_vecMin);
+		max = *reinterpret_cast<XMFLOAT3*>(&modelAABB.m_vecMax);
 
-		Math::AABB aabb;
-		XMStoreFloat3(&aabb.Min, min);
-		XMStoreFloat3(&aabb.Max, max);
-		if(CubemapReflection::m_frustum[2].Intersects(aabb))
+		Math::AABB aabb(min, max);
+		aabb.Transform(world);
+		mRenderableAABB->SetAABB(aabb);
+
+		if(mRenderStage == 0)
 		{
-			mRenderableAABB->SetColor(SolidGreen, SolidRed, SolidBlack);
-			if(entity->m_pRwObject)
+			if(CubemapReflection::mObjectsCulled[2][entity])
 			{
-				entity->m_bImBeingRendered = true;
+				XMINT4 saturate = {0, 60,  0, 255};
+				mRenderableAABB->SetColor(SolidGreen, saturate, saturate);
+				if(entity->m_pRwObject)
+				{
+					entity->m_bImBeingRendered = true;
 
-				if(entity->m_pRwObject->type == rpATOMIC)
-					RpAtomicRender(entity->m_pRwAtomic);
-				else
-					RpClumpRender(entity->m_pRwClump);
+					if(entity->m_pRwObject->type == rpATOMIC)
+						RpAtomicRender(entity->m_pRwAtomic);
+					else
+						RpClumpRender(entity->m_pRwClump);
 
-				entity->m_bImBeingRendered = false;
+					entity->m_bImBeingRendered = false;
+				}
+			}
+			else
+			{
+				mRenderableAABB->SetColor(SolidRed, SolidBlack, SolidBlack);
 			}
 		}
-		else
-		{
-			mRenderableAABB->SetColor(SolidRed, SolidBlack, SolidBlack);
-		}
-		mRenderableAABB->SetAABB(aabb);
+
 		mRenderableAABB->Render(aabb, world);
 	}
-	m_frustumRenderable->RenderFrustum(false);
+
+	m_frustumRenderable->SetColor(SolidBlue);
+	m_frustumRenderable->RenderFrustum(true);
 	RwCameraEndUpdate(m_camera);
 }
 

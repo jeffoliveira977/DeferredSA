@@ -2,15 +2,15 @@
 
 VertexBuffer::VertexBuffer()
 {
-    m_vertexBuffer = nullptr;
+    mVertexBuffer = nullptr;
 }
 
 VertexBuffer::~VertexBuffer()
 {
-    RwD3D9DynamicVertexBufferDestroy(m_vertexBuffer);   
+    RwD3D9DynamicVertexBufferDestroy(mVertexBuffer);   
 }
 
-void VertexBuffer::Allocate(RwUInt32 size, RwUInt32 stride)
+void VertexBuffer::Initialize(RwUInt32 size, RwUInt32 stride)
 {
     if(size == 0)
         throw std::invalid_argument("invalid size for allocating vertex buffer");
@@ -19,7 +19,7 @@ void VertexBuffer::Allocate(RwUInt32 size, RwUInt32 stride)
         throw std::invalid_argument("invalid stride for allocating vertex buffer");
 
     m_stride = stride;
-    auto result = RwD3D9DynamicVertexBufferCreate(m_stride * size, &m_vertexBuffer);
+    auto result = RwD3D9DynamicVertexBufferCreate(m_stride * size, &mVertexBuffer);
 
     if(!result)
         throw std::runtime_error("VertexBuffer::Allocate");
@@ -27,22 +27,39 @@ void VertexBuffer::Allocate(RwUInt32 size, RwUInt32 stride)
 
 void VertexBuffer::Copy(RwUInt32 size, void* data)
 {
-    if(m_vertexBuffer == nullptr || 
+    if(mVertexBuffer == nullptr || 
        data == nullptr)
         return;
 
     void* bufferMem = NULL;
-    m_vertexBuffer->Lock(0, m_stride * size, &bufferMem, D3DLOCK_DISCARD);
+    mVertexBuffer->Lock(0, m_stride * size, &bufferMem, D3DLOCK_DISCARD);
     memcpy(bufferMem, data, m_stride * size);
-    m_vertexBuffer->Unlock();
+    mVertexBuffer->Unlock();
 }
 
 void VertexBuffer::Set()
 {
-    RwD3D9SetStreamSource(0, m_vertexBuffer, 0, m_stride);
+    RwD3D9SetStreamSource(0, mVertexBuffer, 0, m_stride);
+}
+
+void VertexBuffer::Map(RwUInt32 size, void** data)
+{
+    if(mVertexBuffer == nullptr ||
+       data == nullptr)
+        return;
+
+    mVertexBuffer->Lock(0, size, data, D3DLOCK_DISCARD);
+}
+
+void VertexBuffer::Unmap()
+{
+    if(mVertexBuffer == nullptr)
+        return;
+
+    mVertexBuffer->Unlock();
 }
 
 IDirect3DVertexBuffer9* VertexBuffer::GetBuffer()
 {
-    return m_vertexBuffer;
+    return mVertexBuffer;
 }

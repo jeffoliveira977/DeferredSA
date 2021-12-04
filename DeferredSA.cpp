@@ -59,7 +59,6 @@ void Initialize()
 	SoftParticlesContext = new SoftParticles();
 	SoftParticlesContext->initGraphicsBuffer();
 	PBSMaterialMgr::LoadMaterials();
-
 	RenderableScene::InitGraphicsBuffer();
 
 	// Setup Dear ImGui context
@@ -78,6 +77,7 @@ void Initialize()
 	ImGui_ImplWin32_Init(*(HWND*)0x00C8CF88);
 	ImGui_ImplDX9_Init(GetD3DDevice());
 }
+
 
 void SetSurfaceD(int id)
 {
@@ -332,7 +332,7 @@ void RenderRealTimeShadows(const RwV3d& sundir)
 void CRealTimeShadowManager__Update()
 {
 	//ShadowCasterEntity->ClearCullList();
-	ShadowCasterEntity->Update(GetSectorX(CRenderer::ms_vecCameraPosition.x), GetSectorY(CRenderer::ms_vecCameraPosition.y));
+	//ShadowCasterEntity->Update(GetSectorX(CRenderer::ms_vecCameraPosition.x), GetSectorY(CRenderer::ms_vecCameraPosition.y));
 	//CVector g_vSunPosition;
 	//GetSunPosn(&g_vSunPosition, CTimeCycle::m_CurrentColours.m_fFarClip);
 	//const auto sunDirs = reinterpret_cast<RwV3d*>(0xB7CA50);
@@ -342,7 +342,7 @@ void CRealTimeShadowManager__Update()
 	//RenderRealTimeShadows(*(RwV3d*)&g_vSunPosition);
 
 
-	CascadedShadowManagement->Update();
+//	CascadedShadowManagement->Update();
 	//SpotShadow->Update();
 //	EnvironmentMapping::SphericalMap();
 	XMVECTOR minExtents, maxExtents;
@@ -383,14 +383,14 @@ void CRealTimeShadowManager__Update()
 	//float c = (box.Max.z + abs(box.Min.z) * 2);
 	//EnvironmentMapping::CubeMap();
 
-	//RenderableScene::m_frustumRenderable->mView = CascadedShadowManagement->Desc[0].lightViewMatrix;
-	//RenderableScene::m_frustumRenderable->mProj = CascadedShadowManagement->Desc[0].lightOrthoMatrix;
-	RenderableScene::m_frustumRenderable->mView = CubemapReflection::m_viewMatrix[2];
-	RenderableScene::m_frustumRenderable->mProj = CubemapReflection::m_projectionMatrix;
+	RenderableScene::m_frustumRenderable->mView = CascadedShadowManagement->Desc[0].lightViewMatrix;
+	RenderableScene::m_frustumRenderable->mProj = CascadedShadowManagement->Desc[0].lightOrthoMatrix;
+	//RenderableScene::m_frustumRenderable->mView = CubemapReflection::m_viewMatrix[2];
+	//RenderableScene::m_frustumRenderable->mProj = CubemapReflection::m_projectionMatrix;
 	RenderableScene::m_frustumRenderable->SetViewWindow(ot.x * 0.5f, ot.x * 0.5f);
 	RenderableScene::m_frustumRenderable->SetClipPlane(0.01, 3000.0);
-	RenderableScene::m_frustumRenderable->SetViewMatrix((RwMatrix*)&XMMatrixInverse(0, CubemapReflection::m_viewMatrix[2]));
-	//RenderableScene::m_frustumRenderable->SetViewMatrix((RwMatrix*)&XMMatrixInverse(0, CascadedShadowManagement->Desc[0].lightViewMatrix));
+	//RenderableScene::m_frustumRenderable->SetViewMatrix((RwMatrix*)&XMMatrixInverse(0, CubemapReflection::m_viewMatrix[2]));
+	RenderableScene::m_frustumRenderable->SetViewMatrix((RwMatrix*)&XMMatrixInverse(0, CascadedShadowManagement->Desc[0].lightViewMatrix));
 
 	RenderableScene::m_frustumRenderable->m_frustum = CubemapReflection::m_frustum[2];
 	//RenderableScene::m_frustumRenderable->SetViewWindow(camera->viewWindow.x, camera->viewWindow.y);
