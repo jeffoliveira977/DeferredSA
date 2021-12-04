@@ -395,12 +395,12 @@ inline float DotProduct(const CVector& v1, const CVector& v2)
     return v1.z * v2.z + v1.y * v2.y + v1.x * v2.x;
 }
 
-inline inline CVector operator/(const CVector& vec, float dividend)
+inline CVector operator/(const CVector& vec, float dividend)
 {
     return CVector(vec.x / dividend, vec.y / dividend, vec.z / dividend);
 }
 
-inline inline float SquaredMagnitude(float x, float y)
+inline float SquaredMagnitude(float x, float y)
 {
     return x * x + y * y;
 }

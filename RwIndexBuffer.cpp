@@ -30,6 +30,22 @@ void RwIndexBuffer::Copy(RwUInt32 size, void* in)
     m_buffer->Unlock();
 }
 
+void RwIndexBuffer::Map(RwUInt32 size, void** data)
+{
+    if(m_buffer == nullptr || data == nullptr)
+        return;
+
+    m_buffer->Lock(0, size, data, D3DLOCK_DISCARD);
+}
+
+void RwIndexBuffer::Unmap()
+{
+    if(m_buffer == nullptr)
+        return;
+
+    m_buffer->Unlock();
+}
+
 void RwIndexBuffer::Set()
 {
     _rwD3D9SetIndices(m_buffer);

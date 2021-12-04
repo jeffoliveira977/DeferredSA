@@ -10,6 +10,10 @@ public:
 	void Initialize(RwUInt32 size, RwUInt32 stride);
 	void Copy(RwUInt32 size, void *data);
 	void Set();
+
+	void Map(RwUInt32 size, void** data);
+	void Unmap();
+
 	IDirect3DVertexBuffer9* GetBuffer();
 private:
 	IDirect3DVertexBuffer9* mVertexBuffer;

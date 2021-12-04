@@ -33,23 +33,23 @@ private:
 	RwV2d m_viewWindow;
 	RwMatrix* LTM;
 	VertexBuffer* mVertexBuffer;
-	RwIndexBuffer* mIndexBuffer;
+	RwIndexBuffer* mIndexBuffer[2];
 	void* mVertexShader;
 	void* mPixelShader;
 	XMINT4 mColor;
-public:
-	XMMATRIX mView;
+	static std::vector<RwUInt16> mIndicesL;
+	static std::vector<RwUInt16> mIndicesT;
+	std::vector<Vertex> mVertices;
+	XMMATRIX mWorld;
 	XMMATRIX mProj;
-	Math::Frustum m_frustum;
+public:
 	RenderableFrustum();
 	~RenderableFrustum();
 
-	void SetViewMatrix(RwMatrix* LTM);
-	void SetViewWindow(float x, float y); 
-	void SetClipPlane(float nearPlane, float farPlane);
-
 	void InitGraphicsBuffer();
-	void RenderFrustum(bool ortho);
+	void Render(bool ortho);
 	void SetColor(XMINT4 color);
+	void SetWorldMatrix(XMMATRIX world);
+	void SetProjectionMatrix(XMMATRIX projection, bool ortho);
 };
 
