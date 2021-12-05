@@ -62,7 +62,6 @@ void RenderableAABB::Render()
 	mVertexBuffer->Map(mVertices.size() * sizeof(Vertex), (void**)&vertexData);
 	std::copy(mVertices.begin(), mVertices.end(), vertexData);
 	mVertexBuffer->Unmap();
-
 	RwD3D9SetStreamSource(0, mVertexBuffer->GetBuffer(), 0, sizeof(Vertex));
 	_rwD3D9SetIndices(mIndexBuffer->GetBuffer());
 

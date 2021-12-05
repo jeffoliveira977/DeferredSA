@@ -156,7 +156,7 @@ void RenderableFrustum::SetProjectionMatrix(XMMATRIX projection, bool ortho)
 		farClip = -m.m[3][2] / (1.0f + m.m[2][2]);
 	}
 
-	PrintMessage("%f %f %f %f", viewLeft, viewRight, nearClip, farClip);
+	//PrintMessage("%f %f %f %f", viewLeft, viewRight, nearClip, farClip);
 
 	float depth[3];
 	depth[0] = 1.0f;

@@ -293,5 +293,8 @@
     <FxCompile Include="shaders\WaterSkinnedMeshReflectionVS.hlsl">
       <Filter>shaders</Filter>
     </FxCompile>
+    <FxCompile Include="shaders\PBR.hlsl">
+      <Filter>shaders</Filter>
+    </FxCompile>
   </ItemGroup>
 </Project>

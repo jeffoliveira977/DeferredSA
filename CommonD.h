@@ -567,3 +567,36 @@ struct Mat4x4
 #include <DirectXCollision.h>
 
 ContainmentType TestAABBPlane(XMFLOAT4* p, CVector min, CVector max);
+
+#include <chrono>
+using namespace std;
+typedef chrono::high_resolution_clock hr_clock;
+
+class CPerfTimer
+{
+private:
+    chrono::time_point<hr_clock> beg;
+    __int64 msCount = -1;
+    string	m_Name{NULL};
+public:
+    explicit CPerfTimer(const string& Name) : m_Name{Name}
+    {}
+    // Begin counting
+    void Start()
+    {
+        beg = hr_clock::now();
+    }
+    // Stop counting
+    void Stop()
+    {
+        msCount = chrono::duration_cast<std::chrono::microseconds>(hr_clock::now() - beg).count();
+    }
+    // Return counter debug info.
+    string GetTimerResult()
+    {
+        char buff[100];
+        snprintf(buff, sizeof(buff), "%.3f", (msCount / 1000.0));
+
+        return m_Name + ": " + string(buff) + " ms";
+    }
+};

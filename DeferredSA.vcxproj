@@ -260,6 +260,9 @@
     <FxCompile Include="shaders\Im3dVS.hlsl">
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='GTASA Release|Win32'">Vertex</ShaderType>
     </FxCompile>
+    <FxCompile Include="shaders\PBR.hlsl">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='GTASA Release|Win32'">true</ExcludedFromBuild>
+    </FxCompile>
     <FxCompile Include="shaders\Shadow.hlsl">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='GTASA Release|Win32'">true</ExcludedFromBuild>
     </FxCompile>

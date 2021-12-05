@@ -543,12 +543,6 @@ float2 GetUnsizedVPos(float2 VPos)
     return float2((VPos - (fInverseViewportDimensions * 0.5f)) / fInverseViewportDimensions);
 }
 
-// Basic lambertian diffuse term, Normal and Light Direction should be normalized
-inline float LambertDiffuse(in float3 vNormal, in float3 vLightDir)
-{
-    float fCosA = dot(vNormal, vLightDir); // cosine of angle between normal and light vector
-    return max(fCosA, 0.0f);
-}
 
 float3 LambertLighting(float3 lightNormal, float3 surfaceNormal, float3 lightColor)
 {
@@ -559,11 +553,11 @@ float3 LambertLighting(float3 lightNormal, float3 surfaceNormal, float3 lightCol
 }
 
 
-void CalculateDiffuseTerm(in float3 vNormal, in float3 vLightDir, out float fDiffuseTerm, in float fRoughness)
-{
-    float fLambert = LambertDiffuse(vNormal, vLightDir);
-    fDiffuseTerm = fLambert;
-}
+//void CalculateDiffuseTerm(in float3 vNormal, in float3 vLightDir, out float fDiffuseTerm, in float fRoughness)
+//{
+//    float fLambert = LambertDiffuse(vNormal, vLightDir);
+//    fDiffuseTerm = fLambert;
+//}
 
 float PhongSpecular(in float3 vNormal, in float3 vLightDir, in float3 vViewDir, in float fRoughness)
 {

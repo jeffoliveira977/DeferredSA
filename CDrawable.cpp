@@ -55,7 +55,7 @@ void MeshRenderingMode::RenderCallBack(RwResEntry* entry, void* object, RwUInt8 
 
 void MeshRenderingMode::ShadowRendering(RwResEntry* entry, void* object, RwUInt32 flags)
 {
-	XMMATRIX  worldMatrix, viewMatrix, projectionMatrix;
+	XMMATRIX  worldMatrix;
 
 	RwMatrix* LTM;
 	RxD3D9ResEntryHeader* header;

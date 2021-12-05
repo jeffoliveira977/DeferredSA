@@ -28,7 +28,6 @@ PS_DeferredOutput main(VS_DeferredOutput input)
     //outColor.a = 1;
    // outColor = input.Color * lerp(0.25f, 1.0f, 1 - DNBalance);
     outColor = MaterialColor;
-    float _Bias = 0.5;
     if (HasTexture)
         outColor *= tex2D(Diffuse, input.Texcoord);
     

@@ -290,8 +290,8 @@ void SkinnedMeshPipeline::DeferredRendering(RwResEntry* entry, void* object, RwU
 		float shininess = CCustomCarEnvMapPipeline__GetFxEnvShininess(material);
 
 		RwV4d materialProps;
-		materialProps.x = 0.01;
-		materialProps.y = 0.1;
+		materialProps.x = 0.6;
+		materialProps.y = 0.6;
 		materialProps.z = CCustomBuildingDNPipeline__m_fDNBalanceParam;
 		materialProps.w = 1.0;
 

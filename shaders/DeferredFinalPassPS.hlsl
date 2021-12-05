@@ -1,5 +1,6 @@
 #include "Utilities.hlsl"
 #include "Shadow.hlsl"
+#include "PBR.hlsl"
 
 #define PI 3.14
 #define USE_ADDITIONALGBUFFER	
@@ -50,16 +51,6 @@ float4 SphereEnvMap(float3 normal, float3 viewDir)
     R.y = 1 - R.y;
     
     return tex2D(SphericMapSampler, R.xy);
-}
-float MicrofacetFresnel(in float3 LightDir, in float3 Normal, in float fRoughness)
-{
-    float IOR = 1.5f;
-    float f0 = (1 - IOR) / (1 + IOR);
-    f0 *= f0;
-    // Cosine between light and normal
-    float CosPhi = max(dot(LightDir, Normal), 0);
-
-    return f0 + (1 - f0) * pow(1 - CosPhi, 5.0);
 }
 
 float4 main(float2 texCoord : TEXCOORD0, float2 vpos:VPOS) : COLOR

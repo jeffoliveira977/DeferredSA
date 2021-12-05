@@ -23,7 +23,7 @@ namespace Math
 		XMVECTOR minVec = XMVectorSet(points[0].x, points[0].y, points[0].z, 1.0);
 		XMVECTOR maxVec = XMVectorSet(points[0].x, points[0].y, points[0].z, 1.0);
 
-		for(int i = 0; i < count; i++)
+		for(size_t i = 0; i < count; i++)
 		{
 			XMVECTOR point = XMLoadFloat3(&points[i]);
 			minVec = XMVectorMin(minVec, point);

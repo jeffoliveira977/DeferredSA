@@ -1,8 +1,9 @@
 #include "Utilities.hlsl"
 #include "Shadow.hlsl"
+#include "PBR.hlsl"
 
-float3 SkyLightColor : register(c8);
-float3 HorizonColor : register(c9);
+float3 HorizonColor : register(c8);
+float3 SkyLightColor : register(c9);
 float3 SunColor : register(c10);
 float3 SunPosition : register(c11);
 float3 FogData : register(c12);
@@ -40,107 +41,6 @@ sampler2D NormalMap : register(s1);
 ShadowData ShadowBuffer : register(c16);
 sampler2D ShadowSampler[4] : register(s2);
 
-inline float pow5(float v)
-{
-    return v * v * v * v * v;
-}
-float MicrofacetNDF_GGX(in float3 vNormal, in float3 vHalfWay, in float fRoughness)
-{
-    float fRoughnessSqr = fRoughness * fRoughness;
-
-    float fCosAlphaSqr = saturate(dot(vNormal, vHalfWay)); // Alpha is angle between normal and half-way vector
-	//fCosAlphaSqr *= fCosAlphaSqr;		// need to check if can be optimized to use less instructions
-    float fDiv = ((fRoughnessSqr - 1) * fCosAlphaSqr + 1);
-    float fNDCoeff = fRoughnessSqr;
-    fNDCoeff /= PI * (fDiv * fDiv + 1e-7f);
-
-    half d = (fCosAlphaSqr * fRoughnessSqr - fCosAlphaSqr) * fCosAlphaSqr + 1.0f; // 2 mad
-    return fRoughnessSqr / (d * d + 1e-7f);
-	//return fNDCoeff;
-	//float 
-}
-float GGX_PartialGeometry(float cosThetaN, float alpha)
-{
-    float cosTheta_sqr = saturate(cosThetaN * cosThetaN);
-    float tan2 = (1 - cosTheta_sqr) / cosTheta_sqr;
-    float GP = 2 / (1 + sqrt(1 + alpha * alpha * tan2));
-    return GP;
-}
-float MicrofacetFresnel(in float3 LightDir, in float3 Normal, in float fRoughness)
-{
-    float IOR = 1.5f;
-    float f0 = (1 - IOR) / (1 + IOR);
-    f0 *= f0;
-    // Cosine between light and normal
-    float CosPhi = max(dot(LightDir, Normal), 0);
-
-    return f0 + (1 - f0) * pow5(1 - CosPhi);
-}
-float GGX_Distribution(float cosThetaNH, float alpha)
-{
-    float alpha2 = alpha * alpha;
-    float NH_sqr = saturate(cosThetaNH * cosThetaNH);
-    float den = NH_sqr * alpha2 + (1.0 - NH_sqr);
-    return alpha2 / (PI * den * den);
-}
-inline float SmithJointGGXVisibilityTerm(float NdotL, float NdotV, float roughness)
-{
-	// Original formulation:
-	//	lambda_v	= (-1 + sqrt(a2 * (1 - NdotL2) / NdotL2 + 1)) * 0.5f;
-	//	lambda_l	= (-1 + sqrt(a2 * (1 - NdotV2) / NdotV2 + 1)) * 0.5f;
-	//	G			= 1 / (1 + lambda_v + lambda_l);
-
-	// Reorder code to be more optimal
-    float a = roughness;
-    float a2 = a * a;
-
-    float lambdaV = NdotL * sqrt((-NdotV * a2 + NdotV) * NdotV + a2);
-    float lambdaL = NdotV * sqrt((-NdotL * a2 + NdotL) * NdotL + a2);
-
-	// Simplify visibility term: (2.0f * NdotL * NdotV) /  ((4.0f * NdotL * NdotV) * (lambda_v + lambda_l + 1e-5f));
-    return 0.5f / (lambdaV + lambdaL + 1e-5f);
-}
-void CalculateSpecularTerm(in float3 vNormal, in float3 vLightDir, in float3 vViewDir, in float fRoughness, out float fSpecularTerm)
-{
-    float3 vHalfWay = normalize(vLightDir + vViewDir);
-    float fresnelTerm = MicrofacetFresnel(vLightDir, vHalfWay, fRoughness);
-    float roug_sqr = fRoughness * fRoughness;
-    float G = GGX_PartialGeometry(dot(vNormal, vViewDir), roug_sqr) * GGX_PartialGeometry(dot(vNormal, vLightDir), roug_sqr);
-    float D = GGX_Distribution(dot(vNormal, vHalfWay), roug_sqr);
-    float ndfTerm = MicrofacetNDF_GGX(vNormal, vHalfWay, fRoughness * fRoughness);
-    float ndl = saturate(dot(vNormal, vLightDir));
-    float ndv = saturate(dot(vNormal, vViewDir));
-    float visibilityTerm = SmithJointGGXVisibilityTerm(ndl, ndv, fRoughness * fRoughness);
-    /*if (ndv <= 0.0 || ndl <= 0.0)
-    {
-        fSpecularTerm = 0.0f;
-        return;
-    }*/
-	//MicrofacetGeometricShadow(vNormal, vViewDir, fRoughness);
-#define USE_PBR 0 
-#if USE_PBR==1
-    fSpecularTerm = ndfTerm * 0.25f;
-#else
-    fSpecularTerm = PhongSpecular(vNormal, vLightDir, -vViewDir, fRoughness) * 4.0f;
-#endif
-    //
-    //ndfTerm * fresnelTerm;
-}
-void CalculateDiffuseTerm_ViewDependent(in float3 vNormal, in float3 vLightDir, in float3 vViewDir, out float fDiffuseTerm, in float fRoughness)
-{
-    float fLambert = LambertDiffuse(vNormal, vLightDir);
-    float fFL = pow5(1 - saturate(dot(vNormal, vLightDir)));
-    float fFV = pow5(1 - saturate(dot(vNormal, vViewDir)));
-    float3 vHalfWay = normalize(vLightDir + vViewDir);
-	
-    float LdotH = saturate(dot(vHalfWay, vLightDir));
-
-    float fd90 = 0.5 + 2 * LdotH * LdotH * fRoughness;
-	// Two schlick fresnel term
-    float lightScatter = (1 + (fd90 - 1) * fFL);
-    float viewScatter = (1 + (fd90 - 1) * fFV);
-    fDiffuseTerm = (lightScatter * viewScatter) * fLambert;
-}
 
 static const float g_fAtmosphereHeight = 8000.0f;
 static const float g_fThickAtmosphereHeight = 1200.0f;
@@ -265,48 +165,79 @@ float4 main(VS_Output input, float2 vpos :VPOS) : COLOR
     
     const float3 ViewPos = CameraPosition.xyz;  
     float3 WorldPos = input.WorldPosition.xyz;
-    float3 Normals = (input.Normal.xyz * 0.5f + 0.5f) * 2.0f - 1.0f;
-    Normals.z = sqrt(1.01 - dot(Normals.xy, Normals.xy));
+    float3 Normals = input.Normal.xyz * 0.5f + 0.5f;
+    Normals.xy = Normals * 2 - 1;
+    Normals.z = sqrt(max(1 - dot(Normals.xy, Normals.xy), 0.0f));
     Normals = normalize(Normals);
+    
     float3 ViewDir = normalize(WorldPos.xyz - ViewPos);
     float3 LightDir = normalize(SunPosition.xyz);
 
+    
+    float SpecIntensity = MaterialProps.x;
+    float Roughness = 1 - MaterialProps.y;
+    
     float DiffuseTerm, SpecularTerm;
-    CalculateDiffuseTerm_ViewDependent(Normals.xyz, LightDir, ViewDir, DiffuseTerm, 1 - fGlossiness);
-    CalculateSpecularTerm(Normals.xyz, LightDir, -ViewDir, 1 - fGlossiness,  SpecularTerm);
+    CalculateDiffuseTerm_ViewDependent(Normals.xyz, LightDir, ViewDir, DiffuseTerm, Roughness);
+    CalculateSpecularTerm(Normals.xyz, LightDir, -ViewDir, Roughness, SpecularTerm);
     // clamp to avoid unrealisticly high values
-    SpecularTerm = min(SpecularTerm, 16.0f);
-    DiffuseTerm *= DNBalance;
+   // SpecularTerm = min(SpecularTerm, 16.0f);
+    //DiffuseTerm *= DNBalance;
 
     float4 albedoSample = MaterialColor;
     if (HasTexture)
         albedoSample *= tex2D(Diffuse, input.Texcoord);
     
     float4 outColor;
-    float ShadowTerm = DrawShadow(ShadowSampler, WorldPos,
-    length(WorldPos.xyz - ViewPos), WorldPos, ShadowBuffer) * DNBalance;
+    float ShadowTerm = DrawShadow(ShadowSampler, WorldPos, length(WorldPos.xyz - ViewPos), WorldPos, ShadowBuffer) * DNBalance;
+
+    //float3 ReflDir = normalize(reflect(ViewDir, normalize(Normals.xyz)));
+    //float3 FullScattering;
+
+    //float3 ObjectColor = CalculateFogColor(float3(0, 0, 0), ReflDir, LightDir, 1000, 0, FullScattering);
+    //float3 SkyColor = GetSkyColor(ReflDir, LightDir, FullScattering);
+
+    //float3 ReflectionFallBack = 0.0f;
+    ////ReflDir.x *= -1;
+  
+    ////float4 CubeMap =
+    ////    txCubeMap.SampleLevel(samLinear, ReflDir, (1 - fGlossiness) * 9.0f);
+    ////ReflectionFallBack = lerp(CubeMap.rgb, SkyColor, 1 - CubeMap.a);
+    
+    //float3 sun_lighting = DiffuseTerm * ShadowTerm * SunColor.rgb;
+    //float3 radiance = input.Color.rgb * saturate(1.0f - DNBalance + 0.2f);
+    //// todo: add lighting methods for forward renderer
+    
+    //outColor.rgb = albedoSample.rgb * (sun_lighting + radiance + SkyLightColor.rgb * 0.3f) +
+    //    SpecularTerm * fSpecularIntensity * DNBalance * SunColor.rgb * ShadowTerm + ReflectionFallBack * fSpecularIntensity;
+   
+    //outColor.rgb = CalculateFogColor(outColor.rgb, ViewDir, LightDir, input.Depth, WorldPos.z, FullScattering);
+    //outColor.a = albedoSample.a * input.Color.a;
+    
+    //float3 Radiance = i.vColor.rgb * saturate(1.0f - vSunLightDir.w + 0.2f);
+
+    //float2 Lighting = float2(DiffuseTerm, SpecularTerm * SpecIntensity) * ShadowTerm;
+    //outColor.xyzw = float4(Lighting.x * vSunColor.rgb + Radiance.rgb * saturate(1.0f - vSunLightDir.w + 0.2f), Lighting.y);
+    float3 Radiance = input.Color * lerp(0.25f, 1.0f, 1 - DNBalance);
+   
+    float2 Lighting = float2(DiffuseTerm, SpecularTerm * SpecIntensity) * ShadowTerm;
+    outColor.xyzw = float4(Lighting.x * SunColor.rgb + Radiance.rgb * saturate(1.0f - DNBalance + 0.2f), Lighting.y);
 
     float3 ReflDir = normalize(reflect(ViewDir, normalize(Normals.xyz)));
+    ReflDir.x *= -1;
+    
     float3 FullScattering;
-
-    float3 ObjectColor = CalculateFogColor(float3(0, 0, 0), ReflDir, LightDir, 1000, 0, FullScattering);
-    float3 SkyColor = GetSkyColor(ReflDir, LightDir, FullScattering);
-
-    float3 ReflectionFallBack = 0.0f;
-    //ReflDir.x *= -1;
+    float3 ObjectColor = CalculateFogColor(float3(0, 0, 0), ViewDir, SunPosition.xyz, 1000, 0, FullScattering);
   
-    //float4 CubeMap =
-    //    txCubeMap.SampleLevel(samLinear, ReflDir, (1 - fGlossiness) * 9.0f);
-    //ReflectionFallBack = lerp(CubeMap.rgb, SkyColor, 1 - CubeMap.a);
+    float3 SkyColor = GetSkyColor(ViewDir, SunPosition.xyz, FullScattering);
+    float3 ReflectionTerm = 0;
     
-    float3 sun_lighting = DiffuseTerm * ShadowTerm * SunColor.rgb;
-    float3 radiance = input.Color.rgb * saturate(1.0f - DNBalance + 0.2f);
-    // todo: add lighting methods for forward renderer
+    float3 Diffuse = (outColor.xyz + SkyLightColor.rgb * 0.3f);
+    SpecularTerm = (outColor.w * outColor.xyz);
     
-    outColor.rgb = albedoSample.rgb * (sun_lighting + radiance + SkyLightColor.rgb * 0.3f) +
-        SpecularTerm * fSpecularIntensity * DNBalance * SunColor.rgb * ShadowTerm + ReflectionFallBack * fSpecularIntensity;
-   
-    outColor.rgb = CalculateFogColor(outColor.rgb, ViewDir, LightDir, input.Depth, WorldPos.z, FullScattering);
-    outColor.a = albedoSample.a * input.Color.a;
+    float FresnelCoeff = MicrofacetFresnel(Normals, -ViewDir, MaterialProps.y);
+    outColor.xyz = Diffuse * albedoSample.rgb + SpecularTerm * MaterialProps.x + ReflectionTerm * FresnelCoeff * MaterialProps.x;
+    outColor.rgb = CalculateFogColor(outColor.rgb, ViewDir, SunPosition.xyz, input.Depth, WorldPos.z, FullScattering);
+    outColor.a = albedoSample.a;
     return outColor;
 }

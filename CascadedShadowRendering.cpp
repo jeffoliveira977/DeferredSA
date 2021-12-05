@@ -129,15 +129,15 @@ void CascadedShadowRendering::imguiParameters()
         ImGuiSliderFlags flags = ImGuiSliderFlags_NoRoundToFormat;
 
         ImGui::EndTabItem();
-        ImGui::InputFloat("Bias 0", &BiasCoefficients[0], 0.000001, 0.00001, "%.6f");
-        ImGui::InputFloat("Bias 1", &BiasCoefficients[1], 0.000001, 0.00001, "%.6f");
-        ImGui::InputFloat("Bias 2", &BiasCoefficients[2], 0.000001, 0.00001, "%.6f");
-        ImGui::InputFloat("Bias 3", &BiasCoefficients[3], 0.000001, 0.00001, "%.6f");
+        ImGui::InputFloat("Bias 0", &BiasCoefficients[0], 0.000001f, 0.00001f, "%.6f");
+        ImGui::InputFloat("Bias 1", &BiasCoefficients[1], 0.000001f, 0.00001f, "%.6f");
+        ImGui::InputFloat("Bias 2", &BiasCoefficients[2], 0.000001f, 0.00001f, "%.6f");
+        ImGui::InputFloat("Bias 3", &BiasCoefficients[3], 0.000001f, 0.00001f, "%.6f");
 
-        ImGui::InputFloat("DistanceCoefficients 0", &DistanceCoefficients[0], 0.0001, 0.001, "%.6f");
-        ImGui::InputFloat("DistanceCoefficients 1", &DistanceCoefficients[1], 0.0001, 0.001, "%.6f");
-        ImGui::InputFloat("DistanceCoefficients 2", &DistanceCoefficients[2], 0.0001, 0.001, "%.6f");
-        ImGui::InputFloat("DistanceCoefficients 3", &DistanceCoefficients[3], 0.0001, 0.001, "%.6f");
+        ImGui::InputFloat("DistanceCoefficients 0", &DistanceCoefficients[0], 0.0001f, 0.001f, "%.6f");
+        ImGui::InputFloat("DistanceCoefficients 1", &DistanceCoefficients[1], 0.0001f, 0.001f, "%.6f");
+        ImGui::InputFloat("DistanceCoefficients 2", &DistanceCoefficients[2], 0.0001f, 0.001f, "%.6f");
+        ImGui::InputFloat("DistanceCoefficients 3", &DistanceCoefficients[3], 0.0001f, 0.001f, "%.6f");
 
         WriteIniFileFloat(BiasCoefficients[0], "BiasCoefficients0", cPath);
         WriteIniFileFloat(BiasCoefficients[1], "BiasCoefficients1", cPath);

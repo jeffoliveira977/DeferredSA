@@ -52,7 +52,6 @@ namespace Math
 
 	bool BoundingSphere::Intersects(XMFLOAT4 plane)
 	{
-		PlaneIntersectionType result;
 		XMVECTOR P = XMLoadFloat4(&plane);
 		XMVECTOR V = XMLoadFloat3(&Center);
 
