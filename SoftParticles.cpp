@@ -5,6 +5,7 @@
 #include "Fx_c.h"
 #include "ShaderManager.h"
 #include "VertexBuffer.h"
+
 SoftParticles* SoftParticlesContext;
 constexpr int32_t TOTAL_TEMP_BUFFER_INDICES = 4096;
 constexpr int32_t TOTAL_TEMP_BUFFER_VERTICES = 2048;
@@ -115,10 +116,8 @@ void SoftParticles::RenderAddTri(float x1, float y1, float z1,
 
     RwIm3DVertexSetPos(&verts[0], x1, y1, z1);
     RwIm3DVertexSetRGBA(&verts[0], (RwUInt8)r1, (RwUInt8)g1, (RwUInt8)b1, (RwUInt8)a1);
-
     RwIm3DVertexSetPos(&verts[1], x2, y2, z2);
     RwIm3DVertexSetRGBA(&verts[1], (RwUInt8)r2, (RwUInt8)g2, (RwUInt8)b2, (RwUInt8)a2);
-
     RwIm3DVertexSetPos(&verts[2], x3, y3, z3);
     RwIm3DVertexSetRGBA(&verts[2], (RwUInt8)r3, (RwUInt8)g3, (RwUInt8)b3, (RwUInt8)a3);
 

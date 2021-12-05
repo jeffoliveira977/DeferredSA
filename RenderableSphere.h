@@ -3,15 +3,18 @@
 #include "CommonD.h"
 #include "VertexBuffer.h"
 #include "RwIndexBuffer.h"
-#include "AABB.h"
+#include "BoundingSphere.h"
+#include "PixelShader.h"
+#include "VertexShader.h"
 
-class RenderableAABB
+class RenderableSphere
 {
 	struct Vertex
 	{
 		float x, y, z;
 		int32_t color;
 
+		Vertex(){};
 		Vertex(float x, float y, float z)
 		{
 			this->x = x;
@@ -27,26 +30,25 @@ class RenderableAABB
 			this->color = ((color.w << 24) | ((color.x) << 16) |
 						  ((color.y) << 8) | ((color.z)));
 		}
-	};
-
+	}; 
+	
 	XMMATRIX mWorld;
-	void* mVertexShader;
-	void* mPixelShader;
+	VertexShader* mVertexShader;
+	PixelShader* mPixelShader;
 	VertexBuffer* mVertexBuffer;
 	RwIndexBuffer* mIndexBuffer;
-	XMINT4 mColor[6];
+	XMINT4 mColor;
 	std::vector<Vertex> mVertices;
-	static std::list<RwUInt16> mIndices;
+	std::vector<RwUInt16> mIndices;
+	Math::BoundingSphere mSphere;
 public:
-	RenderableAABB();
-	~RenderableAABB();
+	RenderableSphere();
+	~RenderableSphere();
 
-	void Initialize();
+	void Initialize(int slices, int stacks);
 	void Render();
-	void SetAABB(Math::AABB aabb);
+	void SetSphere(Math::BoundingSphere sphere);
 	void SetWorldMatrix(XMMATRIX world);
 	void SetColor(XMINT4 color);
-	void SetColor(XMINT4 color, XMINT4 color2, XMINT4 color3);
-	void SetColor(XMINT4 color, XMINT4 color2, XMINT4 color3, XMINT4 color4, XMINT4 color5, XMINT4 color6);
 };
 

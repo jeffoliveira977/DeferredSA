@@ -113,7 +113,10 @@ void CubemapReflection::ScanSectorList(int sectorX, int sectorY)
 
 void CubemapReflection::Update()
 {
-	m_projectionMatrix = XMMatrixPerspectiveFovRH(XMConvertToRadians(90.0f), 1.0f, 0.01f, 3000.0f);
+	float w = static_cast<float>(RsGlobal.maximumWidth); 
+	float h = static_cast<float>(RsGlobal.maximumHeight);
+	m_projectionMatrix = XMMatrixPerspectiveFovRH(XMConvertToRadians(90.0f), w/h, 0.01f, 3000.0f);
+	
 	CVector pos = FindPlayerCoors(0);
 
 	for(size_t i = 0; i < 6; i++)

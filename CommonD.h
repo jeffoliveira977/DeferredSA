@@ -395,12 +395,12 @@ inline float DotProduct(const CVector& v1, const CVector& v2)
     return v1.z * v2.z + v1.y * v2.y + v1.x * v2.x;
 }
 
-inline inline CVector operator/(const CVector& vec, float dividend)
+inline CVector operator/(const CVector& vec, float dividend)
 {
     return CVector(vec.x / dividend, vec.y / dividend, vec.z / dividend);
 }
 
-inline inline float SquaredMagnitude(float x, float y)
+inline float SquaredMagnitude(float x, float y)
 {
     return x * x + y * y;
 }
@@ -529,12 +529,12 @@ struct Vec3
         result.Z = Z * other.Z;
         return result;
     }
-   static Vec3 Cross(Vec3 vector1, Vec3 vector2)
+   static Vec3 Cross(Vec3 vector1, Vec3 Vec2)
     {
         Vec3 result;
-        result.X = vector1.Y * vector2.Z - vector1.Z * vector2.Y;
-        result.Y = vector1.Z * vector2.X - vector1.X * vector2.Z;
-        result.Z = vector1.X * vector2.Y - vector1.Y * vector2.X;
+        result.X = vector1.Y * Vec2.Z - vector1.Z * Vec2.Y;
+        result.Y = vector1.Z * Vec2.X - vector1.X * Vec2.Z;
+        result.Z = vector1.X * Vec2.Y - vector1.Y * Vec2.X;
         return result;
     }
 
@@ -543,6 +543,90 @@ struct Vec3
        return (value1.X * value2.X + value1.Y * value2.Y + value1.Z * value2.Z);
    }
 
+   static Vec3 Vec3::Normalize(Vec3 value)
+   {
+       Vec3 result;
+       float length = value.Length();
+
+       if(length == 0)
+       {
+           return {0,0,0};
+       }
+
+       float num = 1 / length;
+       result.X *= num;
+       result.Y *= num;
+       result.Z *= num;
+       return result;
+   }
+
+
+};
+
+struct Vec2
+{
+    float X, Y;
+
+    Vec2(const float x, const float y)
+        : X(x), Y(y)
+    {}
+
+    Vec2::Vec2(const float value)
+        : X(value), Y(value)
+    {}
+
+    Vec2::Vec2(const Vec2& obj)
+        : X(obj.X), Y(obj.Y)
+    {}
+
+    Vec2::Vec2()
+        : X(0), Y(0)
+    {}
+
+    Vec2 Vec2::operator+(const Vec2& other) const
+    {
+        return Vec2(X + other.X, Y + other.Y);
+    }
+
+    Vec2 Vec2::operator/(const float divider) const
+    {
+        return Vec2(X / divider, Y / divider);
+    }
+
+    Vec2 Vec2::operator/(const Vec2& other) const
+    {
+        return Vec2(X / other.X, Y / other.Y);
+    }
+
+    bool Vec2::operator==(const Vec2& other) const
+    {
+        return ((X == other.X) && (Y == other.Y));
+    }
+
+    bool Vec2::operator!=(const Vec2& other) const
+    {
+        return ((X != other.X) || (Y != other.Y));
+    }
+
+    Vec2 Vec2::operator*(const float scaleFactor) const
+    {
+        return Vec2(X * scaleFactor, Y * scaleFactor);
+    }
+
+    Vec2 Vec2::operator*(const Vec2& other) const
+    {
+        return Vec2(X * other.X, Y * other.Y);
+    }
+
+    Vec2 Vec2::operator-(const Vec2& other) const
+    {
+        return Vec2(X - other.X, Y - other.Y);
+    }
+
+    Vec2 Vec2::operator-() const
+    {
+        return Vec2(-X, -Y);
+    }
 };
 //struct Ray
 //{

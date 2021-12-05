@@ -22,7 +22,7 @@ void VertexBuffer::Initialize(RwUInt32 size, RwUInt32 stride)
     auto result = RwD3D9DynamicVertexBufferCreate(m_stride * size, &mVertexBuffer);
 
     if(!result)
-        throw std::runtime_error("VertexBuffer::Allocate");
+        throw std::runtime_error("VertexBuffer::Initialize");
 }
 
 void VertexBuffer::Copy(RwUInt32 size, void* data)
@@ -44,8 +44,7 @@ void VertexBuffer::Set()
 
 void VertexBuffer::Map(RwUInt32 size, void** data)
 {
-    if(mVertexBuffer == nullptr ||
-       data == nullptr)
+    if(mVertexBuffer == nullptr || data == nullptr)
         return;
 
     mVertexBuffer->Lock(0, size, data, D3DLOCK_DISCARD);

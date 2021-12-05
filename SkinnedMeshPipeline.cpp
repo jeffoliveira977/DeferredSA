@@ -259,6 +259,9 @@ void SkinnedMeshPipeline::DeferredRendering(RwResEntry* entry, void* object, RwU
 	_rpSkinMatrixUpdating(bones, (RpAtomic*)object, skin);
 	_rwD3D9SetVertexShaderConstant(12, bones, sizeof(bones) / sizeof(XMVECTOR));
 
+	auto numTextureCoords = RpGeometryGetNumTexCoordSets(geometry);
+	PrintMessage("%i", numTextureCoords);
+
 	//float fog[2];
 	//fog[0] = CTimeCycle::m_CurrentColours.m_fFogStart;
 	//fog[1] = Scene.m_pRwCamera->farPlane;

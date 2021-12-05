@@ -192,6 +192,7 @@ void ShadowCaster::Update(int x, int y)
     for(int i = -sectorCount; i < sectorCount; i++)
             ScanSectorList( x+i,y+  j);
         
+    
 }
 
 #include "CGame.h"

@@ -31,7 +31,7 @@ PS_DeferredOutput main(VS_DeferredOutput input)
         float3x3 tbn = float3x3(normalize(input.Tangent), normalize(input.Binormal), normalize(normal));
         normal = normalize(mul(normalMap, tbn));
     }
-    else if (ForceNormalMap)
+    else if (1)
     {
         float3x3 c = img3x3(Diffuse, input.Texcoord, 512, 0);
         float3 normalMap = height2normal_sobel(c);
