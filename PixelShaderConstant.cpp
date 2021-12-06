@@ -21,6 +21,13 @@ void PixelShaderConstant::SetVector(RwUInt32 index, void* value)
     _rwD3D9SetPixelShaderConstant(index, value, 1);
 }
 
+void PixelShaderConstant::SetRwRGBA(RwUInt32 index, RwRGBA value)
+{
+    RwRGBAReal color;
+    RwRGBARealFromRwRGBA(&color, &value);
+    _rwD3D9SetPixelShaderConstant(index, &color, 1);
+}
+
 void PixelShaderConstant::SetData(RwUInt32 index, void* value, size_t size)
 {
     _rwD3D9SetPixelShaderConstant(index, value, size);
@@ -29,6 +36,11 @@ void PixelShaderConstant::SetData(RwUInt32 index, void* value, size_t size)
 void PixelShaderConstant::SetMatrix(RwUInt32 index, void* value)
 {
     _rwD3D9SetPixelShaderConstant(index, value, 4);
+}
+
+void PixelShaderConstant::SetMatrix(RwUInt32 index, XMMATRIX value)
+{
+    _rwD3D9SetPixelShaderConstant(index, &value, 4);
 }
 
 void PixelShaderConstant::SetMatrixArray(RwUInt32 index, void* value, size_t size)

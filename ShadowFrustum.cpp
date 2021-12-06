@@ -42,9 +42,9 @@ void GetCameraFrustumCorners(RwCamera* camera, RwReal nearClip, RwReal farClip, 
 #include "CScene.h"
 void ShadowFrustum::DirectionalLightTransform(RwCamera* mainCam, const RW::V3d& lightDir, int shadowCascade)
 {
-    XMVECTOR lightDirection = XMVectorSet(lightDir.getX(), lightDir.getY(), lightDir.getZ(), 1.0);
+    XMVECTOR lightDirection = XMVectorSet(lightDir.getX(), lightDir.getY(), lightDir.getZ(), 1.0f);
 
-    float lastSplitDist = 0.0;
+    float lastSplitDist = 0.0f;
     for(size_t i = 0; i < CascadeCount; i++)
     {
         #ifndef RWCAMERA_TRANS 
@@ -107,15 +107,15 @@ void ShadowFrustum::DirectionalLightTransform(RwCamera* mainCam, const RW::V3d& 
 
             XMStoreFloat3(&Desc[i].m_AABB.Min, minExtents);
             XMStoreFloat3(&Desc[i].m_AABB.Max, maxExtents);
-            XMStoreFloat3(&Desc[i]. FrustumCenter, frustumCenter);
+            XMStoreFloat3(&Desc[i].FrustumCenter, frustumCenter);
 
             XMFLOAT3 extents;
             XMStoreFloat3(&extents, maxExtents - minExtents);
 
-           CVector coors= FindPlayerCoors(0);
+            CVector coors = FindPlayerCoors(0);
             float longEdge = max(extents.x, extents.y);
-            longEdge *= 0.5;
-            Desc[i].NearClip = -(extents.z < 500.0 ? 500.0 : extents.z);
+            longEdge *= 0.5f;
+            Desc[i].NearClip = -(extents.z < 500.0f ? 500.0f : extents.z);
             Desc[i].FarClip = 50.0f + -Desc[i].NearClip;
 
            // PrintMessage("%f", coors.z);
@@ -144,8 +144,8 @@ void ShadowFrustum::DirectionalLightTransform(RwCamera* mainCam, const RW::V3d& 
             }
 
             XMMATRIX projection = Desc[i].lightOrthoMatrix;
-            projection.r[0] *= 0.5;
-            projection.r[1] *= 0.5;
+            projection.r[0] *= 0.5f;
+            projection.r[1] *= 0.5f;
             Desc[i].m_FrustumCulling.SetMatrix(Desc[i].lightViewMatrix * projection);
         }
         #else
@@ -254,7 +254,7 @@ void ShadowFrustum::CalculateShadowDistances(const RwReal nearClip, const RwReal
         float lambda = 1.0f;
 
         if(m_partitionMode == PartitionMode_PSSM)
-            lambda = 0.95;
+            lambda = 0.95f;
 
         float clipRange = farClip - nearClip;
 

@@ -43,8 +43,8 @@ void RenderableSphere::Initialize(int slices, int stacks)
 	float thetaStep, theta;
 	RwUInt32 vertexCount, indicesCount;
 
-	phiStep = -2 * XM_PI / slices;
-	phiStart = XM_PI / 2;
+	phiStep = -2.0f * XM_PI / slices;
+	phiStart = XM_PI / 2.0f;
 
 	thetaStep = XM_PI / stacks;
 	theta = thetaStep;

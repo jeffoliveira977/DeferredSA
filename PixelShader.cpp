@@ -12,7 +12,18 @@ PixelShader::~PixelShader()
 
 void PixelShader::CreateFromBinary(string file)
 {
-    mPixelShader = RwCreateCompiledPixelShader(file);
+	string path = DEFERREDSHADERPATH + file + ".cso";
+	
+	ifstream f(file);
+	if(!f.good())
+	{
+		f.close();
+		string message = "Failed to load shader: " + file;
+		MessageBox(0, &message[0], "Error", MB_OK);
+	}
+
+	auto bytes = readFile(path);
+	RwD3D9CreateVertexShader((RwUInt32*)bytes.data(), &mPixelShader);
 }
 
 void PixelShader::CreateFromFile(string file, string profile)

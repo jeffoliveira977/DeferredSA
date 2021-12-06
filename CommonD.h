@@ -153,7 +153,7 @@ struct RpSkin
     void* field_3C;
 };
 
-std::vector<BYTE> readFile(const char* filename);
+std::vector<BYTE> readFile(std::string filename);
 void rwD3D9SetRenderTargets(RwRaster* rasters[], int rasterCount, RwUInt32 startIndex);
 #define rpD3D9SkinVertexShaderMatrixUpdate(matrices, atomic, skin) ((void( __cdecl*)(RwMatrix*, RpAtomic*, RpSkin*))0x7C78A0)(matrices, atomic, skin)
 #define RwD3D9RenderStateReset() ((int (__cdecl*)())0x7FD100)()

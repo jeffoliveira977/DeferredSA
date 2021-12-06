@@ -112,6 +112,24 @@ long long option_2(string filename, std::size_t bytes)
 	return std::chrono::duration_cast<std::chrono::milliseconds>(endTime - startTime).count();
 }
 
+std::vector<BYTE> readFile(string filename)
+{
+	std::ifstream file(filename, std::ios::binary);
+	file.unsetf(std::ios::skipws);
+	std::streampos fileSize;
+	file.seekg(0, std::ios::end);
+	fileSize = file.tellg();
+	file.seekg(0, std::ios::beg);
+
+	std::vector<BYTE> vec;
+	vec.reserve(fileSize);
+	vec.insert(vec.begin(),
+			   std::istream_iterator<BYTE>(file),
+			   std::istream_iterator<BYTE>());
+
+	return vec;
+}
+
 void* RwCreateCompiledVertexShader(string filename)
 {
 	void* shader;
@@ -125,17 +143,9 @@ void* RwCreateCompiledVertexShader(string filename)
 		MessageBox(0, &message[0], "Error", MB_OK);
 	}
 
-	ifstream is;
-	is.open(path, ios::binary);
-	is.seekg(0, ios::end);
-	length = is.tellg();
-	is.seekg(0, ios::beg);
-	buffer = new char[length];
-	is.read(buffer, length);
-	is.close();
-	RwD3D9CreateVertexShader((RwUInt32*)buffer, &shader);
+	auto bytes = readFile(path);
+	RwD3D9CreateVertexShader((RwUInt32*)bytes.data(), &shader);
 
-	delete[] buffer;
 	return shader;
 }
 
@@ -152,45 +162,10 @@ void* RwCreateCompiledPixelShader(string filename)
 		MessageBox(0, &message[0], "Error", MB_OK);
 	}
 
-	ifstream is;
-	is.open(path, ios::binary);
-	is.seekg(0, ios::end);
-	length = is.tellg();
-	is.seekg(0, ios::beg);
-	buffer = new char[length];
-	is.read(buffer, length);
-	is.close();
-	RwD3D9CreatePixelShader((RwUInt32*)buffer, &shader);
+	auto bytes = readFile(path);
+	RwD3D9CreatePixelShader((RwUInt32*)bytes.data(), &shader);
 
-	delete[] buffer;
 	return shader;
-}
-
-std::vector<BYTE> readFile(const char* filename)
-{
-	// open the file:
-	std::ifstream file(filename, std::ios::binary);
-
-	// Stop eating new lines in binary mode!!!
-	file.unsetf(std::ios::skipws);
-
-	// get its size:
-	std::streampos fileSize;
-
-	file.seekg(0, std::ios::end);
-	fileSize = file.tellg();
-	file.seekg(0, std::ios::beg);
-
-	// reserve capacity
-	std::vector<BYTE> vec;
-	vec.reserve(fileSize);
-
-	// read the data:
-	vec.insert(vec.begin(),
-			   std::istream_iterator<BYTE>(file),
-			   std::istream_iterator<BYTE>());
-
-	return vec;
 }
 
 #include <d3dcompiler.h>
