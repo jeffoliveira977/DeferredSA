@@ -153,7 +153,7 @@ struct RpSkin
     void* field_3C;
 };
 
-std::vector<BYTE> readFile(const char* filename);
+std::vector<BYTE> readFile(std::string filename);
 void rwD3D9SetRenderTargets(RwRaster* rasters[], int rasterCount, RwUInt32 startIndex);
 #define rpD3D9SkinVertexShaderMatrixUpdate(matrices, atomic, skin) ((void( __cdecl*)(RwMatrix*, RpAtomic*, RpSkin*))0x7C78A0)(matrices, atomic, skin)
 #define RwD3D9RenderStateReset() ((int (__cdecl*)())0x7FD100)()
@@ -308,7 +308,15 @@ typedef void cDMAudio;
 #define RwResourcesFreeResEntry(entry) ((RwBool ( __cdecl*)(RwResEntry*))0x807DE0)(entry)
 #define RxPipelineDestroy(pipeline) ((void ( __cdecl*)(RxPipeline*))0x805820)(pipeline) 
 
-#define DEFERREDSHADERPATH "DeferredSA/shaders/binary/"
+#define DEFERREDSHADERPATHBINARY "DeferredSA/shaders/binary/"
+#define DEFERREDSHADERPATH "DeferredSA/shaders/"
+
+extern uint16_t& uiTempBufferIndicesStored;
+extern uint16_t& uiTempBufferVerticesStored;
+constexpr int32_t TOTAL_TEMP_BUFFER_INDICES = 4096;
+extern RxVertexIndex(&aTempBufferIndices)[TOTAL_TEMP_BUFFER_INDICES]; // size 4096
+constexpr int32_t TOTAL_TEMP_BUFFER_VERTICES = 2048;
+extern RxObjSpace3DVertex(&aTempBufferVertices)[TOTAL_TEMP_BUFFER_VERTICES];
 
 void RwD3D9RestoreRenderTargets(int count);
 IDirect3DVertexShader9* CreateVertexShader(string path, string profile);

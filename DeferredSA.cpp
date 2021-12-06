@@ -386,7 +386,7 @@ void CMirrors__BeforeMainRender()
 	
 	//SpotShadow->Update();
 	//EnvironmentMapping::DualParaboloidMap();
-	//CWaterLevel::RenderReflection(CRenderer_RenderRoadsAndBuildings);
+	CWaterLevel::RenderReflection(CRenderer_RenderRoadsAndBuildings);
 	//CMirrors::BeforeMainRender();
 }
 
@@ -455,6 +455,7 @@ void Hook()
 	plugin::Events::d3dLostEvent += LostDevice;
 	plugin::Events::d3dResetEvent += ResetDevice;
 
+
 	// Deferred shading don't work with multi sampling, so disable it.
 	patch::RedirectJump(0x007F8A90, RwD3D9ChangeMultiSamplingLevels2);
 	patch::RedirectJump(0x007F84F0, RwD3D9EngineSetMultiSamplingLevels2);
@@ -483,7 +484,7 @@ void Hook()
 
 	plugin::patch::RedirectCall(0x74D234, CreateGeometryCheckNormals);
 	plugin::patch::RedirectCall(0x5D71D9, SetGeometryUsageFlag);
-	CWaterLevel::Hook();
+	 CWaterLevel::Hook();
     CGameIdle::Patch();
     VehicleMeshPipeline::hook();
     BuldingMeshPipeline::hook();

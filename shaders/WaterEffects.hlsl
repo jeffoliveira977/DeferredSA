@@ -1,21 +1,21 @@
 #include "Utilities.hlsl"
 // VS
-row_major float4x4 xView : register(c0);
+row_major float4x4 xView : register(c4);
 
 // VS/PS
-row_major float4x4 xProjection : register(c4);
-float Time : register(c8);
+row_major float4x4 xProjection : register(c8);
+float Time : register(c12);
 
 // PS
-row_major float4x4 xViewInverse : register(c0);
-float3 xLightDirection : register(c9);
-float3 Fog : register(c10);
+row_major float4x4 xViewInverse : register(c4);
+float3 xLightDirection : register(c13);
+float3 Fog : register(c14);
 
-float4 FogColor : register(c11);
-float4 Watercolor : register(c12);
-float4 SunColor : register(c13);
-float4 SkyLightColor : register(c14);
-float4 HorizonColor : register(c15);
+float4 FogColor : register(c15);
+float4 Watercolor : register(c16);
+float4 SunColor : register(c17);
+float4 SkyLightColor : register(c18);
+float4 HorizonColor : register(c19);
 
 // variables for the BUMP MAP
 static float xDrawMode = 2.0;

@@ -138,6 +138,7 @@
     <ClCompile Include="RenderableSphere.cpp" />
     <ClCompile Include="RwIndexBuffer.cpp" />
     <ClCompile Include="ShaderManager.cpp" />
+    <ClCompile Include="Texture.cpp" />
     <ClCompile Include="VertexShader.cpp" />
     <ClCompile Include="ShadowCaster.cpp" />
     <ClCompile Include="ShadowFrustum.cpp" />
@@ -185,6 +186,7 @@
     <ClInclude Include="RenderableSphere.h" />
     <ClInclude Include="RwIndexBuffer.h" />
     <ClInclude Include="ShaderManager.h" />
+    <ClInclude Include="Texture.h" />
     <ClInclude Include="VertexShader.h" />
     <ClInclude Include="ShadowCaster.h" />
     <ClInclude Include="ShadowFrustum.h" />

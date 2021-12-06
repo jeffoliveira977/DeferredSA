@@ -290,11 +290,11 @@ rxD3D9SubmitNode(RxPipelineNodeInstance* self __RWUNUSED__,
     {
         _rwD3D9RenderStateVertexAlphaEnable(TRUE);
     }
-
+   
     XMMATRIX worldMatrix = RwMatrixToXMMATRIX(stash->ltm);
     _rwD3D9SetVertexShaderConstant(0, &worldMatrix, 4);
     ShaderContext->SetViewProjectionMatrix(4, true);
-   
+  
     /* Enable clipping if needed*/
     if(stash->flags & rwIM3D_NOCLIP)
     {
@@ -317,7 +317,7 @@ rxD3D9SubmitNode(RxPipelineNodeInstance* self __RWUNUSED__,
     primitiveType = _RwD3D9PrimConv[stash->primType];
 
     numVerts = _rwD3D9ImmPool->numElements;
-
+  
     if(numVerts > 0)
     {
         if((NULL != stash->indices) && (stash->numIndices > 0))

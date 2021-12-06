@@ -7,9 +7,6 @@
 #include "VertexBuffer.h"
 
 SoftParticles* SoftParticlesContext;
-constexpr int32_t TOTAL_TEMP_BUFFER_INDICES = 4096;
-constexpr int32_t TOTAL_TEMP_BUFFER_VERTICES = 2048;
-RxObjSpace3DVertex(&aTempBufferVertices)[TOTAL_TEMP_BUFFER_VERTICES] = *(RxObjSpace3DVertex(*)[TOTAL_TEMP_BUFFER_VERTICES])0xC4D958;
 
 SoftParticles::SoftParticles()
 {

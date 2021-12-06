@@ -82,6 +82,7 @@
     <ClCompile Include="VertexShaderConstant.cpp" />
     <ClCompile Include="VertexShader.cpp" />
     <ClCompile Include="PixelShader.cpp" />
+    <ClCompile Include="Texture.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="GTADef.h" />
@@ -142,6 +143,7 @@
     <ClInclude Include="VertexShaderConstant.h" />
     <ClInclude Include="VertexShader.h" />
     <ClInclude Include="PixelShader.h" />
+    <ClInclude Include="Texture.h" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="imgui">
