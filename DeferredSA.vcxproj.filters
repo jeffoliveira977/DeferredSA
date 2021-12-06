@@ -1,0 +1,300 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClCompile Include="DeferredSA.cpp" />
+    <ClCompile Include="Quad.cpp" />
+    <ClCompile Include="DeferredRenderer.cpp" />
+    <ClCompile Include="EnvironmentMapping.cpp" />
+    <ClCompile Include="Water.cpp" />
+    <ClCompile Include="Lights.cpp" />
+    <ClCompile Include="CommonD.cpp" />
+    <ClCompile Include="CDrawable.cpp" />
+    <ClCompile Include="CGameIdle.cpp" />
+    <ClCompile Include="dllmain.cpp" />
+    <ClCompile Include="..\imgui\imgui.cpp">
+      <Filter>imgui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\imgui\imgui_demo.cpp">
+      <Filter>imgui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\imgui\imgui_draw.cpp">
+      <Filter>imgui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\imgui\imgui_tables.cpp">
+      <Filter>imgui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\imgui\imgui_widgets.cpp">
+      <Filter>imgui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\imgui\backends\imgui_impl_dx9.cpp">
+      <Filter>imgui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\imgui\backends\imgui_impl_win32.cpp">
+      <Filter>imgui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\imgui\backends\imgui_impl_rw.cpp">
+      <Filter>imgui</Filter>
+    </ClCompile>
+    <ClCompile Include="Renderer.cpp" />
+    <ClCompile Include="RwMath.cpp" />
+    <ClCompile Include="CascadedShadowRendering.cpp" />
+    <ClCompile Include="ShadowFrustum.cpp" />
+    <ClCompile Include="ShaderManager.cpp" />
+    <ClCompile Include="PBSMaterial.cpp" />
+    <ClCompile Include="SoftParticles.cpp" />
+    <ClCompile Include="Immediate3D.cpp" />
+    <ClCompile Include="Mesh.cpp" />
+    <ClCompile Include="SpotlightShadow.cpp" />
+    <ClCompile Include="ShadowCaster.cpp" />
+    <ClCompile Include="Frustum.cpp" />
+    <ClCompile Include="BoundingSphere.cpp" />
+    <ClCompile Include="AABB.cpp" />
+    <ClCompile Include="Collider.cpp" />
+    <ClCompile Include="VisibilityPlugins.cpp" />
+    <ClCompile Include="VertexBuffer.cpp" />
+    <ClCompile Include="RwIndexBuffer.cpp" />
+    <ClCompile Include="RenderableReflectionObjects.cpp" />
+    <ClCompile Include="BuldingMeshPipeline.cpp">
+      <Filter>Pipeline</Filter>
+    </ClCompile>
+    <ClCompile Include="DefaultMeshPipeline.cpp">
+      <Filter>Pipeline</Filter>
+    </ClCompile>
+    <ClCompile Include="DefaultPipeline.cpp">
+      <Filter>Pipeline</Filter>
+    </ClCompile>
+    <ClCompile Include="SkinnedMeshInstance.cpp">
+      <Filter>Pipeline</Filter>
+    </ClCompile>
+    <ClCompile Include="SkinnedMeshPipeline.cpp">
+      <Filter>Pipeline</Filter>
+    </ClCompile>
+    <ClCompile Include="VehicleMeshPipeline.cpp">
+      <Filter>Pipeline</Filter>
+    </ClCompile>
+    <ClCompile Include="RenderableFrustum.cpp" />
+    <ClCompile Include="RenderableScene.cpp" />
+    <ClCompile Include="CubemapReflection.cpp" />
+    <ClCompile Include="DualParaboloidReflection.cpp" />
+    <ClCompile Include="RenderableAABB.cpp" />
+    <ClCompile Include="RenderableSphere.cpp" />
+    <ClCompile Include="PixelShaderConstant.cpp" />
+    <ClCompile Include="VertexShaderConstant.cpp" />
+    <ClCompile Include="VertexShader.cpp" />
+    <ClCompile Include="PixelShader.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="GTADef.h" />
+    <ClInclude Include="Quad.h" />
+    <ClInclude Include="DeferredRenderer.h" />
+    <ClInclude Include="EnvironmentMapping.h" />
+    <ClInclude Include="Water.h" />
+    <ClInclude Include="Lights.h" />
+    <ClInclude Include="CommonD.h" />
+    <ClInclude Include="CDrawable.h" />
+    <ClInclude Include="CGameIdle.h" />
+    <ClInclude Include="DeferredSA.h" />
+    <ClInclude Include="Renderer.h" />
+    <ClInclude Include="RwMath.h" />
+    <ClInclude Include="resource.h" />
+    <ClInclude Include="CascadedShadowRendering.h" />
+    <ClInclude Include="ShadowFrustum.h" />
+    <ClInclude Include="ShaderManager.h" />
+    <ClInclude Include="PBSMaterial.h" />
+    <ClInclude Include="SoftParticles.h" />
+    <ClInclude Include="Immediate3D.h" />
+    <ClInclude Include="Mesh.h" />
+    <ClInclude Include="SpotlightShadow.h" />
+    <ClInclude Include="ShadowCaster.h" />
+    <ClInclude Include="Frustum.h" />
+    <ClInclude Include="BoundingSphere.h" />
+    <ClInclude Include="AABB.h" />
+    <ClInclude Include="Collider.h" />
+    <ClInclude Include="VisibilityPlugins.h" />
+    <ClInclude Include="VertexBuffer.h" />
+    <ClInclude Include="RwIndexBuffer.h" />
+    <ClInclude Include="RenderableReflectionObjects.h" />
+    <ClInclude Include="BuldingMeshPipeline.h">
+      <Filter>Pipeline</Filter>
+    </ClInclude>
+    <ClInclude Include="DefaultMeshPipeline.h">
+      <Filter>Pipeline</Filter>
+    </ClInclude>
+    <ClInclude Include="DefaultPipeline.h">
+      <Filter>Pipeline</Filter>
+    </ClInclude>
+    <ClInclude Include="SkinnedMeshInstance.h">
+      <Filter>Pipeline</Filter>
+    </ClInclude>
+    <ClInclude Include="SkinnedMeshPipeline.h">
+      <Filter>Pipeline</Filter>
+    </ClInclude>
+    <ClInclude Include="VehicleMeshPipeline.h">
+      <Filter>Pipeline</Filter>
+    </ClInclude>
+    <ClInclude Include="RenderableFrustum.h" />
+    <ClInclude Include="RenderableScene.h" />
+    <ClInclude Include="CubemapReflection.h" />
+    <ClInclude Include="DualParaboloidReflection.h" />
+    <ClInclude Include="RenderableAABB.h" />
+    <ClInclude Include="RenderableSphere.h" />
+    <ClInclude Include="PixelShaderConstant.h" />
+    <ClInclude Include="VertexShaderConstant.h" />
+    <ClInclude Include="VertexShader.h" />
+    <ClInclude Include="PixelShader.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="imgui">
+      <UniqueIdentifier>{ebe84ada-ac73-4342-b8bd-9bf7cb5b86fa}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="shaders">
+      <UniqueIdentifier>{ffe65f58-a716-4279-917b-72de1db4eccd}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Pipeline">
+      <UniqueIdentifier>{7db76db8-2c71-4179-b66d-c15caee0dfab}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="DeferredSA.rc" />
+  </ItemGroup>
+  <ItemGroup>
+    <FxCompile Include="shaders\AtmosphericScattering.hlsl">
+      <Filter>shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="shaders\DefaultMeshPS.hlsl">
+      <Filter>shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="shaders\DefaultMeshVS.hlsl">
+      <Filter>shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="shaders\DeferredBuldingPS.hlsl">
+      <Filter>shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="shaders\DeferredBuldingVS.hlsl">
+      <Filter>shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="shaders\DeferredDirectLightPS.hlsl">
+      <Filter>shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="shaders\DeferredFinalPassPS.hlsl">
+      <Filter>shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="shaders\DeferredPointAndSpotLightPS.hlsl">
+      <Filter>shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="shaders\DeferredVehiclePS.hlsl">
+      <Filter>shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="shaders\DeferredVehicleVS.hlsl">
+      <Filter>shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="shaders\DualParaboloidPS.hlsl">
+      <Filter>shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="shaders\DualParaboloidVS.hlsl">
+      <Filter>shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="shaders\FillGBuffer.hlsl">
+      <Filter>shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="shaders\ForwardBuldingPS.hlsl">
+      <Filter>shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="shaders\ForwardBuldingVS.hlsl">
+      <Filter>shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="shaders\ForwardObjectPS.hlsl">
+      <Filter>shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="shaders\ForwardObjectVS.hlsl">
+      <Filter>shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="shaders\ForwardVehiclePS.hlsl">
+      <Filter>shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="shaders\ForwardVehicleVS.hlsl">
+      <Filter>shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="shaders\GaussianBlur.hlsl">
+      <Filter>shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="shaders\GaussianBlurX.hlsl">
+      <Filter>shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="shaders\GaussianBlurY.hlsl">
+      <Filter>shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="shaders\Im3dPS.hlsl">
+      <Filter>shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="shaders\Im3dVS.hlsl">
+      <Filter>shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="shaders\Shadow.hlsl">
+      <Filter>shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="shaders\ShadowMappingPS.hlsl">
+      <Filter>shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="shaders\ShadowMappingVS.hlsl">
+      <Filter>shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="shaders\ShadowScreen.hlsl">
+      <Filter>shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="shaders\SimplePS.hlsl">
+      <Filter>shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="shaders\SimpleVS.hlsl">
+      <Filter>shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="shaders\SkinnedMeshPS.hlsl">
+      <Filter>shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="shaders\SkinnedMeshShadowPS.hlsl">
+      <Filter>shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="shaders\SkinnedMeshShadowVS.hlsl">
+      <Filter>shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="shaders\SkinnedMeshVS.hlsl">
+      <Filter>shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="shaders\SoftParticlesPS.hlsl">
+      <Filter>shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="shaders\SoftParticlesVS.hlsl">
+      <Filter>shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="shaders\SphereMap.hlsl">
+      <Filter>shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="shaders\Utilities.hlsl">
+      <Filter>shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="shaders\VolumetricLight.hlsl">
+      <Filter>shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="shaders\VolumetricLightCombine.hlsl">
+      <Filter>shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="shaders\WaterEffects.hlsl">
+      <Filter>shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="shaders\WaterReflectionPS.hlsl">
+      <Filter>shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="shaders\WaterReflectionVS.hlsl">
+      <Filter>shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="shaders\WaterSkinnedMeshReflectionPS.hlsl">
+      <Filter>shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="shaders\WaterSkinnedMeshReflectionVS.hlsl">
+      <Filter>shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="shaders\PBR.hlsl">
+      <Filter>shaders</Filter>
+    </FxCompile>
+  </ItemGroup>
+</Project>
