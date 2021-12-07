@@ -16,7 +16,7 @@ class DefaultMeshPipeline : virtual public MeshRenderingMode
 	void DeferredRendering(RwResEntry* entry, void* object, RwUInt32 flags);
 	void ForwardRendering(RwResEntry* entry, void* object, RwUInt32 flags);
 public:
-	static void hook();
+	static void Hook();
 	RwBool initGraphics();
 };
 

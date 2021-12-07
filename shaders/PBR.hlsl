@@ -72,6 +72,89 @@ inline float SmithJointGGXVisibilityTerm(float NdotL, float NdotV, float roughne
     return 0.5f / (lambdaV + lambdaL + 1e-5f);
 }
 
+// ===============================================================================================
+// http://graphicrants.blogspot.com.au/2013/08/specular-brdf-reference.html
+// ===============================================================================================
+float GGX(float NdotV, float a)
+{
+    float k = a / 2;
+    return NdotV / (NdotV * (1.0f - k) + k);
+}
+
+// ===============================================================================================
+// Geometry with Smith approximation:
+// http://blog.selfshadow.com/publications/s2013-shading-course/rad/s2013_pbs_rad_notes.pdf
+// http://graphicrants.blogspot.fr/2013/08/specular-brdf-reference.html
+// ===============================================================================================
+float G_Smith(float a, float nDotV, float nDotL)
+{
+    return GGX(nDotL, a * a) * GGX(nDotV, a * a);
+}
+
+// ================================================================================================
+// Fresnel with Schlick's approximation:
+// http://blog.selfshadow.com/publications/s2013-shading-course/rad/s2013_pbs_rad_notes.pdf
+// http://graphicrants.blogspot.fr/2013/08/specular-brdf-reference.html
+// ================================================================================================
+float3 Schlick_Fresnel(float3 f0, float3 h, float3 l)
+{
+    return f0 + (1.0f - f0) * pow((1.0f - dot(l, h)), 5.0f);
+}
+
+// ================================================================================================
+// Lambertian BRDF
+// http://en.wikipedia.org/wiki/Lambertian_reflectance
+// ================================================================================================
+float3 DirectDiffuseBRDF(float3 diffuseAlbedo, float nDotL)
+{
+    return (diffuseAlbedo * nDotL) / PI;
+}
+
+// ================================================================================================
+// Cook-Torrence BRDF
+float3 DirectSpecularBRDF(float3 camerPosition, float3 specularAlbedo, float3 positionWS, float3 normalWS, float3 lightDir, float roughness)
+{
+    float3 viewDir = normalize(camerPosition - positionWS);
+    float3 halfVec = normalize(viewDir + lightDir);
+
+    float nDotH = saturate(dot(normalWS, halfVec));
+    float nDotL = saturate(dot(normalWS, lightDir));
+    float nDotV = max(dot(normalWS, viewDir), 0.0001f);
+
+    float alpha2 = roughness * roughness;
+
+	// Normal distribution term with Trowbridge-Reitz/GGX.
+    float D = alpha2 / (PI * pow(nDotH * nDotH * (alpha2 - 1) + 1, 2.0f));
+ 
+	// Fresnel term with Schlick's approximation.
+    float3 F = Schlick_Fresnel(specularAlbedo, halfVec, lightDir);
+
+	// Geometry term with Smith's approximation.
+    float G = G_Smith(roughness, nDotV, nDotL);
+
+    return D * F * G;
+}
+
+float3 DirectLighting(float3 camerPosition, float3 normalWS, float3 lightColor, float3 lightPos, float3 diffuseAlbedo,
+	float3 specularAlbedo, float3 positionWS, float roughness, float attenuation)
+{
+    float3 lighting = 0.0f;
+
+    float3 pixelToLight = lightPos - positionWS;
+    float lightDist = length(pixelToLight);
+    float3 lightDir = pixelToLight / lightDist;
+
+    float nDotL = saturate(dot(normalWS, lightDir));
+
+    if (nDotL > 0.0f)
+    {
+        lighting = DirectDiffuseBRDF(diffuseAlbedo, nDotL) * attenuation + DirectSpecularBRDF(camerPosition, specularAlbedo, positionWS, normalWS, lightDir, roughness) * attenuation;
+    }
+
+    return max(lighting, 0.0f) * lightColor;
+}
+
+
 void CalculateSpecularTerm(in float3 vNormal, in float3 vLightDir, in float3 vViewDir, in float fRoughness, out float fSpecularTerm)
 {
     float3 vHalfWay = normalize(vLightDir + vViewDir);

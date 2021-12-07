@@ -20,10 +20,14 @@ struct WaterReflection
 };
 
 extern WaterReflection ObjectType;
-
+#include "VertexBuffer.h"
+#include "RwIndexBuffer.h"
 class CWaterLevel{
 
 private:
+
+  
+
     static RwFrame* m_envFrame;
     static RwCamera* m_envCamera;
     static RwRaster* m_zRaster;
@@ -32,7 +36,8 @@ private:
 public:
     static RwRaster* m_reflection;
     static RwRaster* m_refraction;
-
+    static VertexBuffer* mVertexBuffer;
+    static RwIndexBuffer* mIndexBuffer;
     static void AddObject(CEntity* entity, float distance);
     static void SectorList(CPtrList& ptrList);
     static void ScanSectorList(int sectorX, int sectorY);

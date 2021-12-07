@@ -107,7 +107,7 @@ struct _rxD3D9Im3DVertexNoTex
 #define RwCameraSync( camera )                                                 \
     ( (RwCamera * (__cdecl *)(RwCamera *))0x7EE5A0 )( camera )
 
-#define rwD3D9DeleteVertexDeclaration(declaration) ((RwBool (__cdecl*)(PDIRECT3DVERTEXDECLARATION9))0x7FAC10)(declaration)
+#define rwD3D9DeleteVertexDeclaration(declaration) ((RwBool (__cdecl*)(void*))0x7FAC10)(declaration)
 #define _rwD3D9RWGetRasterStage(stage) ((RwRaster*(__cdecl*)(RwUInt32))0x7FDE50)(stage)
 #define RwD3D9DeleteVertexShader(shader) ((RwBool (__cdecl*)(void *))0x7FAC90)(shader)
 #define RwD3D9DeletePixelShader(shader) ((RwBool (__cdecl*)(void *))0x7FACF0)(shader)

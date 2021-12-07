@@ -13,7 +13,7 @@ RxPipeline* _rpSkinD3D9CreatePlainPipe()
 	return SkinnedMeshPipe->initGraphics();
 }
 
-void SkinnedMeshPipeline::hook()
+void SkinnedMeshPipeline::Hook()
 {
 	plugin::patch::RedirectJump(0x7CB2B0, _rpSkinD3D9CreatePlainPipe);
 	plugin::patch::RedirectJump(0x7C7B90, _rwSkinD3D9AtomicAllInOneNode);
@@ -290,8 +290,8 @@ void SkinnedMeshPipeline::DeferredRendering(RwResEntry* entry, void* object, RwU
 		float shininess = CCustomCarEnvMapPipeline__GetFxEnvShininess(material);
 
 		RwV4d materialProps;
-		materialProps.x = 0.6;
-		materialProps.y = 0.6;
+		materialProps.x = 0.01;
+		materialProps.y = 0.1;
 		materialProps.z = CCustomBuildingDNPipeline__m_fDNBalanceParam;
 		materialProps.w = 1.0;
 

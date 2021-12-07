@@ -7,8 +7,7 @@
 #include "plugin.h"
 #include "VertexShader.h"
 #include "PixelShader.h"
-#include "VertexBuffer.h"
-#include "RwIndexBuffer.h"
+
 using namespace plugin;
 
 RwRaster* CWaterLevel::m_reflection = NULL;
@@ -62,8 +61,8 @@ uint32_t& m_nWaterConfiguration = *(uint32_t*)0xC228A0;
 
 #include "CFileLoader.h"
 
-VertexBuffer* mVertexBuffer = nullptr;
-RwIndexBuffer* mIndexBuffer = nullptr;
+VertexBuffer* CWaterLevel::mVertexBuffer = nullptr;
+RwIndexBuffer* CWaterLevel::mIndexBuffer = nullptr;
 
 void CWaterLevel::InitShaders()
 {
@@ -152,63 +151,62 @@ void CWaterLevel::imguiParameters()
 }
 
 #include <DirectXMath.h>
-
+#include "ShaderManager.h"
+#include "PixelShaderConstant.h"
+#include "CascadedShadowRendering.h"
 void CWaterLevel::SetupWaterShader()
 {
-    int& waterdis = *(int*)0x08D37D0;
-    waterdis = 100;
+   // int& waterdis = *(int*)0x08D37D0;
+    //waterdis = 100;
 
-   
+    ShaderContext->SetViewProjectionMatrix(4, true);
+    ShaderContext->SetInverseViewMatrix(4, false);
+    ShaderContext->SetProjectionMatrix(8, false);
 
 
-    DirectX::XMMATRIX transformTransposedMatrix;
-    DirectX::XMMATRIX worldMatrix;
 
-    D3DXMATRIX world;
-    D3DXMatrixIdentity(&world);
-
-    D3DXMATRIX worldViewProj, proj, worldInverse, view, viewInverse;
-    RwD3D9GetTransform(D3DTS_PROJECTION, &proj);
-    RwD3D9GetTransform(D3DTS_VIEW, &view);
-
-    _rwD3D9SetVertexShaderConstant(4, &view, 4);
-    _rwD3D9SetVertexShaderConstant(8, &proj, 4);
-  
-    D3DXMatrixInverse(&viewInverse, 0, &view);
-    _rwD3D9SetPixelShaderConstant(4, &viewInverse, 4);
-    _rwD3D9SetPixelShaderConstant(8, &proj, 4);
-
-    auto ti = (float)CTimer__m_snTimeInMilliseconds;
+    float ti = (float)CTimer__m_snTimeInMilliseconds;
     ti = ti / 1000.0;
     _rwD3D9SetVertexShaderConstant(12, &ti, 1);
     _rwD3D9SetPixelShaderConstant(12, &ti, 1);
 
-    CVector* sunDirs = (CVector*)0xB7CA50;
-    int sunDirIndex = *(int*)0xB79FD0;
-    CVector curSunDir = sunDirs[sunDirIndex];
-    _rwD3D9SetPixelShaderConstant(13, &curSunDir, 1);
-
-    float fog[4];
-    fog[0] = CTimeCycle::m_CurrentColours.m_fFogStart;
-    fog[1] = CTimeCycle::m_CurrentColours.m_fFarClip;
-    _rwD3D9SetPixelShaderConstant(14, &fog, 1);
+    float mSettings[2];
+    mSettings[0] = CTimeCycle::m_CurrentColours.m_fFogStart;
+    mSettings[1] = CTimeCycle::m_CurrentColours.m_fFarClip;
+    _rwD3D9SetPixelShaderConstant(13, &mSettings, 1);
 
     RwUInt32 color;
     RwRenderStateGet(rwRENDERSTATEFOGCOLOR, &color);
 
     RwRGBAReal fogColor;
     RwLongToRGBAReal(&fogColor, color);
-    _rwD3D9SetPixelShaderConstant(15, &fogColor, 1);
+    _rwD3D9SetPixelShaderConstant(14, &fogColor, 1);
 
     RwRGBAReal waterColor = {CTimeCycle::m_CurrentColours.m_fWaterRed / 255.0f,
                                CTimeCycle::m_CurrentColours.m_fWaterGreen / 255.0f,
                                 CTimeCycle::m_CurrentColours.m_fWaterBlue / 255.0f,
                                 CTimeCycle::m_CurrentColours.m_fWaterAlpha / 255.0f};
 
-    _rwD3D9SetPixelShaderConstant(16, &waterColor, 1);
-    _rwD3D9SetPixelShaderConstant(17, &GetSunColor(), 1);
-    _rwD3D9SetPixelShaderConstant(18, &GetSkyTopColor(), 1);
-    _rwD3D9SetPixelShaderConstant(19, &GetSkyBottomColor(), 1);
+
+    PixelShaderConstant::SetData(15, &waterColor, 1);
+    ShaderContext->SetSkyColor(16);
+    ShaderContext->SetSunColor(18);
+    ShaderContext->SetSunDirection(19);
+
+    for(size_t i = 0; i < CascadedShadowManagement->CascadeCount; i++)
+    {
+        rwD3D9SetSamplerState(i + 6, D3DSAMP_MINFILTER, D3DTEXF_LINEAR);
+        rwD3D9SetSamplerState(i + 6, D3DSAMP_MAGFILTER, D3DTEXF_LINEAR);
+        rwD3D9SetSamplerState(i + 6, D3DSAMP_MIPFILTER, D3DTEXF_LINEAR);
+        rwD3D9SetSamplerState(i + 6, D3DSAMP_ADDRESSU, D3DTADDRESS_CLAMP);
+        rwD3D9SetSamplerState(i + 6, D3DSAMP_ADDRESSV, D3DTADDRESS_CLAMP);
+        rwD3D9SetSamplerState(i + 6, D3DSAMP_BORDERCOLOR, 0xFFFFFFFF);
+
+        rwD3D9RWSetRasterStage(CascadedShadowManagement->m_shadowColorRaster[i], i + 6);
+    }
+
+    _rwD3D9SetPixelShaderConstant(20, &CascadedShadowManagement->m_shadowBuffer,
+                                  sizeof(CascadedShadowManagement->m_shadowBuffer) / sizeof(XMVECTOR));
 
     CWaterLevel__RenderWater();
 }
@@ -267,14 +265,15 @@ void CRenderer_RenderRoadsAndBuildings(void)
     ObjectType.vehicles = true;
     ObjectType.objects = true;
     ObjectType.peds = true;
-    /*DefinedState();
+    
+    DefinedState();
 
     CClouds__Render();
     CCoronas__RenderReflections();
     CCoronas__Render();
     CClouds__RenderBottomFromHeight();
     CWeather__RenderRainStreaks();
-    CCoronas__RenderSunReflection();*/
+    CCoronas__RenderSunReflection();
 
     RwRenderStateSet(rwRENDERSTATECULLMODE, (void*)2);
 
@@ -356,17 +355,17 @@ void DrawWater()
     RwInt32 stride = sizeof(RwIm3DVertex);
 
     RwIm3DVertex* bufferMem = nullptr;
-    mVertexBuffer->Map(numVerts * stride, (void**)&bufferMem);
+    CWaterLevel::mVertexBuffer->Map(numVerts * stride, (void**)&bufferMem);
     std::copy(aTempBufferVertices, aTempBufferVertices + numVerts, bufferMem);
-    mVertexBuffer->Unmap();
+    CWaterLevel::mVertexBuffer->Unmap();
 
     RwImVertexIndex* indexBuffer = nullptr;
-    mIndexBuffer->Map(numIndices * sizeof(RwImVertexIndex), (void**)&indexBuffer);
+    CWaterLevel::mIndexBuffer->Map(numIndices * sizeof(RwImVertexIndex), (void**)&indexBuffer);
     std::copy(aTempBufferIndices, aTempBufferIndices + numIndices, indexBuffer);
-    mIndexBuffer->Unmap();
+    CWaterLevel::mIndexBuffer->Unmap();
 
-    RwD3D9SetStreamSource(0, mVertexBuffer->GetBuffer(), 0, stride);
-    _rwD3D9SetIndices(mIndexBuffer->GetBuffer());
+    RwD3D9SetStreamSource(0, CWaterLevel::mVertexBuffer->GetBuffer(), 0, stride);
+    _rwD3D9SetIndices(CWaterLevel::mIndexBuffer->GetBuffer());
 
     _rwD3D9SetVertexShader(pWaterVSCode->GetShader());
     _rwD3D9SetPixelShader(pWaterPSCode->GetShader());
@@ -415,10 +414,10 @@ void DrawWater()
     RwD3D9SetSamplerState(4, D3DSAMP_MAGFILTER, D3DTEXF_LINEAR);
     RwD3D9SetSamplerState(4, D3DSAMP_MINFILTER, D3DTEXF_LINEAR);
     RwD3D9SetSamplerState(4, D3DSAMP_MIPFILTER, D3DTEXF_LINEAR);
-    RwD3D9SetSamplerState(4, D3DSAMP_ADDRESSU, D3DTADDRESS_MIRROR);
-    RwD3D9SetSamplerState(4, D3DSAMP_ADDRESSV, D3DTADDRESS_MIRROR);
+    RwD3D9SetSamplerState(4, D3DSAMP_ADDRESSU, D3DTADDRESS_WRAP);
+    RwD3D9SetSamplerState(4, D3DSAMP_ADDRESSV, D3DTADDRESS_WRAP);
     RwD3D9SetSamplerState(4, D3DSAMP_MAXANISOTROPY, 16);
-    RwD3D9SetTexture(Foam, 4);
+    _rwD3D9RWSetRasterStage(DeferredContext->m_graphicsBuffer[1], 4);
 
     RwD3D9SetSamplerState(5, D3DSAMP_MAGFILTER, D3DTEXF_LINEAR);
     RwD3D9SetSamplerState(5, D3DSAMP_MINFILTER, D3DTEXF_LINEAR);
@@ -426,15 +425,7 @@ void DrawWater()
     RwD3D9SetSamplerState(5, D3DSAMP_ADDRESSU, D3DTADDRESS_WRAP);
     RwD3D9SetSamplerState(5, D3DSAMP_ADDRESSV, D3DTADDRESS_WRAP);
     RwD3D9SetSamplerState(5, D3DSAMP_MAXANISOTROPY, 16);
-    _rwD3D9RWSetRasterStage(DeferredContext->m_graphicsBuffer[1], 5);
-
-    RwD3D9SetSamplerState(6, D3DSAMP_MAGFILTER, D3DTEXF_LINEAR);
-    RwD3D9SetSamplerState(6, D3DSAMP_MINFILTER, D3DTEXF_LINEAR);
-    RwD3D9SetSamplerState(6, D3DSAMP_MIPFILTER, D3DTEXF_LINEAR);
-    RwD3D9SetSamplerState(6, D3DSAMP_ADDRESSU, D3DTADDRESS_WRAP);
-    RwD3D9SetSamplerState(6, D3DSAMP_ADDRESSV, D3DTADDRESS_WRAP);
-    RwD3D9SetSamplerState(6, D3DSAMP_MAXANISOTROPY, 16);
-    RwD3D9SetTexture(Water_NormalW, 6);
+    RwD3D9SetTexture(Water_NormalW, 5);
 
     RwInt32 numPrimitives = numIndices / 3;
     _rwD3D9DrawIndexedPrimitive(D3DPT_TRIANGLELIST, 0, 0, numVerts, 0, numPrimitives);

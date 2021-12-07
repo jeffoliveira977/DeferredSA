@@ -29,7 +29,7 @@ public:
 	void BindFirstPass();
 	void BindLastPass();
 	void RenderPostProcessing();
-	void initGraphicsBuffer();
+	void Initialize();
 
 	void imguiParameters();
 private:

@@ -18,7 +18,7 @@ protected:
 	void DeferredRendering(RwResEntry* entry, void* object, RwUInt32 flags);
 	void ForwardRendering(RwResEntry* entry, void* object, RwUInt32 flags);
 public:
-	static void hook();
+	static void Hook();
 	RxPipeline* initGraphics();
 };
 

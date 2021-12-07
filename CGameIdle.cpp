@@ -194,7 +194,9 @@ void CGameIdle::UpdateShadowDNBalance()
 		m_fShadowDNBalance = 1.0;
 	else
 		m_fShadowDNBalance = 1.0f - (1140.0f - currentMinutes) / 60.0f;
+
 }
+
 #include "ShaderManager.h"
 #include "SoftParticles.h"
 

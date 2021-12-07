@@ -6,22 +6,12 @@
 #include "ShaderManager.h"
 #include "VertexBuffer.h"
 
-SoftParticles* SoftParticlesContext;
+VertexShader* SoftParticles::mVertexShader = nullptr;
+PixelShader* SoftParticles::mPixelShader = nullptr;
+VertexBuffer* SoftParticles::mVertexBuffer = nullptr;
+void* SoftParticles::mVertexDeclColor = nullptr;
 
-SoftParticles::SoftParticles()
-{
-    VS_softParticles = nullptr;
-    PS_softParticles = nullptr;
-    mVertexBuffer = nullptr;
-}
-
-SoftParticles::~SoftParticles()
-{
-    RwD3D9DeleteVertexShader(VS_softParticles);
-    RwD3D9DeletePixelShader(PS_softParticles); 
-}
-
-void SoftParticles::hook()
+void SoftParticles::Hook()
 {
     plugin::patch::RedirectCall(0x004A19A6, RenderBegin);
     plugin::patch::RedirectCall(0x004A1EAC, RenderBegin);
@@ -37,21 +27,36 @@ void SoftParticles::hook()
     plugin::patch::RedirectCall(0x004A3E87, RenderEnd);
 }
 
-void SoftParticles::initGraphicsBuffer()
+void SoftParticles::Initialize()
 {
-    VS_softParticles = RwCreateCompiledVertexShader("SoftParticlesVS");
-    PS_softParticles = RwCreateCompiledPixelShader("SoftParticlesPS");
+    mVertexShader = new VertexShader();
+    mVertexShader->CreateFromBinary("SoftParticlesVS");
 
-    mVertexBuffer = std::unique_ptr<VertexBuffer>(new VertexBuffer());
-    try
+    mPixelShader = new PixelShader();
+    mPixelShader->CreateFromBinary("SoftParticlesPS");
+
+    mVertexBuffer = new VertexBuffer();
+    mVertexBuffer->Initialize(TOTAL_TEMP_BUFFER_VERTICES, sizeof(RwIm3DVertex));
+
+    D3DVERTEXELEMENT9 declaration[] =
     {
-        mVertexBuffer->Initialize(TOTAL_TEMP_BUFFER_VERTICES, sizeof(RwIm3DVertex));
-    }
-    catch(const std::exception&e)
-    {
-        MessageBox(0, e.what(), "Error", MB_OK);
-        return;
-    }
+        {0, 0,  D3DDECLTYPE_FLOAT3,   D3DDECLMETHOD_DEFAULT, D3DDECLUSAGE_POSITION,     0},
+        {0, 12, D3DDECLTYPE_FLOAT3,   D3DDECLMETHOD_DEFAULT, D3DDECLUSAGE_NORMAL,       0},
+        {0, 24, D3DDECLTYPE_D3DCOLOR, D3DDECLMETHOD_DEFAULT, D3DDECLUSAGE_COLOR,        0},
+        {0, 28, D3DDECLTYPE_FLOAT2,   D3DDECLMETHOD_DEFAULT, D3DDECLUSAGE_TEXCOORD,     0},
+        D3DDECL_END()
+    };
+
+    RwD3D9CreateVertexDeclaration(declaration, &mVertexDeclColor);
+}
+
+void SoftParticles::Release()
+{
+    delete mVertexShader;
+    delete mPixelShader;
+    delete mVertexBuffer;
+
+    rwD3D9DeleteVertexDeclaration(mVertexDeclColor);
 }
 
 void SoftParticles::Render()
@@ -76,13 +81,17 @@ void SoftParticles::Render()
     _rwD3D9SetVertexShaderConstant(12, &TheCamera.GetPosition(), 1);
 
     ShaderContext->SetFogParams(0);
-    _rwD3D9SetVertexShader(VS_softParticles);
-    _rwD3D9SetPixelShader(PS_softParticles);
+    _rwD3D9SetVertexShader(mVertexShader->GetShader());
+    _rwD3D9SetPixelShader(mPixelShader->GetShader());
 
-    _rwD3D9SetVertexDeclaration(VertexDeclIm3DOld);
- 
-    mVertexBuffer->Copy(3 * g_fx.m_nVerticesCount, aTempBufferVertices);
-    mVertexBuffer->Set();
+    _rwD3D9SetVertexDeclaration(mVertexDeclColor);
+
+    RwUInt32 stride = sizeof(RwIm3DVertex);
+    RwIm3DVertex* bufferMem = nullptr;
+    mVertexBuffer->Map(3 * stride * g_fx.m_nVerticesCount, (void**)&bufferMem);
+    std::copy(aTempBufferVertices, aTempBufferVertices + g_fx.m_nVerticesCount * 3, bufferMem);
+    mVertexBuffer->Unmap();
+    RwD3D9SetStreamSource(0, mVertexBuffer->GetBuffer(), 0, stride);
 
     rwD3D9DrawPrimitive(D3DPT_TRIANGLELIST, 0, g_fx.m_nVerticesCount);
 }
@@ -112,11 +121,11 @@ void SoftParticles::RenderAddTri(float x1, float y1, float z1,
     RwIm3DVertex*& verts = (RwIm3DVertex*&)g_fx.m_pVerts;
 
     RwIm3DVertexSetPos(&verts[0], x1, y1, z1);
-    RwIm3DVertexSetRGBA(&verts[0], (RwUInt8)r1, (RwUInt8)g1, (RwUInt8)b1, (RwUInt8)a1);
+    RwIm3DVertexSetRGBA(&verts[0], r1, g1, b1, a1);
     RwIm3DVertexSetPos(&verts[1], x2, y2, z2);
-    RwIm3DVertexSetRGBA(&verts[1], (RwUInt8)r2, (RwUInt8)g2, (RwUInt8)b2, (RwUInt8)a2);
+    RwIm3DVertexSetRGBA(&verts[1], r2, g2, b2, a2);
     RwIm3DVertexSetPos(&verts[2], x3, y3, z3);
-    RwIm3DVertexSetRGBA(&verts[2], (RwUInt8)r3, (RwUInt8)g3, (RwUInt8)b3, (RwUInt8)a3);
+    RwIm3DVertexSetRGBA(&verts[2], r3, g3, b3, a3);
 
     if(g_fx.m_pRasterToRender)
     {
@@ -143,7 +152,7 @@ void SoftParticles::RenderEnd()
     if(!g_fx.m_nVerticesCount)
         return;
 
-    SoftParticlesContext->Render();
+    Render();
 
     g_fx.m_pVerts = aTempBufferVertices;
     g_fx.m_nVerticesCount2 = 0;

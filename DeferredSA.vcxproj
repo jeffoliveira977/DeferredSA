@@ -67,9 +67,11 @@
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <AdditionalIncludeDirectories>D:\Jogos\GTA API\imgui\backends;D:\Jogos\GTA API\imgui;$(PLUGIN_SDK_DIR)\plugin_sa\;$(PLUGIN_SDK_DIR)\plugin_sa\game_sa\;$(PLUGIN_SDK_DIR)\shared\;$(PLUGIN_SDK_DIR)\shared\game\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>_NDEBUG;_CRT_SECURE_NO_WARNINGS;_CRT_NON_CONFORMING_SWPRINTFS;GTASA;GTAGAME_NAME="San Andreas";GTAGAME_ABBR="SA";GTAGAME_ABBRLOW="sa";GTAGAME_PROTAGONISTNAME="CJ";GTAGAME_CITYNAME="San Andreas";_DX9_SDK_INSTALLED;PLUGIN_SGV_10US;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <LanguageStandard>stdcpplatest</LanguageStandard>
+      <LanguageStandard>stdcpp17</LanguageStandard>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WholeProgramOptimization>false</WholeProgramOptimization>
+      <ConformanceMode>false</ConformanceMode>
+      <LanguageStandard_C>stdc17</LanguageStandard_C>
     </ClCompile>
     <Link>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
@@ -126,11 +128,14 @@
     <ClCompile Include="CascadedShadowRendering.cpp" />
     <ClCompile Include="DualParaboloidReflection.cpp" />
     <ClCompile Include="Frustum.cpp" />
+    <ClCompile Include="GameHooks.cpp" />
+    <ClCompile Include="ImguiManager.cpp" />
     <ClCompile Include="Immediate3D.cpp" />
     <ClCompile Include="Mesh.cpp" />
     <ClCompile Include="PBSMaterial.cpp" />
-    <ClCompile Include="PixelShaderConstant.cpp" />
     <ClCompile Include="PixelShader.cpp" />
+    <ClCompile Include="PixelShaderConstant.cpp" />
+    <ClCompile Include="PixelShaderState.cpp" />
     <ClCompile Include="RenderableAABB.cpp" />
     <ClCompile Include="RenderableFrustum.cpp" />
     <ClCompile Include="RenderableReflectionObjects.cpp" />
@@ -138,13 +143,13 @@
     <ClCompile Include="RenderableSphere.cpp" />
     <ClCompile Include="RwIndexBuffer.cpp" />
     <ClCompile Include="ShaderManager.cpp" />
-    <ClCompile Include="Texture.cpp" />
-    <ClCompile Include="VertexShader.cpp" />
+    <ClCompile Include="ShaderState.cpp" />
     <ClCompile Include="ShadowCaster.cpp" />
     <ClCompile Include="ShadowFrustum.cpp" />
     <ClCompile Include="SkinnedMeshPipeline.cpp" />
     <ClCompile Include="SoftParticles.cpp" />
     <ClCompile Include="SpotlightShadow.cpp" />
+    <ClCompile Include="Texture.cpp" />
     <ClCompile Include="VehicleMeshPipeline.cpp" />
     <ClCompile Include="DefaultPipeline.cpp" />
     <ClCompile Include="DeferredRenderer.cpp" />
@@ -157,6 +162,7 @@
     <ClCompile Include="RwMath.cpp" />
     <ClCompile Include="SkinnedMeshInstance.cpp" />
     <ClCompile Include="VertexBuffer.cpp" />
+    <ClCompile Include="VertexShader.cpp" />
     <ClCompile Include="VertexShaderConstant.cpp" />
     <ClCompile Include="VisibilityPlugins.cpp" />
     <ClCompile Include="Water.cpp" />
@@ -174,11 +180,14 @@
     <ClInclude Include="CascadedShadowRendering.h" />
     <ClInclude Include="DualParaboloidReflection.h" />
     <ClInclude Include="Frustum.h" />
+    <ClInclude Include="GameHooks.h" />
+    <ClInclude Include="ImguiManager.h" />
     <ClInclude Include="Immediate3D.h" />
     <ClInclude Include="Mesh.h" />
     <ClInclude Include="PBSMaterial.h" />
-    <ClInclude Include="PixelShaderConstant.h" />
     <ClInclude Include="PixelShader.h" />
+    <ClInclude Include="PixelShaderConstant.h" />
+    <ClInclude Include="PixelShaderState.h" />
     <ClInclude Include="RenderableAABB.h" />
     <ClInclude Include="RenderableFrustum.h" />
     <ClInclude Include="RenderableReflectionObjects.h" />
@@ -186,13 +195,13 @@
     <ClInclude Include="RenderableSphere.h" />
     <ClInclude Include="RwIndexBuffer.h" />
     <ClInclude Include="ShaderManager.h" />
-    <ClInclude Include="Texture.h" />
-    <ClInclude Include="VertexShader.h" />
+    <ClInclude Include="ShaderState.h" />
     <ClInclude Include="ShadowCaster.h" />
     <ClInclude Include="ShadowFrustum.h" />
     <ClInclude Include="SkinnedMeshPipeline.h" />
     <ClInclude Include="SoftParticles.h" />
     <ClInclude Include="SpotlightShadow.h" />
+    <ClInclude Include="Texture.h" />
     <ClInclude Include="VehicleMeshPipeline.h" />
     <ClInclude Include="DefaultPipeline.h" />
     <ClInclude Include="DeferredRenderer.h" />
@@ -206,6 +215,7 @@
     <ClInclude Include="RwMath.h" />
     <ClInclude Include="SkinnedMeshInstance.h" />
     <ClInclude Include="VertexBuffer.h" />
+    <ClInclude Include="VertexShader.h" />
     <ClInclude Include="VertexShaderConstant.h" />
     <ClInclude Include="VisibilityPlugins.h" />
     <ClInclude Include="Water.h" />
@@ -214,6 +224,9 @@
     <ResourceCompile Include="DeferredSA.rc" />
   </ItemGroup>
   <ItemGroup>
+    <FxCompile Include="ColorVS.hlsl">
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='GTASA Release|Win32'">Vertex</ShaderType>
+    </FxCompile>
     <FxCompile Include="shaders\AtmosphericScattering.hlsl" />
     <FxCompile Include="shaders\DefaultMeshPS.hlsl" />
     <FxCompile Include="shaders\DefaultMeshVS.hlsl">
@@ -262,9 +275,6 @@
     <FxCompile Include="shaders\Im3dVS.hlsl">
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='GTASA Release|Win32'">Vertex</ShaderType>
     </FxCompile>
-    <FxCompile Include="shaders\PBR.hlsl">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='GTASA Release|Win32'">true</ExcludedFromBuild>
-    </FxCompile>
     <FxCompile Include="shaders\Shadow.hlsl">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='GTASA Release|Win32'">true</ExcludedFromBuild>
     </FxCompile>
@@ -309,6 +319,7 @@
     <FxCompile Include="shaders\WaterSkinnedMeshReflectionVS.hlsl">
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='GTASA Release|Win32'">Vertex</ShaderType>
     </FxCompile>
+    <FxCompile Include="ColorPS.hlsl" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

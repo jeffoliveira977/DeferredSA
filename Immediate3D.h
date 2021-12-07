@@ -1,8 +1,21 @@
 #pragma once
 #include "CommonD.h"
+#include "VertexBuffer.h"
+#include "RwIndexBuffer.h"
+#include "PixelShader.h"
+#include "VertexShader.h"
 
-void Immediate3D__Hook();
+class Immediate3D
+{
+public:
+    static void Hook();
+private:
+    static VertexBuffer* mVertexBuffer;
+    static RwIndexBuffer* mIndexBuffer;
+    static VertexShader* mVertexShader;
+    static PixelShader* mPixelShader;
 
-RwBool
-rxD3D9SubmitNode(RxPipelineNodeInstance* self __RWUNUSED__,
-                 const RxPipelineNodeParam* params __RWUNUSED__);
+    static RwBool Open();
+    static void Close();
+    static RwBool Render(RxPipelineNodeInstance* self, const RxPipelineNodeParam* params);
+};

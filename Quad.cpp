@@ -168,3 +168,30 @@ void DrawScreenQuad()
 	_rwD3D9SetFVF(D3DFVF_XYZRHW | D3DFVF_TEX1);
 	_rwD3D9DrawPrimitiveUP(D3DPT_TRIANGLESTRIP, 2, svQuad, sizeof(ScreenVertex));
 }
+
+void DrawScreenQuad(float x, float y, float width, float height)
+{
+	struct ScreenVertex
+	{
+		RwV4dTag    p;
+		RwTexCoords t;
+	};
+
+	ScreenVertex svQuad[4];
+	float z = 0.5;
+
+	svQuad[0].p = {x, y, 0.5f, 1.0f};
+	svQuad[0].t = {0.0f, 0.0f};
+
+	svQuad[1].p = {x + width, y, z, 1.0f};
+	svQuad[1].t = {1.0f, 0.0f};
+
+	svQuad[2].p = {x, y + height, z, 1.0f};
+	svQuad[2].t = {0.0f, 1.0f};
+
+	svQuad[3].p = {x + width, y + width, z, 1.0f};
+	svQuad[3].t = {1.0f, 1.0f};
+
+	_rwD3D9SetFVF(D3DFVF_XYZRHW | D3DFVF_TEX1);
+	_rwD3D9DrawPrimitiveUP(D3DPT_TRIANGLESTRIP, 2, svQuad, sizeof(ScreenVertex));
+}

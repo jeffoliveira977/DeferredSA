@@ -48,7 +48,7 @@ DeferredRendering::~DeferredRendering()
 
 float VolumetricLightParam[3];
 
-void DeferredRendering::initGraphicsBuffer()
+void DeferredRendering::Initialize()
 {
 	PS_DirectLight = RwCreateCompiledPixelShader("DeferredDirectLightPS");
 	PS_PointAndSpotLight = RwCreateCompiledPixelShader("DeferredPointAndSpotLightPS");

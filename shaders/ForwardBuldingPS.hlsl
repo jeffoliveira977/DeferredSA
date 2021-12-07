@@ -186,38 +186,11 @@ float4 main(VS_Output input, float2 vpos :VPOS) : COLOR
 
     float4 albedoSample = MaterialColor;
     if (HasTexture)
-        albedoSample *= tex2D(Diffuse, input.Texcoord);
-    
+        albedoSample *= tex2D(Diffuse, input.Texcoord);    
+
     float4 outColor;
     float ShadowTerm = DrawShadow(ShadowSampler, WorldPos, length(WorldPos.xyz - ViewPos), WorldPos, ShadowBuffer) * DNBalance;
 
-    //float3 ReflDir = normalize(reflect(ViewDir, normalize(Normals.xyz)));
-    //float3 FullScattering;
-
-    //float3 ObjectColor = CalculateFogColor(float3(0, 0, 0), ReflDir, LightDir, 1000, 0, FullScattering);
-    //float3 SkyColor = GetSkyColor(ReflDir, LightDir, FullScattering);
-
-    //float3 ReflectionFallBack = 0.0f;
-    ////ReflDir.x *= -1;
-  
-    ////float4 CubeMap =
-    ////    txCubeMap.SampleLevel(samLinear, ReflDir, (1 - fGlossiness) * 9.0f);
-    ////ReflectionFallBack = lerp(CubeMap.rgb, SkyColor, 1 - CubeMap.a);
-    
-    //float3 sun_lighting = DiffuseTerm * ShadowTerm * SunColor.rgb;
-    //float3 radiance = input.Color.rgb * saturate(1.0f - DNBalance + 0.2f);
-    //// todo: add lighting methods for forward renderer
-    
-    //outColor.rgb = albedoSample.rgb * (sun_lighting + radiance + SkyLightColor.rgb * 0.3f) +
-    //    SpecularTerm * fSpecularIntensity * DNBalance * SunColor.rgb * ShadowTerm + ReflectionFallBack * fSpecularIntensity;
-   
-    //outColor.rgb = CalculateFogColor(outColor.rgb, ViewDir, LightDir, input.Depth, WorldPos.z, FullScattering);
-    //outColor.a = albedoSample.a * input.Color.a;
-    
-    //float3 Radiance = i.vColor.rgb * saturate(1.0f - vSunLightDir.w + 0.2f);
-
-    //float2 Lighting = float2(DiffuseTerm, SpecularTerm * SpecIntensity) * ShadowTerm;
-    //outColor.xyzw = float4(Lighting.x * vSunColor.rgb + Radiance.rgb * saturate(1.0f - vSunLightDir.w + 0.2f), Lighting.y);
     float3 Radiance = input.Color * lerp(0.25f, 1.0f, 1 - DNBalance);
    
     float2 Lighting = float2(DiffuseTerm, SpecularTerm * SpecIntensity) * ShadowTerm;

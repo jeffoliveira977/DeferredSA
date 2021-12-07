@@ -34,7 +34,7 @@ float4 main(float2 texCoord : TEXCOORD0, float2 vpos:VPOS) : COLOR
     
     float4 Parameters = TEXTURE2D_MATERIALPROPS(texCoord);
     float SpecIntensity = Parameters.x;
-    float Roughness = 1-Parameters.y;
+    float Roughness = 1 - Parameters.y;
     
     float4 color;
     
@@ -47,16 +47,15 @@ float4 main(float2 texCoord : TEXCOORD0, float2 vpos:VPOS) : COLOR
     float3 worldPosition;
     WorldPositionFromDepth(texCoord, depth, ProjectionMatrix, ViewInverseMatrix, worldPosition);
     
-    float FarClip2= 160.0;
-    float FogStart2= 0.0;
+    float FarClip2 = 160.0;
+    float FogStart2 = 0.0;
     float fogdist;
     fogdist = worldPosition.z;
     float fadefact = (FarClip2 - depth) / (FarClip2 - FogStart2);
     fadefact = saturate(1.0 - fadefact);
     
-    //Shadow = lerp(Shadow, 1.0, fadefact); //reduce based on fog, guess not required becaose of defog code
-    //Shadow = lerp(1.0, Shadow, 0.7); //reduce in general
-    //FadeOutShadow(Value, depth, 300);
+    Shadow = lerp(Shadow, 1.0, fadefact); 
+    Shadow = lerp(1.0, Shadow, 0.7); 
     float3 lightDir = normalize(sunDir);
     float3 ViewDir = normalize(worldPosition.xyz - ViewInverseMatrix[3].xyz); // View direction vector
 
@@ -68,5 +67,6 @@ float4 main(float2 texCoord : TEXCOORD0, float2 vpos:VPOS) : COLOR
     
     float2 Lighting = float2(DiffuseTerm, SpecularTerm * SpecIntensity) * (ShadowDNBalance <= 0.0 ? 1.0 : Shadow);
     color = float4(Lighting.x * sunColor.rgb + Radiance * saturate(1.0f - ShadowDNBalance + 0.2f), Lighting.y);
+    
     return color;
 }
