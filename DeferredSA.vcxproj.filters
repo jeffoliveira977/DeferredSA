@@ -309,5 +309,11 @@
     <FxCompile Include="ColorVS.hlsl">
       <Filter>shaders</Filter>
     </FxCompile>
+    <FxCompile Include="QuadVS.hlsl">
+      <Filter>shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="QuadPS.hlsl">
+      <Filter>shaders</Filter>
+    </FxCompile>
   </ItemGroup>
 </Project>

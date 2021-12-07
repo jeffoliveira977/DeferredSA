@@ -227,6 +227,10 @@
     <FxCompile Include="ColorVS.hlsl">
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='GTASA Release|Win32'">Vertex</ShaderType>
     </FxCompile>
+    <FxCompile Include="QuadPS.hlsl" />
+    <FxCompile Include="QuadVS.hlsl">
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='GTASA Release|Win32'">Vertex</ShaderType>
+    </FxCompile>
     <FxCompile Include="shaders\AtmosphericScattering.hlsl" />
     <FxCompile Include="shaders\DefaultMeshPS.hlsl" />
     <FxCompile Include="shaders\DefaultMeshVS.hlsl">

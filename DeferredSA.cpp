@@ -63,7 +63,6 @@ void Initialize()
 	ImguiManager::Initialize();
 }
 
-
 void SetSurfaceD(int id)
 {
 	auto rasterCube = RASTEREXTFROMCONSTRASTER(CubemapReflection::m_cubeRaster);
