@@ -78,8 +78,47 @@ void rwD3D9EngineSetMultiSamplingLevels(RwUInt32)
 	SelectedMultisamplingLevelsNonMask = 0;
 }
 
+unsigned int gCurrentLevel;
+RwRaster* gCurrentRaster;
+
+RwUInt8* LockLevel(RwRaster* raster, unsigned int level, unsigned int mode)
+{
+	gCurrentLevel = level;
+	gCurrentRaster = raster;
+	return RwRasterLock(raster, level, mode);
+}
+
+RwUInt32 ReadLevel(RwStream* stream, void* pbuf, unsigned int size)
+{
+	// if we have a wrong level (and this texture is not corrupted)
+	if(size == 0 && gCurrentLevel != 0)
+	{
+		auto rasterExt = RASTEREXTFROMRASTER(gCurrentRaster);
+
+		// simply copy the data from previous level
+		if(gCurrentRaster->cType == rwRASTERTYPETEXTURE && rasterExt->compressed && rasterExt->texture)
+		{
+			D3DLOCKED_RECT rect;
+			rasterExt->texture->LockRect(gCurrentLevel - 1, &rect, NULL, D3DLOCK_READONLY);
+
+			RwUInt32 sz = 16;
+			if(rasterExt->d3dFormat == D3DFMT_DXT1)
+				sz = 8;
+
+			memcpy(pbuf, rect.pBits, sz);
+
+			rasterExt->texture->UnlockRect(gCurrentLevel - 1);
+			return size;
+		}
+	}
+	return RwStreamRead(stream, pbuf, size);
+}
+
 void GameHooks()
-{	
+{
+	patch::RedirectCall(0x4CDCA4, LockLevel);
+	patch::RedirectCall(0x4CDCD9, ReadLevel);
+
 	// Deferred shading don't work with multi sampling, so disable it.
 	patch::RedirectJump(0x007F8A90, rwD3D9ChangeMultiSamplingLevels);
 	patch::RedirectJump(0x007F84F0, rwD3D9EngineSetMultiSamplingLevels);
@@ -89,7 +128,6 @@ void GameHooks()
 
 	plugin::patch::RedirectJump(0x00706AB0, CRealTimeShadowManager__Update);
 	plugin::patch::RedirectCall(0x0053EA12, CMirrors__BeforeMainRender);
-
 	//plugin::patch::RedirectJump(0x00734570, Renderer::InsertEntityIntoSortedList);
 	//plugin::patch::RedirectJump(0x005534B0, Renderer::AddEntityToRenderList);
 	//plugin::patch::RedirectJump(0x00553710, Renderer::AddToLodRenderList);

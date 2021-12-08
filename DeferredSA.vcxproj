@@ -131,6 +131,7 @@
     <ClCompile Include="GameHooks.cpp" />
     <ClCompile Include="ImguiManager.cpp" />
     <ClCompile Include="Immediate3D.cpp" />
+    <ClCompile Include="IndexBufferManager.cpp" />
     <ClCompile Include="Mesh.cpp" />
     <ClCompile Include="PBSMaterial.cpp" />
     <ClCompile Include="PixelShader.cpp" />
@@ -183,6 +184,7 @@
     <ClInclude Include="GameHooks.h" />
     <ClInclude Include="ImguiManager.h" />
     <ClInclude Include="Immediate3D.h" />
+    <ClInclude Include="IndexBufferManager.h" />
     <ClInclude Include="Mesh.h" />
     <ClInclude Include="PBSMaterial.h" />
     <ClInclude Include="PixelShader.h" />

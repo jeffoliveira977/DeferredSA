@@ -1,7 +1,7 @@
 #include "Immediate3D.h"
 #include "ShaderManager.h"
 #include "PixelShaderConstant.h"
-
+#include "IndexBufferManager.h"
 VertexBuffer* Immediate3D::mVertexBuffer = nullptr;
 RwIndexBuffer* Immediate3D::mIndexBuffer = nullptr;
 VertexShader* Immediate3D::mVertexShader = nullptr;
@@ -16,6 +16,8 @@ void Immediate3D::Hook()
 
 void Immediate3D::Close(void)
 {
+    IndexBufferManager::Release();
+
     if(VertexDeclIm3DNoTex != NULL)
     {
         rwD3D9DeleteVertexDeclaration(VertexDeclIm3DNoTex);
@@ -38,6 +40,7 @@ void Immediate3D::Close(void)
 
 RwBool Immediate3D::Open(void)
 {
+     IndexBufferManager::Restore();
     {
         D3DVERTEXELEMENT9 declaration[] =
         {

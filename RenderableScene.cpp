@@ -66,7 +66,7 @@ void RenderableScene::Render()
 	//RwFrameUpdateObjects(m_frame);
 
 	//CameraTilt(m_camera, 0, 110.0);
-	//TranslateCameraZ(m_camera, -340);
+	TranslateCameraZ(m_camera, -340);
 	RwFrameUpdateObjects(m_frame);
 
 	RwRGBA ambient = {CTimeCycle::m_CurrentColours.m_nSkyTopRed, CTimeCycle::m_CurrentColours.m_nSkyTopGreen, CTimeCycle::m_CurrentColours.m_nSkyTopBlue, 255};

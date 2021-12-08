@@ -87,6 +87,7 @@
     <ClCompile Include="VertexShader.cpp" />
     <ClCompile Include="GameHooks.cpp" />
     <ClCompile Include="ImguiManager.cpp" />
+    <ClCompile Include="IndexBufferManager.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="GTADef.h" />
@@ -152,6 +153,7 @@
     <ClInclude Include="VertexShader.h" />
     <ClInclude Include="GameHooks.h" />
     <ClInclude Include="ImguiManager.h" />
+    <ClInclude Include="IndexBufferManager.h" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="imgui">

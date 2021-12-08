@@ -50,6 +50,7 @@ void Initialize()
 	CubemapReflection::Initialize();
 	DualParaboloidReflection::Initialize();
 
+	Quad::Initialize();
 	//CreateQuadRender();
 	DeferredContext = new DeferredRendering();
 	DeferredContext->Initialize();
@@ -187,9 +188,10 @@ void ShutdowRenderware()
 	delete DefaultMeshPipe;
 	delete VehicleMeshPipe;
 
+	Quad::Release();
 	SoftParticles::Release();
 }
-
+#include "IndexBufferManager.h"
 void Hook()
 {
 	SetWindowsHookEx(WH_GETMESSAGE, MessageProc, NULL, GetCurrentThreadId());
@@ -199,6 +201,7 @@ void Hook()
 	plugin::Events::gameProcessEvent += GameProcess;
 	plugin::Events::shutdownRwEvent += ShutdowRenderware;
 	plugin::Events::drawingEvent += Render;
-
+	plugin::Events::d3dLostEvent += IndexBufferManager::Release;
+	plugin::Events::d3dResetEvent += IndexBufferManager::Restore;
 	GameHooks();
 }

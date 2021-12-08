@@ -10,7 +10,7 @@ VertexBuffer::~VertexBuffer()
     RwD3D9DynamicVertexBufferDestroy(mVertexBuffer);   
 }
 
-void VertexBuffer::Initialize(RwUInt32 size, RwUInt32 stride)
+void VertexBuffer::Initialize(RwUInt32 size, RwUInt32 stride, bool dynamic)
 {
     if(size == 0)
         throw std::invalid_argument("invalid size for allocating vertex buffer");
@@ -19,7 +19,18 @@ void VertexBuffer::Initialize(RwUInt32 size, RwUInt32 stride)
         throw std::invalid_argument("invalid stride for allocating vertex buffer");
 
     m_stride = stride;
-    auto result = RwD3D9DynamicVertexBufferCreate(m_stride * size, &mVertexBuffer);
+
+    RwBool result = FALSE;
+
+    if(dynamic)
+    {
+        result = RwD3D9DynamicVertexBufferCreate(stride * size, &mVertexBuffer);
+    }
+    else
+    {
+        RwUInt32 of = 0;
+        result = RwD3D9CreateVertexBuffer(stride, size * stride, &mVertexBuffer, &of);
+    }
 
     if(!result)
         throw std::runtime_error("VertexBuffer::Initialize");

@@ -125,16 +125,6 @@ void RenderableSphere::Initialize(int slices, int stacks)
 	mIndices[indicesCount++] = (i - 1) * slices + j;
 	mIndices[indicesCount++] = (i - 1) * slices + 1;
 	mIndices[indicesCount++] = vertexCount;
-
-	Vertex* vertexData = nullptr;
-	mVertexBuffer->Map(mVertices.size() * sizeof(Vertex), (void**)&vertexData);
-	std::copy(mVertices.begin(), mVertices.end(), vertexData);
-	mVertexBuffer->Unmap();
-
-	RwUInt16* indexData = nullptr;
-	mIndexBuffer->Map(mIndices.size() * sizeof(RwUInt16), (void**)&indexData);
-	std::copy(mIndices.begin(), mIndices.end(), indexData);
-	mIndexBuffer->Unmap();
 }
 
 void RenderableSphere::Render()
@@ -151,6 +141,16 @@ void RenderableSphere::Render()
 	PixelShaderConstant::SetFloat(0, 0.0);
 	VertexShaderConstant::SetMatrix(0, mWorld * translation * scale);
 	//ShaderContext->SetViewProjectionMatrix(4, true);
+
+	Vertex* vertexData = nullptr;
+	mVertexBuffer->Map(mVertices.size() * sizeof(Vertex), (void**)&vertexData);
+	std::copy(mVertices.begin(), mVertices.end(), vertexData);
+	mVertexBuffer->Unmap();
+
+	RwUInt16* indexData = nullptr;
+	mIndexBuffer->Map(mIndices.size() * sizeof(RwUInt16), (void**)&indexData);
+	std::copy(mIndices.begin(), mIndices.end(), indexData);
+	mIndexBuffer->Unmap();
 
 	_rwD3D9SetVertexDeclaration(VertexDeclIm3DNoTex);
 
@@ -183,11 +183,6 @@ void RenderableSphere::SetColor(XMINT4 color)
 								color.x, color.y,
 								color.z, color.w);
 		}
-
-		Vertex* vertexData = nullptr;
-		mVertexBuffer->Map(mVertices.size() * sizeof(Vertex), (void**)&vertexData);
-		std::copy(mVertices.begin(), mVertices.end(), vertexData);
-		mVertexBuffer->Unmap();
 
 		mColor = color;
 	}
