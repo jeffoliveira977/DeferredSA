@@ -116,6 +116,10 @@ float3 GetSkyColor(float3 ViewDir, float3 LightDir, float3 FullScattering)
     
     return lerp(FullScattering, SunDiskColor, SunDiskCoeff * DNBalance);
 }
+float InterleavedGradientNoise(float2 index)
+{
+    return frac(frac(dot(index.xy, float2(0.06711056, 0.00583715))) * 52.9829189);
+}
 
 float4 main(VS_Output input, float2 vpos :VPOS) : COLOR
 {
@@ -184,13 +188,23 @@ float4 main(VS_Output input, float2 vpos :VPOS) : COLOR
    // SpecularTerm = min(SpecularTerm, 16.0f);
     //DiffuseTerm *= DNBalance;
 
-    float4 albedoSample = MaterialColor;
+    float4 albedoSample = MaterialColor * input.Color;
     if (HasTexture)
         albedoSample *= tex2D(Diffuse, input.Texcoord);    
-
+    //albedoSample.a = albedoSample.a > 0.95f ? albedoSample.a : InterleavedGradientNoise(vpos) * albedoSample.a;
+   
     float4 outColor;
     float ShadowTerm = DrawShadow(ShadowSampler, WorldPos, length(WorldPos.xyz - ViewPos), WorldPos, ShadowBuffer) * DNBalance;
-
+    float FarClip2 = 160.0;
+    float FogStart2 = 0.0;
+    float fogdist;
+    fogdist = input.WorldPosition.z;
+    float fadefact = (FarClip2 - input.Depth) / (FarClip2 - FogStart2);
+    fadefact = saturate(1.0 - fadefact);
+    
+    ShadowTerm = lerp(ShadowTerm, 1.0, fadefact);
+    ShadowTerm = lerp(1.0, ShadowTerm, 0.7);
+    
     float3 Radiance = input.Color * lerp(0.25f, 1.0f, 1 - DNBalance);
    
     float2 Lighting = float2(DiffuseTerm, SpecularTerm * SpecIntensity) * ShadowTerm;
@@ -207,7 +221,7 @@ float4 main(VS_Output input, float2 vpos :VPOS) : COLOR
     
     float3 Diffuse = (outColor.xyz + SkyLightColor.rgb * 0.3f);
     SpecularTerm = (outColor.w * outColor.xyz);
-    
+
     float FresnelCoeff = MicrofacetFresnel(Normals, -ViewDir, MaterialProps.y);
     outColor.xyz = Diffuse * albedoSample.rgb + SpecularTerm * MaterialProps.x + ReflectionTerm * FresnelCoeff * MaterialProps.x;
     outColor.rgb = CalculateFogColor(outColor.rgb, ViewDir, SunPosition.xyz, input.Depth, WorldPos.z, FullScattering);

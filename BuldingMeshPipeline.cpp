@@ -208,11 +208,13 @@ void BuldingMeshPipeline::DeferredRendering(RwResEntry* entry, void* object, RwU
 	RwMatrix* LTM= RwFrameGetLTM(RpAtomicGetFrame(object));
 	XMMATRIX worldMatrix = RwMatrixToXMMATRIX(LTM);
 	_rwD3D9SetVertexShaderConstant(0, &worldMatrix, 4);
-	
+	RwRenderStateSet(rwRENDERSTATESRCBLEND, (void*)rwBLENDSRCALPHA);
+	RwRenderStateSet(rwRENDERSTATEDESTBLEND, (void*)rwBLENDINVSRCALPHA);
+
 	RwMatrix view;
 	RwD3D9GetTransform(D3DTS_VIEW, &view);
 	_rwD3D9SetPixelShaderConstant(4, &view, 4);
-
+//	RwD3D9SetRenderState(D3DRS_ALPHABLENDENABLE, FALSE);
 	int numMeshes = header->numMeshes;
 	while(numMeshes--)
 	{
@@ -223,11 +225,12 @@ void BuldingMeshPipeline::DeferredRendering(RwResEntry* entry, void* object, RwU
 		material = instance->material;
 		matcolor = &material->color;
 		texture = material->texture;
-
-		if((instance->vertexAlpha ||
-			matcolor->alpha != 0xFF ||
-			(texture && RwD3D9TextureHasAlpha(texture))) == false)
-		{
+		auto hasAlpha = instance->vertexAlpha || matcolor->alpha != 255;
+		RwRenderStateSet(rwRENDERSTATEVERTEXALPHAENABLE, (void*)hasAlpha);
+		//if((/*instance->vertexAlpha ||*/
+		//	matcolor->alpha != 0xFF ||
+		//	(texture && RwD3D9TextureHasAlpha(texture))) == false || instance->vertexAlpha)
+		//{
 			RwRGBAReal colorValue = {1.0, 1.0, 1.0, 1.0};
 			float fSpec = max(CWeather::WetRoads,
 							  CCustomCarEnvMapPipeline__GetFxSpecSpecularity(
@@ -301,13 +304,14 @@ void BuldingMeshPipeline::DeferredRendering(RwResEntry* entry, void* object, RwU
 
 			RwD3DDevice->SetPixelShaderConstantB(0, info, sizeof(info)/4);
 			D3D9Render(header, instance, texture, flags);
-		}
+		//}
 		instance++;
 	}
 }
 
 void BuldingMeshPipeline::ForwardRendering(RwResEntry* entry, void* object, RwUInt32 flags)
 {
+	return;
 	RxD3D9ResEntryHeader* header;
 	RxD3D9InstanceData* instance;
 
@@ -382,7 +386,7 @@ void BuldingMeshPipeline::ForwardRendering(RwResEntry* entry, void* object, RwUI
 		else
 			RwRenderStateSet(rwRENDERSTATEALPHATESTFUNCTIONREF, (void*)0);
 
-		if(hasAlpha || instance->vertexAlpha || matcolor->alpha != 255)
+		if(hasAlpha || /*instance->vertexAlpha ||*/ matcolor->alpha != 255)
 		{
 			RwRGBAReal colorValue = {1.0, 1.0, 1.0, 1.0};
 

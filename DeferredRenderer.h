@@ -49,6 +49,8 @@ private:
 	void CascadedShadow();
 	void AtmosphericScattering();
 	void VolumetricLight();
+	void FXAA();
+	void Bloom();
 };
 
 extern DeferredRendering *DeferredContext;

@@ -48,6 +48,22 @@ DeferredRendering::~DeferredRendering()
 
 float VolumetricLightParam[3];
 
+
+RwRaster* mFXAARaster = nullptr;
+
+
+void* mFXAAVertexShader = nullptr;
+void* mFXAAPixelShader = nullptr;
+
+RwRaster* mGaussianBlurXRaster = nullptr;
+RwRaster* mGaussianBlurYRaster = nullptr;
+void* mGaussianBlurVertexShader = nullptr;
+void* mGaussianBlurXPixelShader = nullptr;
+void* mGaussianBlurYPixelShader = nullptr;
+
+RwRaster* mBloomRaster = nullptr;
+void* mBloomPixelShader = nullptr;
+
 void DeferredRendering::Initialize()
 {
 	PS_DirectLight = RwCreateCompiledPixelShader("DeferredDirectLightPS");
@@ -59,12 +75,27 @@ void DeferredRendering::Initialize()
 	PS_VolumetricLightCombine = RwCreateCompiledPixelShader("VolumetricLightCombine");
 	VS_Quad = RwCreateCompiledVertexShader("GaussianBlur");
 
+	mFXAAVertexShader = RwCreateCompiledVertexShader("FXAA_VS");
+	mFXAAPixelShader = RwCreateCompiledPixelShader("FXAA_PS");
+
+	mGaussianBlurVertexShader = RwCreateCompiledVertexShader("GaussianBlur");
+	mGaussianBlurXPixelShader = RwCreateCompiledPixelShader("GaussianBlurX");
+	mGaussianBlurYPixelShader = RwCreateCompiledPixelShader("GaussianBlurY");
+
+	mBloomPixelShader = RwCreateCompiledPixelShader("BloomPS");
+
 	int width, height;
 	width = RsGlobal.maximumWidth;
 	height = RsGlobal.maximumHeight;
 	m_shadowScreenRaster = RwD3D9RasterCreate(width, height, D3DFMT_A8R8G8B8, rwRASTERTYPECAMERATEXTURE);
 	m_screenRaster = RwD3D9RasterCreate(width, height, D3DFMT_A8R8G8B8, rwRASTERTYPECAMERATEXTURE);
 	m_volumetricLight = RwD3D9RasterCreate(width, height, D3DFMT_A8R8G8B8, rwRASTERTYPECAMERATEXTURE);
+	mFXAARaster = RwD3D9RasterCreate(width, height, D3DFMT_A8R8G8B8, rwRASTERTYPECAMERATEXTURE);
+
+	mGaussianBlurXRaster = RwD3D9RasterCreate(width, height, D3DFMT_A8R8G8B8, rwRASTERTYPECAMERATEXTURE);
+	mGaussianBlurYRaster = RwD3D9RasterCreate(width, height, D3DFMT_A8R8G8B8, rwRASTERTYPECAMERATEXTURE);
+
+	mBloomRaster = RwD3D9RasterCreate(width, height, D3DFMT_A8R8G8B8, rwRASTERTYPECAMERATEXTURE);
 
 	// For better quality we will use D3DFMT_A16B16G16R16F
 	m_graphicsLight = RwD3D9RasterCreate(width, height, D3DFMT_A16B16G16R16F, rwRASTERTYPECAMERATEXTURE);
@@ -153,6 +184,9 @@ void DeferredRendering::RenderPostProcessing()
 	ShaderContext->SetInverseViewMatrix(0);
 	ShaderContext->SetProjectionMatrix(4);
 	VolumetricLight();
+
+	FXAA();
+	Bloom();
 }
 
 void DeferredRendering::DirectLight()
@@ -280,7 +314,76 @@ void DeferredRendering::VolumetricLight()
 
 	_rwD3D9SetPixelShader(PS_VolumetricLightCombine);
 	__rwD3D9SetRenderTarget(0, RwD3D9RenderSurface);
-	QuadRender();
+	DrawScreenQuad();
+}
+
+void DeferredRendering::FXAA()
+{
+	IDirect3DSurface9* screenSurface;
+	auto screenExt = RASTEREXTFROMRASTER(mFXAARaster);
+	screenExt->texture->GetSurfaceLevel(0, &screenSurface);
+
+	RwD3DDevice->StretchRect(RwD3D9RenderSurface, NULL, screenSurface, NULL, D3DTEXF_NONE);
+
+	screenSurface->Release();
+
+
+	XMMATRIX world, view, projection;
+	RwD3D9GetTransform(D3DTS_VIEW, &view);
+	RwD3D9GetTransform(D3DTS_PROJECTION, &projection);
+	world = XMMatrixIdentity();
+
+	_rwD3D9SetVertexShaderConstant(0, &(world * view * projection), 4);
+	_rwD3D9SetVertexShader(mFXAAVertexShader);
+	_rwD3D9SetPixelShader(mFXAAPixelShader);
+	rwD3D9RWSetRasterStage(mFXAARaster, 0);
+	__rwD3D9SetRenderTarget(0, RwD3D9RenderSurface);
+	DrawScreenQuad();
+}
+
+void DeferredRendering::Bloom()
+{
+	IDirect3DSurface9* screenSurface;
+	auto screenExt = RASTEREXTFROMRASTER(m_screenRaster);
+	screenExt->texture->GetSurfaceLevel(0, &screenSurface);
+
+	RwD3DDevice->StretchRect(RwD3D9RenderSurface, NULL, screenSurface, NULL, D3DTEXF_NONE);
+
+	screenSurface->Release();
+
+	_rwD3D9SetVertexShader(mGaussianBlurVertexShader);
+	int width, height;
+	width = RsGlobal.maximumWidth;
+	height = RsGlobal.maximumHeight;
+	//RwD3D9SetRenderState(D3DRS_ALPHABLENDENABLE, TRUE);
+	//RwRenderStateSet(rwRENDERSTATESRCBLEND, (void*)rwBLENDSRCALPHA);
+	//RwRenderStateSet(rwRENDERSTATEDESTBLEND, (void*)rwBLENDINVSRCALPHA);
+
+	RwV2d samplesOffsets[15];
+	float sampleWeights[15];
+	GetGaussianOffsets(true, width / height, samplesOffsets, sampleWeights);
+
+	//_rwD3D9SetVertexShaderConstant(0, samplesOffsets, sizeof(samplesOffsets));
+	//_rwD3D9SetVertexShaderConstant(19, sampleWeights, sizeof(sampleWeights) );
+	_rwD3D9SetPixelShader(mGaussianBlurXPixelShader);
+	rwD3D9RWSetRasterStage(m_screenRaster, 0);
+	RwD3D9SetRenderTarget(0, mGaussianBlurXRaster);
+	DrawScreenQuad();
+
+	GetGaussianOffsets(false, width / height, samplesOffsets, sampleWeights);
+	//_rwD3D9SetVertexShaderConstant(0, samplesOffsets, sizeof(samplesOffsets));
+	//_rwD3D9SetVertexShaderConstant(19, sampleWeights, sizeof(sampleWeights) );
+	_rwD3D9SetPixelShader(mGaussianBlurYPixelShader);
+	rwD3D9RWSetRasterStage(mGaussianBlurXRaster, 0);
+	RwD3D9SetRenderTarget(0, mGaussianBlurYRaster);
+	DrawScreenQuad();
+
+	_rwD3D9SetPixelShader(mBloomPixelShader);
+	rwD3D9RWSetRasterStage(mGaussianBlurYRaster, 0);
+	rwD3D9RWSetRasterStage(m_screenRaster, 1);
+	__rwD3D9SetRenderTarget(0, RwD3D9RenderSurface);
+	DrawScreenQuad();
+
 }
 
 #include "imgui.h"

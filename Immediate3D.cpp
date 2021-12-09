@@ -16,8 +16,8 @@ void Immediate3D::Hook()
 
 void Immediate3D::Close(void)
 {
-    IndexBufferManager::Release();
-
+   // IndexBufferManager::Release();
+    releaseDynamicIBs();
     if(VertexDeclIm3DNoTex != NULL)
     {
         rwD3D9DeleteVertexDeclaration(VertexDeclIm3DNoTex);
@@ -40,7 +40,8 @@ void Immediate3D::Close(void)
 
 RwBool Immediate3D::Open(void)
 {
-     IndexBufferManager::Restore();
+    recreateDynamicIBs();
+    // IndexBufferManager::Restore();
     {
         D3DVERTEXELEMENT9 declaration[] =
         {

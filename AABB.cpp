@@ -82,7 +82,6 @@ namespace Math
 
 	bool AABB::Intersects(XMFLOAT4 plane)
 	{
-		bool falseNegative = false;
 		float d = std::max(Min.x * plane.x, Max.x * plane.x)
 				+ std::max(Min.y * plane.y, Max.y * plane.y)
 				+ std::max(Min.z * plane.z, Max.z * plane.z)

@@ -317,5 +317,14 @@
     <FxCompile Include="QuadPS.hlsl">
       <Filter>shaders</Filter>
     </FxCompile>
+    <FxCompile Include="FXAA_VS.hlsl">
+      <Filter>shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="FXAA_PS.hlsl">
+      <Filter>shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="shaders\BloomPS.hlsl">
+      <Filter>shaders</Filter>
+    </FxCompile>
   </ItemGroup>
 </Project>

@@ -22,4 +22,12 @@ private:
 	bool mDynamic;
 	IDirect3DIndexBuffer9* m_buffer;
 };
+ void
+releaseDynamicIBs(void);
+ void
+recreateDynamicIBs(void);
+void addDynamicIB(uint32_t length, IDirect3DIndexBuffer9** buf);	// NB: don't share this pointer
+void removeDynamicIB(IDirect3DIndexBuffer9** buf);
 
+void* createIndexBuffer(uint32_t length, bool dynamic);
+void destroyIndexBuffer(void* indexBuffer);

@@ -231,6 +231,7 @@ enum eZoneAttributes : uint16_t
 #define CClouds__RenderBottomFromHeight() ((void (__cdecl *)())0x7154B0)()
 #define CWeather__RenderRainStreaks() ((void (__cdecl *)())0x72AF70)()
 #define CWeather__UnderWaterness (*(float *)0xC8132C)
+#define CPlantMgr__Render() ((void (__cdecl *)())0x5DBAE0)()
 #define CPad__GetPad(number) ((CPad *(__cdecl *)(unsigned int))0x53FB70)(number)
 //#define FindPlayerPed(number) ((CPed *(__cdecl *)(unsigned int))0x56E210)(number)
 #define CPlayerPed__DrawTriangleForMouseRecruitPed(ped) ((void (__thiscall *)(CPed *))0x60BA80)(ped)

@@ -229,11 +229,19 @@
     <FxCompile Include="ColorVS.hlsl">
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='GTASA Release|Win32'">Vertex</ShaderType>
     </FxCompile>
+    <FxCompile Include="FXAA_PS.hlsl">
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='GTASA Release|Win32'">Pixel</ShaderType>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='GTASA zDebug|Win32'">Pixel</ShaderType>
+    </FxCompile>
+    <FxCompile Include="FXAA_VS.hlsl">
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='GTASA Release|Win32'">Vertex</ShaderType>
+    </FxCompile>
     <FxCompile Include="QuadPS.hlsl" />
     <FxCompile Include="QuadVS.hlsl">
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='GTASA Release|Win32'">Vertex</ShaderType>
     </FxCompile>
     <FxCompile Include="shaders\AtmosphericScattering.hlsl" />
+    <FxCompile Include="shaders\BloomPS.hlsl" />
     <FxCompile Include="shaders\DefaultMeshPS.hlsl" />
     <FxCompile Include="shaders\DefaultMeshVS.hlsl">
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='GTASA Release|Win32'">Vertex</ShaderType>
