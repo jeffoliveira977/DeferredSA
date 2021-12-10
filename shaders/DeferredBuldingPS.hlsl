@@ -37,7 +37,7 @@ PS_DeferredOutput main(VS_DeferredOutput input, float2 vpos :VPOS)
 
     float4 params;
     float3 normal = input.Normal;
-    outColor.a = outColor.a > 0.95f ? outColor.a : InterleavedGradientNoise(vpos) * outColor.a;
+  //  outColor.a = outColor.a > 0.95f ? outColor.a : InterleavedGradientNoise(vpos) * outColor.a;
     if (HasSpecularMap)
     {
         params.xyz = tex2D(SpecularMap, input.Texcoord).xyz;

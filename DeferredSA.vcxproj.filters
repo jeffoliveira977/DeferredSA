@@ -317,13 +317,25 @@
     <FxCompile Include="QuadPS.hlsl">
       <Filter>shaders</Filter>
     </FxCompile>
-    <FxCompile Include="shaders\BloomPS.hlsl">
-      <Filter>shaders</Filter>
-    </FxCompile>
     <FxCompile Include="shaders\FXAA_PS.hlsl">
       <Filter>shaders</Filter>
     </FxCompile>
     <FxCompile Include="shaders\FXAA_VS.hlsl">
+      <Filter>shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="DownFilter4.hlsl">
+      <Filter>shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="BloomCombine.hlsl">
+      <Filter>shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="shaders\VolumetricClouds.hlsl">
+      <Filter>shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="shaders\VolumetricCloudsBlur.hlsl">
+      <Filter>shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="shaders\VolumetricCloudsCombine.hlsl">
       <Filter>shaders</Filter>
     </FxCompile>
   </ItemGroup>

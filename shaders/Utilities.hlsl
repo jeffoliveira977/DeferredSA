@@ -228,6 +228,14 @@ inline float DecodeDepth(sampler2D samplerDepth, float2 texCoord)
     return depth.x;
 }
 
+inline void DecodeDepthNormal(sampler2D samplerDepth, float2 texCoord, float farPlane, out float depth, out float3 normal)
+{
+    float4 depthNormal = tex2D(samplerDepth, texCoord);
+    normal = TwoChannelNormalX2(depthNormal.xy);
+    depth = DecodeFloatRG(depthNormal.zw, farPlane);
+    depth = depth <= 0 ? farPlane : depth;
+}
+
 inline void DecodeDepthNormal(float2 texCoord, float farPlane, out float depth, out float3 normal)
 {
     float4 depthNormal = TEXTURE2D_DEPTHNORMAL(texCoord);

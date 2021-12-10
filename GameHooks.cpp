@@ -114,6 +114,25 @@ RwUInt32 ReadLevel(RwStream* stream, void* pbuf, unsigned int size)
 	return RwStreamRead(stream, pbuf, size);
 }
 
+void SetGeometryUsageFlag(RpGeometry* geometry, unsigned int flags)
+{
+	unsigned int usageFlags = RpD3D9GeometryGetUsageFlags(geometry);
+
+	usageFlags |= flags;
+	RpD3D9GeometrySetUsageFlags(geometry, (RpD3D9GeometryUsageFlag)usageFlags);
+}
+RpGeometry* CreateGeometryCheckNormals(int numVerts, int numTriangles, unsigned int format)
+{
+	RpGeometry* geometry;
+	format |= rpGEOMETRYNORMALS;
+
+	geometry = RpGeometryCreate(numVerts, numTriangles, format);
+	SetGeometryUsageFlag(geometry, rpD3D9GEOMETRYUSAGE_CREATETANGENTS);
+
+	return geometry;
+}
+
+
 void GameHooks()
 {
 	patch::RedirectCall(0x4CDCA4, LockLevel);
@@ -141,6 +160,9 @@ void GameHooks()
 
 	Lights::Patch();
 	plugin::patch::RedirectJump(0x7578C0, D3D9AtomicDefaultInstanceCallback);
+
+	plugin::patch::RedirectCall(0x74D234, CreateGeometryCheckNormals);
+	plugin::patch::RedirectCall(0x5D71D9, SetGeometryUsageFlag);
 
 	Immediate3D::Hook();
 	SoftParticles::Hook();

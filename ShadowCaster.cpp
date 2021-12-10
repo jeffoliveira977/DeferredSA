@@ -249,6 +249,6 @@ void ShadowCaster::Render(int i)
 
         entity->m_bImBeingRendered = false;
     }
-    VisibilityPlugins::RenderWeaponPedsNoMuzzleFlash();
-    // CVisibilityPlugins::RenderWeaponPedsForPC();
+    //VisibilityPlugins::RenderWeaponPedsNoMuzzleFlash();
+     CVisibilityPlugins::RenderWeaponPedsForPC();
 }

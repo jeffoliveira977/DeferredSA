@@ -51,6 +51,7 @@ private:
 	void VolumetricLight();
 	void FXAA();
 	void Bloom();
+	void VolumetricClouds();
 };
 
 extern DeferredRendering *DeferredContext;

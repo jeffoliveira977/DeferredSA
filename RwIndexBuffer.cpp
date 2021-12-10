@@ -113,7 +113,7 @@ void RwIndexBuffer::Initialize(RwUInt32 size, bool dynamic)
     //    mSize = size;
     //    result = D3DResourceSystem::CreateIndexBuffer(size, 101, (void**)&m_buffer);
     //}
-
+    dynamic = false;
     m_buffer= (IDirect3DIndexBuffer9*)createIndexBuffer(size * sizeof(RwUInt16), dynamic);
     if(dynamic)
     addDynamicIB(size * sizeof(RwUInt16), &m_buffer);

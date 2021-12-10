@@ -161,8 +161,8 @@ void RenderDeferred()
 	CRenderer::RenderFadingInEntities();
 
 	BreakManager_c__Render(g_breakMan, 1);
-	//CVisibilityPlugins__RenderWeaponPedsForPC();
-	VisibilityPlugins::RenderWeaponPedsNoMuzzleFlash();
+	CVisibilityPlugins__RenderWeaponPedsForPC();
+	//VisibilityPlugins::RenderWeaponPedsNoMuzzleFlash();
 }
 
 float CGameIdle::m_fShadowDNBalance=1.0;

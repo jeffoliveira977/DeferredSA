@@ -208,13 +208,13 @@ void BuldingMeshPipeline::DeferredRendering(RwResEntry* entry, void* object, RwU
 	RwMatrix* LTM= RwFrameGetLTM(RpAtomicGetFrame(object));
 	XMMATRIX worldMatrix = RwMatrixToXMMATRIX(LTM);
 	_rwD3D9SetVertexShaderConstant(0, &worldMatrix, 4);
-	RwRenderStateSet(rwRENDERSTATESRCBLEND, (void*)rwBLENDSRCALPHA);
-	RwRenderStateSet(rwRENDERSTATEDESTBLEND, (void*)rwBLENDINVSRCALPHA);
+	RwRenderStateSet(rwRENDERSTATESRCBLEND, (void*)5);
+	RwRenderStateSet(rwRENDERSTATEDESTBLEND, (void*)6);
 
 	RwMatrix view;
 	RwD3D9GetTransform(D3DTS_VIEW, &view);
 	_rwD3D9SetPixelShaderConstant(4, &view, 4);
-//	RwD3D9SetRenderState(D3DRS_ALPHABLENDENABLE, FALSE);
+
 	int numMeshes = header->numMeshes;
 	while(numMeshes--)
 	{
@@ -225,8 +225,9 @@ void BuldingMeshPipeline::DeferredRendering(RwResEntry* entry, void* object, RwU
 		material = instance->material;
 		matcolor = &material->color;
 		texture = material->texture;
-		auto hasAlpha = instance->vertexAlpha || matcolor->alpha != 255;
-		RwRenderStateSet(rwRENDERSTATEVERTEXALPHAENABLE, (void*)hasAlpha);
+		auto hasAlpha = instance->vertexAlpha || matcolor->alpha != 255|| (texture && RwD3D9TextureHasAlpha(texture));
+		RwRenderStateSet(rwRENDERSTATEVERTEXALPHAENABLE, (void*)TRUE);
+		RwD3D9SetRenderState(D3DRS_ALPHABLENDENABLE, FALSE);
 		//if((/*instance->vertexAlpha ||*/
 		//	matcolor->alpha != 0xFF ||
 		//	(texture && RwD3D9TextureHasAlpha(texture))) == false || instance->vertexAlpha)

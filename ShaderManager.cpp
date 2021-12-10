@@ -71,6 +71,19 @@ void ShaderManager::SetInverseViewMatrix(int idx, bool vs)
 		_rwD3D9SetPixelShaderConstant(idx, &inverseView, 4);
 }
 
+void ShaderManager::SetInverseProjectionMatrix(int idx, bool vs)
+{
+	XMMATRIX projection, inverseProjection;
+
+	RwD3D9GetTransform(D3DTS_PROJECTION, &projection);
+	inverseProjection = XMMatrixInverse(NULL, projection);
+
+	if(vs)
+		_rwD3D9SetVertexShaderConstant(idx, &inverseProjection, 4);
+	else
+		_rwD3D9SetPixelShaderConstant(idx, &inverseProjection, 4);
+}
+
 void ShaderManager::SetProjectionMatrix(int idx, bool vs)
 {
 	RwMatrix projection;
@@ -99,6 +112,9 @@ void ShaderManager::SetViewProjectionMatrix(int idx, bool vs)
 		_rwD3D9SetPixelShaderConstant(idx, &projection, 4);
 	}
 }
+
+void ShaderManager::SetInverseViewProjectionMatrix()
+{}
 
 void ShaderManager::SetSunColor(int idx)
 {
