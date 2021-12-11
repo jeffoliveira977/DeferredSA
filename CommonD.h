@@ -107,7 +107,7 @@ struct _rxD3D9Im3DVertexNoTex
 #define RwCameraSync( camera )                                                 \
     ( (RwCamera * (__cdecl *)(RwCamera *))0x7EE5A0 )( camera )
 
-#define rwD3D9DeleteVertexDeclaration(declaration) ((RwBool (__cdecl*)(PDIRECT3DVERTEXDECLARATION9))0x7FAC10)(declaration)
+#define rwD3D9DeleteVertexDeclaration(declaration) ((RwBool (__cdecl*)(void*))0x7FAC10)(declaration)
 #define _rwD3D9RWGetRasterStage(stage) ((RwRaster*(__cdecl*)(RwUInt32))0x7FDE50)(stage)
 #define RwD3D9DeleteVertexShader(shader) ((RwBool (__cdecl*)(void *))0x7FAC90)(shader)
 #define RwD3D9DeletePixelShader(shader) ((RwBool (__cdecl*)(void *))0x7FACF0)(shader)
@@ -231,6 +231,7 @@ enum eZoneAttributes : uint16_t
 #define CClouds__RenderBottomFromHeight() ((void (__cdecl *)())0x7154B0)()
 #define CWeather__RenderRainStreaks() ((void (__cdecl *)())0x72AF70)()
 #define CWeather__UnderWaterness (*(float *)0xC8132C)
+#define CPlantMgr__Render() ((void (__cdecl *)())0x5DBAE0)()
 #define CPad__GetPad(number) ((CPad *(__cdecl *)(unsigned int))0x53FB70)(number)
 //#define FindPlayerPed(number) ((CPed *(__cdecl *)(unsigned int))0x56E210)(number)
 #define CPlayerPed__DrawTriangleForMouseRecruitPed(ped) ((void (__thiscall *)(CPed *))0x60BA80)(ped)
@@ -308,7 +309,15 @@ typedef void cDMAudio;
 #define RwResourcesFreeResEntry(entry) ((RwBool ( __cdecl*)(RwResEntry*))0x807DE0)(entry)
 #define RxPipelineDestroy(pipeline) ((void ( __cdecl*)(RxPipeline*))0x805820)(pipeline) 
 
-#define DEFERREDSHADERPATH "DeferredSA/shaders/binary/"
+#define DEFERREDSHADERPATHBINARY "DeferredSA/shaders/binary/"
+#define DEFERREDSHADERPATH "DeferredSA/shaders/"
+
+extern uint16_t& uiTempBufferIndicesStored;
+extern uint16_t& uiTempBufferVerticesStored;
+constexpr int32_t TOTAL_TEMP_BUFFER_INDICES = 4096;
+extern RxVertexIndex(&aTempBufferIndices)[TOTAL_TEMP_BUFFER_INDICES]; // size 4096
+constexpr int32_t TOTAL_TEMP_BUFFER_VERTICES = 2048;
+extern RxObjSpace3DVertex(&aTempBufferVertices)[TOTAL_TEMP_BUFFER_VERTICES];
 
 void RwD3D9RestoreRenderTargets(int count);
 IDirect3DVertexShader9* CreateVertexShader(string path, string profile);

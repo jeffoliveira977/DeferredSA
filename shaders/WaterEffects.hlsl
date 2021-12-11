@@ -1,21 +1,22 @@
 #include "Utilities.hlsl"
+#include "Shadow.hlsl"
 // VS
-row_major float4x4 xView : register(c0);
+row_major float4x4 xView : register(c4);
 
 // VS/PS
-row_major float4x4 xProjection : register(c4);
-float Time : register(c8);
+row_major float4x4 xProjection : register(c8);
+float Time : register(c12);
 
 // PS
-row_major float4x4 xViewInverse : register(c0);
-float3 xLightDirection : register(c9);
-float3 Fog : register(c10);
+row_major float4x4 xViewInverse : register(c4);
+float3 xLightDirection : register(c13);
+float3 Fog : register(c14);
 
-float4 FogColor : register(c11);
-float4 Watercolor : register(c12);
-float4 SunColor : register(c13);
-float4 SkyLightColor : register(c14);
-float4 HorizonColor : register(c15);
+float4 FogColor : register(c15);
+float4 Watercolor : register(c16);
+float4 SunColor : register(c17);
+float4 SkyLightColor : register(c18);
+float4 HorizonColor : register(c19);
 
 // variables for the BUMP MAP
 static float xDrawMode = 2.0;
@@ -30,9 +31,12 @@ static float xWindForce = 0.1;
 sampler WaterBumpMapSampler : register(s1);
 sampler ReflectionSampler : register(s2);
 sampler RefractionSampler : register(s3);
-sampler EnvSampler : register(s4);
-sampler2D SamplerDepth : register(s5);
-sampler2D WaterWake : register(s6);
+sampler2D SamplerDepth : register(s4);
+sampler2D WaterWake : register(s5);
+
+ShadowData ShadowBuffer : register(c20);
+sampler2D ShadowSampler[4] : register(s6);
+
 //------- Technique: Water --------
 
 struct WaterVertexToPixel
@@ -440,11 +444,15 @@ float4 WaterPS(WaterVertexToPixel PSIn, float2 vpos : VPOS0) : COLOR
     float3 sun = SunColor.rgb;
     sun = RGBtoHSV(sun);
     sun = HSVtoRGB(float3(sun.x, sun.y*0.7, sun.z));
+   
+    float ShadowTerm = DrawShadow(ShadowSampler, PSIn.worldPosition.xyz, length(PSIn.worldPosition.xyz - xViewInverse[3].xyz), PSIn.worldPosition.xyz, ShadowBuffer);
+
+    
     // luminance
-    //combinedColor.rgb += diffuse(normal, H, 40.0) * SunColor.rgb * 0.4;
+    combinedColor.rgb += diffuse(normal, H, 40.0) * SunColor.rgb * 0.4 * ShadowTerm;
     
     float glow = 100.0;
-    combinedColor.rgb += BlinnPhongSpecular(lightDir, -viewDir, normal, glow) * sun;
+    combinedColor.rgb += BlinnPhongSpecular(lightDir, -viewDir, normal, glow) * sun * ShadowTerm;
     
     // foam 
     float sinTimer = sin(Time);
@@ -452,6 +460,7 @@ float4 WaterPS(WaterVertexToPixel PSIn, float2 vpos : VPOS0) : COLOR
     float4 foamColor = tex2D(WaterWake, foamuv);
     combinedColor += foamColor * (1 - foamDepth);
     
+ 
     combinedColor = CalculateFog(combinedColor, objectZ);
     
     combinedColor.a = 1.0;

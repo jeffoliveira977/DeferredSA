@@ -7,7 +7,7 @@ public:
 	VertexBuffer();
 	~VertexBuffer();
 
-	void Initialize(RwUInt32 size, RwUInt32 stride);
+	void Initialize(RwUInt32 size, RwUInt32 stride, bool dynamic = true);
 	void Copy(RwUInt32 size, void *data);
 	void Set();
 

@@ -23,7 +23,7 @@ namespace Math
 		XMVECTOR minVec = XMVectorSet(points[0].x, points[0].y, points[0].z, 1.0);
 		XMVECTOR maxVec = XMVectorSet(points[0].x, points[0].y, points[0].z, 1.0);
 
-		for(size_t i = 0; i < count; i++)
+		for(int i = 0; i < count; i++)
 		{
 			XMVECTOR point = XMLoadFloat3(&points[i]);
 			minVec = XMVectorMin(minVec, point);
@@ -82,7 +82,6 @@ namespace Math
 
 	bool AABB::Intersects(XMFLOAT4 plane)
 	{
-		bool falseNegative = false;
 		float d = std::max(Min.x * plane.x, Max.x * plane.x)
 				+ std::max(Min.y * plane.y, Max.y * plane.y)
 				+ std::max(Min.z * plane.z, Max.z * plane.z)

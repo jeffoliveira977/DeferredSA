@@ -5,43 +5,60 @@
 #include <algorithm>
 #include <tuple>
 #include <vector>
-#include "CGameIdle.h"
-#include "PixelShaderConstant.h"
-#include "VertexShaderConstant.h"
 ShaderManager* ShaderContext;
 
-void ShaderManager::SetTimecyProps(RwUInt32 index)
+std::vector<char*> ShaderList;
+void ShaderManager::LoadShaders()
 {
-	PixelShaderConstant::SetVector(index+0, &mSkyTopColor);
-	PixelShaderConstant::SetVector(index+1, &mSkytBottomColor);
-	PixelShaderConstant::SetVector(index+2, &mSunColor);
-	PixelShaderConstant::SetVector(index+3, sunDirs);
-	PixelShaderConstant::SetVector(index+4, mSettings);
+	//std::make_tuple(3.8, 'A', "Lisa Simpson");
 }
 
-void ShaderManager::SetSkyColor(RwUInt32 index)
+void ShaderManager::SetTimecyProps(int idx)
 {
-	PixelShaderConstant::SetVector(index+0, &mSkyTopColor);
-	PixelShaderConstant::SetVector(index+1, &mSkytBottomColor);
+	//Update();
+	_rwD3D9SetPixelShaderConstant(idx, &m_skyTop, 1); idx++;
+	_rwD3D9SetPixelShaderConstant(idx, &m_skyBottom, 1); idx++;
+	_rwD3D9SetPixelShaderConstant(idx, &m_sunColor, 1); idx++;
+	_rwD3D9SetPixelShaderConstant(idx, sunDirs, 1); idx++;
+	_rwD3D9SetPixelShaderConstant(idx, m_planeData, 1);
 }
 
-void ShaderManager::SetSunDirection(RwUInt32 index)
+void ShaderManager::SetSkyColor(int idx)
 {
-	PixelShaderConstant::SetVector(index, sunDirs);
+	/*m_skyTop = {
+				static_cast<float>(CTimeCycle::m_CurrentColours.m_nSkyTopRed) / 255.0f,
+				static_cast<float>(CTimeCycle::m_CurrentColours.m_nSkyTopGreen) / 255.0f,
+				static_cast<float>(CTimeCycle::m_CurrentColours.m_nSkyTopBlue) / 255.0f};
+
+	m_skyBottom = {
+	   static_cast<float>(CTimeCycle::m_CurrentColours.m_nSkyBottomRed) / 255.0f,
+	   static_cast<float>(CTimeCycle::m_CurrentColours.m_nSkyBottomGreen) / 255.0f,
+	   static_cast<float>(CTimeCycle::m_CurrentColours.m_nSkyBottomBlue) / 255.0f};*/
+
+	_rwD3D9SetPixelShaderConstant(idx, &m_skyTop, 1); idx++;
+	_rwD3D9SetPixelShaderConstant(idx, &m_skyBottom, 1);
 }
 
-void ShaderManager::SetViewMatrix(RwUInt32 index, bool vs)
+void ShaderManager::SetSunDirection(int idx)
 {
-	XMMATRIX view;
+	/*sunDirs = (CVector*)0xB7CA50;
+	int sunDirIndex = *(int*)0xB79FD0;
+	sunDirs[sunDirIndex];*/
+	_rwD3D9SetPixelShaderConstant(idx, sunDirs, 1);
+}
+
+void ShaderManager::SetViewMatrix(int idx, bool vs)
+{
+	RwMatrix view;
 	RwD3D9GetTransform(D3DTS_VIEW, &view);
 
 	if(vs)
-		VertexShaderConstant::SetMatrix(index, view);
+		_rwD3D9SetVertexShaderConstant(idx, &view, 4);
 	else
-		PixelShaderConstant::SetMatrix(index, view);
+		_rwD3D9SetPixelShaderConstant(idx, &view, 4);
 }
 
-void ShaderManager::SetInverseViewMatrix(RwUInt32 index, bool vs)
+void ShaderManager::SetInverseViewMatrix(int idx, bool vs)
 {
 	XMMATRIX view, inverseView;
 
@@ -49,81 +66,96 @@ void ShaderManager::SetInverseViewMatrix(RwUInt32 index, bool vs)
 	inverseView = XMMatrixInverse(NULL, view);
 
 	if(vs)
-		VertexShaderConstant::SetMatrix(index, inverseView);
+		_rwD3D9SetVertexShaderConstant(idx, &inverseView, 4);
 	else
-		PixelShaderConstant::SetMatrix(index, inverseView);
+		_rwD3D9SetPixelShaderConstant(idx, &inverseView, 4);
 }
 
-void ShaderManager::SetProjectionMatrix(RwUInt32 index, bool vs)
+void ShaderManager::SetInverseProjectionMatrix(int idx, bool vs)
 {
-	XMMATRIX projection;
+	XMMATRIX projection, inverseProjection;
+
+	RwD3D9GetTransform(D3DTS_PROJECTION, &projection);
+	inverseProjection = XMMatrixInverse(NULL, projection);
+
+	if(vs)
+		_rwD3D9SetVertexShaderConstant(idx, &inverseProjection, 4);
+	else
+		_rwD3D9SetPixelShaderConstant(idx, &inverseProjection, 4);
+}
+
+void ShaderManager::SetProjectionMatrix(int idx, bool vs)
+{
+	RwMatrix projection;
 	RwD3D9GetTransform(D3DTS_PROJECTION, &projection);
 
 	if(vs)
-		VertexShaderConstant::SetMatrix(index, projection);
+		_rwD3D9SetVertexShaderConstant(idx, &projection, 4);
 	else
-		PixelShaderConstant::SetMatrix(index, &projection);
+		_rwD3D9SetPixelShaderConstant(idx, &projection, 4);
 }
 
-void ShaderManager::SetViewProjectionMatrix(RwUInt32 startIndex, bool vs)
+void ShaderManager::SetViewProjectionMatrix(int idx, bool vs)
 {
-	XMMATRIX view, projection;
+	RwMatrix view, projection;
 	RwD3D9GetTransform(D3DTS_VIEW, &view);
 	RwD3D9GetTransform(D3DTS_PROJECTION, &projection);
 
 	if(vs)
 	{
-		VertexShaderConstant::SetMatrix(startIndex, view);
-		VertexShaderConstant::SetMatrix(startIndex + 4, projection);
+		_rwD3D9SetVertexShaderConstant(idx, &view, 4); idx += 4;
+		_rwD3D9SetVertexShaderConstant(idx, &projection, 4);
 	}
 	else
 	{
-		VertexShaderConstant::SetMatrix(startIndex, view);
-		VertexShaderConstant::SetMatrix(startIndex + 4, projection);
+		_rwD3D9SetPixelShaderConstant(idx, &view, 4); idx += 4;
+		_rwD3D9SetPixelShaderConstant(idx, &projection, 4);
 	}
 }
 
-void ShaderManager::SetViewProjectionMatrix(RwUInt32 index, XMMATRIX view, XMMATRIX projection)
-{
-	RwD3D9SetTransform(D3DTS_VIEW, &view);
-	RwD3D9SetTransform(D3DTS_PROJECTION, &projection);
+void ShaderManager::SetInverseViewProjectionMatrix()
+{}
 
-	VertexShaderConstant::SetMatrix(index, view);
-	VertexShaderConstant::SetMatrix(index + 4, projection);
+void ShaderManager::SetSunColor(int idx)
+{
+	/*m_sunColor = {
+			 static_cast<float>(CTimeCycle::m_CurrentColours.m_nSunCoreRed) / 255.0f,
+			 static_cast<float>(CTimeCycle::m_CurrentColours.m_nSunCoreGreen) / 255.0f,
+			 static_cast<float>(CTimeCycle::m_CurrentColours.m_nSunCoreBlue) / 255.0f};*/
+	_rwD3D9SetPixelShaderConstant(idx, &m_sunColor, 1);
 }
-
-void ShaderManager::SetSunColor(RwUInt32 index)
+#include "CGameIdle.h"
+void ShaderManager::SetFogParams(int idx)
 {
-	VertexShaderConstant::SetVector(index, &mSunColor);
-}
-
-void ShaderManager::SetFogParams(RwUInt32 index)
-{
-	VertexShaderConstant::SetVector(index, mSettings);
+	/*m_planeData[0] = CTimeCycle::m_CurrentColours.m_fFogStart;
+	m_planeData[1] = Scene.m_pRwCamera->farPlane;
+	m_planeData[3] = 1.0f - (CGame::currArea == 0 ? CGameIdle::m_fShadowDNBalance : 1.0f);*/
+	_rwD3D9SetPixelShaderConstant(idx, m_planeData, 1);
 }
 
 void ShaderManager::Update()
 {
-	auto colourSet = CTimeCycle::m_CurrentColours;
+	m_skyTop = {
+			 static_cast<float>(CTimeCycle::m_CurrentColours.m_nSkyTopRed) / 255.0f,
+			 static_cast<float>(CTimeCycle::m_CurrentColours.m_nSkyTopGreen) / 255.0f,
+			 static_cast<float>(CTimeCycle::m_CurrentColours.m_nSkyTopBlue) / 255.0f};
 
-	mSkyTopColor = {static_cast<float>(colourSet.m_nSkyTopRed) / 255.0f,
-			 static_cast<float>(colourSet.m_nSkyTopGreen) / 255.0f,
-			 static_cast<float>(colourSet.m_nSkyTopBlue) / 255.0f};
+	m_skyBottom = {
+	   static_cast<float>(CTimeCycle::m_CurrentColours.m_nSkyBottomRed) / 255.0f,
+	   static_cast<float>(CTimeCycle::m_CurrentColours.m_nSkyBottomGreen) / 255.0f,
+	   static_cast<float>(CTimeCycle::m_CurrentColours.m_nSkyBottomBlue) / 255.0f};
 
-	mSkytBottomColor = {static_cast<float>(colourSet.m_nSkyBottomRed) / 255.0f,
-	   static_cast<float>(colourSet.m_nSkyBottomGreen) / 255.0f,
-	   static_cast<float>(colourSet.m_nSkyBottomBlue) / 255.0f};
-
-	mSunColor = {static_cast<float>(colourSet.m_nSunCoreRed) / 255.0f,
-		  static_cast<float>(colourSet.m_nSunCoreGreen) / 255.0f,
-		  static_cast<float>(colourSet.m_nSunCoreBlue) / 255.0f};
+	m_sunColor = {
+		  static_cast<float>(CTimeCycle::m_CurrentColours.m_nSunCoreRed) / 255.0f,
+		  static_cast<float>(CTimeCycle::m_CurrentColours.m_nSunCoreGreen) / 255.0f,
+		  static_cast<float>(CTimeCycle::m_CurrentColours.m_nSunCoreBlue) / 255.0f};
 
 	sunDirs = (CVector*)0xB7CA50;
 	int sunDirIndex = *(int*)0xB79FD0;
 	sunDirs[sunDirIndex];
 
-	mSettings[0] = colourSet.m_fFogStart;
-	mSettings[1] = Scene.m_pRwCamera->farPlane;
-	mSettings[2] = 1.0f - (CGame::currArea == 0 ? CGameIdle::m_fShadowDNBalance : 1.0f);
-	mSettings[3] = colourSet.m_fFarClip - colourSet.m_fFogStart;
+	m_planeData[0] = CTimeCycle::m_CurrentColours.m_fFogStart;
+	m_planeData[1] = Scene.m_pRwCamera->farPlane;
+	m_planeData[2] = 1.0f - (CGame::currArea == 0 ? CGameIdle::m_fShadowDNBalance : 1.0f);
+	m_planeData[3] = CTimeCycle::m_CurrentColours.m_fFarClip - CTimeCycle::m_CurrentColours.m_fFogStart;
 }

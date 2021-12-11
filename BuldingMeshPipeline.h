@@ -17,12 +17,15 @@ class BuldingMeshPipeline : virtual public MeshRenderingMode
 	void* VS_waterReflection;
 	void* PS_waterReflection;
 
+	void* mColorVertexShader;
+	void* mColorPixelShader;
+
 	 void ReflectionRendering(RwResEntry* entry, void* object, RwUInt32 flags);
 	 void DeferredRendering(RwResEntry* entry, void* object, RwUInt32 flags);
 	 void ForwardRendering(RwResEntry* entry, void* object, RwUInt32 flags);
 public:
 	RxPipeline* initGraphics();
-	static void hook();
+	static void Hook();
 };
 
 extern BuldingMeshPipeline* BuldingMeshPipe;

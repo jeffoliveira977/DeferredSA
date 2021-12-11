@@ -1,4 +1,5 @@
 #include "CommonD.h"
+#include "Quad.h"
 
 // Screen quad vertex format
 struct ScreenVertex
@@ -13,8 +14,7 @@ struct QuadVertex
 };
 
 IDirect3DVertexDeclaration9* VertexDeclaration;
-IDirect3DIndexBuffer9* IndexBuffer;
-IDirect3DVertexBuffer9* VertexBuffer;
+
 ScreenVertex svQuad[4];
 QuadVertex verts[4] =
 {
@@ -87,34 +87,11 @@ void CreateQuadRender()
 	//memcpy(bufferMem, indices, 6 * sizeof(RwUInt16));
 	//IDirect3DIndexBuffer9_Unlock(IndexBuffer);
 
-	// Create the quad vertex buffer
-	RwD3D9CreateVertexBuffer(sizeof(QuadVertex2), 4 * sizeof(QuadVertex2), (void**)&VertexBuffer, &offset);
-
-
-	FLOAT fWidth = (FLOAT)RsGlobal.maximumWidth - 0.5f;
-	FLOAT fHeight = (FLOAT)RsGlobal.maximumHeight - 0.5f;
-
-	// Copy the vertices
-	QuadVertex2* pVertices = 0;
-	VertexBuffer->Lock(0, 0, (void**)&pVertices, 0);
-	pVertices[0].p = D3DXVECTOR4(0.0f, 0.0f, 0.0f, 1.0f);
-	pVertices[1].p = D3DXVECTOR4(0.0f, fHeight, 0.0f, 1.0f);
-	pVertices[2].p = D3DXVECTOR4(fWidth, 0.0f, 0.0f, 1.0f);
-	pVertices[3].p = D3DXVECTOR4(fWidth, fHeight, 0.0f, 1.0f);
-
-	pVertices[0].t = D3DXVECTOR2(0.0f, 0.0f);
-	pVertices[1].t = D3DXVECTOR2(0.0f, 1.0f);
-	pVertices[2].t = D3DXVECTOR2(1.0f, 0.0f);
-	pVertices[3].t = D3DXVECTOR2(1.0f, 1.0f);
-	VertexBuffer->Unlock();
 }
 
 
 void QuadDestroy()
 {
-	if(VertexBuffer)
-		VertexBuffer->Release();
-	VertexBuffer = NULL;
 
 	/*if(IndexBuffer)
 		IndexBuffer->Release();
@@ -123,11 +100,7 @@ void QuadDestroy()
 
 void QuadRender()
 {
-	// Draw the quad
-	RwD3D9SetStreamSource(0, VertexBuffer, 0, sizeof(QuadVertex2));
-	_rwD3D9SetFVF(FVF_QUADVERTEX);
-	_rwD3D9DrawPrimitive(D3DPT_TRIANGLESTRIP, 0, 2);
-
+	
 	//_rwD3D9SetVertexDeclaration(VertexDeclaration);
 	//_rwD3D9SetIndices(IndexBuffer);
 	//RwD3D9SetStreamSource(0, VertexBuffer, 0, sizeof(QuadVertex));
@@ -168,3 +141,124 @@ void DrawScreenQuad()
 	_rwD3D9SetFVF(D3DFVF_XYZRHW | D3DFVF_TEX1);
 	_rwD3D9DrawPrimitiveUP(D3DPT_TRIANGLESTRIP, 2, svQuad, sizeof(ScreenVertex));
 }
+
+void DrawScreenQuad(float x, float y, float width, float height)
+{
+	struct ScreenVertex
+	{
+		RwV4dTag    p;
+		RwTexCoords t;
+	};
+
+	ScreenVertex svQuad[4];
+	float z = 0.5;
+
+	svQuad[0].p = {x, y, 0.5f, 1.0f};
+	svQuad[0].t = {0.0f, 0.0f};
+
+	svQuad[1].p = {x + width, y, z, 1.0f};
+	svQuad[1].t = {1.0f, 0.0f};
+
+	svQuad[2].p = {x, y + height, z, 1.0f};
+	svQuad[2].t = {0.0f, 1.0f};
+
+	svQuad[3].p = {x + width, y + width, z, 1.0f};
+	svQuad[3].t = {1.0f, 1.0f};
+
+	_rwD3D9SetFVF(D3DFVF_XYZRHW | D3DFVF_TEX1);
+	_rwD3D9DrawPrimitiveUP(D3DPT_TRIANGLESTRIP, 2, svQuad, sizeof(ScreenVertex));
+}
+
+VertexShader* Quad::mVertexShader = nullptr;
+PixelShader* Quad::mPixelShader = nullptr;
+VertexBuffer* Quad::mVertexBuffer = nullptr;
+RwIndexBuffer* Quad::mIndexBuffer = nullptr;
+void* Quad::mVertexDeclQuad = nullptr;
+
+void Quad::Initialize()
+{
+	D3DVERTEXELEMENT9 declaration[] =
+	{
+		{0, 0,  D3DDECLTYPE_FLOAT4,   D3DDECLMETHOD_DEFAULT, D3DDECLUSAGE_POSITION,     0},
+		{0, 16, D3DDECLTYPE_FLOAT2,   D3DDECLMETHOD_DEFAULT, D3DDECLUSAGE_TEXCOORD,     0},
+		D3DDECL_END()
+	};
+
+	RwD3D9CreateVertexDeclaration(declaration, &mVertexDeclQuad);
+
+	mVertexShader = new VertexShader();
+	mVertexShader->CreateFromBinary("QuadVS");
+
+	mPixelShader = new PixelShader();
+	mPixelShader->CreateFromBinary("QuadPS");
+
+	mVertexBuffer = new VertexBuffer();
+	mVertexBuffer->Initialize(4, sizeof(QuadVertex));
+	
+	mIndexBuffer = new RwIndexBuffer();
+	mIndexBuffer->Initialize(6);
+
+	RwUInt32 stride = sizeof(QuadVertex);
+	QuadVertex* bufferMem = nullptr;
+	mVertexBuffer->Map(stride * 4, (void**)&bufferMem);
+	std::copy(verts, verts + 4, bufferMem);
+	mVertexBuffer->Unmap();
+
+	static RwUInt16 indices[] = {0, 1, 2, 2, 3, 0};
+
+	RwUInt16* indexBuffer = nullptr;
+	mIndexBuffer->Map(sizeof(RwUInt16) * 6, (void**)&indexBuffer);
+	std::copy(indices, indices + 6, indexBuffer);
+	mIndexBuffer->Unmap();
+}
+
+void Quad::Release()
+{
+	delete mVertexShader;
+	delete mPixelShader;
+	delete mVertexBuffer;
+	delete mIndexBuffer;
+
+	rwD3D9DeleteVertexDeclaration(mVertexDeclQuad);
+}
+
+void Quad::Render()
+{
+	_rwD3D9SetVertexShader(mVertexShader->GetShader());
+	// _rwD3D9SetPixelShader(mPixelShader->GetShader());
+
+	//RwD3D9SetStreamSource(0, mVertexBuffer->GetBuffer(), 0, sizeof(QuadVertex));
+	// _rwD3D9SetIndices(mIndexBuffer->GetBuffer());
+
+	//_rwD3D9SetVertexDeclaration(mVertexDeclQuad);
+	// _rwD3D9DrawIndexedPrimitive(D3DPT_TRIANGLELIST, 0, 0, 4, 0, 6);
+	//_rwD3D9SetVertexShader(NULL);
+
+	struct ScreenVertex
+	{
+		RwV4dTag    p;
+		RwTexCoords t;
+	};
+	FLOAT fWidth = (FLOAT)RsGlobal.maximumWidth - 0.5f;
+	FLOAT fHeight = (FLOAT)RsGlobal.maximumHeight - 0.5f;
+
+	ScreenVertex svQuad[4];
+	svQuad[0].p = {-0.5f, -0.5f, 0.5f, 1.0f};
+	svQuad[0].t = {0.0f, 0.0f};
+
+	svQuad[1].p = {fWidth, -0.5f, 0.5f, 1.0f};
+	svQuad[1].t = {1.0f, 0.0f};
+
+	svQuad[2].p = {-0.5f, fHeight, 0.5f, 1.0f};
+	svQuad[2].t = {0.0f, 1.0f};
+
+	svQuad[3].p = {fWidth, fHeight, 0.5f, 1.0f};
+	svQuad[3].t = {1.0f, 1.0f};
+
+
+	_rwD3D9SetFVF(D3DFVF_XYZRHW | D3DFVF_TEX1);
+	_rwD3D9DrawPrimitiveUP(D3DPT_TRIANGLESTRIP, 2, svQuad, sizeof(ScreenVertex));
+}
+
+void Quad::Render(float x, float y, float width, float height)
+{}

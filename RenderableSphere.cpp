@@ -43,8 +43,8 @@ void RenderableSphere::Initialize(int slices, int stacks)
 	float thetaStep, theta;
 	RwUInt32 vertexCount, indicesCount;
 
-	phiStep = -2.0f * XM_PI / slices;
-	phiStart = XM_PI / 2.0f;
+	phiStep = -2 * XM_PI / slices;
+	phiStart = XM_PI / 2;
 
 	thetaStep = XM_PI / stacks;
 	theta = thetaStep;
@@ -135,6 +135,7 @@ void RenderableSphere::Initialize(int slices, int stacks)
 	mIndexBuffer->Map(mIndices.size() * sizeof(RwUInt16), (void**)&indexData);
 	std::copy(mIndices.begin(), mIndices.end(), indexData);
 	mIndexBuffer->Unmap();
+
 }
 
 void RenderableSphere::Render()
@@ -188,7 +189,10 @@ void RenderableSphere::SetColor(XMINT4 color)
 		mVertexBuffer->Map(mVertices.size() * sizeof(Vertex), (void**)&vertexData);
 		std::copy(mVertices.begin(), mVertices.end(), vertexData);
 		mVertexBuffer->Unmap();
-
+		RwUInt16* indexData = nullptr;
+		mIndexBuffer->Map(mIndices.size() * sizeof(RwUInt16), (void**)&indexData);
+		std::copy(mIndices.begin(), mIndices.end(), indexData);
+		mIndexBuffer->Unmap();
 		mColor = color;
 	}
 }

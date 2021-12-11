@@ -25,7 +25,7 @@ void CCustomBuildingDNPipeline__Render(RwResEntry* repEntry, void* object,
 	BuldingMeshPipe->RenderCallBack(repEntry, object, type, flags);
 }
 
-void BuldingMeshPipeline::hook()
+void BuldingMeshPipeline::Hook()
 {
 	plugin::patch::RedirectJump(0x5D6750, CCustomBuildingDNPipeline__CreateCustomObjPipe);
 }
@@ -73,6 +73,10 @@ RxPipeline* BuldingMeshPipeline::initGraphics()
 
 			RxD3D9AllInOneSetRenderCallBack(node, CCustomBuildingDNPipeline__Render);
 			
+
+			mColorVertexShader = RwCreateCompiledVertexShader("ColorVS");
+			mColorPixelShader = RwCreateCompiledPixelShader("ColorPS");
+
 			VS_forward           = RwCreateCompiledVertexShader("ForwardBuldingVS");
 			PS_forward           = RwCreateCompiledPixelShader("ForwardBuldingPS");
 			VS_deferred          = RwCreateCompiledVertexShader("DeferredBuldingVS");
@@ -131,8 +135,8 @@ void BuldingMeshPipeline::ReflectionRendering(RwResEntry* entry, void* object, R
 	else if(gRenderState == RenderingStage::stageDualParaboloidMap)
 	{
 		float fog[4];
-		fog[0] = 0.1f;
-		fog[1] = 300.0f;
+		fog[0] = 0.1;
+		fog[1] = 300.0;
 		_rwD3D9SetVertexShaderConstant(12, fog, 1);
 
 		_rwD3D9SetVertexShader(VS_dualParaboloidMap);
@@ -204,7 +208,9 @@ void BuldingMeshPipeline::DeferredRendering(RwResEntry* entry, void* object, RwU
 	RwMatrix* LTM= RwFrameGetLTM(RpAtomicGetFrame(object));
 	XMMATRIX worldMatrix = RwMatrixToXMMATRIX(LTM);
 	_rwD3D9SetVertexShaderConstant(0, &worldMatrix, 4);
-	
+	RwRenderStateSet(rwRENDERSTATESRCBLEND, (void*)5);
+	RwRenderStateSet(rwRENDERSTATEDESTBLEND, (void*)6);
+
 	RwMatrix view;
 	RwD3D9GetTransform(D3DTS_VIEW, &view);
 	_rwD3D9SetPixelShaderConstant(4, &view, 4);
@@ -219,11 +225,13 @@ void BuldingMeshPipeline::DeferredRendering(RwResEntry* entry, void* object, RwU
 		material = instance->material;
 		matcolor = &material->color;
 		texture = material->texture;
-
-		if((instance->vertexAlpha ||
-			matcolor->alpha != 0xFF ||
-			(texture && RwD3D9TextureHasAlpha(texture))) == false)
-		{
+		auto hasAlpha = instance->vertexAlpha || matcolor->alpha != 255|| (texture && RwD3D9TextureHasAlpha(texture));
+		RwRenderStateSet(rwRENDERSTATEVERTEXALPHAENABLE, (void*)TRUE);
+		RwD3D9SetRenderState(D3DRS_ALPHABLENDENABLE, FALSE);
+		//if((/*instance->vertexAlpha ||*/
+		//	matcolor->alpha != 0xFF ||
+		//	(texture && RwD3D9TextureHasAlpha(texture))) == false || instance->vertexAlpha)
+		//{
 			RwRGBAReal colorValue = {1.0, 1.0, 1.0, 1.0};
 			float fSpec = max(CWeather::WetRoads,
 							  CCustomCarEnvMapPipeline__GetFxSpecSpecularity(
@@ -297,13 +305,14 @@ void BuldingMeshPipeline::DeferredRendering(RwResEntry* entry, void* object, RwU
 
 			RwD3DDevice->SetPixelShaderConstantB(0, info, sizeof(info)/4);
 			D3D9Render(header, instance, texture, flags);
-		}
+		//}
 		instance++;
 	}
 }
 
 void BuldingMeshPipeline::ForwardRendering(RwResEntry* entry, void* object, RwUInt32 flags)
 {
+	return;
 	RxD3D9ResEntryHeader* header;
 	RxD3D9InstanceData* instance;
 
@@ -327,8 +336,6 @@ void BuldingMeshPipeline::ForwardRendering(RwResEntry* entry, void* object, RwUI
 	_rwD3D9SetPixelShaderConstant(12, fog, 1);
 	_rwD3D9SetPixelShaderConstant(13, &TheCamera.GetPosition(), 1);
 
-	_rwD3D9SetVertexShader(VS_forward);
-	_rwD3D9SetPixelShader(PS_forward);
 
 	RwRenderStateSet(rwRENDERSTATESRCBLEND, (void*)rwBLENDSRCALPHA);
 	RwRenderStateSet(rwRENDERSTATEDESTBLEND, (void*)rwBLENDINVSRCALPHA);
@@ -362,6 +369,17 @@ void BuldingMeshPipeline::ForwardRendering(RwResEntry* entry, void* object, RwUI
 		matcolor = &material->color;
 		texture = material->texture;
 
+		if(texture)
+		{
+			_rwD3D9SetVertexShader(VS_forward);
+			_rwD3D9SetPixelShader(PS_forward);
+		}
+		else
+		{
+			_rwD3D9SetVertexShader(mColorVertexShader);
+			_rwD3D9SetPixelShader(mColorPixelShader);
+		}
+
 		hasAlpha = material->texture && RwD3D9TextureHasAlpha(material->texture);
 
 		if(hasAlpha)
@@ -369,38 +387,26 @@ void BuldingMeshPipeline::ForwardRendering(RwResEntry* entry, void* object, RwUI
 		else
 			RwRenderStateSet(rwRENDERSTATEALPHATESTFUNCTIONREF, (void*)0);
 
-		if(hasAlpha || instance->vertexAlpha || matcolor->alpha != 255)
+		if(hasAlpha || /*instance->vertexAlpha ||*/ matcolor->alpha != 255)
 		{
 			RwRGBAReal colorValue = {1.0, 1.0, 1.0, 1.0};
+
 			float fSpec = max(CWeather::WetRoads,
 							  CCustomCarEnvMapPipeline__GetFxSpecSpecularity(
 								  material));
 			float fGlossiness = RpMaterialGetFxEnvShininess(material);
+
 			RwV4d materialProps;
 			materialProps.x = fSpec;
 			materialProps.y = fGlossiness;
 			materialProps.z = 1.0f - (CGame::currArea == 0 ? CGameIdle::m_fShadowDNBalance : 1.0f);
 			materialProps.w = 2.2;
 
-			if(material->surfaceProps.ambient > 1.0)
-			{
-				colorValue = {(float)matcolor->red / 255.0f * 16.0f,
-							 (float)matcolor->green / 255.0f * 16.0f,
-							 (float)matcolor->blue / 255.0f * 16.0f, (float)matcolor->alpha / 255.0f};
-			}
-			else
-			{
-				colorValue = {(float)matcolor->red / 255.0f,
-							 (float)matcolor->green / 255.0f,
-							 (float)matcolor->blue / 255.0f, (float)matcolor->alpha / 255.0f};
-			}
-
 			if(flags & rpGEOMETRYLIGHT)
 			{
 				if(flags & rpGEOMETRYMODULATEMATERIALCOLOR)
 				{
-					//RwRGBARealFromRwRGBA(&colorValue, matcolor);
-
+					RwRGBARealFromRwRGBA(&colorValue, matcolor);
 					_rwD3D9SetPixelShaderConstant(14, &colorValue, 1);
 				}
 				else

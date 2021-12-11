@@ -14,7 +14,7 @@ class VehicleMeshPipeline : virtual public MeshRenderingMode
 	void ForwardRendering(RwResEntry* entry, void* object, RwUInt32 flags);
 public:
 	RxPipeline* initGraphics();
-	static void hook();
+	static void Hook();
 };
 
 extern VehicleMeshPipeline* VehicleMeshPipe;

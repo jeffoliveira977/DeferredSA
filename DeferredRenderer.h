@@ -29,7 +29,7 @@ public:
 	void BindFirstPass();
 	void BindLastPass();
 	void RenderPostProcessing();
-	void initGraphicsBuffer();
+	void Initialize();
 
 	void imguiParameters();
 private:
@@ -49,6 +49,9 @@ private:
 	void CascadedShadow();
 	void AtmosphericScattering();
 	void VolumetricLight();
+	void FXAA();
+	void Bloom();
+	void VolumetricClouds();
 };
 
 extern DeferredRendering *DeferredContext;

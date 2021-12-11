@@ -7,7 +7,7 @@ BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpReserved)
     {
         case DLL_PROCESS_ATTACH:
             
-            dllModule = hinstDLL;
+         //   dllModule = hinstDLL;
             Hook();
             break;
 

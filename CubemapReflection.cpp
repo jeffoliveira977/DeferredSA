@@ -188,7 +188,10 @@ void CubemapReflection::RenderScene()
 		RwCameraClear(m_camera, &ambient, rwCAMERACLEARIMAGE | rwCAMERACLEARZ);
 		RwCameraBeginUpdate(m_camera);
 
-		ShaderContext->SetViewProjectionMatrix(4, m_viewMatrix[i], m_projectionMatrix);
+		RwD3D9SetTransform(D3DTS_VIEW, &m_viewMatrix[i]);
+		RwD3D9SetTransform(D3DTS_PROJECTION, &m_projectionMatrix);
+
+		ShaderContext->SetViewProjectionMatrix(4, true);
 
 		for(auto& entity : m_renderableList[i])
 		{

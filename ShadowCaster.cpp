@@ -192,7 +192,6 @@ void ShadowCaster::Update(int x, int y)
     for(int i = -sectorCount; i < sectorCount; i++)
             ScanSectorList( x+i,y+  j);
         
-    
 }
 
 #include "CGame.h"
@@ -250,6 +249,6 @@ void ShadowCaster::Render(int i)
 
         entity->m_bImBeingRendered = false;
     }
-    VisibilityPlugins::RenderWeaponPedsNoMuzzleFlash();
-    // CVisibilityPlugins::RenderWeaponPedsForPC();
+    //VisibilityPlugins::RenderWeaponPedsNoMuzzleFlash();
+     CVisibilityPlugins::RenderWeaponPedsForPC();
 }

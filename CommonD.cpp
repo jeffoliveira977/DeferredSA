@@ -13,6 +13,11 @@ LPDIRECT3DVERTEXDECLARATION9& VertexDeclIm3DOld = *(LPDIRECT3DVERTEXDECLARATION9
 rwIm3DPool *& _rwD3D9ImmPool = *(rwIm3DPool**)0xC9AB30;
 D3DPRIMITIVETYPE* _RwD3D9PrimConv = (D3DPRIMITIVETYPE*)0x88513C;
 
+uint16_t& uiTempBufferIndicesStored = *(uint16_t*)0xC4B954;
+uint16_t& uiTempBufferVerticesStored = *(uint16_t*)0xC4B950;
+RxObjSpace3DVertex(&aTempBufferVertices)[TOTAL_TEMP_BUFFER_VERTICES] = *(RxObjSpace3DVertex(*)[TOTAL_TEMP_BUFFER_VERTICES])0xC4D958;
+RxVertexIndex(&aTempBufferIndices)[TOTAL_TEMP_BUFFER_INDICES] = *(RxVertexIndex(*)[TOTAL_TEMP_BUFFER_INDICES])0xC4B958;
+
 inline bool exists_test0(const std::string& name)
 {
 	ifstream f(name.c_str());
@@ -136,7 +141,7 @@ void* RwCreateCompiledVertexShader(string filename)
 	int length;
 	char* buffer;
 
-	string path = DEFERREDSHADERPATH + filename + ".cso";
+	string path = DEFERREDSHADERPATHBINARY + filename + ".cso";
 	if(!exists_test0(path))
 	{
 		string message = "Failed to load shader: " + filename;
@@ -155,7 +160,7 @@ void* RwCreateCompiledPixelShader(string filename)
 	int length;
 	char* buffer;
 	
-	string path = DEFERREDSHADERPATH + filename + ".cso";
+	string path = DEFERREDSHADERPATHBINARY + filename + ".cso";
 	if(!exists_test0(path))
 	{
 		string message = "Failed to load shader: " + filename;
@@ -168,53 +173,26 @@ void* RwCreateCompiledPixelShader(string filename)
 	return shader;
 }
 
+#include <filesystem>
+
+
 #include <d3dcompiler.h>
 IDirect3DVertexShader9* CreateVertexShader(string path, string profile)
 {
-	if(!exists_test0(path))
-		MessageBox(0, path.c_str(), "Error", MB_OK);
-
 
 	void* shader;
-
-	std::string version;
-	if(std::string::npos == profile.find("VS2"))
-		version = "vs_3_0";
-	else
-		version = "vs_2_0";
-
-	// thanks to LINK/2012 for this
-	HMODULE hMyModule;
-	char shaderPath[MAX_PATH];
-	if(GetModuleHandleEx(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS | GET_MODULE_HANDLE_EX_FLAG_UNCHANGED_REFCOUNT,
-		(LPCTSTR)&CreateVertexShader, &hMyModule))
-	{
-		GetModuleFileName(hMyModule, shaderPath, sizeof(shaderPath));
-		*strrchr(shaderPath, '\\') = '\0';	// remove asi name
-	}
-	else
-		strcpy(shaderPath, ".");
-
-	strcat(shaderPath, string("\\" + path).c_str());	// append shader name
-
-	wchar_t shaderPathWide[MAX_PATH];
-	mbstowcs(shaderPathWide, shaderPath, _countof(shaderPathWide));
-
 	ID3DBlob* vsCodeBlob;
 	ID3DBlob* vsErrorBlob;
 
-	const D3D_SHADER_MACRO defines[] =
-	{
-		"EXAMPLE_DEFINE", "1",
-		NULL, NULL
-	};
-	D3DCompileFromFile(shaderPathWide, NULL, D3D_COMPILE_STANDARD_FILE_INCLUDE, profile.c_str(), version.c_str(), D3DCOMPILE_DEBUG, 0, &vsCodeBlob, &vsErrorBlob);
+	string filepath = DEFERREDSHADERPATH + path + ".hlsl";
+	std::filesystem::path parentPath = std::filesystem::canonical(filepath);
+
+	D3DCompileFromFile(parentPath.c_str(), NULL, D3D_COMPILE_STANDARD_FILE_INCLUDE, profile.c_str(), "vs_3_0", D3DCOMPILE_DEBUG, 0, &vsCodeBlob, &vsErrorBlob);
 
 	if(vsErrorBlob && vsErrorBlob->GetBufferPointer())
 	{
 		MessageBox(0, (char*)vsErrorBlob->GetBufferPointer(), "Error", MB_OK);
 	}
-
 
 	RwD3D9CreateVertexShader((RwUInt32*)vsCodeBlob->GetBufferPointer(), &shader);
 
@@ -223,41 +201,13 @@ IDirect3DVertexShader9* CreateVertexShader(string path, string profile)
 
 IDirect3DPixelShader9* CreatePixelShader(string path, string profile)
 {
-	if(!exists_test0(path))
-		MessageBox(0, path.c_str(), "Error", MB_OK);
-	
 	void* shader;
-
-	std::string version;
-	if(std::string::npos == profile.find("PS2"))
-		version = "ps_3_0";
-	else
-		version = "ps_2_0";
-	// thanks to LINK/2012 for this
-	HMODULE hMyModule;
-	char shaderPath[MAX_PATH];
-	if(GetModuleHandleEx(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS | GET_MODULE_HANDLE_EX_FLAG_UNCHANGED_REFCOUNT,
-		(LPCTSTR)&CreateVertexShader, &hMyModule))
-	{
-		GetModuleFileName(hMyModule, shaderPath, sizeof(shaderPath));
-		*strrchr(shaderPath, '\\') = '\0';	// remove asi name
-	}
-	else
-		strcpy(shaderPath, ".");
-	strcat(shaderPath, string("/" + path).c_str());	// append shader name
-
-
-	wchar_t shaderPathWide[MAX_PATH];
-	mbstowcs(shaderPathWide, shaderPath, _countof(shaderPathWide));
-
 	ID3DBlob* vsCodeBlob;
 	ID3DBlob* vsErrorBlob;
-	const D3D_SHADER_MACRO defines[] =
-	{
-		"EXAMPLE_DEFINE", "1",
-		NULL, NULL
-	};
-	D3DCompileFromFile(shaderPathWide, NULL, D3D_COMPILE_STANDARD_FILE_INCLUDE, profile.c_str(), version.c_str(), D3DCOMPILE_DEBUG, 0, &vsCodeBlob, &vsErrorBlob);
+
+	string filepath = DEFERREDSHADERPATH + path + ".hlsl";
+	std::filesystem::path parentPath = std::filesystem::canonical(filepath);
+	D3DCompileFromFile(parentPath.c_str(), NULL, D3D_COMPILE_STANDARD_FILE_INCLUDE, profile.c_str(), "ps_3_0", D3DCOMPILE_DEBUG, 0, &vsCodeBlob, &vsErrorBlob);
 
 	RwD3D9CreatePixelShader((RwUInt32*)vsCodeBlob->GetBufferPointer(), &shader);
 

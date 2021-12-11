@@ -76,7 +76,7 @@ RxPipeline* VehicleMeshPipeline::initGraphics()
 	return 0;
 }
 
-void VehicleMeshPipeline::hook()
+void VehicleMeshPipeline::Hook()
 {
 	patch::RedirectJump(0x005D9F80, CCustomCarEnvMapPipeline__CreateCustomOpenGLObjPipe);
 }

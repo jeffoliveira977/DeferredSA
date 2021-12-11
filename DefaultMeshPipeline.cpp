@@ -14,7 +14,7 @@ RwBool _rpCreatePlatformAtomicPipelines()
 	return DefaultMeshPipe->initGraphics();
 }
 
-void DefaultMeshPipeline::hook()
+void DefaultMeshPipeline::Hook()
 {
 	patch::RedirectJump(0x74EB80, _rpCreatePlatformAtomicPipelines);
 	patch::RedirectJump(0x757890, D3D9AtomicAllInOnePipelineInit);

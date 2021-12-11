@@ -48,18 +48,6 @@ void RenderableFrustum::InitGraphicsBuffer()
 
 	mVertexShader = RwCreateCompiledVertexShader("Im3dVS");
 	mPixelShader = RwCreateCompiledPixelShader("Im3dPS");
-
-	RwUInt32 numIndices = mIndicesL.size();
-	RwUInt16* indexData = nullptr;
-
-	mIndexBuffer[0]->Map(numIndices * sizeof(RwUInt16), (void**)&indexData);
-	std::copy(mIndicesL.begin(), mIndicesL.end(), indexData);
-	mIndexBuffer[0]->Unmap();
-
-	numIndices = mIndicesT.size();
-	mIndexBuffer[1]->Map(numIndices * sizeof(RwUInt16), (void**)&indexData);
-	std::copy(mIndicesT.begin(), mIndicesT.end(), indexData);
-	mIndexBuffer[1]->Unmap();
 }
 
 void RenderableFrustum::Render(bool ortho)
@@ -91,17 +79,25 @@ void RenderableFrustum::Render(bool ortho)
 	_rwD3D9SetVertexShaderConstant(0, &mWorld, 4);
 	ShaderContext->SetViewProjectionMatrix(4, true);
 
-	Vertex* vertexData = nullptr;
-	RwUInt16* indexData = nullptr;
+	RwUInt32 numIndices = mIndicesL.size();
 
-	{
-		mVertexBuffer->Map(numVertices * sizeof(Vertex), (void**)&vertexData);
-		std::copy(mVertices.begin(), mVertices.end(), vertexData);
-		mVertexBuffer->Unmap();
-		RwD3D9SetStreamSource(0, mVertexBuffer->GetBuffer(), 0, sizeof(Vertex));
-		_rwD3D9SetIndices(mIndexBuffer[0]->GetBuffer());
-		_rwD3D9DrawIndexedPrimitive(D3DPT_LINELIST, 0, 0, numVertices, 0, mIndicesL.size() / 2);
-	}
+	RwUInt16* indexData = nullptr;
+	mIndexBuffer[0]->Map(numIndices * sizeof(RwUInt16), (void**)&indexData);
+	std::copy(mIndicesL.begin(), mIndicesL.end(), indexData);
+	mIndexBuffer[0]->Unmap();
+
+	numIndices = mIndicesT.size();
+	mIndexBuffer[1]->Map(numIndices * sizeof(RwUInt16), (void**)&indexData);
+	std::copy(mIndicesT.begin(), mIndicesT.end(), indexData);
+	mIndexBuffer[1]->Unmap();
+
+	Vertex* vertexData = nullptr;
+	mVertexBuffer->Map(numVertices * sizeof(Vertex), (void**)&vertexData);
+	std::copy(mVertices.begin(), mVertices.end(), vertexData);
+	mVertexBuffer->Unmap();
+	RwD3D9SetStreamSource(0, mVertexBuffer->GetBuffer(), 0, sizeof(Vertex));
+	_rwD3D9SetIndices(mIndexBuffer[0]->GetBuffer());
+	_rwD3D9DrawIndexedPrimitive(D3DPT_LINELIST, 0, 0, numVertices, 0, mIndicesL.size() / 2);
 
 	// Render Filled box
 
@@ -113,14 +109,12 @@ void RenderableFrustum::Render(bool ortho)
 							mColor.x, mColor.y, mColor.z, mColor.w);
 	}
 
-	{
-		mVertexBuffer->Map(numVertices, (void**)&vertexData);
-		std::copy(mVertices.begin(), mVertices.end(), vertexData);
-		mVertexBuffer->Unmap();
-		RwD3D9SetStreamSource(0, mVertexBuffer->GetBuffer(), 0, sizeof(Vertex));
-		_rwD3D9SetIndices(mIndexBuffer[1]->GetBuffer());
-		_rwD3D9DrawIndexedPrimitive(D3DPT_TRIANGLELIST, 0, 0, numVertices, 0, mIndicesT.size() / 3);
-	}
+	mVertexBuffer->Map(numVertices, (void**)&vertexData);
+	std::copy(mVertices.begin(), mVertices.end(), vertexData);
+	mVertexBuffer->Unmap();
+	RwD3D9SetStreamSource(0, mVertexBuffer->GetBuffer(), 0, sizeof(Vertex));
+	_rwD3D9SetIndices(mIndexBuffer[1]->GetBuffer());
+	_rwD3D9DrawIndexedPrimitive(D3DPT_TRIANGLELIST, 0, 0, numVertices, 0, mIndicesT.size() / 3);
 }
 
 void RenderableFrustum::SetProjectionMatrix(XMMATRIX projection, bool ortho)

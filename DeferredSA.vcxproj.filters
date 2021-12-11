@@ -51,6 +51,8 @@
     <ClCompile Include="AABB.cpp" />
     <ClCompile Include="Collider.cpp" />
     <ClCompile Include="VisibilityPlugins.cpp" />
+    <ClCompile Include="ShaderState.cpp" />
+    <ClCompile Include="PixelShaderState.cpp" />
     <ClCompile Include="VertexBuffer.cpp" />
     <ClCompile Include="RwIndexBuffer.cpp" />
     <ClCompile Include="RenderableReflectionObjects.cpp" />
@@ -78,11 +80,14 @@
     <ClCompile Include="DualParaboloidReflection.cpp" />
     <ClCompile Include="RenderableAABB.cpp" />
     <ClCompile Include="RenderableSphere.cpp" />
+    <ClCompile Include="Texture.cpp" />
     <ClCompile Include="PixelShaderConstant.cpp" />
     <ClCompile Include="VertexShaderConstant.cpp" />
-    <ClCompile Include="VertexShader.cpp" />
     <ClCompile Include="PixelShader.cpp" />
-    <ClCompile Include="Texture.cpp" />
+    <ClCompile Include="VertexShader.cpp" />
+    <ClCompile Include="GameHooks.cpp" />
+    <ClCompile Include="ImguiManager.cpp" />
+    <ClCompile Include="IndexBufferManager.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="GTADef.h" />
@@ -112,6 +117,8 @@
     <ClInclude Include="AABB.h" />
     <ClInclude Include="Collider.h" />
     <ClInclude Include="VisibilityPlugins.h" />
+    <ClInclude Include="ShaderState.h" />
+    <ClInclude Include="PixelShaderState.h" />
     <ClInclude Include="VertexBuffer.h" />
     <ClInclude Include="RwIndexBuffer.h" />
     <ClInclude Include="RenderableReflectionObjects.h" />
@@ -139,11 +146,14 @@
     <ClInclude Include="DualParaboloidReflection.h" />
     <ClInclude Include="RenderableAABB.h" />
     <ClInclude Include="RenderableSphere.h" />
+    <ClInclude Include="Texture.h" />
     <ClInclude Include="PixelShaderConstant.h" />
     <ClInclude Include="VertexShaderConstant.h" />
-    <ClInclude Include="VertexShader.h" />
     <ClInclude Include="PixelShader.h" />
-    <ClInclude Include="Texture.h" />
+    <ClInclude Include="VertexShader.h" />
+    <ClInclude Include="GameHooks.h" />
+    <ClInclude Include="ImguiManager.h" />
+    <ClInclude Include="IndexBufferManager.h" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="imgui">
@@ -295,7 +305,40 @@
     <FxCompile Include="shaders\WaterSkinnedMeshReflectionVS.hlsl">
       <Filter>shaders</Filter>
     </FxCompile>
-    <FxCompile Include="shaders\PBR.hlsl">
+    <FxCompile Include="ColorPS.hlsl">
+      <Filter>shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="ColorVS.hlsl">
+      <Filter>shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="QuadVS.hlsl">
+      <Filter>shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="QuadPS.hlsl">
+      <Filter>shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="shaders\FXAA_PS.hlsl">
+      <Filter>shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="shaders\FXAA_VS.hlsl">
+      <Filter>shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="DownFilter4.hlsl">
+      <Filter>shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="BloomCombine.hlsl">
+      <Filter>shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="shaders\VolumetricClouds.hlsl">
+      <Filter>shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="shaders\VolumetricCloudsBlur.hlsl">
+      <Filter>shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="shaders\VolumetricCloudsCombine.hlsl">
+      <Filter>shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="shaders\BloomPS.hlsl">
       <Filter>shaders</Filter>
     </FxCompile>
   </ItemGroup>

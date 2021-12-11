@@ -6,15 +6,23 @@
 
 RwBool _rpD3D9SkinAtomicCreateVertexBuffer(void* object, RxD3D9ResEntryHeader* resEntryHeader)
 {
-    RpAtomic* atomic;
-    RpGeometry* geometry;
+    D3DVERTEXELEMENT9       declaration[20];
+    const RpAtomic* atomic;
+    const RpGeometry* geometry;
+    RpGeometryFlag          flags;
+    RpD3D9GeometryUsageFlag usageFlags;
+    RwUInt32                numTextureCoords;
     RxD3D9VertexStream* vertexStream;
+    RwUInt32                declarationIndex;
     RwUInt32                numMeshes;
     RxD3D9InstanceData* instancedData;
 
-    atomic = (RpAtomic*)object;
-    geometry = RpAtomicGetGeometry(atomic);
+    atomic = (const RpAtomic*)object;
+    geometry = (const RpGeometry*)RpAtomicGetGeometry(atomic);
+    flags = (RpGeometryFlag)RpGeometryGetFlags(geometry);
+    usageFlags = RpD3D9GeometryGetUsageFlags(geometry);
 
+    numTextureCoords = RpGeometryGetNumTexCoordSets(geometry);
     resEntryHeader->totalNumVertex = geometry->numVertices;
     vertexStream = &resEntryHeader->vertexStream[0];
 
@@ -32,22 +40,104 @@ RwBool _rpD3D9SkinAtomicCreateVertexBuffer(void* object, RxD3D9ResEntryHeader* r
         vertexStream->vertexBuffer = NULL;
     }
 
-    D3DVERTEXELEMENT9 declaration[] =
+    declarationIndex = 0;
+
+    declaration[declarationIndex].Stream = 0;
+    declaration[declarationIndex].Offset = vertexStream->stride;
+    declaration[declarationIndex].Type = D3DDECLTYPE_FLOAT3;
+    declaration[declarationIndex].Method = D3DDECLMETHOD_DEFAULT;
+    declaration[declarationIndex].Usage = D3DDECLUSAGE_POSITION;
+    declaration[declarationIndex].UsageIndex = 0;
+    declarationIndex++;
+    vertexStream->stride = sizeof(RwV3d);
+    vertexStream->geometryFlags = rpGEOMETRYLOCKVERTICES;
+
+    /* Normals */
+    if(flags & rxGEOMETRY_NORMALS)
     {
-        {0, 0,  D3DDECLTYPE_FLOAT3,   D3DDECLMETHOD_DEFAULT, D3DDECLUSAGE_POSITION,     0},
-        {0, 12, D3DDECLTYPE_FLOAT2,   D3DDECLMETHOD_DEFAULT, D3DDECLUSAGE_TEXCOORD,     0},
-        {0, 20, D3DDECLTYPE_D3DCOLOR, D3DDECLMETHOD_DEFAULT, D3DDECLUSAGE_COLOR,        0},
-        {0, 24, D3DDECLTYPE_FLOAT3,   D3DDECLMETHOD_DEFAULT, D3DDECLUSAGE_NORMAL,       0},
-        {0, 36, D3DDECLTYPE_FLOAT3,   D3DDECLMETHOD_DEFAULT, D3DDECLUSAGE_BINORMAL,     0},
-        {0, 48, D3DDECLTYPE_FLOAT3,   D3DDECLMETHOD_DEFAULT, D3DDECLUSAGE_TANGENT,      0},
-        {0, 60, D3DDECLTYPE_FLOAT4,   D3DDECLMETHOD_DEFAULT, D3DDECLUSAGE_BLENDWEIGHT,  0},
-        {0, 76, D3DDECLTYPE_UBYTE4,   D3DDECLMETHOD_DEFAULT, D3DDECLUSAGE_BLENDINDICES, 0},
-        D3DDECL_END()
-    };
+        declaration[declarationIndex].Stream = 0;
+        declaration[declarationIndex].Offset = vertexStream->stride;
+        declaration[declarationIndex].Type = D3DDECLTYPE_FLOAT3;
+        declaration[declarationIndex].Method = D3DDECLMETHOD_DEFAULT;
+        declaration[declarationIndex].Usage = D3DDECLUSAGE_NORMAL;
+        declaration[declarationIndex].UsageIndex = 0;
+        declarationIndex++;
+        vertexStream->geometryFlags |= rpGEOMETRYLOCKNORMALS;
+        vertexStream->stride += sizeof(RwV3d);
+    }
 
-    RwD3D9CreateVertexDeclaration(declaration, &(resEntryHeader->vertexDeclaration));
+    /* Pre-lighting */
+    if(flags & rxGEOMETRY_PRELIT)
+    {
+        declaration[declarationIndex].Stream = 0;
+        declaration[declarationIndex].Offset = vertexStream->stride;
+        declaration[declarationIndex].Type = D3DDECLTYPE_D3DCOLOR;
+        declaration[declarationIndex].Method = D3DDECLMETHOD_DEFAULT;
+        declaration[declarationIndex].Usage = D3DDECLUSAGE_COLOR;
+        declaration[declarationIndex].UsageIndex = 0;
+        declarationIndex++;
+        vertexStream->stride += sizeof(RwRGBA);
+        vertexStream->geometryFlags |= rpGEOMETRYLOCKPRELIGHT;
+    }
 
-    vertexStream->stride = 80;
+    /* Texture coordinates */
+    for(RwUInt32 n = 0; n < numTextureCoords; n++)
+    {
+        declaration[declarationIndex].Stream = 0;
+        declaration[declarationIndex].Offset = vertexStream->stride;
+        declaration[declarationIndex].Type = D3DDECLTYPE_FLOAT2;
+        declaration[declarationIndex].Method = D3DDECLMETHOD_DEFAULT;
+        declaration[declarationIndex].Usage = D3DDECLUSAGE_TEXCOORD;
+        declaration[declarationIndex].UsageIndex = n;
+        declarationIndex++;
+        vertexStream->stride += sizeof(RwV2d);
+        vertexStream->geometryFlags |= (rpGEOMETRYLOCKTEXCOORDS1 << n);
+    }
+
+    /* Tangents */
+    //if(flags & rxGEOMETRY_NORMALS/*(usageFlags & rpD3D9GEOMETRYUSAGE_CREATETANGENTS) != 0*/ &&
+    //   numTextureCoords > 0)
+    //{
+    declaration[declarationIndex].Stream = 0;
+    declaration[declarationIndex].Offset = vertexStream->stride;
+    declaration[declarationIndex].Type = D3DDECLTYPE_FLOAT3;
+    declaration[declarationIndex].Method = D3DDECLMETHOD_DEFAULT;
+    declaration[declarationIndex].Usage = D3DDECLUSAGE_TANGENT;
+    declaration[declarationIndex].UsageIndex = 0;
+    declarationIndex++;
+    vertexStream->stride += sizeof(RwV3d);
+    //}
+
+    /* Indices */
+    declaration[declarationIndex].Stream = 0;
+    declaration[declarationIndex].Offset = vertexStream->stride;
+    declaration[declarationIndex].Type = D3DDECLTYPE_UBYTE4;
+    declaration[declarationIndex].Method = D3DDECLMETHOD_DEFAULT;
+    declaration[declarationIndex].Usage = D3DDECLUSAGE_BLENDINDICES;
+    declaration[declarationIndex].UsageIndex = 0;
+    declarationIndex++;
+    vertexStream->stride += sizeof(RwUInt32);
+
+    /* Weight */
+    declaration[declarationIndex].Stream = 0;
+    declaration[declarationIndex].Offset = vertexStream->stride;
+    declaration[declarationIndex].Type = D3DDECLTYPE_FLOAT4;
+    declaration[declarationIndex].Method = D3DDECLMETHOD_DEFAULT;
+    declaration[declarationIndex].Usage = D3DDECLUSAGE_BLENDWEIGHT;
+    declaration[declarationIndex].UsageIndex = 0;
+    declarationIndex++;
+    vertexStream->stride += sizeof(RwV4d);
+
+    /* End of declaration */
+    declaration[declarationIndex].Stream = 0xFF;
+    declaration[declarationIndex].Offset = 0;
+    declaration[declarationIndex].Type = D3DDECLTYPE_UNUSED;
+    declaration[declarationIndex].Method = 0;
+    declaration[declarationIndex].Usage = 0;
+    declaration[declarationIndex].UsageIndex = 0;
+
+    RwD3D9CreateVertexDeclaration(declaration,
+                                  &(resEntryHeader->vertexDeclaration));
 
     vertexStream->managed = TRUE;
     if(FALSE == RwD3D9CreateVertexBuffer(vertexStream->stride,
@@ -72,310 +162,269 @@ RwBool _rpD3D9SkinAtomicCreateVertexBuffer(void* object, RxD3D9ResEntryHeader* r
     }
     while(--numMeshes);
 
-    return TRUE;
 
+    return TRUE;
 }
 
 #include "DefaultPipeline.h"
 
-struct SimpleVertexSkin
-{
-    RwV3d           pos;
-    RwTexCoords     uv;
-    RwRGBA          color;
-    RwV3d           normal;
-    RwV3d           binormal;
-    RwV3d           tangent;
-    RwMatrixWeights weights;
-    RwUInt32        indices;
-};
-
-#define SMALL_FLOAT 1e-12f
-#include "RwMath.h"
-
-void _GenerateNormals(SimpleVertexSkin* verticles, unsigned int vertexCount, RpTriangle* triangles, unsigned int triangleCount, bool isTriStrip)
-{
-    auto fast_abs = [](float x)
-    {
-        return x > 0 ? x : -x;
-    };
-
-    // generate normal for each triangle and vertex in mesh
-    for(RwUInt32 i = 0; i < triangleCount; i++)
-    {
-        auto triangle = triangles[i];
-        bool swapIds = isTriStrip;
-        auto iA = triangle.vertIndex[0], iB = triangle.vertIndex[1], iC = triangle.vertIndex[2];
-
-        if(swapIds && i % 2 == 0)
-        {
-            RwUInt16 t = iC;
-            iC = iB;
-            iB = t;
-        }
-
-        auto vA = verticles[iA],
-            vB = verticles[iB],
-            vC = verticles[iC];
-
-        // tangent vector
-        RwV3d edge1 = {
-            vB.pos.x - vA.pos.x,
-            vB.pos.y - vA.pos.y,
-            vB.pos.z - vA.pos.z
-        };
-
-        // bitangent vector
-        RwV3d edge2 = {
-            vC.pos.x - vA.pos.x,
-            vC.pos.y - vA.pos.y,
-            vC.pos.z - vA.pos.z
-        };
-
-        RwTexCoords tex0 = verticles[iA].uv;
-        RwTexCoords tex1 = verticles[iB].uv;
-        RwTexCoords tex2 = verticles[iC].uv;
-
-        RwV2d uv1 = {tex1.u - tex0.u, tex1.v - tex0.v};
-        RwV2d uv2 = {tex2.u - tex0.u, tex2.v - tex0.v};
-        float diff = (uv1.x * uv2.y - uv1.y * uv2.x);
-
-        RW::V3d edge01, edge02, cp;
-        edge01 = {edge1.x, uv1.x, uv1.y};
-        edge02 = {edge2.x, uv2.x, uv2.y};
-        cp = edge01.cross(edge02);
-
-        if((RwReal)fast_abs(cp.getX()) > SMALL_FLOAT)
-        {
-            const RwReal invcpx = 1.f / cp.getX();
-            verticles[iA].tangent.x += -cp.getY() * invcpx;
-            verticles[iB].tangent.x += -cp.getY() * invcpx;
-            verticles[iC].tangent.x += -cp.getY() * invcpx;
-        }
-
-        /* y, s, t */
-        edge01 = {edge1.y, uv1.x, uv1.y};
-        edge02 = {edge2.y, uv2.x, uv2.y};
-
-        cp = edge01.cross(edge02);
-        if((RwReal)fast_abs(cp.getX()) > SMALL_FLOAT)
-        {
-            const RwReal invcpx = 1.f / cp.getX();
-            verticles[iA].tangent.y += -cp.getY() * invcpx;
-            verticles[iB].tangent.y += -cp.getY() * invcpx;
-            verticles[iC].tangent.y += -cp.getY() * invcpx;
-        }
-
-        /* z, s, t */
-        edge01 = {edge1.z, uv1.x, uv1.y};
-        edge02 = {edge2.z, uv2.x, uv2.y};
-
-        cp = edge01.cross(edge02);
-        if((RwReal)fast_abs(cp.getX()) > SMALL_FLOAT)
-        {
-            const RwReal invcpx = 1.f / cp.getX();
-            verticles[iA].tangent.z += -cp.getY() * invcpx;
-            verticles[iB].tangent.z += -cp.getY() * invcpx;
-            verticles[iC].tangent.z += -cp.getY() * invcpx;
-        }
-
-        RwV3d normal = {(edge1.y * edge2.z - edge1.z * edge2.y),
-                        (edge1.z * edge2.x - edge1.x * edge2.z),
-                        (edge1.x * edge2.y - edge1.y * edge2.x)};
-
-        // increase normals of each vertex in triangle 
-        verticles[iA].normal = {
-            verticles[iA].normal.x + normal.x,
-            verticles[iA].normal.y + normal.y,
-            verticles[iA].normal.z + normal.z
-        };
-        verticles[iB].normal = {
-            verticles[iB].normal.x + normal.x,
-            verticles[iB].normal.y + normal.y,
-            verticles[iB].normal.z + normal.z
-        };
-        verticles[iC].normal = {
-            verticles[iC].normal.x + normal.x,
-            verticles[iC].normal.y + normal.y,
-            verticles[iC].normal.z + normal.z
-        };
-    }
-
-    for(RwUInt32 i = 0; i < vertexCount; i++)
-    {
-        RwReal length = sqrt(verticles[i].normal.x * verticles[i].normal.x +
-                             verticles[i].normal.y * verticles[i].normal.y +
-                             verticles[i].normal.z * verticles[i].normal.z);
-        if(length > 0.001f)
-            verticles[i].normal = {verticles[i].normal.x / length,
-                                   verticles[i].normal.y / length,
-                                   verticles[i].normal.z / length};
-        RW::V3d t = verticles[i].tangent;
-        t.normalize();
-      
-        verticles[i].tangent = t.getRWVector();
-        verticles[i].binormal = t.cross(verticles[i].normal).getRWVector();
-    }
-}
-
-void _GenerateTangentsOnly(SimpleVertexSkin* verticles,
-                                                 unsigned int  vertexCount,
-                                                 RpTriangle* triangles,
-                                                 unsigned int  triangleCount,
-                                                 bool          isTriStrip)
-{
-    // generate normal for each triangle and vertex in mesh
-    for(RwUInt32 i = 0; i < triangleCount; i++)
-    {
-        auto triangle = triangles[i];
-        bool swapIds = isTriStrip;
-        auto iA = triangle.vertIndex[0], iB = triangle.vertIndex[1],
-            iC = triangle.vertIndex[2];
-
-        if(swapIds && i % 2 == 0)
-        {
-            RwUInt16 t = iC;
-            iC = iB;
-            iB = t;
-        }
-
-        auto vA = verticles[iA], vB = verticles[iB], vC = verticles[iC];
-        // tangent vector
-        RwV3d edge1 = {vB.pos.x - vA.pos.x, vB.pos.y - vA.pos.y,
-                       vB.pos.z - vA.pos.z};
-
-        // bitangent vector
-        RwV3d edge2 = {vC.pos.x - vA.pos.x, vC.pos.y - vA.pos.y,
-                       vC.pos.z - vA.pos.z};
-
-        RwTexCoords tex0 = verticles[iA].uv;
-        RwTexCoords tex1 = verticles[iB].uv;
-        RwTexCoords tex2 = verticles[iC].uv;
-
-        RwV2d uv1 = {tex1.u - tex0.u, tex1.v - tex0.v};
-        RwV2d uv2 = {tex2.u - tex0.u, tex2.v - tex0.v};
-        float diff = (uv1.x * uv2.y - uv1.y * uv2.x);
-        if(diff < 0.00001F && diff > -0.00001F)
-            continue;
-
-        float r = 1.0f / diff;
-
-        RwV3d tangent{((edge1.x * uv2.y) - (edge2.x * uv1.y)) * r,
-                      ((edge1.y * uv2.y) - (edge2.y * uv1.y)) * r,
-                      ((edge1.z * uv2.y) - (edge2.z * uv1.y)) * r};
-
-        RwV3d bitangent{((edge2.x * uv1.x) - (edge1.x * uv2.x)) * r,
-                        ((edge2.y * uv1.x) - (edge1.y * uv2.x)) * r,
-                        ((edge2.z * uv1.x) - (edge1.z * uv2.x)) * r};
-
-        verticles[iA].tangent = {verticles[iA].tangent.x + tangent.x,
-                                 verticles[iA].tangent.y + tangent.y,
-                                 verticles[iA].tangent.z + tangent.z};
-        verticles[iB].tangent = {verticles[iB].tangent.x + tangent.x,
-                                 verticles[iB].tangent.y + tangent.y,
-                                 verticles[iB].tangent.z + tangent.z};
-        verticles[iC].tangent = {verticles[iC].tangent.x + tangent.x,
-                                 verticles[iC].tangent.y + tangent.y,
-                                 verticles[iC].tangent.z + tangent.z};
-
-        verticles[iA].binormal = {verticles[iA].binormal.x + bitangent.x,
-                                   verticles[iA].binormal.y + bitangent.y,
-                                   verticles[iA].binormal.z + bitangent.z};
-        verticles[iB].binormal = {verticles[iB].binormal.x + bitangent.x,
-                                   verticles[iB].binormal.y + bitangent.y,
-                                   verticles[iB].binormal.z + bitangent.z};
-        verticles[iC].binormal = {verticles[iC].binormal.x + bitangent.x,
-                                   verticles[iC].binormal.y + bitangent.y,
-                                   verticles[iC].binormal.z + bitangent.z};
-    }
-    // normalize normals
-    for(RwUInt32 i = 0; i < vertexCount; i++)
-    {
-        RW::V3d n = verticles[i].normal;
-        RW::V3d t = verticles[i].tangent;
-        RW::V3d b = verticles[i].binormal;
-
-        // make tangent orthoganal to normal
-        t = t - n * n.dot(t);
-        t.normalize();
-
-        if(n.cross(t).dot(b) < 0.0f)
-        {
-            t = t * -1.0f;
-        }
-        verticles[i].tangent = {t.getX(), t.getY(), t.getZ()};
-    }
-}
-
-void RemapIndices(RwUInt32* dst, RwUInt32* mem, RwUInt8* remap)
-{
-    RwUInt8* dstPosition = reinterpret_cast<RwUInt8*>(dst);
-    RwUInt8* src = reinterpret_cast<RwUInt8*>(mem);
-
-    dstPosition[0] = remap[src[0]];
-    dstPosition[1] = remap[src[1]];
-    dstPosition[2] = remap[src[2]];
-    dstPosition[3] = remap[src[3]];
-}
-
 RwBool _rpD3D9SkinGeometryReinstance(void* object, RxD3D9ResEntryHeader* resEntryHeader, RwUInt32 lockedSinceLastInst)
 {
+
+    D3DVERTEXELEMENT9       declaration[20];
     const RpAtomic* atomic;
     const RpGeometry* geometry;
+    RpGeometryFlag          flags;
+    RpD3D9GeometryUsageFlag usageFlags;
+    RwUInt32                numTextureCoords;
     RxD3D9VertexStream* vertexStream;
-
+    RwUInt32                numStreams, stream;
     RwUInt32                vbSize;
-    SimpleVertexSkin* lockedVertexBuffer;
+    RwUInt8* lockedVertexBuffer;
+    RwUInt32                declarationIndex, n;
 
+    RwUInt32                numMeshes;
+    RxD3D9InstanceData* instancedData;
     RpSkin* skin;
 
     atomic = (const RpAtomic*)object;
     skin = rpSkinGeometryGetSkin(atomic->geometry);
     geometry = (const RpGeometry*)RpAtomicGetGeometry(atomic);
+    flags = (RpGeometryFlag)RpGeometryGetFlags(geometry);
+    usageFlags = RpD3D9GeometryGetUsageFlags(geometry);
+    numTextureCoords = RpGeometryGetNumTexCoordSets(geometry);
+
+    IDirect3DVertexDeclaration9_GetDeclaration((LPDIRECT3DVERTEXDECLARATION9)resEntryHeader->vertexDeclaration,
+                                               declaration,
+                                               &n);
 
     lockedVertexBuffer = NULL;
-    vertexStream = &resEntryHeader->vertexStream[0];
+    vertexStream = &(resEntryHeader->vertexStream[0]);
 
-    vbSize = vertexStream->stride * resEntryHeader->totalNumVertex;
-
-    IDirect3DVertexBuffer9* vertexBuffer = reinterpret_cast<IDirect3DVertexBuffer9*>(vertexStream->vertexBuffer);
-
-    vertexBuffer->Lock(vertexStream->offset, vbSize, (void**)&lockedVertexBuffer, D3DLOCK_NOSYSLOCK);
-
-    std::vector<RwUInt8> remap(resEntryHeader->totalNumVertex);
-    for(RwUInt8 i = 0; i < static_cast<RwUInt8>(rpSkinGetNumBones(skin)); i++)
-        remap[i] = i;
-
-    std::unique_ptr<SimpleVertexSkin> vertexData(new SimpleVertexSkin[resEntryHeader->totalNumVertex]);
-
-    bool hasNormals = geometry->morphTarget[0].normals != nullptr,
-        hasTexCoords = geometry->texCoords[0] != nullptr,
-        hasColors = geometry->preLitLum && geometry->flags & rpGEOMETRYPRELIT;
-
-    for(RwUInt32 i = 0; i < resEntryHeader->totalNumVertex; i++)
+    if(rpGEOMETRYLOCKALL == lockedSinceLastInst ||
+        (lockedSinceLastInst & vertexStream->geometryFlags) != 0)
     {
-        vertexData.get()[i].pos = geometry->morphTarget[0].verts[i];
-        vertexData.get()[i].uv = hasTexCoords ? geometry->texCoords[0][i] : RwTexCoords{0, 0};
-        vertexData.get()[i].color = hasColors ? geometry->preLitLum[i] : RwRGBA{255, 255, 255, 255};
-        vertexData.get()[i].normal = (hasNormals &&
-                                      geometry->morphTarget[0].normals[i].x != NAN &&
-                                      geometry->morphTarget[0].normals[i].y != NAN &&
-                                      geometry->morphTarget[0].normals[i].z != NAN) ? geometry->morphTarget[0].normals[i] : RwV3d{0.0f, 1.0f, 0.0f};
-        vertexData.get()[i].binormal = RwV3d{0.0f, 0.0f, -1.0f};
-        vertexData.get()[i].tangent = RwV3d{1.0f, 0.0f, 0.0f};
-        vertexData.get()[i].weights = skin->vertexBoneWeights[i];
-        RemapIndices(&vertexData.get()[i].indices, &skin->vertexBoneIndices[i], remap.data());
+        vbSize = vertexStream->stride * (resEntryHeader->totalNumVertex);
+
+        IDirect3DVertexBuffer9_Lock((LPDIRECT3DVERTEXBUFFER9)vertexStream->vertexBuffer,
+                                    vertexStream->offset, vbSize, (void**)&(lockedVertexBuffer),
+                                    D3DLOCK_NOSYSLOCK);
     }
 
-    if(!hasNormals)
-        _GenerateNormals(vertexData.get(), resEntryHeader->totalNumVertex, geometry->triangles, geometry->numTriangles, false);
-    else
-        _GenerateTangentsOnly(vertexData.get(), resEntryHeader->totalNumVertex,
-                              geometry->triangles, geometry->numTriangles, false);
+    declarationIndex = 0;
 
+    /* Positions */
+    if(lockedSinceLastInst & rpGEOMETRYLOCKVERTICES)
+    {
+        const RwV3d* pos;
 
-    std::copy(vertexData.get(), vertexData.get() + resEntryHeader->totalNumVertex, lockedVertexBuffer);
-    vertexBuffer->Unlock();
+        pos = geometry->morphTarget[0].verts;
+
+        /* Find positions */
+        declarationIndex = 0;
+        while(declaration[declarationIndex].Usage != D3DDECLUSAGE_POSITION ||
+              declaration[declarationIndex].UsageIndex != 0)
+        {
+            declarationIndex++;
+        }
+
+        _rpD3D9VertexDeclarationInstV3d(declaration[declarationIndex].Type,
+                                        lockedVertexBuffer +
+                                        declaration[declarationIndex].Offset,
+                                        pos,
+                                        resEntryHeader->totalNumVertex,
+                                        vertexStream->stride);
+    }
+
+    /* Indices and Weight */
+    if(skin && skin->useVS
+       && (lockedSinceLastInst & rpGEOMETRYLOCKALL))
+    {
+
+        /* Find Weight */
+        declarationIndex = 0;
+        while(declaration[declarationIndex].Usage != D3DDECLUSAGE_BLENDWEIGHT ||
+              declaration[declarationIndex].UsageIndex != 0)
+        {
+            declarationIndex++;
+        }
+
+        RwUInt32 n = 0;
+
+        if(rpSkinGetMeshBoneRLECount(skin) > 0)
+            MessageBox(0, "BoneRLE not implemented", "error", MB_OK | MB_ICONERROR);
+
+        _rpD3D9VertexDeclarationInstWeights(declaration[declarationIndex].Type,
+                                            lockedVertexBuffer +
+                                            declaration[declarationIndex].Offset,
+                                            (RwV4d*)rpSkinGetVertexBoneWeights(skin),
+                                            resEntryHeader->totalNumVertex,
+                                            vertexStream->stride);
+        /* Find Indices */
+        declarationIndex = 0;
+        while(declaration[declarationIndex].Usage != D3DDECLUSAGE_BLENDINDICES ||
+              declaration[declarationIndex].UsageIndex != 0)
+        {
+            declarationIndex++;
+        }
+
+        RwUInt8 remapIndices[252];
+        memset(remapIndices, 0, sizeof(remapIndices));
+
+        for(RwUInt8 i = 0; i < rpSkinGetNumBones(skin); i++)
+            remapIndices[i] = i;
+
+        _rpD3D9VertexDeclarationInstIndicesRemap(declaration[declarationIndex].Type,
+                                                 lockedVertexBuffer +
+                                                 declaration[declarationIndex].Offset,
+                                                 rpSkinGetVertexBoneIndices(skin),
+                                                 remapIndices,
+                                                 resEntryHeader->totalNumVertex,
+                                                 vertexStream->stride);
+    }
+
+    /* Normals */
+    if(flags & rxGEOMETRY_NORMALS)
+    {
+        if(lockedSinceLastInst & rpGEOMETRYLOCKNORMALS)
+        {
+            RwV3d* pos;
+            RwV3d* normal;
+            RwTexCoords* texCoord;
+
+            pos = geometry->morphTarget[0].verts;
+            normal = geometry->morphTarget[0].normals;
+
+            texCoord = (RwTexCoords*)(geometry->texCoords[numTextureCoords - 1]);
+            //_rpD3D9VertexDeclarationInstNormal(pos, normal, texCoord, resEntryHeader);
+
+            /* Find normals */
+            declarationIndex = 0;
+            while(declaration[declarationIndex].Usage != D3DDECLUSAGE_NORMAL ||
+                  declaration[declarationIndex].UsageIndex != 0)
+            {
+                declarationIndex++;
+            }
+
+            _rpD3D9VertexDeclarationInstV3d(declaration[declarationIndex].Type,
+                                            lockedVertexBuffer +
+                                            declaration[declarationIndex].Offset,
+                                            normal,
+                                            resEntryHeader->totalNumVertex,
+                                            vertexStream->stride);
+        }
+    }
+
+    /* Pre-lighting */
+    if(flags & rxGEOMETRY_PRELIT)
+    {
+        if(lockedSinceLastInst & rpGEOMETRYLOCKPRELIGHT)
+        {
+            RwRGBA* color;
+            RwRGBA defaultColor;
+            RwUInt32 stride;
+
+            /* Find prelit */
+            declarationIndex = 0;
+            while(declaration[declarationIndex].Usage != D3DDECLUSAGE_COLOR ||
+                  declaration[declarationIndex].UsageIndex != 0)
+            {
+                declarationIndex++;
+            }
+
+            defaultColor = {255, 255, 255, 255};
+            color = (RwRGBA*)geometry->preLitLum ? geometry->preLitLum : &defaultColor;
+
+            stride = vertexStream->stride;
+
+            numMeshes = resEntryHeader->numMeshes;
+            instancedData = (RxD3D9InstanceData*)(resEntryHeader + 1);
+
+            do
+            {
+                instancedData->vertexAlpha = _rpD3D9VertexDeclarationInstColor(lockedVertexBuffer +
+                                                                               declaration[declarationIndex].Offset +
+                                                                               ((instancedData->minVert) * stride),
+                                                                               color + instancedData->minVert,
+                                                                               instancedData->numVertices,
+                                                                               stride);
+
+                instancedData++;
+            }
+            while(--numMeshes);
+        }
+    }
+
+    /* Texture coordinates */
+    if(numTextureCoords)
+    {
+        RwUInt32 i;
+
+        if(lockedSinceLastInst & rpGEOMETRYLOCKTEXCOORDSALL)
+        {
+            const RwV2d* texCoord;
+
+            for(i = 0; i < numTextureCoords; i++)
+            {
+                if(lockedSinceLastInst & (rpGEOMETRYLOCKTEXCOORDS1 << i))
+                {
+                    texCoord = (const RwV2d*)(geometry->texCoords[i]);
+
+                    /* Find tex coords */
+                    declarationIndex = 0;
+                    while(declaration[declarationIndex].Usage != D3DDECLUSAGE_TEXCOORD ||
+                          declaration[declarationIndex].UsageIndex != i)
+                    {
+                        declarationIndex++;
+                    }
+
+                    _rpD3D9VertexDeclarationInstV2d(declaration[declarationIndex].Type,
+                                                    lockedVertexBuffer +
+                                                    declaration[declarationIndex].Offset,
+                                                    texCoord,
+                                                    resEntryHeader->totalNumVertex,
+                                                    vertexStream->stride);
+                }
+            }
+        }
+    }
+
+    /* Tangents */
+    //if(flags & rxGEOMETRY_NORMALS/*(usageFlags & rpD3D9GEOMETRYUSAGE_CREATETANGENTS) != 0 */ &&
+    //   numTextureCoords > 0)
+    //{
+    if(lockedSinceLastInst & (rpGEOMETRYLOCKVERTICES | rpGEOMETRYLOCKTEXCOORDSALL))
+    {
+        const RwV3d* pos;
+        const RwV3d* normal;
+        const RwTexCoords* texCoord;
+
+        /* Find tangents */
+        declarationIndex = 0;
+        while(declaration[declarationIndex].Usage != D3DDECLUSAGE_TANGENT ||
+              declaration[declarationIndex].UsageIndex != 0)
+        {
+            declarationIndex++;
+        }
+
+        pos = geometry->morphTarget[0].verts;
+        normal = geometry->morphTarget[0].normals;
+        texCoord = geometry->texCoords[numTextureCoords - 1];
+
+        _rpD3D9VertexDeclarationInstTangent(declaration[declarationIndex].Type,
+                                            lockedVertexBuffer +
+                                            declaration[declarationIndex].Offset,
+                                            pos,
+                                            texCoord,
+                                            resEntryHeader,
+                                            vertexStream->stride);
+    }
+    //}
+
+    if(lockedVertexBuffer != NULL)
+    {
+        IDirect3DVertexBuffer9_Unlock((LPDIRECT3DVERTEXBUFFER9)resEntryHeader->vertexStream[0].vertexBuffer);
+    }
 
     return TRUE;
 }
@@ -384,7 +433,6 @@ D3DPRIMITIVETYPE* _RwD3D9SkinPrimConvTable = (D3DPRIMITIVETYPE*)0x882D74;
 
 RwResEntry* _rxD3D9SkinInstance(RpAtomic* atomic, void* owner, RwResEntry** resEntryPointer, RpMeshHeader* meshHeader)
 {
-    
     RxD3D9ResEntryHeader* resEntryHeader;
     RxD3D9InstanceData* instancedData;
     RwResEntry* resEntry;
@@ -591,14 +639,12 @@ RwResEntry* _rxD3D9SkinInstance(RpAtomic* atomic, void* owner, RwResEntry** resE
     }
 
     _rpD3D9SkinGeometryReinstance(atomic, resEntryHeader, rpGEOMETRYLOCKALL);
-   
+
     return resEntry;
 }
 
 RwBool _rwSkinD3D9AtomicAllInOneNode(RxPipelineNodeInstance* self, const RxPipelineNodeParam* params)
 {
-    CPerfTimer tim("t");
-    tim.Start();
     RpAtomic* atomic;
     RpGeometry* geometry;
     RwResEntry* resEntry;
@@ -677,13 +723,9 @@ RwBool _rwSkinD3D9AtomicAllInOneNode(RxPipelineNodeInstance* self, const RxPipel
     atomic->interpolator.flags &= ~rpINTERPOLATORDIRTYINSTANCE;
 
     SkinnedMeshPipe->RenderCallBack(geometry->repEntry, atomic, rpATOMIC, rxGEOMETRY_TEXTURED2 | rxGEOMETRY_TEXTURED);
-    tim.Stop();
-
-    PrintMessage("%s", tim.GetTimerResult().c_str());
 
     return TRUE;
 }
-
 
 //RxNodeDefinition* RxNodeDefinitionGetD3D9SkinAtomicAllInOne()
 //{

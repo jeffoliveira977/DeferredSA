@@ -84,114 +84,12 @@ void RenderReflection(void)
  }
 
 
-
-int& CRenderer__ms_nNoOfVisibleEntities = *(int*)0xB76844;
-CVector& CRenderer__ms_vecCameraPosition = *(CVector*)0xB76870;
-CEntity**& CRenderer__ms_aVisibleEntityPtrs = *(CEntity***)(0x553526 + 3); //0xB75898;	// [1000]
-CEntity**& CRenderer__ms_aVisibleLodPtrs = *(CEntity***)(0x5534F2 + 3); //0xB748F8;		// [1000]
-int& CRenderer__ms_nNoOfVisibleLods = *(int*)0xB76840;
-
 #include "CVisibilityPlugins.h"
 #include "CObjectInfo.h"
-using tAlphaRenderOrderedListCB = void(__cdecl*)(CEntity * entity, float distance);
-CLinkList<CVisibilityPlugins::AlphaObjectInfo>& m_alphaList = *(CLinkList<CVisibilityPlugins::AlphaObjectInfo>*)0xC88070;
-CLinkList<CVisibilityPlugins::AlphaObjectInfo>& m_alphaBoatAtomicList = *(CLinkList<CVisibilityPlugins::AlphaObjectInfo>*)0xC880C8;
-CLinkList<CVisibilityPlugins::AlphaObjectInfo>& m_alphaEntityList = *(CLinkList<CVisibilityPlugins::AlphaObjectInfo>*)0xC88120;
-CLinkList<CVisibilityPlugins::AlphaObjectInfo>& m_alphaUnderwaterEntityList = *(CLinkList<CVisibilityPlugins::AlphaObjectInfo>*)0xC88178;
-CLinkList<CVisibilityPlugins::AlphaObjectInfo>& m_alphaReallyDrawLastList = *(CLinkList<CVisibilityPlugins::AlphaObjectInfo>*)0xC881D0;
-
-void CVisibilityPlugins__RenderFadingUnderwaterEntities()
-{
-	/*for(auto i = m_alphaUnderwaterEntityList.usedListTail.prev; i != &m_alphaUnderwaterEntityList.usedListHead; i = i->prev)
-	{
-		auto type = ((CEntity*)i->data.m_pAtomic)->m_nType;
-		if(type == ENTITY_TYPE_PED && ObjectType.peds ||
-		   type == ENTITY_TYPE_VEHICLE && ObjectType.vehicles||
-		   type == ENTITY_TYPE_BUILDING && ObjectType.buldings ||
-		   type == ENTITY_TYPE_OBJECT && ObjectType.objects)
-		{
-			auto callBack = reinterpret_cast<tAlphaRenderOrderedListCB>(i->data.m_pCallback);
-			callBack((CEntity*)i->data.m_pAtomic, i->data.m_fAlpha);
-		}
-	}*/
-}
-
-void CVisibilityPlugins__RenderFadingInBuildings(void)
-{
-	/*for(auto i = m_alphaEntityList.usedListTail.prev; i != &m_alphaEntityList.usedListHead; i = i->prev)
-	{
-		auto type = ((CEntity*)i->data.m_pAtomic)->m_nType;
-		if(type == ENTITY_TYPE_PED && ObjectType.peds ||
-		   type == ENTITY_TYPE_VEHICLE && ObjectType.vehicles ||
-		   type == ENTITY_TYPE_BUILDING && ObjectType.buldings ||
-		   type == ENTITY_TYPE_OBJECT && ObjectType.objects)
-		{
-			auto callBack = reinterpret_cast<tAlphaRenderOrderedListCB>(i->data.m_pCallback);
-			callBack((CEntity*)i->data.m_pAtomic, i->data.m_fAlpha);
-		}
-	}*/
-}
 
 #include <game_sa\CVehicleModelInfo.h>
 #include <game_sa\CModelInfo.h>
 
-bool gbCulled;
-void CRenderer_RenderRoadsAndBuildings(void)
-{
-	ObjectType.buldings = true;
-	ObjectType.vehicles = true;
-	ObjectType.objects = true;
-	ObjectType.peds = true;
-	/*DefinedState();
-
-	CClouds__Render();
-	CCoronas__RenderReflections();
-	CCoronas__Render();
-	CClouds__RenderBottomFromHeight();
-	CWeather__RenderRainStreaks();
-	CCoronas__RenderSunReflection();*/
-
-	RwRenderStateSet(rwRENDERSTATECULLMODE, (void*)2);
-
-	gbCulled = true;
-	for(int i = 0; i < CRenderer__ms_nNoOfVisibleEntities; i++)
-	{
-		CEntity* e = CRenderer__ms_aVisibleEntityPtrs[i];
-		int type = e->m_nType;
-		if((type == ENTITY_TYPE_PED && ObjectType.peds) ||
-		  ( type == ENTITY_TYPE_VEHICLE && ObjectType.vehicles) ||
-		   (type == ENTITY_TYPE_BUILDING && ObjectType.buldings) ||
-		   (type == ENTITY_TYPE_OBJECT && ObjectType.objects))
-		{
-			//if(reinterpret_cast<CBaseModelInfo*>(CModelInfo::ms_modelInfoPtrs[e->m_nModelIndex])->nSpecialType)
-			// CRenderer__RenderOneRoad(e);
-			//else
-				Renderer::RenderOneNonRoad(e);
-		}
-	}
-
-	for(int i = 0; i < CRenderer__ms_nNoOfVisibleLods; i++)
-	{
-		CEntity* e = CRenderer__ms_aVisibleLodPtrs[i];
-		int type = e->m_nType;
-		if((type == ENTITY_TYPE_PED && ObjectType.peds) ||
-			(type == ENTITY_TYPE_VEHICLE && ObjectType.vehicles) ||
-		   (type == ENTITY_TYPE_BUILDING && ObjectType.buldings) ||
-		   (type == ENTITY_TYPE_OBJECT && ObjectType.objects))
-		{
-			Renderer::RenderOneNonRoad(CRenderer__ms_aVisibleLodPtrs[i]);
-		}
-	}
-
-	RwRenderStateSet(rwRENDERSTATEFOGENABLE, (void*)TRUE);
-	RwRenderStateSet(rwRENDERSTATEVERTEXALPHAENABLE, (void*)TRUE);
-	RwRenderStateSet(rwRENDERSTATECULLMODE, (void*)3);
-
-	CVisibilityPlugins__RenderFadingInBuildings();
-	CVisibilityPlugins__RenderFadingUnderwaterEntities();
-
-	CVisibilityPlugins__RenderWeaponPedsForPC();
-}
 
 void RenderForward()
 {
@@ -263,8 +161,8 @@ void RenderDeferred()
 	CRenderer::RenderFadingInEntities();
 
 	BreakManager_c__Render(g_breakMan, 1);
-	//CVisibilityPlugins__RenderWeaponPedsForPC();
-	VisibilityPlugins::RenderWeaponPedsNoMuzzleFlash();
+	CVisibilityPlugins__RenderWeaponPedsForPC();
+	//VisibilityPlugins::RenderWeaponPedsNoMuzzleFlash();
 }
 
 float CGameIdle::m_fShadowDNBalance=1.0;
@@ -296,7 +194,9 @@ void CGameIdle::UpdateShadowDNBalance()
 		m_fShadowDNBalance = 1.0;
 	else
 		m_fShadowDNBalance = 1.0f - (1140.0f - currentMinutes) / 60.0f;
+
 }
+
 #include "ShaderManager.h"
 #include "SoftParticles.h"
 
@@ -313,7 +213,7 @@ void CGameIdle::RenderScene(){
 
 	RwD3D9RenderStateReset();
 	DefinedState();
-	RenderForward();
+
 	//
 
 	{
@@ -325,7 +225,9 @@ void CGameIdle::RenderScene(){
 	gRenderState = stageForward;
 	RwD3D9RenderStateReset();
 	DefinedState();
+
 	RenderDeferred();
+
 	sub_707F40();
 	RenderStaticShadows();
 	RenderStoredShadows();
@@ -334,7 +236,10 @@ void CGameIdle::RenderScene(){
 	DefinedState();
 	
 	CWaterLevel::SetupWaterShader(); 
-	//DeferredContext->RenderPostProcessing();
+	CPlantMgr__Render();
+	DefinedState();
+	RenderForward();
+	DeferredContext->RenderPostProcessing();
 	//SoftParticlesContext->SetupParams();
 }
 

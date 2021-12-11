@@ -160,14 +160,18 @@ void DualParaboloidReflection::RenderScene()
 	RwCameraSetRaster(m_camera, m_raster[0]);
 	RwCameraClear(m_camera, &ambient, rwCAMERACLEARIMAGE | rwCAMERACLEARZ);
 	RwCameraBeginUpdate(m_camera);
-	ShaderContext->SetViewProjectionMatrix(4, m_viewMatrix[0], m_projectionMatrix);
+	RwD3D9SetTransform(D3DTS_VIEW, &m_viewMatrix[0]);
+	RwD3D9SetTransform(D3DTS_PROJECTION, &m_projectionMatrix);
+	ShaderContext->SetViewProjectionMatrix(4, true);
 	RenderEntities(0);	
 	RwCameraEndUpdate(m_camera);
 
 	RwCameraSetRaster(m_camera, m_raster[1]);
 	RwCameraClear(m_camera, &ambient, rwCAMERACLEARIMAGE | rwCAMERACLEARZ);
 	RwCameraBeginUpdate(m_camera);
-	ShaderContext->SetViewProjectionMatrix(4, m_viewMatrix[1], m_projectionMatrix);
+	RwD3D9SetTransform(D3DTS_VIEW, &m_viewMatrix[1]);
+	RwD3D9SetTransform(D3DTS_PROJECTION, &m_projectionMatrix);
+	ShaderContext->SetViewProjectionMatrix(4, true);
 	RenderEntities(1);
 	RwCameraEndUpdate(m_camera);
 }
