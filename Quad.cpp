@@ -210,6 +210,12 @@ void Quad::Initialize()
 	mIndexBuffer->Initialize(6);
 
 
+	static RwUInt16 indices[] = {0, 1, 2, 2, 3, 0};
+
+	RwUInt16* indexBuffer = nullptr;
+	mIndexBuffer->Map(sizeof(RwUInt16) * 6, (void**)&indexBuffer);
+	std::copy(indices, indices + 6, indexBuffer);
+	mIndexBuffer->Unmap();
 }
 
 void Quad::Release()
@@ -230,12 +236,6 @@ void Quad::Render()
 	std::copy(verts, verts + 4, bufferMem);
 	mVertexBuffer->Unmap();
 
-	static RwUInt16 indices[] = {0, 1, 2, 2, 3, 0};
-
-	RwUInt16* indexBuffer = nullptr;
-	mIndexBuffer->Map(sizeof(RwUInt16) * 6, (void**)&indexBuffer);
-	std::copy(indices, indices + 6, indexBuffer);
-	mIndexBuffer->Unmap();
 	_rwD3D9SetVertexShader(mVertexShader->GetShader());
 	// _rwD3D9SetPixelShader(mPixelShader->GetShader());
 

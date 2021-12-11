@@ -213,7 +213,7 @@ void DeferredRendering::BindLastPass()
 
 	AtmosphericScattering();
 	VolumetricClouds();
-
+	//VolumetricLight();
 	_rwD3D9SetPixelShader(NULL);
 	_rwD3D9SetVertexShader(NULL);
 }
@@ -230,7 +230,7 @@ void DeferredRendering::RenderPostProcessing()
 	ShaderContext->SetProjectionMatrix(4);
 	// VolumetricLight();
 
-	//FXAA();
+	FXAA();
 	//Bloom();
 
 }
