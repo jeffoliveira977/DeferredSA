@@ -1,7 +1,7 @@
 #include "Utilities.hlsl"
 
-sampler2D txScreen : register(s0);
-sampler2D txVolumetric : register(s1);
+sampler2D txScreen : register(s4);
+sampler2D txVolumetric : register(s5);
 
 float4 FogData : register(c12);
 
@@ -24,7 +24,7 @@ float4 main(float4 pos : POSITION, float2 tex : TEXCOORD0) : COLOR
         for (float a = 0.0; a < 6.27; a += 1.57)
         {
             float2 vec = float2(cos(a), sin(a)) * r;
-            float2 samp_point = tex + vec / float2(1 / 1920.0f, 1 / 1080.0f);
+            float2 samp_point = tex + vec / float2( 1920.0f,  1080.0f);
             float4 samp_color = tex2D(txScreen, samp_point);
             if (samp_color.a > 0.0f)
             {
@@ -44,7 +44,7 @@ float4 main(float4 pos : POSITION, float2 tex : TEXCOORD0) : COLOR
         }
         else if (res_vec.z > 0.0)
         {
-            res_vec.xy = normalize(res_vec.xy) * r / float2(1 / 1920.0f, 1 / 1080.0f);
+            res_vec.xy = normalize(res_vec.xy) * r / float2( 1920.0f,  1080.0f);
             clouds = tex2D(txVolumetric, tex + res_vec.xy);
         }
     }

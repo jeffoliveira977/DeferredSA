@@ -11,7 +11,7 @@ VSOUTPUT_BLUR main(float4 inPosition : POSITION, float2 inTexCoord : TEXCOORD0)
     VSOUTPUT_BLUR OUT = (VSOUTPUT_BLUR) 0;
 
 	// Output the position
-    OUT.vPosition = inPosition;
+    OUT.vPosition = float4(inPosition.xyz, 1.0);
 
 	// Output the texture coordinates
     OUT.vTexCoord = inTexCoord;

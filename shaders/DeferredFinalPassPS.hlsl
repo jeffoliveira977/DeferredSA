@@ -52,7 +52,53 @@ float4 SphereEnvMap(float3 normal, float3 viewDir)
     
     return tex2D(SphericMapSampler, R.xy);
 }
+//Variables
+static float SunSize = { 0.1 };
+static float SunStrength = { 0.21 };
+static float SunSpread = { 11.33 };
+static float SunSpreadSmoothness = { 0.0 };
+static float SunSetHeight = { 0.14 };
+static float SunSetSpread = { 1.0 };
+static float SunSetSpreadSmoothness = { 0.37 };
 
+static float SkyTransitionAng = 0.17;
+static float SkySmoothness = 0.32;
+
+static float3 S_D = { 1, 1, 1 };
+static float3 S_S = { 1, 0.482, 0.325 };
+static float3 ST_D = { 0.22, 0.431, 0.643 };
+static float3 ST_N = { 0.0275, 0.0863, 0.145 };
+static float3 ST_S = { 0.0353, 0.408, 0.671 };
+static float3 SB_D = { 0.82, 0.937, 1 };
+static float3 SB_N = { 0.212, 0.153, 0.133 };
+static float3 SB_S = { 0.541, 0.459, 0.4 };
+
+//just a simple one
+float4 sky(const in float3 cam_dir, float moonLight, float tf)
+{
+    
+    float
+		noon_index = smoothstep(-0.1, 0.25, tf),
+		sunset_index = smoothstep(0.4, 0.15, tf) * smoothstep(-0.26, -0.05, tf),
+		suncross = dot(SunColor.xyz, cam_dir);
+
+    float3
+        top = lerp(lerp(ST_N, ST_D, noon_index), ST_S, sunset_index),
+        bottom = lerp(lerp(SB_N, SB_D, noon_index), SB_S, sunset_index),
+        sun = lerp(S_S, S_D, noon_index),
+        c = lerp(bottom, top, smoothstep(SkyTransitionAng - SkySmoothness, SkyTransitionAng + SkySmoothness, cam_dir.z));
+
+    if (-SunSize / 1000.0 < suncross - 1)
+        c = sun * suncross * SunStrength * 3.0;
+    else
+    {
+        c += cam_dir.z * sun * exp((suncross - 1.0) / SunSpread) * SunStrength / 2.0;
+        c += sunset_index * sun * exp((suncross - 1.0) / SunSetSpread) * SunStrength * smoothstep(SunSetHeight + SunSetSpreadSmoothness, SunSetHeight - SunSetSpreadSmoothness, cam_dir.z) * smoothstep(-0.2, 0.1, cam_dir.z);
+    }
+    c += sun * exp((suncross - 1.0) / SunSpread * 500.0) * SunStrength;
+    
+    return float4(c, 1.0);
+}
 float4 main(float2 texCoord : TEXCOORD0, float2 vpos:VPOS) : COLOR
 {
     float3 outColor;
@@ -126,8 +172,8 @@ float4 main(float2 texCoord : TEXCOORD0, float2 vpos:VPOS) : COLOR
         return float4(outColor, 1);
     }
     
-
-    
+    //float ti = SunColor.z;
+    //return sky(normalize(worldPosition), 0.0, ti);
     return float4(outColor, 0);
 }
 

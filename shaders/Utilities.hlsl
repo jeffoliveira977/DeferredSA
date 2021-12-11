@@ -241,7 +241,7 @@ inline void DecodeDepthNormal(float2 texCoord, float farPlane, out float depth, 
     float4 depthNormal = TEXTURE2D_DEPTHNORMAL(texCoord);
     normal = TwoChannelNormalX2(depthNormal.xy);
     depth = DecodeFloatRG(depthNormal.zw, farPlane);
-    depth = depth <= 0 ? farPlane : depth;
+    depth = depth <= 0.0 ? farPlane : depth;
 }
 
 inline float4 EncodeDepthNormal(float depth, float3 normal)

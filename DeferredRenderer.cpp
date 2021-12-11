@@ -132,15 +132,16 @@ void DeferredRendering::Initialize()
 	m_graphicsBuffer[3] = RwD3D9RasterCreate(width, height, D3DFMT_A16B16G16R16F, rwRASTERTYPECAMERATEXTURE);
 
 	//mCloudTexture = RwD3D9DDSTextureRead("DeferredSA/textures/cloud", nullptr);
-	mWeatherexture = RwD3D9DDSTextureRead("DeferredSA/textures/weather", nullptr);
+	//mWeatherexture = RwD3D9DDSTextureRead("DeferredSA/textures/weather", nullptr);
 	//mWorleyexture = RwD3D9DDSTextureRead("DeferredSA/textures/worley", nullptr);
 	//if(mCloudTexture ==nullptr)
-	//	MessageBox(0, "failed", "Error", MB_OK);
+	//	throw std::system_error(std::error_code(static_cast<int>(GetLastError()), std::system_category()), "MultiByteToWideChar");
 
-	HRESULT hr;
-	hr= D3DXCreateTextureFromFileA(RwD3DDevice, "DeferredSA/textures/cloud.dds", &g_CLOUDTEX);
-	hr= D3DXCreateTextureFromFileA(RwD3DDevice, "DeferredSA/textures/worley.dds", &g_WORLEYTEX);
-	if(FAILED(hr))
+	//HRESULT hr;
+	//hr= D3DXCreateTextureFromFileA(RwD3DDevice, "DeferredSA/textures/cloud.dds", &g_CLOUDTEX);
+	//hr= D3DXCreateTextureFromFileA(RwD3DDevice, "DeferredSA/textures/worley.dds", &g_WORLEYTEX);
+	mWorleyexture = LoadTextureFromFile("DeferredSA/textures/distribution.png");
+	if(mWorleyexture == nullptr)
 	MessageBox(0, "failed", "Error", MB_OK);
 
 	mVolumetricCloudRaster = RwD3D9RasterCreate(width, height, D3DFMT_A16B16G16R16F, rwRASTERTYPECAMERATEXTURE);
@@ -189,7 +190,7 @@ void DeferredRendering::BindLastPass()
 	_rwD3D9RWSetRasterStage(m_shadowScreenRaster, 5);
 
 	// Only use pixel shader
-	_rwD3D9SetVertexShader(NULL);
+	_rwD3D9SetVertexShader(mGaussianBlurVertexShader);
 
 	// We need to disable Z buffer
 	RwRenderStateSet(rwRENDERSTATEZWRITEENABLE, FALSE);
@@ -205,15 +206,14 @@ void DeferredRendering::BindLastPass()
 	DirectLight();
 	PointAndSpotLight();
 
-	
 
 	// Restore render target and draw light to final raster
 	RwD3D9RestoreRenderTargets(4);
 	FinalPass();
 
 	AtmosphericScattering();
-	VolumetricLight();
-	//VolumetricClouds();
+	VolumetricClouds();
+
 	_rwD3D9SetPixelShader(NULL);
 	_rwD3D9SetVertexShader(NULL);
 }
@@ -230,9 +230,9 @@ void DeferredRendering::RenderPostProcessing()
 	ShaderContext->SetProjectionMatrix(4);
 	// VolumetricLight();
 
-	FXAA();
-	Bloom();
-	// VolumetricClouds();
+	//FXAA();
+	//Bloom();
+
 }
 
 void DeferredRendering::DirectLight()
@@ -444,14 +444,21 @@ void DeferredRendering::Bloom()
 	DrawScreenQuad();
 
 }
+static float VolumeBox_top = 550.0f;
+static float VolumeBox_bottom = 440.0f;
+static float BodyTop = 800.0f;
+static float BodyMiddle = 450.0f;
+static float BodyBottom = 300.0f;
+static float BodyThickness = 0.05f;
 
+static float Atomesphere_Distance = 200.0f;
+static float Atomesphere_Smoothness = 6000.0f;
+static float Atomesphere[3] = {-5.92f, -5.32f, 3.81f};
+
+static float cloud_shift[3] = {10.0f, 10.0f, 10.0f};
+#include "CTimer.h"
 void DeferredRendering::VolumetricClouds()
 {
-	RwRenderStateSet(rwRENDERSTATEZWRITEENABLE, (void*)TRUE);
-	RwRenderStateSet(rwRENDERSTATEZTESTENABLE, (void*)TRUE);
-	RwRenderStateSet(rwRENDERSTATECULLMODE, (void*)rwCULLMODECULLNONE);
-	RwD3D9SetRenderState(D3DRS_ALPHATESTENABLE, TRUE);
-	RwD3D9SetRenderState(D3DRS_ALPHABLENDENABLE, TRUE);
 	IDirect3DSurface9* screenSurface;
 	auto screenExt = RASTEREXTFROMRASTER(m_screenRaster);
 	screenExt->texture->GetSurfaceLevel(0, &screenSurface);
@@ -474,30 +481,60 @@ void DeferredRendering::VolumetricClouds()
 	   static_cast<float>(CTimeCycle::m_CurrentColours.m_fPostFx2Green) / 255.0f,
 	   static_cast<float>(CTimeCycle::m_CurrentColours.m_fPostFx2Blue) / 255.0f};
 	_rwD3D9SetPixelShaderConstant(11, &m_skyBottom, 1);
-	float mSettings[2];
-	mSettings[0] = CTimeCycle::m_CurrentColours.m_fFogStart;
-	mSettings[1] = CTimeCycle::m_CurrentColours.m_fFarClip;
-	_rwD3D9SetPixelShaderConstant(12, &mSettings, 1);
+	ShaderContext->SetFogParams(12);
 
-	float ti = (float)CTimer__m_snTimeInMilliseconds;
-	ti = ti / 1000.0;
+	static float ti = 0.0f;
+	constexpr auto time_interval = 1.0f / (0.0005f) * 3000.0f;
+	if(ti < time_interval)
+		ti += CTimer::ms_fTimeStep;
+	else
+		ti = ti -
+		time_interval + CTimer::ms_fTimeStep;
+
 	_rwD3D9SetPixelShaderConstant(13, &ti, 1);
 
-	//ShaderContext->SetFogParams(11);
+	_rwD3D9SetPixelShaderConstant(14, &VolumeBox_top, 1);
+	_rwD3D9SetPixelShaderConstant(15, &VolumeBox_bottom, 1);
+	_rwD3D9SetPixelShaderConstant(16, &BodyTop, 1);
+	_rwD3D9SetPixelShaderConstant(17, &BodyMiddle, 1);
+	_rwD3D9SetPixelShaderConstant(18, &BodyBottom, 1);
+	_rwD3D9SetPixelShaderConstant(19, &BodyThickness, 1);
 
-	for(size_t i = 0; i < 3; i++)
-	{
-		rwD3D9SetSamplerState(i, D3DSAMP_MINFILTER, D3DTEXF_LINEAR);
-		rwD3D9SetSamplerState(i, D3DSAMP_MAGFILTER, D3DTEXF_LINEAR);
-		rwD3D9SetSamplerState(i, D3DSAMP_MIPFILTER, D3DTEXF_LINEAR);
-		rwD3D9SetSamplerState(i, D3DSAMP_ADDRESSU, D3DTADDRESS_WRAP);
-		rwD3D9SetSamplerState(i, D3DSAMP_ADDRESSV, D3DTADDRESS_WRAP);
-	}
+	_rwD3D9SetPixelShaderConstant(20, &Atomesphere_Distance, 1);
+	_rwD3D9SetPixelShaderConstant(21, &Atomesphere_Smoothness, 1);
+	_rwD3D9SetPixelShaderConstant(22, Atomesphere, 1);
 
-	_rwD3D9SetPixelShader(mVolumetricCloudsPixelShader);
-	rwD3D9RWSetRasterStage(m_graphicsBuffer[1], 2);
-	RwD3D9SetRenderTarget(0, mVolumetricCloudRaster);
-	DrawScreenQuad();
+	_rwD3D9SetPixelShaderConstant(23, cloud_shift, 1);
+
+	rwD3D9SetSamplerState(2, D3DSAMP_MINFILTER, D3DTEXF_LINEAR);
+	rwD3D9SetSamplerState(2, D3DSAMP_MAGFILTER, D3DTEXF_LINEAR);
+	rwD3D9SetSamplerState(2, D3DSAMP_MIPFILTER, D3DTEXF_LINEAR);
+	rwD3D9SetSamplerState(2, D3DSAMP_ADDRESSU, D3DTADDRESS_WRAP);
+	rwD3D9SetSamplerState(2, D3DSAMP_ADDRESSV, D3DTADDRESS_WRAP);
+	rwD3D9SetSamplerState(2, D3DSAMP_ADDRESSW, D3DTADDRESS_WRAP);
+
+	rwD3D9SetSamplerState(4, D3DSAMP_MINFILTER, D3DTEXF_LINEAR);
+	rwD3D9SetSamplerState(4, D3DSAMP_MAGFILTER, D3DTEXF_LINEAR);
+	rwD3D9SetSamplerState(4, D3DSAMP_MIPFILTER, D3DTEXF_LINEAR);
+	rwD3D9SetSamplerState(4, D3DSAMP_ADDRESSU, D3DTADDRESS_CLAMP);
+	rwD3D9SetSamplerState(4, D3DSAMP_ADDRESSV, D3DTADDRESS_CLAMP);
+	rwD3D9SetSamplerState(4, D3DSAMP_MAXMIPLEVEL, 16);
+
+	rwD3D9SetSamplerState(5, D3DSAMP_MINFILTER, D3DTEXF_LINEAR);
+	rwD3D9SetSamplerState(5, D3DSAMP_MAGFILTER, D3DTEXF_LINEAR);
+	rwD3D9SetSamplerState(5, D3DSAMP_MIPFILTER, D3DTEXF_LINEAR);
+	rwD3D9SetSamplerState(5, D3DSAMP_ADDRESSU, D3DTADDRESS_WRAP);
+	rwD3D9SetSamplerState(5, D3DSAMP_ADDRESSV, D3DTADDRESS_WRAP);
+	rwD3D9SetSamplerState(5, D3DSAMP_ADDRESSW, D3DTADDRESS_WRAP);
+	rwD3D9SetSamplerState(5, D3DSAMP_SRGBTEXTURE, FALSE);
+	rwD3D9SetSamplerState(5, D3DSAMP_MAXMIPLEVEL, 16);
+	rwD3D9SetSamplerState(5, D3DSAMP_MIPMAPLODBIAS, 0);
+	_rwD3D9SetVertexShader(mGaussianBlurVertexShader);
+
+	//_rwD3D9SetPixelShader(mVolumetricCloudsPixelShader);
+	//rwD3D9RWSetRasterStage(m_graphicsBuffer[1], 2);
+	//RwD3D9SetRenderTarget(0, mVolumetricCloudRaster);
+	//DrawScreenQuad();
 
 	//_rwD3D9SetPixelShader(mVolumetricCloudsBlurPixelShader);
 	//rwD3D9RWSetRasterStage(mVolumetricCloudRaster, 0);
@@ -505,13 +542,14 @@ void DeferredRendering::VolumetricClouds()
 	//RwD3D9SetRenderTarget(0, mVolumetricCloudBlurRaster);
 	//DrawScreenQuad();
 
-	_rwD3D9SetPixelShader(mVolumetricCloudsCombinePixelShader);
-	rwD3D9RWSetRasterStage(m_graphicsLight, 0);
-	rwD3D9RWSetRasterStage(mVolumetricCloudRaster, 1);
+	_rwD3D9SetPixelShader(mVolumetricCloudsPixelShader);
+	rwD3D9RWSetRasterStage(m_screenRaster, 4);
+	RwD3D9SetTexture(mWorleyexture, 5);
 	__rwD3D9SetRenderTarget(0, RwD3D9RenderSurface);
-	DrawScreenQuad();
-
+	Quad::Render();
 }
+
+
 
 #include "imgui.h"
 void DeferredRendering::imguiParameters()
@@ -522,6 +560,24 @@ void DeferredRendering::imguiParameters()
 		ImGui::InputFloat("RaymarchingDistance", &VolumetricLightParam[0], 0.1, 1.0, "%.1f");
 		ImGui::InputFloat("SunlightBlendOffset", &VolumetricLightParam[1], 0.01, 0.1, "%.6f");
 		ImGui::InputFloat("SunlightIntensity", &VolumetricLightParam[2], 0.01, 0.1, "%.3f");
+	}
+
+	if(ImGui::BeginTabItem("Cloud"))
+	{
+		ImGui::EndTabItem();
+		ImGui::InputFloat("VolumeBox_top", &VolumeBox_top, 2.0, 100.0);
+		ImGui::InputFloat("VolumeBox_bottom", &VolumeBox_bottom, 2, 100.0);
+
+		ImGui::InputFloat("Atomesphere_Distance", &Atomesphere_Distance, 100.0, 200.0);
+		ImGui::InputFloat("Atomesphere_Smoothness", &Atomesphere_Smoothness, 100, 200.0);
+		ImGui::InputFloat3("Atomesphere_Smoothness", Atomesphere, "%.1f");
+
+		ImGui::InputFloat3("cloud_shift", cloud_shift, "%.1f");
+
+		ImGui::InputFloat("BodyTop", &BodyTop,2.0, 100.0);
+		ImGui::InputFloat("BodyMiddle", &BodyMiddle, 2, 100.0);
+		ImGui::InputFloat("BodyBottom", &BodyBottom, 2.0, 100.0);
+		ImGui::InputFloat("BodyThickness", &BodyThickness, 0.01, 0.1, "%.1f");
 	}
 }
 
