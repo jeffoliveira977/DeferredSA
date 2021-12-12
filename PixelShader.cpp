@@ -38,7 +38,7 @@ void PixelShader::CreateFromFile(string file, string profile)
 	ID3DBlob* vsErrorBlob;
 
 	std::filesystem::path parentPath = std::filesystem::canonical(path);
-	D3DCompileFromFile(parentPath.c_str(), NULL, D3D_COMPILE_STANDARD_FILE_INCLUDE, profile.c_str(), "ps_3_0", D3DCOMPILE_DEBUG, 0, &vsCodeBlob, &vsErrorBlob);
+	D3DCompileFromFile(parentPath.c_str(), NULL, D3D_COMPILE_STANDARD_FILE_INCLUDE, profile.c_str(), "ps_3_0", NULL, 0, &vsCodeBlob, &vsErrorBlob);
 	
 	if(vsErrorBlob && vsErrorBlob->GetBufferPointer())
 	{
@@ -50,7 +50,7 @@ void PixelShader::CreateFromFile(string file, string profile)
 	vsCodeBlob->Release();
 }
 
-void* PixelShader::GetShader()
+void* PixelShader::GetObject()
 {
     return mPixelShader;
 }

@@ -367,8 +367,8 @@ void DrawWater()
     RwD3D9SetStreamSource(0, CWaterLevel::mVertexBuffer->GetBuffer(), 0, stride);
     _rwD3D9SetIndices(CWaterLevel::mIndexBuffer->GetBuffer());
 
-    _rwD3D9SetVertexShader(pWaterVSCode->GetShader());
-    _rwD3D9SetPixelShader(pWaterPSCode->GetShader());
+    _rwD3D9SetVertexShader(pWaterVSCode->GetObject());
+    _rwD3D9SetPixelShader(pWaterPSCode->GetObject());
 
     //RwD3D9SetSamplerState(2, D3DSAMP_MAGFILTER, D3DTEXF_LINEAR);
     //RwD3D9SetSamplerState(2, D3DSAMP_MINFILTER, D3DTEXF_LINEAR);

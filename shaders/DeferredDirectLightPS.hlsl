@@ -66,7 +66,7 @@ float4 main(float2 texCoord : TEXCOORD0, float2 vpos:VPOS) : COLOR
     float3 Radiance = tex2D(RadianceSampler, texCoord);
     
     float2 Lighting = float2(DiffuseTerm, SpecularTerm * SpecIntensity) * (ShadowDNBalance <= 0.0 ? 1.0 : Shadow);
-    color = float4(Lighting.x * sunColor.rgb + Radiance * saturate(1.0f - ShadowDNBalance + 0.2f), Lighting.y);
+    color = float4(Lighting.x * sunColor.rgb + 0.6 + Radiance * saturate(1.0f - ShadowDNBalance + 0.2f), Lighting.y);
     
     return color;
 }

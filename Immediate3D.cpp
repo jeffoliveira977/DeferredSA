@@ -123,8 +123,8 @@ RwBool Immediate3D::Render(RxPipelineNodeInstance* self, const RxPipelineNodePar
 
         _rwD3D9SetVertexDeclaration(VertexDeclIm3DOld);
 
-        _rwD3D9SetVertexShader(mVertexShader->GetShader());
-        _rwD3D9SetPixelShader(mPixelShader->GetShader());
+        _rwD3D9SetVertexShader(mVertexShader->GetObject());
+        _rwD3D9SetPixelShader(mPixelShader->GetObject());
  
         primitiveType = _RwD3D9PrimConv[stash->primType];
    

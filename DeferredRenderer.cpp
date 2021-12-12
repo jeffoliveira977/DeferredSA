@@ -11,6 +11,8 @@
 #include "CGame.h"
 #include "CGameIdle.h"
 #include <DirectXMath.h>
+#include "ShaderConstant.h"
+#include "VolumetricClouds.h"
 
 RenderingStage gRenderState;
 DeferredRendering *DeferredContext;
@@ -29,6 +31,7 @@ DeferredRendering::DeferredRendering()
 	PS_PointAndSpotLight = nullptr;
 	PS_TargetLight       = nullptr;
 	PS_ShadowScreen      = nullptr;
+	mVolumetricClouds = nullptr;
 }
 
 DeferredRendering::~DeferredRendering()
@@ -44,6 +47,8 @@ DeferredRendering::~DeferredRendering()
 	RwD3D9DeletePixelShader(PS_PointAndSpotLight);
 	RwD3D9DeletePixelShader(PS_TargetLight);
 	RwD3D9DeletePixelShader(PS_ShadowScreen);
+
+	delete mVolumetricClouds;;
 }
 
 float VolumetricLightParam[3];
@@ -106,10 +111,6 @@ void DeferredRendering::Initialize()
 	mDownFilter4PixelShader = RwCreateCompiledPixelShader("DownFilter4");
 	mBloomCombinePixelShader = RwCreateCompiledPixelShader("BloomCombine");
 
-	mVolumetricCloudsPixelShader = RwCreateCompiledPixelShader("VolumetricClouds");
-	mVolumetricCloudsBlurPixelShader = RwCreateCompiledPixelShader("VolumetricCloudsBlur");
-	mVolumetricCloudsCombinePixelShader = RwCreateCompiledPixelShader("VolumetricCloudsCombine");
-
 	int width, height;
 	width = RsGlobal.maximumWidth;
 	height = RsGlobal.maximumHeight;
@@ -131,22 +132,12 @@ void DeferredRendering::Initialize()
 	m_graphicsBuffer[2] = RwD3D9RasterCreate(width, height, D3DFMT_A16B16G16R16F, rwRASTERTYPECAMERATEXTURE);
 	m_graphicsBuffer[3] = RwD3D9RasterCreate(width, height, D3DFMT_A16B16G16R16F, rwRASTERTYPECAMERATEXTURE);
 
-	//mCloudTexture = RwD3D9DDSTextureRead("DeferredSA/textures/cloud", nullptr);
-	//mWeatherexture = RwD3D9DDSTextureRead("DeferredSA/textures/weather", nullptr);
-	//mWorleyexture = RwD3D9DDSTextureRead("DeferredSA/textures/worley", nullptr);
-	//if(mCloudTexture ==nullptr)
-	//	throw std::system_error(std::error_code(static_cast<int>(GetLastError()), std::system_category()), "MultiByteToWideChar");
 
-	//HRESULT hr;
-	//hr= D3DXCreateTextureFromFileA(RwD3DDevice, "DeferredSA/textures/cloud.dds", &g_CLOUDTEX);
-	//hr= D3DXCreateTextureFromFileA(RwD3DDevice, "DeferredSA/textures/worley.dds", &g_WORLEYTEX);
-	mWorleyexture = LoadTextureFromFile("DeferredSA/textures/distribution.png");
-	if(mWorleyexture == nullptr)
-	MessageBox(0, "failed", "Error", MB_OK);
+	mVolumetricClouds = new VolumetricClouds();
+	mVolumetricClouds->Initialize();
 
-	mVolumetricCloudRaster = RwD3D9RasterCreate(width, height, D3DFMT_A16B16G16R16F, rwRASTERTYPECAMERATEXTURE);
-	mVolumetricCloudBlurRaster = RwD3D9RasterCreate(width, height, D3DFMT_A16B16G16R16F, rwRASTERTYPECAMERATEXTURE);
-	mVolumetricCloudCombineRaster = RwD3D9RasterCreate(width, height, D3DFMT_A16B16G16R16F, rwRASTERTYPECAMERATEXTURE);
+	mPostProcessing = new PostProcessing();
+	mPostProcessing->Initialize();
 
 	VolumetricLightParam[0] = 97.5;
 	VolumetricLightParam[1] = 0.74000001;
@@ -169,18 +160,18 @@ void DeferredRendering::BindLastPass()
 	ShaderContext->SetInverseViewMatrix(0);
 	ShaderContext->SetProjectionMatrix(4);
 
-	//for(size_t i = 0; i < 4; i++)
-	//{
-	//	rwD3D9SetSamplerState(i, D3DSAMP_MAGFILTER, D3DTEXF_LINEAR);
-	//	rwD3D9SetSamplerState(i, D3DSAMP_MINFILTER, D3DTEXF_LINEAR);
-	//	rwD3D9SetSamplerState(i, D3DSAMP_MIPFILTER, D3DTEXF_LINEAR);
-	//	rwD3D9SetSamplerState(i, D3DSAMP_ADDRESSU, D3DTADDRESS_WRAP);
-	//	rwD3D9SetSamplerState(i, D3DSAMP_ADDRESSV, D3DTADDRESS_WRAP);
-	//	//rwD3D9SetSamplerState(i, D3DSAMP_ADDRESSW, D3DTADDRESS_WRAP);
-	//	//auto rasExt = RASTEREXTFROMRASTER(m_graphicsBuffer[i]);
-	//	//RwD3DDevice->SetTexture(i + 1, rasExt->texture);
+	for(size_t i = 0; i < 4; i++)
+	{
+		rwD3D9SetSamplerState(i, D3DSAMP_MAGFILTER, D3DTEXF_LINEAR);
+		rwD3D9SetSamplerState(i, D3DSAMP_MINFILTER, D3DTEXF_LINEAR);
+		rwD3D9SetSamplerState(i, D3DSAMP_MIPFILTER, D3DTEXF_LINEAR);
+		rwD3D9SetSamplerState(i, D3DSAMP_ADDRESSU, D3DTADDRESS_WRAP);
+		rwD3D9SetSamplerState(i, D3DSAMP_ADDRESSV, D3DTADDRESS_WRAP);
+		rwD3D9SetSamplerState(i, D3DSAMP_ADDRESSW, D3DTADDRESS_WRAP);
+		//auto rasExt = RASTEREXTFROMRASTER(m_graphicsBuffer[i]);
+		//RwD3DDevice->SetTexture(i + 1, rasExt->texture);
 
-	//}
+	}
 
 	_rwD3D9RWSetRasterStage(m_graphicsLight, 0);
 	_rwD3D9RWSetRasterStage(m_graphicsBuffer[0], 1);
@@ -212,7 +203,15 @@ void DeferredRendering::BindLastPass()
 	FinalPass();
 
 	AtmosphericScattering();
-	VolumetricClouds();
+
+	IDirect3DSurface9* screenSurface;
+	auto screenExt = RASTEREXTFROMRASTER(m_screenRaster);
+	screenExt->texture->GetSurfaceLevel(0, &screenSurface);
+
+	RwD3DDevice->StretchRect(RwD3D9RenderSurface, NULL, screenSurface, NULL, D3DTEXF_NONE);
+	screenSurface->Release();
+	mVolumetricClouds->Render(m_screenRaster);
+
 	//VolumetricLight();
 	_rwD3D9SetPixelShader(NULL);
 	_rwD3D9SetVertexShader(NULL);
@@ -226,13 +225,9 @@ void DeferredRendering::RenderPostProcessing()
 	RwD3D9SetRenderState(D3DRS_ALPHATESTENABLE, TRUE);
 	RwRenderStateSet(rwRENDERSTATECULLMODE, (void*)rwCULLMODECULLNONE);
 	RwD3D9SetRenderState(D3DRS_ALPHABLENDENABLE, TRUE);
-	ShaderContext->SetInverseViewMatrix(0);
-	ShaderContext->SetProjectionMatrix(4);
-	// VolumetricLight();
 
-	FXAA();
-	//Bloom();
-
+	mPostProcessing->RenderFXAA();
+	mPostProcessing->RenderBloom();
 }
 
 void DeferredRendering::DirectLight()
@@ -363,193 +358,87 @@ void DeferredRendering::VolumetricLight()
 	DrawScreenQuad();
 }
 
-void DeferredRendering::FXAA()
-{
-	IDirect3DSurface9* screenSurface;
-	auto screenExt = RASTEREXTFROMRASTER(mFXAARaster);
-	screenExt->texture->GetSurfaceLevel(0, &screenSurface);
-
-	RwD3DDevice->StretchRect(RwD3D9RenderSurface, NULL, screenSurface, NULL, D3DTEXF_NONE);
-
-	screenSurface->Release();
-
-
-	XMMATRIX world, view, projection;
-	RwD3D9GetTransform(D3DTS_VIEW, &view);
-	RwD3D9GetTransform(D3DTS_PROJECTION, &projection);
-	world = XMMatrixIdentity();
-
-	_rwD3D9SetVertexShaderConstant(0, &(world * view * projection), 4);
-	_rwD3D9SetVertexShader(mFXAAVertexShader);
-	_rwD3D9SetPixelShader(mFXAAPixelShader);
-	rwD3D9RWSetRasterStage(mFXAARaster, 0);
-	__rwD3D9SetRenderTarget(0, RwD3D9RenderSurface);
-	DrawScreenQuad();
-}
-
-void DeferredRendering::Bloom()
-{
-	IDirect3DSurface9* screenSurface;
-	auto screenExt = RASTEREXTFROMRASTER(m_screenRaster);
-	screenExt->texture->GetSurfaceLevel(0, &screenSurface);
-
-	RwD3DDevice->StretchRect(RwD3D9RenderSurface, NULL, screenSurface, NULL, D3DTEXF_NONE);
-	screenSurface->Release();
-
-	RwD3D9SetRenderState(D3DRS_ALPHABLENDENABLE, TRUE);
-	_rwD3D9SetVertexShader(mGaussianBlurVertexShader);
-
-	int width, height;
-	width = RsGlobal.maximumWidth;
-	height = RsGlobal.maximumHeight;
-
-	_rwD3D9SetPixelShader(mBloomPixelShader);
-	rwD3D9RWSetRasterStage(m_screenRaster, 0);
-	RwD3D9SetRenderTarget(0, mBloomRaster);
-	DrawScreenQuad();
-
-	_rwD3D9SetPixelShader(mDownFilter4PixelShader);
-	rwD3D9RWSetRasterStage(mBloomRaster, 0);
-	RwD3D9SetRenderTarget(0, mDownFilter4Raster);
-	DrawScreenQuad();
-
-	_rwD3D9SetPixelShader(mDownFilter4PixelShader);
-	rwD3D9RWSetRasterStage(mDownFilter4Raster, 0);
-	RwD3D9SetRenderTarget(0, mBloomRaster);
-	DrawScreenQuad();
-
-	/*RwV2d samplesOffsets[15];
-	float sampleWeights[15];
-	GetGaussianOffsets(true, width / height, samplesOffsets, sampleWeights);*/
-	//_rwD3D9SetVertexShaderConstant(0, samplesOffsets, sizeof(samplesOffsets));
-	//_rwD3D9SetVertexShaderConstant(19, sampleWeights, sizeof(sampleWeights) );
-	_rwD3D9SetPixelShader(mGaussianBlurXPixelShader);
-	rwD3D9RWSetRasterStage(mBloomRaster, 0);
-	RwD3D9SetRenderTarget(0, mGaussianBlurXRaster);
-	DrawScreenQuad();
-
-	//GetGaussianOffsets(false, width / height, samplesOffsets, sampleWeights);
-	//_rwD3D9SetVertexShaderConstant(0, samplesOffsets, sizeof(samplesOffsets));
-	//_rwD3D9SetVertexShaderConstant(19, sampleWeights, sizeof(sampleWeights) );
-
-	_rwD3D9SetPixelShader(mGaussianBlurYPixelShader);
-	rwD3D9RWSetRasterStage(mGaussianBlurXRaster, 0);
-	RwD3D9SetRenderTarget(0, mGaussianBlurYRaster);
-	DrawScreenQuad();
-
-	_rwD3D9SetPixelShader(mBloomCombinePixelShader);
-	rwD3D9RWSetRasterStage(mGaussianBlurYRaster, 0);
-	rwD3D9RWSetRasterStage(m_screenRaster, 1);
-	__rwD3D9SetRenderTarget(0, RwD3D9RenderSurface);
-	DrawScreenQuad();
-
-}
-static float VolumeBox_top = 550.0f;
-static float VolumeBox_bottom = 440.0f;
-static float BodyTop = 800.0f;
-static float BodyMiddle = 450.0f;
-static float BodyBottom = 300.0f;
-static float BodyThickness = 0.05f;
-
-static float Atomesphere_Distance = 200.0f;
-static float Atomesphere_Smoothness = 6000.0f;
-static float Atomesphere[3] = {-5.92f, -5.32f, 3.81f};
-
-static float cloud_shift[3] = {10.0f, 10.0f, 10.0f};
-#include "CTimer.h"
-void DeferredRendering::VolumetricClouds()
-{
-	IDirect3DSurface9* screenSurface;
-	auto screenExt = RASTEREXTFROMRASTER(m_screenRaster);
-	screenExt->texture->GetSurfaceLevel(0, &screenSurface);
-	RwD3DDevice->StretchRect(RwD3D9RenderSurface, NULL, screenSurface, NULL, D3DTEXF_NONE);
-	screenSurface->Release();
-
-	ShaderContext->SetInverseViewMatrix(0);
-	ShaderContext->SetProjectionMatrix(4);
-	ShaderContext->SetSunColor(8);
-	ShaderContext->SetSunDirection(9);
-
-	CVector m_skyTop = {
-			 static_cast<float>(CTimeCycle::m_CurrentColours.m_fPostFx1Red) / 255.0f,
-			 static_cast<float>(CTimeCycle::m_CurrentColours.m_fPostFx1Green) / 255.0f,
-			 static_cast<float>(CTimeCycle::m_CurrentColours.m_fPostFx1Blue) / 255.0f};
-	_rwD3D9SetPixelShaderConstant(10, &m_skyTop, 1);
-	
-	CVector m_skyBottom = {
-	   static_cast<float>(CTimeCycle::m_CurrentColours.m_fPostFx2Red) / 255.0f,
-	   static_cast<float>(CTimeCycle::m_CurrentColours.m_fPostFx2Green) / 255.0f,
-	   static_cast<float>(CTimeCycle::m_CurrentColours.m_fPostFx2Blue) / 255.0f};
-	_rwD3D9SetPixelShaderConstant(11, &m_skyBottom, 1);
-	ShaderContext->SetFogParams(12);
-
-	static float ti = 0.0f;
-	constexpr auto time_interval = 1.0f / (0.0005f) * 3000.0f;
-	if(ti < time_interval)
-		ti += CTimer::ms_fTimeStep;
-	else
-		ti = ti -
-		time_interval + CTimer::ms_fTimeStep;
-
-	_rwD3D9SetPixelShaderConstant(13, &ti, 1);
-
-	_rwD3D9SetPixelShaderConstant(14, &VolumeBox_top, 1);
-	_rwD3D9SetPixelShaderConstant(15, &VolumeBox_bottom, 1);
-	_rwD3D9SetPixelShaderConstant(16, &BodyTop, 1);
-	_rwD3D9SetPixelShaderConstant(17, &BodyMiddle, 1);
-	_rwD3D9SetPixelShaderConstant(18, &BodyBottom, 1);
-	_rwD3D9SetPixelShaderConstant(19, &BodyThickness, 1);
-
-	_rwD3D9SetPixelShaderConstant(20, &Atomesphere_Distance, 1);
-	_rwD3D9SetPixelShaderConstant(21, &Atomesphere_Smoothness, 1);
-	_rwD3D9SetPixelShaderConstant(22, Atomesphere, 1);
-
-	_rwD3D9SetPixelShaderConstant(23, cloud_shift, 1);
-
-	rwD3D9SetSamplerState(2, D3DSAMP_MINFILTER, D3DTEXF_LINEAR);
-	rwD3D9SetSamplerState(2, D3DSAMP_MAGFILTER, D3DTEXF_LINEAR);
-	rwD3D9SetSamplerState(2, D3DSAMP_MIPFILTER, D3DTEXF_LINEAR);
-	rwD3D9SetSamplerState(2, D3DSAMP_ADDRESSU, D3DTADDRESS_WRAP);
-	rwD3D9SetSamplerState(2, D3DSAMP_ADDRESSV, D3DTADDRESS_WRAP);
-	rwD3D9SetSamplerState(2, D3DSAMP_ADDRESSW, D3DTADDRESS_WRAP);
-
-	rwD3D9SetSamplerState(4, D3DSAMP_MINFILTER, D3DTEXF_LINEAR);
-	rwD3D9SetSamplerState(4, D3DSAMP_MAGFILTER, D3DTEXF_LINEAR);
-	rwD3D9SetSamplerState(4, D3DSAMP_MIPFILTER, D3DTEXF_LINEAR);
-	rwD3D9SetSamplerState(4, D3DSAMP_ADDRESSU, D3DTADDRESS_CLAMP);
-	rwD3D9SetSamplerState(4, D3DSAMP_ADDRESSV, D3DTADDRESS_CLAMP);
-	rwD3D9SetSamplerState(4, D3DSAMP_MAXMIPLEVEL, 16);
-
-	rwD3D9SetSamplerState(5, D3DSAMP_MINFILTER, D3DTEXF_LINEAR);
-	rwD3D9SetSamplerState(5, D3DSAMP_MAGFILTER, D3DTEXF_LINEAR);
-	rwD3D9SetSamplerState(5, D3DSAMP_MIPFILTER, D3DTEXF_LINEAR);
-	rwD3D9SetSamplerState(5, D3DSAMP_ADDRESSU, D3DTADDRESS_WRAP);
-	rwD3D9SetSamplerState(5, D3DSAMP_ADDRESSV, D3DTADDRESS_WRAP);
-	rwD3D9SetSamplerState(5, D3DSAMP_ADDRESSW, D3DTADDRESS_WRAP);
-	rwD3D9SetSamplerState(5, D3DSAMP_SRGBTEXTURE, FALSE);
-	rwD3D9SetSamplerState(5, D3DSAMP_MAXMIPLEVEL, 16);
-	rwD3D9SetSamplerState(5, D3DSAMP_MIPMAPLODBIAS, 0);
-	_rwD3D9SetVertexShader(mGaussianBlurVertexShader);
-
-	//_rwD3D9SetPixelShader(mVolumetricCloudsPixelShader);
-	//rwD3D9RWSetRasterStage(m_graphicsBuffer[1], 2);
-	//RwD3D9SetRenderTarget(0, mVolumetricCloudRaster);
-	//DrawScreenQuad();
-
-	//_rwD3D9SetPixelShader(mVolumetricCloudsBlurPixelShader);
-	//rwD3D9RWSetRasterStage(mVolumetricCloudRaster, 0);
-	//rwD3D9RWSetRasterStage(m_graphicsBuffer[1], 1);
-	//RwD3D9SetRenderTarget(0, mVolumetricCloudBlurRaster);
-	//DrawScreenQuad();
-
-	_rwD3D9SetPixelShader(mVolumetricCloudsPixelShader);
-	rwD3D9RWSetRasterStage(m_screenRaster, 4);
-	RwD3D9SetTexture(mWorleyexture, 5);
-	__rwD3D9SetRenderTarget(0, RwD3D9RenderSurface);
-	Quad::Render();
-}
-
-
+//void DeferredRendering::FXAA()
+//{
+//	IDirect3DSurface9* screenSurface;
+//	auto screenExt = RASTEREXTFROMRASTER(mFXAARaster);
+//	screenExt->texture->GetSurfaceLevel(0, &screenSurface);
+//
+//	RwD3DDevice->StretchRect(RwD3D9RenderSurface, NULL, screenSurface, NULL, D3DTEXF_NONE);
+//
+//	screenSurface->Release();
+//
+//
+//	XMMATRIX world, view, projection;
+//	RwD3D9GetTransform(D3DTS_VIEW, &view);
+//	RwD3D9GetTransform(D3DTS_PROJECTION, &projection);
+//	world = XMMatrixIdentity();
+//
+//	_rwD3D9SetVertexShaderConstant(0, &(world * view * projection), 4);
+//	//_rwD3D9SetVertexShader(mFXAAVertexShader);
+//	_rwD3D9SetPixelShader(mFXAAPixelShader);
+//	rwD3D9RWSetRasterStage(mFXAARaster, 0);
+//	__rwD3D9SetRenderTarget(0, RwD3D9RenderSurface);
+//	DrawScreenQuad();
+//}
+//
+//void DeferredRendering::Bloom()
+//{
+//	IDirect3DSurface9* screenSurface;
+//	auto screenExt = RASTEREXTFROMRASTER(m_screenRaster);
+//	screenExt->texture->GetSurfaceLevel(0, &screenSurface);
+//
+//	RwD3DDevice->StretchRect(RwD3D9RenderSurface, NULL, screenSurface, NULL, D3DTEXF_NONE);
+//	screenSurface->Release();
+//
+//	RwD3D9SetRenderState(D3DRS_ALPHABLENDENABLE, TRUE);
+//	_rwD3D9SetVertexShader(mGaussianBlurVertexShader);
+//
+//	int width, height;
+//	width = RsGlobal.maximumWidth;
+//	height = RsGlobal.maximumHeight;
+//
+//	_rwD3D9SetPixelShader(mBloomPixelShader);
+//	rwD3D9RWSetRasterStage(m_screenRaster, 0);
+//	RwD3D9SetRenderTarget(0, mBloomRaster);
+//	DrawScreenQuad();
+//
+//	_rwD3D9SetPixelShader(mDownFilter4PixelShader);
+//	rwD3D9RWSetRasterStage(mBloomRaster, 0);
+//	RwD3D9SetRenderTarget(0, mDownFilter4Raster);
+//	DrawScreenQuad();
+//
+//	_rwD3D9SetPixelShader(mDownFilter4PixelShader);
+//	rwD3D9RWSetRasterStage(mDownFilter4Raster, 0);
+//	RwD3D9SetRenderTarget(0, mBloomRaster);
+//	DrawScreenQuad();
+//
+//	/*RwV2d samplesOffsets[15];
+//	float sampleWeights[15];
+//	GetGaussianOffsets(true, width / height, samplesOffsets, sampleWeights);*/
+//	//_rwD3D9SetVertexShaderConstant(0, samplesOffsets, sizeof(samplesOffsets));
+//	//_rwD3D9SetVertexShaderConstant(19, sampleWeights, sizeof(sampleWeights) );
+//	_rwD3D9SetPixelShader(mGaussianBlurXPixelShader);
+//	rwD3D9RWSetRasterStage(mBloomRaster, 0);
+//	RwD3D9SetRenderTarget(0, mGaussianBlurXRaster);
+//	DrawScreenQuad();
+//
+//	//GetGaussianOffsets(false, width / height, samplesOffsets, sampleWeights);
+//	//_rwD3D9SetVertexShaderConstant(0, samplesOffsets, sizeof(samplesOffsets));
+//	//_rwD3D9SetVertexShaderConstant(19, sampleWeights, sizeof(sampleWeights) );
+//
+//	_rwD3D9SetPixelShader(mGaussianBlurYPixelShader);
+//	rwD3D9RWSetRasterStage(mGaussianBlurXRaster, 0);
+//	RwD3D9SetRenderTarget(0, mGaussianBlurYRaster);
+//	DrawScreenQuad();
+//
+//	_rwD3D9SetPixelShader(mBloomCombinePixelShader);
+//	rwD3D9RWSetRasterStage(mGaussianBlurYRaster, 0);
+//	rwD3D9RWSetRasterStage(m_screenRaster, 1);
+//	__rwD3D9SetRenderTarget(0, RwD3D9RenderSurface);
+//	DrawScreenQuad();
+//
+//}
 
 #include "imgui.h"
 void DeferredRendering::imguiParameters()
@@ -562,7 +451,7 @@ void DeferredRendering::imguiParameters()
 		ImGui::InputFloat("SunlightIntensity", &VolumetricLightParam[2], 0.01, 0.1, "%.3f");
 	}
 
-	if(ImGui::BeginTabItem("Cloud"))
+	/*if(ImGui::BeginTabItem("Cloud"))
 	{
 		ImGui::EndTabItem();
 		ImGui::InputFloat("VolumeBox_top", &VolumeBox_top, 2.0, 100.0);
@@ -578,7 +467,7 @@ void DeferredRendering::imguiParameters()
 		ImGui::InputFloat("BodyMiddle", &BodyMiddle, 2, 100.0);
 		ImGui::InputFloat("BodyBottom", &BodyBottom, 2.0, 100.0);
 		ImGui::InputFloat("BodyThickness", &BodyThickness, 0.01, 0.1, "%.1f");
-	}
+	}*/
 }
 
 void DeferredRendering::CascadedShadow()

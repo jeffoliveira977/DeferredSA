@@ -142,35 +142,6 @@ float4 cloud_shape(float z, float4 profile, float3 dens_thres)
         soft);
 }
 
-//============IQ's noise===================
-//This noise generator is developed by Inigo Quilez.
-//License: Creative Commons Attribution-NonCommercial-ShareAlike 3.0 Unported License
-//float hash(float n)
-//{
-//    return frac(sin(n) * 9487.5987);
-//}
-
-//float noise_p(float3 p)
-//{
-//    float3 fr = floor(p),
-//       ft = frac(p);
-    
-    
-//    float n = 3.0 * fr.x + 17.0 * fr.y + fr.z,
-//        nr = n + 3.0,
-//        nd = n + 17.0,
-//        no = nr + 17.0,
-        
-//        v = lerp(hash(n), hash(n + 1.0), ft.z),
-//        vr = lerp(hash(nr), hash(nr + 1.0), ft.z),
-//        vd = lerp(hash(nd), hash(nd + 1.0), ft.z),
-//        vo = lerp(hash(no), hash(no + 1.0), ft.z);
-    
-//    return ((v * (1.0 - ft.x) + vr * (ft.x)) * (1.0 - ft.y) +
-//        (vd * (1.0 - ft.x) + vo * ft.x) * ft.y);
-//}
-
-
 static float randomSeed = 1618.03398875;
 
 float hash(float n)
@@ -425,7 +396,7 @@ inline void DecodeDepthNormal2(float2 texCoord, float farPlane, out float depth,
     float4 depthNormal = TEXTURE2D_DEPTHNORMAL(texCoord);
     normal = TwoChannelNormalX2(depthNormal.xy);
     depth = DecodeFloatRG(depthNormal.zw, farPlane);
-    depth = depth <= 0.0 ? farPlane * farPlane : depth;
+    depth = depth <= 0.0 ? 100000.0f : depth;
 }
 
 static float2 ScreenSize = { 1.0 / 1080.0, 1 / 1920.0f };
@@ -459,6 +430,6 @@ float4 main(float4 position : POSITION, float2 texcoord : TEXCOORD, float2 vPos 
 
     float4 midCloud = Cloud_mid(direction, ViewDir.xyz, dist, depth, Time / 2.2, moon, ti, sunny);
     r0.xyz = lerp(r0.rgb, midCloud.rgb, midCloud.a);
-
+    
     return r0;
 }

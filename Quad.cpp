@@ -236,8 +236,8 @@ void Quad::Render()
 	std::copy(verts, verts + 4, bufferMem);
 	mVertexBuffer->Unmap();
 
-	_rwD3D9SetVertexShader(mVertexShader->GetShader());
-	// _rwD3D9SetPixelShader(mPixelShader->GetShader());
+	_rwD3D9SetVertexShader(mVertexShader->GetObject());
+	// _rwD3D9SetPixelShader(mPixelShader->GetObject());
 
 	RwD3D9SetStreamSource(0, mVertexBuffer->GetBuffer(), 0, sizeof(QuadVertex));
 	 _rwD3D9SetIndices(mIndexBuffer->GetBuffer());

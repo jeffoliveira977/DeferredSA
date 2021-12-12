@@ -11,7 +11,7 @@ public:
 	void CreateFromBinary(string file);
 	void CreateFromFile(string file, string profile);
 
-	void* GetShader();
+	void* GetObject();
 private:
 	void* mPixelShader;
 };
