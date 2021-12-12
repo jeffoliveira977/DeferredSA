@@ -1,5 +1,6 @@
 #pragma once
 #include "CommonD.h"
+#include "VolumetricClouds.h"
 
 enum RenderingStage
 {
@@ -33,6 +34,8 @@ public:
 
 	void imguiParameters();
 private:
+	VolumetricClouds* mVolumetricClouds;
+
 	void* PS_DirectLight;
 	void* PS_PointAndSpotLight;
 	void* PS_TargetLight;
@@ -51,7 +54,7 @@ private:
 	void VolumetricLight();
 	void FXAA();
 	void Bloom();
-	void VolumetricClouds();
+	void RenderVolumetricClouds();
 };
 
 extern DeferredRendering *DeferredContext;

@@ -88,6 +88,7 @@
     <ClCompile Include="GameHooks.cpp" />
     <ClCompile Include="ImguiManager.cpp" />
     <ClCompile Include="IndexBufferManager.cpp" />
+    <ClCompile Include="VolumetricClouds.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="GTADef.h" />
@@ -154,6 +155,7 @@
     <ClInclude Include="GameHooks.h" />
     <ClInclude Include="ImguiManager.h" />
     <ClInclude Include="IndexBufferManager.h" />
+    <ClInclude Include="VolumetricClouds.h" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="imgui">
@@ -336,9 +338,6 @@
       <Filter>shaders</Filter>
     </FxCompile>
     <FxCompile Include="shaders\VolumetricCloudsCombine.hlsl">
-      <Filter>shaders</Filter>
-    </FxCompile>
-    <FxCompile Include="shaders\BloomPS.hlsl">
       <Filter>shaders</Filter>
     </FxCompile>
   </ItemGroup>

@@ -93,10 +93,8 @@ void RenderReflection(void)
 
 void RenderForward()
 {
-	CClouds__Render();
 	CCoronas__RenderReflections();
 	CCoronas__Render();
-	CClouds__RenderBottomFromHeight();
 	CWeather__RenderRainStreaks();
 	CCoronas__RenderSunReflection();	
 }

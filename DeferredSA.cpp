@@ -191,8 +191,6 @@ void ShutdowRenderware()
 	Quad::Release();
 	SoftParticles::Release();
 }
-#include "CWeather.h"
-
 #include "IndexBufferManager.h"
 void Hook()
 {
@@ -202,7 +200,7 @@ void Hook()
 	plugin::Events::attachRwPluginsEvent += PipelinePlugins;
 	plugin::Events::gameProcessEvent += GameProcess;
 	plugin::Events::shutdownRwEvent += ShutdowRenderware;
-	plugin::Events::drawingEvent += Render;
+	//plugin::Events::drawingEvent += Render;
 	plugin::Events::d3dLostEvent += IndexBufferManager::Release;
 	plugin::Events::d3dResetEvent += IndexBufferManager::Restore;
 	GameHooks();

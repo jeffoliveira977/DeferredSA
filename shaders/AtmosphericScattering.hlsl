@@ -92,8 +92,11 @@ float3 GetSkyColor(float3 ViewDir, float3 LightDir, float3 FullScattering)
     return lerp(FullScattering, SunDiskColor, SunDiskCoeff * ShadowDNBalance);
 }
 
+
 float4 main(float2 texCoord :TEXCOORD) : COLOR
 {
+    
+   
     float4 OutLighting;
 
     const float3 ViewPos = ViewInverseMatrix[3].xyz;
@@ -105,6 +108,7 @@ float4 main(float2 texCoord :TEXCOORD) : COLOR
     DecodeDepthNormal(texCoord, FogData.y, ViewZ, normal);
 
     WorldPositionFromDepth(texCoord, ViewZ, ProjectionMatrix, ViewInverseMatrix, WorldPos);
+
     
     float4 ScreenColor = tex2D(ScreenSampler, texCoord);
     

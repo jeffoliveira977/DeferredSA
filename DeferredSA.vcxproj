@@ -166,6 +166,7 @@
     <ClCompile Include="VertexShader.cpp" />
     <ClCompile Include="VertexShaderConstant.cpp" />
     <ClCompile Include="VisibilityPlugins.cpp" />
+    <ClCompile Include="VolumetricClouds.cpp" />
     <ClCompile Include="Water.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -220,6 +221,7 @@
     <ClInclude Include="VertexShader.h" />
     <ClInclude Include="VertexShaderConstant.h" />
     <ClInclude Include="VisibilityPlugins.h" />
+    <ClInclude Include="VolumetricClouds.h" />
     <ClInclude Include="Water.h" />
   </ItemGroup>
   <ItemGroup>
@@ -242,7 +244,6 @@
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='GTASA Release|Win32'">Vertex</ShaderType>
     </FxCompile>
     <FxCompile Include="shaders\AtmosphericScattering.hlsl" />
-    <FxCompile Include="shaders\BloomPS.hlsl" />
     <FxCompile Include="shaders\DefaultMeshPS.hlsl" />
     <FxCompile Include="shaders\DefaultMeshVS.hlsl">
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='GTASA Release|Win32'">Vertex</ShaderType>
