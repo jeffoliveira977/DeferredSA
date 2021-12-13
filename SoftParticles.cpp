@@ -81,8 +81,8 @@ void SoftParticles::Render()
     _rwD3D9SetVertexShaderConstant(12, &TheCamera.GetPosition(), 1);
 
     ShaderContext->SetFogParams(0);
-    _rwD3D9SetVertexShader(mVertexShader->GetShader());
-    _rwD3D9SetPixelShader(mPixelShader->GetShader());
+    _rwD3D9SetVertexShader(mVertexShader->GetObject());
+    _rwD3D9SetPixelShader(mPixelShader->GetObject());
 
     _rwD3D9SetVertexDeclaration(mVertexDeclColor);
 

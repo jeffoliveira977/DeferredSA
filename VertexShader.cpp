@@ -51,7 +51,7 @@ void VertexShader::CreateFromFile(string file, string profile)
 	vsCodeBlob->Release();
 }
 
-void* VertexShader::GetShader()
+void* VertexShader::GetObject()
 {
     return mVertexShader;
 }

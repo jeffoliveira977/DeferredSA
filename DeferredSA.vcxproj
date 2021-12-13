@@ -137,12 +137,14 @@
     <ClCompile Include="PixelShader.cpp" />
     <ClCompile Include="PixelShaderConstant.cpp" />
     <ClCompile Include="PixelShaderState.cpp" />
+    <ClCompile Include="PostProcessing.cpp" />
     <ClCompile Include="RenderableAABB.cpp" />
     <ClCompile Include="RenderableFrustum.cpp" />
     <ClCompile Include="RenderableReflectionObjects.cpp" />
     <ClCompile Include="RenderableScene.cpp" />
     <ClCompile Include="RenderableSphere.cpp" />
     <ClCompile Include="RwIndexBuffer.cpp" />
+    <ClCompile Include="ShaderConstant.cpp" />
     <ClCompile Include="ShaderManager.cpp" />
     <ClCompile Include="ShaderState.cpp" />
     <ClCompile Include="ShadowCaster.cpp" />
@@ -167,6 +169,7 @@
     <ClCompile Include="VertexShaderConstant.cpp" />
     <ClCompile Include="VisibilityPlugins.cpp" />
     <ClCompile Include="VolumetricClouds.cpp" />
+    <ClCompile Include="VolumetricLight.cpp" />
     <ClCompile Include="Water.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -191,12 +194,14 @@
     <ClInclude Include="PixelShader.h" />
     <ClInclude Include="PixelShaderConstant.h" />
     <ClInclude Include="PixelShaderState.h" />
+    <ClInclude Include="PostProcessing.h" />
     <ClInclude Include="RenderableAABB.h" />
     <ClInclude Include="RenderableFrustum.h" />
     <ClInclude Include="RenderableReflectionObjects.h" />
     <ClInclude Include="RenderableScene.h" />
     <ClInclude Include="RenderableSphere.h" />
     <ClInclude Include="RwIndexBuffer.h" />
+    <ClInclude Include="ShaderConstant.h" />
     <ClInclude Include="ShaderManager.h" />
     <ClInclude Include="ShaderState.h" />
     <ClInclude Include="ShadowCaster.h" />
@@ -222,6 +227,7 @@
     <ClInclude Include="VertexShaderConstant.h" />
     <ClInclude Include="VisibilityPlugins.h" />
     <ClInclude Include="VolumetricClouds.h" />
+    <ClInclude Include="VolumetricLight.h" />
     <ClInclude Include="Water.h" />
   </ItemGroup>
   <ItemGroup>

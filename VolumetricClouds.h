@@ -15,4 +15,3 @@ private:
 	PixelShader* mCombinePixelShader;
 	RwRaster* mVolumetricCloudRaster;
 };
-

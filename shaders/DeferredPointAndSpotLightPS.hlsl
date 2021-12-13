@@ -65,12 +65,12 @@ float4 main(float2 texCoord : TEXCOORD0) : COLOR
     float3 lightPos = -normalize(worldPosition.xyz - LightPosition.xyz);
     float dirLen = length(worldPosition - LightPosition);
     
-    float s = LightType ? 0.95f : 0.15f;
+    float s = LightType ? 1.1f : 0.01f;
     float atten = 1.0f - smoothstep(LightRange * s, LightRange, dirLen);
-    atten = 1.0f - pow(saturate(dirLen / LightRange), 30);
+    atten = 1.0f - pow(saturate(dirLen / LightRange), 2);
     if (LightType)
     {
-        float angle = 40.0;
+        float angle = 30.0;
         float minCos = cos(radians(angle));
 
         float maxCos = lerp(minCos, 1, 0.9f);

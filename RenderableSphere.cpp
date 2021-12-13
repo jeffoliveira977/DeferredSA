@@ -155,8 +155,8 @@ void RenderableSphere::Render()
 
 	_rwD3D9SetVertexDeclaration(VertexDeclIm3DNoTex);
 
-	_rwD3D9SetVertexShader(mVertexShader->GetShader());
-	_rwD3D9SetPixelShader(mPixelShader->GetShader());
+	_rwD3D9SetVertexShader(mVertexShader->GetObject());
+	_rwD3D9SetPixelShader(mPixelShader->GetObject());
 
 	_rwD3D9DrawIndexedPrimitive(D3DPT_TRIANGLELIST, 0, 0, mVertices.size(), 0, mIndices.size() / 3);
 }

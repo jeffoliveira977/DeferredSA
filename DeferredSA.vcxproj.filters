@@ -88,7 +88,10 @@
     <ClCompile Include="GameHooks.cpp" />
     <ClCompile Include="ImguiManager.cpp" />
     <ClCompile Include="IndexBufferManager.cpp" />
+    <ClCompile Include="ShaderConstant.cpp" />
     <ClCompile Include="VolumetricClouds.cpp" />
+    <ClCompile Include="PostProcessing.cpp" />
+    <ClCompile Include="VolumetricLight.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="GTADef.h" />
@@ -155,7 +158,10 @@
     <ClInclude Include="GameHooks.h" />
     <ClInclude Include="ImguiManager.h" />
     <ClInclude Include="IndexBufferManager.h" />
+    <ClInclude Include="ShaderConstant.h" />
     <ClInclude Include="VolumetricClouds.h" />
+    <ClInclude Include="PostProcessing.h" />
+    <ClInclude Include="VolumetricLight.h" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="imgui">

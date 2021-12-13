@@ -72,6 +72,7 @@ void CWaterLevel::InitShaders()
     pWaterPSCode = new PixelShader();
     pWaterPSCode->CreateFromFile("WaterEffects", "WaterPS");
 
+
     mVertexBuffer = new VertexBuffer();
     mVertexBuffer->Initialize(TOTAL_TEMP_BUFFER_VERTICES, sizeof(RwIm3DVertex));
 
@@ -162,7 +163,6 @@ void CWaterLevel::SetupWaterShader()
     ShaderContext->SetViewProjectionMatrix(4, true);
     ShaderContext->SetInverseViewMatrix(4, false);
     ShaderContext->SetProjectionMatrix(8, false);
-
 
 
     float ti = (float)CTimer__m_snTimeInMilliseconds;
@@ -367,8 +367,8 @@ void DrawWater()
     RwD3D9SetStreamSource(0, CWaterLevel::mVertexBuffer->GetBuffer(), 0, stride);
     _rwD3D9SetIndices(CWaterLevel::mIndexBuffer->GetBuffer());
 
-    _rwD3D9SetVertexShader(pWaterVSCode->GetShader());
-    _rwD3D9SetPixelShader(pWaterPSCode->GetShader());
+    _rwD3D9SetVertexShader(pWaterVSCode->GetObject());
+    _rwD3D9SetPixelShader(pWaterPSCode->GetObject());
 
     //RwD3D9SetSamplerState(2, D3DSAMP_MAGFILTER, D3DTEXF_LINEAR);
     //RwD3D9SetSamplerState(2, D3DSAMP_MINFILTER, D3DTEXF_LINEAR);
