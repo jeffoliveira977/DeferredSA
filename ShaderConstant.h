@@ -5,28 +5,43 @@
 struct ctab_constant
 {
     D3DXCONSTANT_DESC desc;
-    struct ctab_constant* constants;
+    ctab_constant* constants;
 };
 
 struct ID3DXConstantTableImpl
 {
-    LONG ref;
     char* ctab;
-    DWORD size;
+    uint32_t size;
     D3DXCONSTANTTABLE_DESC desc;
-    struct ctab_constant* constants;
+     ctab_constant* constants;
 };
 
+class ConstantTable
+{
+    ID3DXConstantTableImpl* mConstantTable;
+protected:
+    HRESULT Initialize(void* byteCode);
+    void Release();
+public:
+    void SetValue(D3DXHANDLE constant, void* data, uint32_t bytes);
 
-HRESULT WINAPI D3DX_GetShaderConstantTable(CONST DWORD* byte_code,
-                                           ID3DXConstantTableImpl** constant_table);
+    void SetBool(D3DXHANDLE constant, bool b);
+    void SetBoolArray(D3DXHANDLE constant, bool* b, uint32_t count);
 
-HRESULT WINAPI D3DX_GetShaderConstantTableEx(CONST DWORD* byte_code,
-                                              DWORD flags,
-                                              ID3DXConstantTableImpl** constant_table);
+    void SetInt(D3DXHANDLE constant, int n);
+    void SetIntArray(D3DXHANDLE constant, int* n, uint32_t count);
 
-HRESULT WINAPI ID3DXConstantTableImpl_SetMatrix(ID3DXConstantTableImpl* This, LPDIRECT3DDEVICE9 device,
-                                                       D3DXHANDLE constant, CONST XMMATRIX* matrix);
+    void SetFloat(D3DXHANDLE constant, float f);
+    void SetFloatArray(D3DXHANDLE constant, float* f, uint32_t count);
 
-HRESULT WINAPI ID3DXConstantTableImpl_SetMatrixTranspose(ID3DXConstantTableImpl* This, LPDIRECT3DDEVICE9 device,
-                                                         D3DXHANDLE constant, CONST XMMATRIX* matrix);
+
+    void SetVector(D3DXHANDLE constant, XMVECTOR* vector);
+    void SetVectorArray(D3DXHANDLE constant, XMVECTOR* vector, uint32_t count);
+
+    void SetMatrix(D3DXHANDLE constant, XMMATRIX* matrix);
+    void SetMatrixArray(D3DXHANDLE constant, XMMATRIX* matrix, uint32_t count);
+    void SetMatrixPointerArray(D3DXHANDLE constant, XMMATRIX** matrix, uint32_t count);
+    void SetMatrixTranspose(D3DXHANDLE constant, XMMATRIX* matrix);
+    void SetMatrixTransposeArray(D3DXHANDLE constant, XMMATRIX* matrix, uint32_t count);
+    void SetMatrixTransposePointerArray(D3DXHANDLE constant, XMMATRIX** matrix, uint32_t count);
+};

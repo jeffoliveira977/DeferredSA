@@ -1,8 +1,9 @@
 #pragma once
 
 #include "CommonD.h"
+#include "ShaderConstant.h"
 
-class PixelShader
+class PixelShader : public ConstantTable
 {
 public:
 	PixelShader();
@@ -12,6 +13,7 @@ public:
 	void CreateFromFile(string file, string profile);
 
 	void* GetObject();
+	void* mBinary;
 private:
 	void* mPixelShader;
 };

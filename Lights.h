@@ -31,7 +31,7 @@ struct LightData
 	CVector color;
 	float pad;
 };
-
+#include "CPointLights.h"
 class Lights
 {
 	
@@ -44,8 +44,8 @@ public:
 	static void SortByDistance(const RwV3d& from);
 	static void ClearLights();
 	static LightData* Buffer();
-	static bool AddOmniLight(eLightMode, CVector, CVector, float, float, float, float, unsigned char, bool, void *);
-	static bool AddOmniSpotLight(eLightMode, CVector, CVector, float, float, float, float, unsigned char, bool, void *);
+	static void AddOmniLight(ePointLightType, CVector, CVector, float, float, float, float, unsigned char, bool, CEntity*);
+	static void AddOmniSpotLight(ePointLightType, CVector, CVector, float, float, float, float, unsigned char, bool, CEntity*);
 	static void __thiscall AddSpotLight(CVehicle* vehicle, int a, CMatrix* matrix, bool isRight);
 	static void Patch();
 };
