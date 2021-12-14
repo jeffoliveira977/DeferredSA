@@ -11,7 +11,7 @@ DefaultMeshPipeline* DefaultMeshPipe;
 
 RwBool _rpCreatePlatformAtomicPipelines()
 {
-	return DefaultMeshPipe->initGraphics();
+	return DefaultMeshPipe->Initialize();
 }
 
 void DefaultMeshPipeline::Hook()
@@ -20,7 +20,7 @@ void DefaultMeshPipeline::Hook()
 	patch::RedirectJump(0x757890, D3D9AtomicAllInOnePipelineInit);
 }
 
-RwBool DefaultMeshPipeline::initGraphics()
+RwBool DefaultMeshPipeline::Initialize()
 {
 	RxPipeline* pipe;
 
@@ -375,11 +375,11 @@ void DefaultMeshPipeline::ForwardRendering(RwResEntry* entry, void* object, RwUI
 		rwD3D9SetSamplerState(i + 2, D3DSAMP_ADDRESSV, D3DTADDRESS_CLAMP);
 		rwD3D9SetSamplerState(i + 2, D3DSAMP_BORDERCOLOR, 0xFFFFFFFF);
 
-		rwD3D9RWSetRasterStage(CascadedShadowManagement->m_shadowColorRaster[i], i + 2);
+		rwD3D9RWSetRasterStage(CascadedShadowManagement->mColorRaster[i], i + 2);
 	}
 
-	_rwD3D9SetPixelShaderConstant(16, &CascadedShadowManagement->m_shadowBuffer,
-								  sizeof(CascadedShadowManagement->m_shadowBuffer) / sizeof(XMVECTOR));
+	_rwD3D9SetPixelShaderConstant(16, &CascadedShadowManagement->mConstantBuffer,
+								  sizeof(CascadedShadowManagement->mConstantBuffer) / sizeof(XMVECTOR));
 	int numMeshes = header->numMeshes;
 	while(numMeshes--)
 	{

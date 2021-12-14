@@ -498,7 +498,7 @@ RwResEntry* _rxD3D9SkinInstance(RpAtomic* atomic, void* owner, RwResEntry** resE
 
     resEntryHeader->primType = _RwD3D9SkinPrimConvTable[RpMeshHeaderGetPrimType(meshHeader)];
 
-    /* initGraphics the vertex buffers pointers */
+    /* Initialize the vertex buffers pointers */
     for(n = 0; n < RWD3D9_MAX_VERTEX_STREAMS; n++)
     {
         resEntryHeader->vertexStream[n].vertexBuffer = NULL;

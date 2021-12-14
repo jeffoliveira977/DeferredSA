@@ -164,6 +164,9 @@
     <ClInclude Include="PostProcessing.h" />
     <ClInclude Include="VolumetricLight.h" />
     <ClInclude Include="AmbientOcclusion.h" />
+    <ClInclude Include="mini\ini.h">
+      <Filter>mini</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="imgui">
@@ -174,6 +177,9 @@
     </Filter>
     <Filter Include="Pipeline">
       <UniqueIdentifier>{7db76db8-2c71-4179-b66d-c15caee0dfab}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="mini">
+      <UniqueIdentifier>{ad799bbb-31ba-4a3c-96d9-2fcef73d195a}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>

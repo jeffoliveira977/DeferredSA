@@ -22,7 +22,7 @@ ShadowData ShadowBuffer: register(c13);
 sampler2D RadianceSampler : register(s4);
 sampler2D ShadowSampler2[4] : register(s6);
 row_major float4x4 ViewProjectionMatrix : register(c40);
-sampler2D ShadowSampler : register(s5);
+sampler2D ShadowSampler[4] : register(s5);
 
 float4 main(float2 texCoord : TEXCOORD0, float2 vpos:VPOS) : COLOR
 {
@@ -30,8 +30,8 @@ float4 main(float2 texCoord : TEXCOORD0, float2 vpos:VPOS) : COLOR
 
     clip(length(AlbedoColor) <= 0);
 
-    float4 Shadow = tex2D(ShadowSampler, texCoord);
-    
+   // float4 Shadow = tex2D(ShadowSampler, texCoord);
+
     float4 Parameters = TEXTURE2D_MATERIALPROPS(texCoord);
     float SpecIntensity = Parameters.x;
     float Roughness = 1 - Parameters.y;
@@ -46,7 +46,8 @@ float4 main(float2 texCoord : TEXCOORD0, float2 vpos:VPOS) : COLOR
         
     float3 worldPosition;
     WorldPositionFromDepth(texCoord, depth, ProjectionMatrix, ViewInverseMatrix, worldPosition);
-    
+    float4 Shadow = DrawShadow(ShadowSampler2, worldPosition, length(worldPosition.xyz - ViewInverseMatrix[3].xyz), worldPosition, ShadowBuffer) * ShadowDNBalance;
+  
     float FarClip2 = 160.0;
     float FogStart2 = 0.0;
     float fogdist;
@@ -66,7 +67,7 @@ float4 main(float2 texCoord : TEXCOORD0, float2 vpos:VPOS) : COLOR
     float3 Radiance = tex2D(RadianceSampler, texCoord);
     
     float2 Lighting = float2(DiffuseTerm, SpecularTerm * SpecIntensity) * (ShadowDNBalance <= 0.0 ? 1.0 : Shadow);
-    color = float4(Lighting.x * sunColor.rgb + 0.6 + Radiance * saturate(1.0f - ShadowDNBalance + 0.2f), Lighting.y);
+    color = float4(Lighting.x * sunColor.rgb + 0.1 + Radiance * saturate(1.0f - ShadowDNBalance + 0.2f), Lighting.y);
     
     return color;
 }

@@ -14,6 +14,8 @@ public:
 	void RenderFXAA();
 	void RenderDOF();
 	void RenderLensFlare();
+
+	void UpdateTextures();
 private:
 	RwRaster* mFXAARaster;
 	RwRaster* mDownFilter4Raster;

@@ -13,7 +13,7 @@ VehicleMeshPipeline* VehicleMeshPipe;
 
 RxPipeline* CCustomCarEnvMapPipeline__CreateCustomOpenGLObjPipe()
 {
-	return VehicleMeshPipe->initGraphics();
+	return VehicleMeshPipe->Initialize();
 }
 
 void CCustomCarEnvMapPipeline__CustomPipeRenderCB(RwResEntry* repEntry, void* object, RwUInt8 type, RwUInt32 flags)
@@ -30,7 +30,7 @@ RwBool CCustomCarEnvMapPipeline__CustomPipeReInstanceCB(void* object, RwResEntry
 	return instanceCallback(object, (RxD3D9ResEntryHeader*)(resEntry + 1), true);
 }
 
-RxPipeline* VehicleMeshPipeline::initGraphics()
+RxPipeline* VehicleMeshPipeline::Initialize()
 {
 	RxPipeline* pipeline;
 

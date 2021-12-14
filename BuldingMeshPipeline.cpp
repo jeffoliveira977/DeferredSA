@@ -16,7 +16,7 @@ BuldingMeshPipeline* BuldingMeshPipe;
 
 RxPipeline* CCustomBuildingDNPipeline__CreateCustomObjPipe()
 {
-	return BuldingMeshPipe->initGraphics();
+	return BuldingMeshPipe->Initialize();
 }
 
 void CCustomBuildingDNPipeline__Render(RwResEntry* repEntry, void* object,
@@ -37,7 +37,7 @@ reinstance(void* object, RwResEntry* resEntry, RxD3D9AllInOneInstanceCallBack in
 			instanceCallback(object, (RxD3D9ResEntryHeader*)(resEntry + 1), true) != 0);
 }
 
-RxPipeline* BuldingMeshPipeline::initGraphics()
+RxPipeline* BuldingMeshPipeline::Initialize()
 {
 	RxPipeline* pipeline;
 
@@ -352,11 +352,11 @@ void BuldingMeshPipeline::ForwardRendering(RwResEntry* entry, void* object, RwUI
 		rwD3D9SetSamplerState(i + 2, D3DSAMP_ADDRESSV, D3DTADDRESS_CLAMP);
 		rwD3D9SetSamplerState(i + 2, D3DSAMP_BORDERCOLOR, 0xFFFFFFFF);
 
-		rwD3D9RWSetRasterStage(CascadedShadowManagement->m_shadowColorRaster[i], i + 2);
+		rwD3D9RWSetRasterStage(CascadedShadowManagement->mColorRaster[i], i + 2);
 	}
 
-	_rwD3D9SetPixelShaderConstant(16, &CascadedShadowManagement->m_shadowBuffer,
-								  sizeof(CascadedShadowManagement->m_shadowBuffer) / sizeof(XMVECTOR));
+	_rwD3D9SetPixelShaderConstant(16, &CascadedShadowManagement->mConstantBuffer,
+								  sizeof(CascadedShadowManagement->mConstantBuffer) / sizeof(XMVECTOR));
 	int numMeshes = header->numMeshes;
 	while(numMeshes--)
 	{

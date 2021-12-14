@@ -121,3 +121,28 @@ void PostProcessing::RenderDOF()
 
 void PostProcessing::RenderLensFlare()
 {}
+
+void PostProcessing::UpdateTextures()
+{
+	int width, height;
+	width = RsGlobal.maximumWidth;
+	height = RsGlobal.maximumHeight;
+
+	//if(width != mScreenRaster->width || height != mScreenRaster->height)
+	//{
+		mScreenRaster->width = width;
+		mScreenRaster->height = height;
+
+		mGaussianBlurXRaster->width = width;
+		mGaussianBlurXRaster->height = height;
+
+		mGaussianBlurYRaster->width = width;
+		mGaussianBlurYRaster->height = height;
+
+		mDownFilter4Raster->width = width;
+		mDownFilter4Raster->height = height;
+
+		mBloomRaster->width = width;
+		mBloomRaster->height = height;
+	//}
+}

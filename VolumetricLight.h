@@ -10,6 +10,7 @@ public:
 	void Initialize();
 	void Render();
 	void UpdateImgui();
+	void UpdateTextures();
 private:
 	void* PS_VolumetricLight;
 	void* PS_VolumetricLightCombine;

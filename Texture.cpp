@@ -17,12 +17,12 @@ Texture::~Texture()
 void Texture::Initialize(RwUInt32 width, RwUInt32 height, D3DFORMAT format, RwUInt32 flags)
 {
 	RwBool validFormat = FALSE;
-	
+
 	if(flags & rwRASTERTYPEZBUFFER)
 		validFormat = _rwD3D9CheckValidZBufferTextureFormat(format);
 	else
 		validFormat = _rwD3D9CheckValidCameraTextureFormat(format);
-	
+
 	if(!validFormat)
 		throw std::invalid_argument("Texture::Initialize() - Invalid texture format");
 
@@ -32,7 +32,11 @@ void Texture::Initialize(RwUInt32 width, RwUInt32 height, D3DFORMAT format, RwUI
 		throw std::runtime_error("Texture::Initialize");
 
 	auto rasterExt = RASTEREXTFROMRASTER(mRaster);
-	rasterExt->texture->GetSurfaceLevel(0, &mSurface);
+
+	if(flags & rwRASTERTYPEZBUFFER)
+		mSurface = (LPSURFACE)rasterExt->texture;
+	else
+		rasterExt->texture->GetSurfaceLevel(0, &mSurface);
 }
 
 void Texture::Initialize(RwChar* file)

@@ -45,7 +45,7 @@ public:
     static void SetupWaterShader();
     static void Hook();
     static void InitShaders();
-
-    static void imguiParameters();
+    static void UpdateTextures();
+    static void UpdateImgui();
 };
 

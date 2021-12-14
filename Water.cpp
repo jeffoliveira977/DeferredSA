@@ -88,9 +88,13 @@ void CWaterLevel::InitShaders()
     //Wavemap = RwD3D9DDSTextureRead("DeferredSA/waterbump");
      //Wavemap = RwD3D9DDSTextureRead("DeferredSA/waves2");
 
-    m_reflection = RwRasterCreate(1920, 1080, 32, rwRASTERTYPECAMERATEXTURE);
-    m_refraction = RwRasterCreate(1920, 1080, 32, rwRASTERTYPECAMERATEXTURE);
-    m_zRaster = RwRasterCreate(1920, 1080, 32, rwRASTERTYPEZBUFFER);
+    int width, height;
+    width = RsGlobal.maximumWidth;
+    height = RsGlobal.maximumHeight;
+
+    m_reflection = RwRasterCreate(width, height, 32, rwRASTERTYPECAMERATEXTURE);
+    m_refraction = RwRasterCreate(width, height, 32, rwRASTERTYPECAMERATEXTURE);
+    m_zRaster = RwRasterCreate(width, height, 32, rwRASTERTYPEZBUFFER);
 
     m_envCamera = RwCameraCreate();
     RwCameraSetProjection(m_envCamera, RwCameraProjection::rwPERSPECTIVE);
@@ -105,7 +109,23 @@ void CWaterLevel::InitShaders()
     RpWorldAddCamera(Scene.m_pRpWorld, m_envCamera);
 }
 
-void CWaterLevel::imguiParameters()
+void CWaterLevel::UpdateTextures()
+{
+    int width, height;
+    width = RsGlobal.maximumWidth;
+    height = RsGlobal.maximumHeight;
+
+    m_reflection->width = width;
+    m_reflection->height = height;
+
+    m_refraction->width = width;
+    m_refraction->height = height;
+
+    m_zRaster->width = width;
+    m_zRaster->height = height;
+}
+
+void CWaterLevel::UpdateImgui()
 {
     if(ImGui::BeginTabItem("Water"))
     {
@@ -202,11 +222,11 @@ void CWaterLevel::SetupWaterShader()
         rwD3D9SetSamplerState(i + 6, D3DSAMP_ADDRESSV, D3DTADDRESS_CLAMP);
         rwD3D9SetSamplerState(i + 6, D3DSAMP_BORDERCOLOR, 0xFFFFFFFF);
 
-        rwD3D9RWSetRasterStage(CascadedShadowManagement->m_shadowColorRaster[i], i + 6);
+        rwD3D9RWSetRasterStage(CascadedShadowManagement->mColorRaster[i], i + 6);
     }
 
-    _rwD3D9SetPixelShaderConstant(20, &CascadedShadowManagement->m_shadowBuffer,
-                                  sizeof(CascadedShadowManagement->m_shadowBuffer) / sizeof(XMVECTOR));
+    _rwD3D9SetPixelShaderConstant(20, &CascadedShadowManagement->mConstantBuffer,
+                                  sizeof(CascadedShadowManagement->mConstantBuffer) / sizeof(XMVECTOR));
 
     CWaterLevel__RenderWater();
 }

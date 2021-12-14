@@ -38,12 +38,12 @@ void PipelinePlugins()
 void Initialize()
 {
 	CascadedShadowManagement = new CascadedShadowRendering();
-	CascadedShadowManagement->initGraphics();
+	CascadedShadowManagement->Initialize();
 	
 	ShadowCasterEntity = new ShadowCaster();
 
 	SpotShadow = new SpotlightShadow();
-	SpotShadow->initGraphics();
+	SpotShadow->Initialize();
 
 	CWaterLevel::InitShaders();
 	EnvironmentMapping::InitializeGraphics();
@@ -95,10 +95,10 @@ void Render()
 	ImVec2 windowSize = ImGui::GetWindowSize();
 
 	ImGui::BeginTabBar("MyTabBar", tab_bar_flags);
-	//CWaterLevel::imguiParameters();
+	//CWaterLevel::UpdateImgui();
 	
-	CascadedShadowManagement->imguiParameters();
-	DeferredContext->imguiParameters();
+	CascadedShadowManagement->UpdateImgui();
+	DeferredContext->UpdateImgui();
 	ImGui::EndTabBar();
 
 	windowSize = ImVec2(100, 100);
@@ -191,7 +191,22 @@ void ShutdowRenderware()
 	Quad::Release();
 	SoftParticles::Release();
 }
+
 #include "IndexBufferManager.h"
+void LostDevice()
+{
+	//CascadedShadowManagement->UpdateTextures();
+
+	CWaterLevel::UpdateTextures();
+	IndexBufferManager::Release();
+	DeferredContext->UpdateTextures();
+}
+
+void ResetDevice()
+{
+	IndexBufferManager::Restore();
+}
+
 void Hook()
 {
 	SetWindowsHookEx(WH_GETMESSAGE, MessageProc, NULL, GetCurrentThreadId());
@@ -201,7 +216,7 @@ void Hook()
 	plugin::Events::gameProcessEvent += GameProcess;
 	plugin::Events::shutdownRwEvent += ShutdowRenderware;
 	plugin::Events::drawingEvent += Render;
-	plugin::Events::d3dLostEvent += IndexBufferManager::Release;
-	plugin::Events::d3dResetEvent += IndexBufferManager::Restore;
+	plugin::Events::d3dLostEvent += LostDevice;
+	plugin::Events::d3dResetEvent += ResetDevice;
 	GameHooks();
 }

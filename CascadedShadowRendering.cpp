@@ -8,121 +8,90 @@
 #include "CGameIdle.h"
 #include "ShaderManager.h"
 #include "ShadowCaster.h"
+#include "imgui.h"
+
+#define MINI_CASE_SENSITIVE
+#include "mini/ini.h"
+
 CascadedShadowRendering* CascadedShadowManagement;
-char cPath[MAX_PATH];
 
 CascadedShadowRendering::CascadedShadowRendering()
 {
     ShadowSize = 1024 * 2;
     CascadeCount = 3;
     FilterSize = 40.0f;
-     MinDistance = 2.0;
-     MaxDistance = 100.0;
-     PSSMLambda = 0.05f;
+    MinDistance = 2.0;
+    MaxDistance = 100.0;
+    PSSMLambda = 0.05f;
 
     for(size_t i = 0; i < 4; i++)
-    {
-        m_shadowColorRaster[i] = nullptr;
+        mColorRaster[i] = nullptr;
 
-        m_pShadowCamera[i] = nullptr;
-    }
-    m_shadowDepthRaster = nullptr;
-
-    char cStr[256];
-    //char cPath[MAX_PATH];
-    GetModuleFileName(NULL, cPath, MAX_PATH);
-
-    if(strrchr(cPath, '\\'))
-        *(char*)(strrchr(cPath, '\\') + 1) = '\0';
-
-    strcat_s(cPath, MAX_PATH, "DeferredConfig.ini");
-
-    GetPrivateProfileString("SHADOW", "DistanceCoefficients0", "0.01", cStr, 256, cPath);
-    DistanceCoefficients[0] = (float)atof(cStr);
-    GetPrivateProfileString("SHADOW", "DistanceCoefficients1", "0.01", cStr, 256, cPath);
-    DistanceCoefficients[1] = (float)atof(cStr);
-    GetPrivateProfileString("SHADOW", "DistanceCoefficients2", "0.01", cStr, 256, cPath);
-    DistanceCoefficients[2] = (float)atof(cStr);
-    GetPrivateProfileString("SHADOW", "DistanceCoefficients3", "0.01", cStr, 256, cPath);
-    DistanceCoefficients[3] = (float)atof(cStr);
-
-    GetPrivateProfileString("SHADOW", "BiasCoefficients0", "0.01", cStr, 256, cPath);
-    BiasCoefficients[0] = (float)atof(cStr);
-    GetPrivateProfileString("SHADOW", "BiasCoefficients1", "0.01", cStr, 256, cPath);
-    BiasCoefficients[1] = (float)atof(cStr);
-    GetPrivateProfileString("SHADOW", "BiasCoefficients2", "0.01", cStr, 256, cPath);
-    BiasCoefficients[2] = (float)atof(cStr);
-    GetPrivateProfileString("SHADOW", "BiasCoefficients3", "0.01", cStr, 256, cPath);
-    BiasCoefficients[3] = (float)atof(cStr);
-
-   /* DistanceCoefficients[0] = 0.052529998f;
-    DistanceCoefficients[1] = 0.16563001f;
-    DistanceCoefficients[2] = 0.44854999f;
-    DistanceCoefficients[3] = 0.64854999f;*/
-
-    //BiasCoefficients[0] = 0.000208f;
-    //BiasCoefficients[1] = 0.00013f;
-    //BiasCoefficients[2] = 0.00171f;
-    //BiasCoefficients[3] = 0.0049000001f;
-
-    //for(int i = 0; i < 5; i++)
-    //    m_fShadowDistances[i] = 0.0f;
+    mDepthRaster = nullptr;
 }
 
 CascadedShadowRendering::~CascadedShadowRendering()
 {
     for(int i = 0; i < CascadeCount; i++)
-    {
-        RwRasterDestroy(m_shadowColorRaster[i]);
-        RwCameraDestroy(m_pShadowCamera[i]);
-    }
-    RwRasterDestroy(m_shadowDepthRaster);
-    //RpWorldRemoveCamera(Scene.m_pRpWorld, m_pShadowCamera);
-   
+        RwRasterDestroy(mColorRaster[i]);
+
+    RwRasterDestroy(mDepthRaster);
 }
 
-void CascadedShadowRendering::initGraphics()
+void CascadedShadowRendering::Initialize()
 {
-    m_shadowDepthRaster = RwD3D9RasterCreate(ShadowSize, ShadowSize, D3DFMT_D24S8, rwRASTERTYPEZBUFFER);
-
     for(int i = 0; i < CascadeCount; i++)
+        mColorRaster[i] = RwD3D9RasterCreate(ShadowSize, ShadowSize, D3DFMT_G32R32F, rwRASTERTYPECAMERATEXTURE);
+
+    mDepthRaster = RwD3D9RasterCreate(ShadowSize, ShadowSize, D3DFMT_D24S8, rwRASTERTYPEZBUFFER);
+
+
+    mINI::INIFile file("DeferredConfig.ini");
+    mINI::INIStructure ini;
+
+    file.read(ini);
+
+    int n = 0, o = 0;
+    for(auto const& it : ini)
     {
-        m_pShadowCamera[i] = RwCameraCreate();
-        RwCameraSetProjection(m_pShadowCamera[i], rwPARALLEL);
+        auto const& section = it.first;
+        auto const& collection = it.second;
+        for(auto const& it2 : collection)
+        {
+            auto const& key = it2.first;
+            auto const& value = it2.second;
+            if(section.compare("SHADOW") == 0)
+            {
+                if(key.find("DistanceCoefficients") != std::string::npos)
+                {
+                    mDistanceCoefficients[n] = (float)atof(value.c_str());
+                    n++;
+                }
+                else if(key.find("BiasCoefficients") != std::string::npos)
+                {
+                    BiasCoefficients[o] = (float)atof(value.c_str());
+                    o++;
+                }
 
-        m_shadowColorRaster[i] = RwD3D9RasterCreate(ShadowSize, ShadowSize, D3DFMT_G32R32F, rwRASTERTYPECAMERATEXTURE);
-        RwCameraSetFrame(m_pShadowCamera[i], RwFrameCreate());
+            }
+        }
     }
-
-   // m_shadowColorRaster[0] = RwD3D9RasterCreate(ShadowSize*4, ShadowSize, D3DFMT_G32R32F, rwRASTERTYPECAMERATEXTURE);
-   //m_shadowDepthRaster = RwD3D9RasterCreate(ShadowSize*4, ShadowSize, D3DFMT_D24S8, rwRASTERTYPEZBUFFER);
-
-   
-    //RpWorldAddCamera(Scene.m_pRpWorld, m_pShadowCamera);
-}	
+}
 
 void CascadedShadowRendering::SetParamsBuffer()
 {
-    m_shadowBuffer.DistanceCoefficients = {m_fShadowDistances[0], m_fShadowDistances[1], m_fShadowDistances[2], m_fShadowDistances[3]};
-    m_shadowBuffer.ShadowBias = {BiasCoefficients[0], BiasCoefficients[1], BiasCoefficients[2], BiasCoefficients[3]};
-    m_shadowBuffer.ShadowParam = {(float)ShadowSize, m_fShadowDistances[4], (float)CascadeCount,
+    mConstantBuffer.mDistanceCoefficients = {m_fShadowDistances[0], m_fShadowDistances[1], m_fShadowDistances[2], m_fShadowDistances[3]};
+    mConstantBuffer.mShadowBias = {BiasCoefficients[0], BiasCoefficients[1], BiasCoefficients[2], BiasCoefficients[3]};
+    mConstantBuffer.mShadowParam = {(float)ShadowSize, m_fShadowDistances[4], (float)CascadeCount,
                                   1.0f - (CGame::currArea == 0 ? CGameIdle::m_fShadowDNBalance : 1.0f)};
 
-    m_shadowBuffer.mShadowMatrix[0] = Desc[0].g_mLightViewProj;
-    m_shadowBuffer.mShadowMatrix[1] = Desc[1].g_mLightViewProj;
-    m_shadowBuffer.mShadowMatrix[2] = Desc[2].g_mLightViewProj;
-    m_shadowBuffer.mShadowMatrix[3] = Desc[3].g_mLightViewProj;
+    for(size_t i = 0; i < CascadeCount; i++)
+    {
+        mConstantBuffer.mShadowMatrix[i] = Desc[i].mLightViewMatrix * Desc[i].mLightOrthoMatrix;
+    }
 }
 
-void WriteIniFileFloat(float value, const char* key, const char* path)
-{
-    char buf[20];
-    sprintf(buf, "%f", value);
-    WritePrivateProfileString("SHADOW", key, buf, path);
-}
-
-#include "imgui.h"
-void CascadedShadowRendering::imguiParameters()
+void CascadedShadowRendering::UpdateImgui()
 {
     if(ImGui::BeginTabItem("Shadow"))
     {
@@ -134,31 +103,44 @@ void CascadedShadowRendering::imguiParameters()
         ImGui::InputFloat("Bias 2", &BiasCoefficients[2], 0.000001, 0.00001, "%.6f");
         ImGui::InputFloat("Bias 3", &BiasCoefficients[3], 0.000001, 0.00001, "%.6f");
 
-        ImGui::InputFloat("DistanceCoefficients 0", &DistanceCoefficients[0], 0.0001, 0.001, "%.6f");
-        ImGui::InputFloat("DistanceCoefficients 1", &DistanceCoefficients[1], 0.0001, 0.001, "%.6f");
-        ImGui::InputFloat("DistanceCoefficients 2", &DistanceCoefficients[2], 0.0001, 0.001, "%.6f");
-        ImGui::InputFloat("DistanceCoefficients 3", &DistanceCoefficients[3], 0.0001, 0.001, "%.6f");
+        ImGui::InputFloat("DistanceCoefficients 0", &mDistanceCoefficients[0], 0.0001, 0.001, "%.6f");
+        ImGui::InputFloat("DistanceCoefficients 1", &mDistanceCoefficients[1], 0.0001, 0.001, "%.6f");
+        ImGui::InputFloat("DistanceCoefficients 2", &mDistanceCoefficients[2], 0.0001, 0.001, "%.6f");
+        ImGui::InputFloat("DistanceCoefficients 3", &mDistanceCoefficients[3], 0.0001, 0.001, "%.6f");
 
-        WriteIniFileFloat(BiasCoefficients[0], "BiasCoefficients0", cPath);
-        WriteIniFileFloat(BiasCoefficients[1], "BiasCoefficients1", cPath);
-        WriteIniFileFloat(BiasCoefficients[2], "BiasCoefficients2", cPath);
-        WriteIniFileFloat(BiasCoefficients[3], "BiasCoefficients3", cPath);
+        mINI::INIFile file("DeferredConfig.ini");
+        mINI::INIStructure ini;
 
-        WriteIniFileFloat(DistanceCoefficients[0], "DistanceCoefficients0", cPath);
-        WriteIniFileFloat(DistanceCoefficients[1], "DistanceCoefficients1", cPath);
-        WriteIniFileFloat(DistanceCoefficients[2], "DistanceCoefficients2", cPath);
-        WriteIniFileFloat(DistanceCoefficients[3], "DistanceCoefficients3", cPath);
+        file.read(ini);
+
+        int n = 0, o = 0;
+        for(auto const& it : ini)
+        {
+            auto const& section = it.first;
+            auto const& collection = it.second;
+            for(auto const& it2 : collection)
+            {
+                auto const& key = it2.first;
+                if(section.compare("SHADOW") == 0)
+                {
+                    if(key.find("DistanceCoefficients") != std::string::npos)
+                    {
+                        ini[section][key] = std::to_string(mDistanceCoefficients[n]);
+                        n++;
+                    }
+                    else if(key.find("BiasCoefficients") != std::string::npos)
+                    {
+                        ini[section][key] = std::to_string(BiasCoefficients[o]);
+                        o++;
+                    }
+
+                }
+            }
+        }
+        file.write(ini);
     }
 }
 
-
-#include "CModelInfo.h"
-void CascadedShadowRendering::RenderShadowToBuffer(int cascade, void(*render)(int cascade))
-{
-
-}
-
-#include "CommonD.h"
 
 void CascadedShadowRendering::Update()
 {
@@ -167,63 +149,37 @@ void CascadedShadowRendering::Update()
 
     gRenderState = stageCascadeShadow;
 
-    RwRGBA ambient = {CTimeCycle::m_CurrentColours.m_nSkyTopRed, CTimeCycle::m_CurrentColours.m_nSkyTopGreen, CTimeCycle::m_CurrentColours.m_nSkyTopBlue, 255};
-
     // Render in red channel
     RwD3D9SetRenderState(D3DRS_COLORWRITEENABLE, D3DCOLORWRITEENABLE_RED);
 
     // Render cascades
     for(size_t i = 0; i < CascadeCount; i++)
     {
-        RwCameraSetRaster(m_pShadowCamera[i], m_shadowColorRaster[i]);
-        RwCameraSetZRaster(m_pShadowCamera[i], m_shadowDepthRaster);
+        RwD3D9SetRenderTarget(0, mColorRaster[i]);
+        rwD3D9SetDepthStencil(mDepthRaster);
 
-        RwFrame* shadowCamFrame = RwCameraGetFrame(m_pShadowCamera[i]);
-        RwMatrix* shadowCamMatrix = RwFrameGetMatrix(shadowCamFrame);
-        
-        m_LightSpaceMatrix.r[3] = XMLoadFloat3(&Desc[i].FrustumCenter);
-        RwMatrixTransform(shadowCamMatrix, &XMMATRIXtoRwMatrix(m_LightSpaceMatrix), rwCOMBINEREPLACE);
+        D3DVIEWPORT9 viewport;
+        viewport.X = 0;
+        viewport.Y = 0;
+        viewport.Width = mColorRaster[i]->width;
+        viewport.Height = mColorRaster[i]->height;
+        viewport.MinZ = 0;
+        viewport.MaxZ = 1;
+        RwD3DDevice->SetViewport(&viewport);
 
+        rwD3D9Clear(nullptr, rwCAMERACLEARIMAGE | rwCAMERACLEARZ);
 
-        XMFLOAT3 extents;
-       // XMStoreFloat3(&extents, (m_lightAABBMax[i] - m_lightAABBMin[i]));
-
-
-        extents.x = Desc[i].m_AABB.Max.x - Desc[i].m_AABB.Min.x;
-        extents.y = Desc[i].m_AABB.Max.y - Desc[i].m_AABB.Min.y;
-        extents.z = Desc[i].m_AABB.Max.z - Desc[i].m_AABB.Min.z;
-
-        RwV2d viewWindow;
-        viewWindow.x = viewWindow.y = std::max(extents.x, extents.y);
-        RwV2dScaleMacro(&viewWindow, &viewWindow, 0.5);
-        RwCameraSetViewWindow(m_pShadowCamera[i], &viewWindow);
-
-        Desc[i].NearClip = -(extents.z < 500.0 ? 500.0 : extents.z);
-        Desc[i].FarClip = 50.0f + -Desc[i].NearClip;
-
-        RwCameraSetNearClipPlane(m_pShadowCamera[i], Desc[i].NearClip);
-        RwCameraSetFarClipPlane(m_pShadowCamera[i], Desc[i].FarClip);
-
-        RwCameraSetProjection(m_pShadowCamera[i], rwPARALLEL);
-        RwCameraClear(m_pShadowCamera[i], gColourTop, rwCAMERACLEARIMAGE | rwCAMERACLEARZ);
-        RwCameraBeginUpdate(m_pShadowCamera[i]);
-
-          RwD3D9SetTransform(D3DTS_VIEW, &Desc[i].lightViewMatrix);
-        RwD3D9SetTransform(D3DTS_PROJECTION, &Desc[i].lightOrthoMatrix);
-
-        // Render entities
+        if(rwD3D9TestState())
         {
-            XMMATRIX view, projection;
-            RwD3D9GetTransform(D3DTS_VIEW, &view);
-            RwD3D9GetTransform(D3DTS_PROJECTION, &projection);
+            RwD3D9SetTransform(D3DTS_VIEW, &Desc[i].mLightViewMatrix);
+            RwD3D9SetTransform(D3DTS_PROJECTION, &Desc[i].mLightOrthoMatrix);
 
-            Desc[i].g_mLightViewProj = view * projection;
-            ShaderContext->SetViewProjectionMatrix(4, true);
+            _rwD3D9SetVertexShaderConstant(4, &Desc[i].mLightViewMatrix, 4);
+            _rwD3D9SetVertexShaderConstant(8, &Desc[i].mLightOrthoMatrix, 4);
 
             ShadowCasterEntity->Render(i);
         }
 
-        RwCameraEndUpdate(m_pShadowCamera[i]);
     }
 
     // Restore all channels colors

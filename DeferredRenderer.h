@@ -41,7 +41,8 @@ public:
 	void RenderPostProcessing();
 	void Initialize();
 
-	void imguiParameters();
+	void UpdateImgui();
+	void UpdateTextures();
 private:
 	void* PS_DirectLight;
 	void* PS_PointAndSpotLight;

@@ -82,7 +82,7 @@ void ShadowCaster::AddObject(CEntity* entity)
 
     for(size_t i = 0; i < CascadedShadowManagement->CascadeCount; i++)
     {
-        bool intersects = CascadedShadowManagement->Desc[i].m_FrustumCulling.Intersects(aabb);
+        bool intersects = CascadedShadowManagement->Desc[i].mFrustumCulling.Intersects(aabb);
 
         if(intersects)
             ObjectInFrustum[i][entity] = true;

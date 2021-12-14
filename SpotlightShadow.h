@@ -13,15 +13,15 @@ public:
 	float m_spotAngle;
 	float m_spotRadius;
 	float m_nShadowSize;
-	RwRaster* m_shadowColorRaster[30];
-	RwRaster* m_shadowDepthRaster;
+	RwRaster* mColorRaster[30];
+	RwRaster* mDepthRaster;
 	XMMATRIX m_shadowMatrix[30];
-	RwCamera* m_pShadowCamera;
+	RwCamera* mCamera;
 
 	SpotlightShadow();
 	~SpotlightShadow();
 
-	void initGraphics();
+	void Initialize();
 	void Update();
 
 };

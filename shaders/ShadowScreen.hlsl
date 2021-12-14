@@ -30,7 +30,7 @@ float4 main(float2 texCoord: TEXCOORD, float2 vpos: VPOS) : COLOR
     //buf.bias = bias;
     const float3 ViewPos = ViewInverseMatrix[3].xyz;
     float Distance = length(worldPosition.xyz - ViewPos);
-    float4 shadow = DrawShadow(ShadowSampler, float3(vpos, 1), Distance, worldPosition, buf);
+    float4 shadow = DrawShadow(ShadowSampler, sunDir, Distance, worldPosition, buf);
   // float shadow = SampleShadowCascades(ShadowSampler[0], worldPosition, Distance, ShadowBuffer);
     
   //  FadeOutShadow(shadow.r, Distance, ShadowBuffer.params.y / 8);

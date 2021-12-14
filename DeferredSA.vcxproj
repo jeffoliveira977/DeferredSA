@@ -192,6 +192,7 @@
     <ClInclude Include="Immediate3D.h" />
     <ClInclude Include="IndexBufferManager.h" />
     <ClInclude Include="Mesh.h" />
+    <ClInclude Include="mini\ini.h" />
     <ClInclude Include="PBSMaterial.h" />
     <ClInclude Include="PixelShader.h" />
     <ClInclude Include="PixelShaderConstant.h" />

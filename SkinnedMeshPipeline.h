@@ -19,7 +19,7 @@ protected:
 	void ForwardRendering(RwResEntry* entry, void* object, RwUInt32 flags);
 public:
 	static void Hook();
-	RxPipeline* initGraphics();
+	RxPipeline* Initialize();
 };
 
 extern SkinnedMeshPipeline* SkinnedMeshPipe;

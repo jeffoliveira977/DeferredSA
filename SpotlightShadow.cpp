@@ -9,36 +9,36 @@ SpotlightShadow* SpotShadow;
 SpotlightShadow::SpotlightShadow()
 {
 	m_nShadowSize = 0.0;
-	m_pShadowCamera = nullptr;
+	mCamera = nullptr;
 	for(size_t i = 0; i < 30; i++)
-	m_shadowColorRaster[i] = nullptr;
+	mColorRaster[i] = nullptr;
 
-	m_shadowDepthRaster = nullptr;
+	mDepthRaster = nullptr;
 }
 
 SpotlightShadow::~SpotlightShadow()
 {
 	for(size_t i = 0; i < 30; i++)
-	RwRasterDestroy(m_shadowColorRaster[i]);
+	RwRasterDestroy(mColorRaster[i]);
 
-	RwRasterDestroy(m_shadowDepthRaster);
-	RwCameraDestroy(m_pShadowCamera);
+	RwRasterDestroy(mDepthRaster);
+	RwCameraDestroy(mCamera);
 }
 
-void SpotlightShadow::initGraphics()
+void SpotlightShadow::Initialize()
 {
-	/*m_pShadowCamera = RwCameraCreate();
-	RwCameraSetProjection(m_pShadowCamera, rwPARALLEL);
-	RwCameraSetProjection(m_pShadowCamera, RwCameraProjection::rwPERSPECTIVE);
-	RwCameraSetNearClipPlane(m_pShadowCamera, 0.1f);
-	RwCameraSetFarClipPlane(m_pShadowCamera, 1000);
+	/*mCamera = RwCameraCreate();
+	RwCameraSetProjection(mCamera, rwPARALLEL);
+	RwCameraSetProjection(mCamera, RwCameraProjection::rwPERSPECTIVE);
+	RwCameraSetNearClipPlane(mCamera, 0.1f);
+	RwCameraSetFarClipPlane(mCamera, 1000);
 
-	RwCameraSetFrame(m_pShadowCamera, RwFrameCreate());
+	RwCameraSetFrame(mCamera, RwFrameCreate());
 	m_nShadowSize = 512.0;
 	for(size_t i = 0; i < 30; i++)
-	m_shadowColorRaster[i]= RwRasterCreate(m_nShadowSize, m_nShadowSize, 32, rwRASTERTYPECAMERATEXTURE);;
+	mColorRaster[i]= RwRasterCreate(m_nShadowSize, m_nShadowSize, 32, rwRASTERTYPECAMERATEXTURE);;
 
-	m_shadowDepthRaster = RwD3D9RasterCreate(m_nShadowSize, m_nShadowSize, D3DFMT_D24S8, rwRASTERTYPEZBUFFER);*/
+	mDepthRaster = RwD3D9RasterCreate(m_nShadowSize, m_nShadowSize, D3DFMT_D24S8, rwRASTERTYPEZBUFFER);*/
 }
 #include "CascadedShadowRendering.h"
 #include "CScene.h"
@@ -78,10 +78,10 @@ void SpotlightShadow::Update()
 
 			m_shadowMatrix[SpotLightCount] = view * projection;
 			gRenderState = stageSphereMap;
-			RwCameraSetRaster(m_pShadowCamera, m_shadowColorRaster[SpotLightCount]);
-			RwCameraSetZRaster(m_pShadowCamera, m_shadowDepthRaster);
-			RwCameraClear(m_pShadowCamera, gColourTop, rwCAMERACLEARIMAGE | rwCAMERACLEARZ);
-			RwCameraBeginUpdate(m_pShadowCamera);
+			RwCameraSetRaster(mCamera, mColorRaster[SpotLightCount]);
+			RwCameraSetZRaster(mCamera, mDepthRaster);
+			RwCameraClear(mCamera, gColourTop, rwCAMERACLEARIMAGE | rwCAMERACLEARZ);
+			RwCameraBeginUpdate(mCamera);
 
 			RwD3D9SetTransform(D3DTS_VIEW, &view);
 			RwD3D9SetTransform(D3DTS_PROJECTION, &projection);
@@ -90,7 +90,7 @@ void SpotlightShadow::Update()
 
 			Renderer::RenderRoads();
 			Renderer::RenderEverythingBarRoads();
-			RwCameraEndUpdate(m_pShadowCamera);
+			RwCameraEndUpdate(mCamera);
 			SpotLightCount++;
 
 

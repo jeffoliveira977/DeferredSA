@@ -10,7 +10,7 @@ SkinnedMeshPipeline* SkinnedMeshPipe;
 
 RxPipeline* _rpSkinD3D9CreatePlainPipe()
 {
-	return SkinnedMeshPipe->initGraphics();
+	return SkinnedMeshPipe->Initialize();
 }
 
 void SkinnedMeshPipeline::Hook()
@@ -19,7 +19,7 @@ void SkinnedMeshPipeline::Hook()
 	plugin::patch::RedirectJump(0x7C7B90, _rwSkinD3D9AtomicAllInOneNode);
 }
 
-RxPipeline* SkinnedMeshPipeline::initGraphics()
+RxPipeline* SkinnedMeshPipeline::Initialize()
 {
 	RxPipeline* pipeline;
 

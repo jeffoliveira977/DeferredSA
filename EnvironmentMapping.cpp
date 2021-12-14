@@ -127,187 +127,6 @@ void EnvironmentMapping::PlaneMap()
 #include "CCam.h"
 #include "GTADef.h"
 
-void RenderFrustum()
-{
-	static RwRGBA yellow = {255, 255, 0,  65};
-	static RwRGBA red = {255,   0, 0, 255};
-
-	/*
-	 * 0:                Camera origin (center of projection)
-	 * 1,  2,  3,  4:    View plane
-	 * 5,  6,  7,  8:    Near clip-plane
-	 * 9,  10, 11, 12:   Far clip-plane
-	 */
-	RwIm3DVertex frustum[13];
-
-	/* Line index */
-	static RwImVertexIndex indicesL[] =
-	{
-		1,  2,  2,  3,  3,  4,  4,  1,
-		5,  6,  6,  7,  7,  8,  8,  5,
-		9, 10, 10, 11, 11, 12, 12,  9,
-		5,  9,  6, 10,  7, 11,  8, 12,
-		0,  0
-	};
-
-	/* Triangle index */
-	static RwImVertexIndex indicesT[] =
-	{
-		 5,  6, 10,
-		10,  9,  5,
-		 6,  7, 11,
-		11, 10,  6,
-		 7,  8, 12,
-		12, 11,  7,
-		 8,  5,  9,
-		 9, 12,  8,
-
-		 7,  6,  5,
-		 5,  8,  7,
-		 9, 10, 11,
-		11, 12,  9
-	};
-
-	static RwReal signs[4][2] =
-	{
-		{  1,  1 },
-		{ -1,  1 },
-		{ -1, -1 },
-		{  1, -1 }
-	};
-
-	RwInt32 i = 0;
-	RwInt32 j = 0;
-	RwInt32 k = 0;
-	RwMatrix* LTM;
-
-	/*
-	 * Ok we're going to draw a camera frustum.
-	 * All we need is:
-	 *    Vertices of the View plane,
-	 *    Vertices of the Near Clip plane,
-	 *    Vertices of the Far Clip plane,
-	 * then we're in business.
-	 */
-
-	XMVECTOR minExtents, maxExtents;
-	minExtents = XMLoadFloat3(&CascadedShadowManagement->Desc[0].m_AABB.Min);
-	maxExtents = XMLoadFloat3(&CascadedShadowManagement->Desc[0].m_AABB.Max);
-	
-	XMFLOAT3 extents;
-	XMStoreFloat3(&extents, maxExtents - minExtents);
-
-	//float longEdge = max(extents.x, extents.y);
-	//longEdge *= 0.5;
-	//float nearClip = extents.z < 500.0 ? 500.0 : extents.z;
-	//float farClip = nearClip;
-
-	//Math::AABB box = CascadedShadowManagement->Desc[0].m_FrustumCulling.GetBoundingBox();
-
-	//float e = (box.Max.z - abs(box.Min.z)) * 0.5;
-	//float c = (box.Max.z + abs(box.Min.z) * 2);
-	//RwReal depth[3];
-	//depth[0] = 1.0f;
-	//depth[1] = CascadedShadowManagement->Desc[0].NearClip;
-	//depth[2] = CascadedShadowManagement->Desc[0].FarClip;
-	//
-	////PrintMessage("%f %f", longEdge,(box.Max.y));
-	RwV2d offset = {0, 0};
-	//RwV2d viewWindow = {longEdge, longEdge};
-
-	RwReal depth[3];
-	depth[0] = 1.0f;
-	depth[1] = EnvironmentMapping::m_envCamera->nearPlane;
-	depth[2] = EnvironmentMapping::m_envCamera->farPlane;
-	RwV2d viewWindow = {EnvironmentMapping::m_envCamera->viewWindow.x, EnvironmentMapping::m_envCamera->viewWindow.y};
-	 /* Origin */
-	RwIm3DVertexSetPos(&frustum[k],0, 0, 0.0f);
-	k++;
-
-
-	/* View Window */
-	for(i = 0; i < 3; i++)
-	{
-		for(j = 1; j < 5; j++)
-		{
-			if(CascadedShadowManagement->m_pShadowCamera[0]->projectionType == rwPERSPECTIVE)
-			{
-				RwIm3DVertexSetPos(&frustum[k],
-								   -offset.x + depth[i] *
-								   ((signs[j - 1][0] * viewWindow.x) + offset.x),
-								   offset.y + depth[i] *
-								   ((signs[j - 1][1] * viewWindow.y) - offset.y),
-								   depth[i]);
-			}
-			else if(CascadedShadowManagement->m_pShadowCamera[0]->projectionType == rwPARALLEL)
-			{
-				RwIm3DVertexSetPos(&frustum[k],
-								   -offset.x + (signs[j - 1][0] * viewWindow.x)
-								   + (depth[i] * offset.x),
-								   offset.y + (signs[j - 1][1] * viewWindow.y)
-								   - (depth[i] * offset.y),
-								   depth[i]);
-			}
-
-			k++;
-		}
-	}
-
-	/*
-	 * Set color & alpha for the lines...
-	 */
-	for(i = 0; i < 5; i++)
-	{
-		RwIm3DVertexSetRGBA(&frustum[i],
-							red.red, red.green, red.blue, red.alpha);
-	}
-
-	for(i = 5; i < 13; i++)
-	{
-		RwIm3DVertexSetRGBA(&frustum[i],
-							yellow.red, yellow.green, yellow.blue, 255);
-	}
-
-	RwRenderStateSet(rwRENDERSTATESHADEMODE, (void*)rwSHADEMODEFLAT);
-	RwRenderStateSet(rwRENDERSTATETEXTURERASTER, (void*)NULL);
-
-	 LTM = RwFrameGetLTM(RwCameraGetFrame(EnvironmentMapping::m_envCamera));
-	//LTM = (RwMatrix*)&XMMatrixInverse(0, CascadedShadowManagement->Desc[0].lightViewMatrix);
-
-	/*
-	 * Draw Lines...
-	 */
-	if(RwIm3DTransform(frustum, 13, LTM, rwIM3D_ALLOPAQUE))
-	{
-		RwIm3DRenderIndexedPrimitive(rwPRIMTYPELINELIST, indicesL, 34);
-
-		RwIm3DEnd();
-	}
-
-	/*
-	 * Set color & alpha for the triangles...
-	 */
-	for(i = 5; i < 13; i++)
-	{
-		RwIm3DVertexSetRGBA(&frustum[i],
-							yellow.red, yellow.green, yellow.blue, yellow.alpha);
-	}
-
-	RwRenderStateSet(rwRENDERSTATEVERTEXALPHAENABLE, (void*)TRUE);
-
-	/*
-	 * Draw triangles...
-	 */
-	if(RwIm3DTransform(frustum, 13, LTM, 0))
-	{
-		RwIm3DRenderIndexedPrimitive(rwPRIMTYPETRILIST, indicesT, 36);
-
-		RwIm3DEnd();
-	}
-
-	RwRenderStateSet(rwRENDERSTATESHADEMODE, (void*)rwSHADEMODEGOURAUD);
-}
-
 void RenderBoundingBox(RwBBox* bbox, RwMatrix* ltm, RwRGBA color)
 {
 	RwInt32 i;
@@ -973,7 +792,7 @@ void EnvironmentMapping::SphericalMap()
 
 	}
 
-	Math::AABB box = CascadedShadowManagement->Desc[0].m_FrustumCulling.GetBoundingBox();
+	Math::AABB box = CascadedShadowManagement->Desc[0].mFrustumCulling.GetBoundingBox();
 	RwBBox bb;
 	bb.inf = {box.Min.x,box.Min.y,box.Min.z};
 	bb.sup = {box.Max.x,box.Max.y,box.Max.z};
@@ -983,7 +802,6 @@ void EnvironmentMapping::SphericalMap()
 	SolidBlue.alpha = 64;
 	RenderBoundingBox(&bb, 0, SolidBlue);
 
-	RenderFrustum();
 	RwCameraEndUpdate(m_envCamera);
 }
 

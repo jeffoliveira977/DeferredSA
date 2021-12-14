@@ -499,7 +499,7 @@ float ComputeShadow4Samples(sampler2D samplerShadow[4], int cascade, float shado
 }
 
 
-float4 DrawShadow(sampler2D samplerShadow[4],float3 vpos, float depthTest, float3 worldPosition, ShadowData shadowBuffer)
+float4 DrawShadow(sampler2D samplerShadow[4],float3 sunDir, float depthTest, float3 worldPosition, ShadowData shadowBuffer)
 { 
     // early fail
     if (shadowBuffer.params.w <= 0)
@@ -609,11 +609,26 @@ float4 DrawShadow(sampler2D samplerShadow[4],float3 vpos, float depthTest, float
     float fShadow = 0.0;
     for (int i = 0; i < NUM_TAPS; i++)
     {
-        fShadow += (z < tex2DShadow(samplerShadow, lightDepthUV + fTaps_Poisson[i]*1.2* lightDepthMapTexSize, nCascadeIndex).r);
+        fShadow += (z < tex2DShadow(samplerShadow, lightDepthUV + fTaps_Poisson[i] * 1.2 * lightDepthMapTexSize, nCascadeIndex).r);
     }
     fShadow *= 1.0 / NUM_TAPS;
     return fShadow;
     
+    float s;
+    float d = length(sunDir.xyz-WorldPos.xyz);
+
+    float2 sd = tex2DShadow(samplerShadow, lightDepthUV, nCascadeIndex).rg;
+
+    float mean = sd.x;
+    float variance = max(sd.y - sd.x * sd.x, 0.0002f);
+
+    float md = mean - d;
+    float pmax = variance / (variance + md * md);
+
+    s = max(d <= mean, pmax);
+  //  s = saturate(s );
+
+    return s;
     
    // return GetShadow(samplerShadow, nCascadeIndex, LightViewPos, LightViewPos.z - shadowBuffer.bias[nCascadeIndex], shadowBuffer.params.x) * Jitter;
     

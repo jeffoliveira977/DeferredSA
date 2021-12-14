@@ -41,11 +41,11 @@ void VolumetricLight::Render()
 		rwD3D9SetSamplerState(i + 4, D3DSAMP_MIPFILTER, D3DTEXF_LINEAR);
 		rwD3D9SetSamplerState(i + 4, D3DSAMP_ADDRESSU, D3DTADDRESS_CLAMP);
 		rwD3D9SetSamplerState(i + 4, D3DSAMP_ADDRESSV, D3DTADDRESS_CLAMP);
-		rwD3D9RWSetRasterStage(CascadedShadowManagement->m_shadowColorRaster[i], i + 4);
+		rwD3D9RWSetRasterStage(CascadedShadowManagement->mColorRaster[i], i + 4);
 	}
 
-	_rwD3D9SetPixelShaderConstant(14, &CascadedShadowManagement->m_shadowBuffer,
-								  sizeof(CascadedShadowManagement->m_shadowBuffer) / sizeof(XMVECTOR));
+	_rwD3D9SetPixelShaderConstant(14, &CascadedShadowManagement->mConstantBuffer,
+								  sizeof(CascadedShadowManagement->mConstantBuffer) / sizeof(XMVECTOR));
 
 	_rwD3D9SetPixelShader(PS_VolumetricLight);
 	_rwD3D9SetVertexShader(0);
@@ -75,4 +75,21 @@ void VolumetricLight::UpdateImgui()
 		ImGui::InputFloat("SunlightBlendOffset", &VolumetricLightParam[1], 0.01, 0.1, "%.6f");
 		ImGui::InputFloat("SunlightIntensity", &VolumetricLightParam[2], 0.01, 0.1, "%.3f");
 	}
+}
+
+void VolumetricLight::UpdateTextures()
+{
+	int width, height;
+	width = RsGlobal.maximumWidth;
+	height = RsGlobal.maximumHeight;
+
+	//if(width != m_screenRaster->width || height != m_screenRaster->height)
+	//{
+		m_screenRaster->width = width;
+		m_screenRaster->height = height;
+
+		m_volumetricLight->width = width;
+		m_volumetricLight->height = height;
+
+	//}
 }

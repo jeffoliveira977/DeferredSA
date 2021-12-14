@@ -170,6 +170,9 @@ void rwD3D9SetRenderTargets(RwRaster* rasters[], int rasterCount, RwUInt32 start
 #define RsCameraShowRaster(camera) ((int (__cdecl *)(RwCamera *))0x619440)(camera)
 #define RsCameraBeginUpdate(camera) ((signed int (__cdecl *)(RwCamera *))0x619450)(camera)
 #define _rwD3D9SetDepthStencilSurface(depthStencilSurface) ((void (__cdecl *)(LPSURFACE))0x007F5EF0)(depthStencilSurface)
+
+
+#define rwD3D9TestState()((int (__cdecl *)())0x007F8300)()
 RwMatrix RwMatrixTranspose(RwMatrix* mtx);
 enum eZoneAttributes : uint16_t
 {
@@ -324,7 +327,7 @@ IDirect3DVertexShader9* CreateVertexShader(string path, string profile);
 IDirect3DPixelShader9* CreatePixelShader(string path, string profile);
 void* RwCreateCompiledVertexShader(string filename);
 void* RwCreateCompiledPixelShader(string filename);
-
+void rwD3D9Clear(RwRGBA* col, RwInt32 clearFlags);
 void RwD3D9SetPixelShaderConstantB(RwUInt32 registerAddress, const void* constantData, RwUInt32 constantCount);
 RwBool rwD3D9CubeRasterCreate(RwRaster* raster, RwUInt32 d3dformat, RwInt32 mipmapLevels);
 XMMATRIX RwMatrixToXMMATRIX(const RwMatrix* mtx);

@@ -176,6 +176,7 @@ void DualParaboloidReflection::RenderScene()
 	RwCameraEndUpdate(m_camera);
 }
 
+
 void DualParaboloidReflection::RenderEntities(int i)
 {
 	if(!CGame::currArea)

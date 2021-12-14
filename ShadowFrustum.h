@@ -22,25 +22,20 @@ public:
 	
 	XMMATRIX m_LightSpaceMatrix;
 
-
+	bool mStabilizeCascades;
 
 	int CascadeCount;
 	int ShadowSize;
 	float FilterSize;
 	ShadowPartitionMode m_partitionMode;
-	XMVECTOR m_planes[4][6];
+
 	struct
 	{
-		XMMATRIX lightViewMatrix;
-		XMMATRIX lightOrthoMatrix;
-		XMMATRIX g_mLightViewProj;
-		Math::AABB m_AABB;
-		XMFLOAT3 FrustumCenter;
-		Math::Frustum m_FrustumCulling;
-		float NearClip;
-		float FarClip;
-		XMFLOAT2 ViewWindow;
+		XMMATRIX mLightViewMatrix;
+		XMMATRIX mLightOrthoMatrix;
+		Math::Frustum mFrustumCulling;
 	}Desc[4];
+
 protected:
 	XMVECTOR  CalculateCameraPos(RwCamera* mainCam, const RW::V3d& lightDir, int shadowCascade);
 
@@ -49,7 +44,7 @@ protected:
 	float PSSMLambda = 0.0100f;
 	
 	float BiasCoefficients[4];
-	float DistanceCoefficients[4];
+	float mDistanceCoefficients[4];
 	float m_fShadowDistances[5];
 };
 

@@ -9,26 +9,21 @@ public:
 
 	struct ShadowData
 	{
-		XMVECTOR DistanceCoefficients;
-		XMVECTOR ShadowParam;
-		XMVECTOR ShadowBias;
+		XMVECTOR mDistanceCoefficients;
+		XMVECTOR mShadowParam;
+		XMVECTOR mShadowBias;
 		XMMATRIX mShadowMatrix[4];
 	};
 
-	ShadowData m_shadowBuffer;
-	RwCamera* m_pShadowCamera[4];
-	RwRaster* m_shadowColorRaster[4];
-	RwRaster* m_shadowDepthRaster;
+	ShadowData mConstantBuffer;
+	RwCamera* mCamera;
+	RwRaster* mColorRaster[4];
+	RwRaster* mDepthRaster;
 
-	RwMatrix viewMatrix[4];
-	RwV2d ViewWindow[4];
-	RwV2d ViewOffset[4];
-	Plane Planes[4][6];
-
-	void imguiParameters();
-	void initGraphics();
+	void Initialize();
 	void Update();
-	void RenderShadowToBuffer(int cascade, void(*render)(int cascade));
 	void SetParamsBuffer();
+	void UpdateImgui();
+	void UpdateTextures();
 };
 extern CascadedShadowRendering *CascadedShadowManagement;
