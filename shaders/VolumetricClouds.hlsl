@@ -1,19 +1,19 @@
 #include "Utilities.hlsl"
 
-row_major float4x4 mViewInv : register(c0);
-row_major float4x4 Projection : register(c4);
-float3 vSunColor : register(c8);
-float3 SunDirection : register(c9);
-float3 fogData : register(c10);
-float Time : register(c11);
+row_major float4x4 mViewInv;
+row_major float4x4 Projection;
+float3 vSunColor;
+float3 SunDirection;
+float2 fogData;
+float Time;
+
 sampler2D ScreenSampler : register(s4);
 sampler2D SamplerDis : register(s5);
+
 #define FogStart fogData.x
 #define FarClip fogData.y
 
-
 static float ChunkSizeA = 15.0;
-
 static float ChunkSizeB = 3.0;
 
 static float DetailSizeC = 3.5;

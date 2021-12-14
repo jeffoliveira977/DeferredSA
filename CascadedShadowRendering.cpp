@@ -11,6 +11,7 @@
 CascadedShadowRendering* CascadedShadowManagement;
 char cPath[MAX_PATH];
 
+#include "mini/ini.h"
 CascadedShadowRendering::CascadedShadowRendering()
 {
     ShadowSize = 1024 * 2;
@@ -37,23 +38,49 @@ CascadedShadowRendering::CascadedShadowRendering()
 
     strcat_s(cPath, MAX_PATH, "DeferredConfig.ini");
 
-    GetPrivateProfileString("SHADOW", "DistanceCoefficients0", "0.01", cStr, 256, cPath);
-    DistanceCoefficients[0] = (float)atof(cStr);
+     mINI::INIFile file("DeferredConfig.ini");
+     mINI::INIStructure ini;
+    
+
+     std::string f;
+    f = ini["SHADOW"]["DistanceCoefficients0"];
+   DistanceCoefficients[0] = (float)atof(f.c_str());
+   f = ini["SHADOW"]["DistanceCoefficients1"];
+   DistanceCoefficients[1] = (float)atof(f.c_str());
+   f = ini["SHADOW"]["DistanceCoefficients2"];
+   DistanceCoefficients[2] = (float)atof(f.c_str());
+   f = ini["SHADOW"]["DistanceCoefficients3"];
+   DistanceCoefficients[3] = (float)atof(f.c_str());
+   
+
+   f = ini["SHADOW"]["BiasCoefficients0"];
+   BiasCoefficients[0] = (float)atof(f.c_str());
+   f = ini["SHADOW"]["BiasCoefficients1"];
+   BiasCoefficients[1] = (float)atof(f.c_str());
+   f = ini["SHADOW"]["BiasCoefficients2"];
+   BiasCoefficients[2] = (float)atof(f.c_str());
+   f = ini["SHADOW"]["BiasCoefficients3"];
+   BiasCoefficients[3] = (float)atof(f.c_str());
+   file.read(ini);
+   
+
+   /* GetPrivateProfileString("SHADOW", "DistanceCoefficients0", "0.01", cStr, 256, cPath);
+    DistanceCoefficients[0] = (float)atof(f.c_str());
     GetPrivateProfileString("SHADOW", "DistanceCoefficients1", "0.01", cStr, 256, cPath);
     DistanceCoefficients[1] = (float)atof(cStr);
     GetPrivateProfileString("SHADOW", "DistanceCoefficients2", "0.01", cStr, 256, cPath);
     DistanceCoefficients[2] = (float)atof(cStr);
     GetPrivateProfileString("SHADOW", "DistanceCoefficients3", "0.01", cStr, 256, cPath);
-    DistanceCoefficients[3] = (float)atof(cStr);
+    DistanceCoefficients[3] = (float)atof(cStr);*/
 
-    GetPrivateProfileString("SHADOW", "BiasCoefficients0", "0.01", cStr, 256, cPath);
-    BiasCoefficients[0] = (float)atof(cStr);
-    GetPrivateProfileString("SHADOW", "BiasCoefficients1", "0.01", cStr, 256, cPath);
-    BiasCoefficients[1] = (float)atof(cStr);
-    GetPrivateProfileString("SHADOW", "BiasCoefficients2", "0.01", cStr, 256, cPath);
-    BiasCoefficients[2] = (float)atof(cStr);
-    GetPrivateProfileString("SHADOW", "BiasCoefficients3", "0.01", cStr, 256, cPath);
-    BiasCoefficients[3] = (float)atof(cStr);
+    //GetPrivateProfileString("SHADOW", "BiasCoefficients0", "0.01", cStr, 256, cPath);
+    //BiasCoefficients[0] = (float)atof(cStr);
+    //GetPrivateProfileString("SHADOW", "BiasCoefficients1", "0.01", cStr, 256, cPath);
+    //BiasCoefficients[1] = (float)atof(cStr);
+    //GetPrivateProfileString("SHADOW", "BiasCoefficients2", "0.01", cStr, 256, cPath);
+    //BiasCoefficients[2] = (float)atof(cStr);
+    //GetPrivateProfileString("SHADOW", "BiasCoefficients3", "0.01", cStr, 256, cPath);
+    //BiasCoefficients[3] = (float)atof(cStr);
 
    /* DistanceCoefficients[0] = 0.052529998f;
     DistanceCoefficients[1] = 0.16563001f;

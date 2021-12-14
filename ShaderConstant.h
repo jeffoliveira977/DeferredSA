@@ -19,9 +19,9 @@ struct ID3DXConstantTableImpl
 class ConstantTable
 {
     ID3DXConstantTableImpl* mConstantTable;
-    LPDIRECT3DDEVICE9 mDevice;
 protected:
-    void Initialize(void* byteCode);
+    HRESULT Initialize(void* byteCode);
+    void Release();
 public:
     void SetValue(D3DXHANDLE constant, void* data, uint32_t bytes);
 

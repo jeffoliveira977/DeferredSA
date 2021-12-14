@@ -145,8 +145,8 @@ void GameHooks()
 	// Remove stencil shadows
 	plugin::patch::Nop(0x0053C1AB, 5); // CStencilShadows::Process
 
-	//plugin::patch::RedirectJump(0x00706AB0, CRealTimeShadowManager__Update);
-	//plugin::patch::RedirectCall(0x0053EA12, CMirrors__BeforeMainRender);
+	plugin::patch::RedirectJump(0x00706AB0, CRealTimeShadowManager__Update);
+	plugin::patch::RedirectCall(0x0053EA12, CMirrors__BeforeMainRender);
 	//plugin::patch::RedirectJump(0x00734570, Renderer::InsertEntityIntoSortedList);
 	//plugin::patch::RedirectJump(0x005534B0, Renderer::AddEntityToRenderList);
 	//plugin::patch::RedirectJump(0x00553710, Renderer::AddToLodRenderList);

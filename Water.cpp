@@ -72,7 +72,6 @@ void CWaterLevel::InitShaders()
     pWaterPSCode = new PixelShader();
     pWaterPSCode->CreateFromFile("WaterEffects", "WaterPS");
 
-
     mVertexBuffer = new VertexBuffer();
     mVertexBuffer->Initialize(TOTAL_TEMP_BUFFER_VERTICES, sizeof(RwIm3DVertex));
 
@@ -163,6 +162,7 @@ void CWaterLevel::SetupWaterShader()
     ShaderContext->SetViewProjectionMatrix(4, true);
     ShaderContext->SetInverseViewMatrix(4, false);
     ShaderContext->SetProjectionMatrix(8, false);
+
 
 
     float ti = (float)CTimer__m_snTimeInMilliseconds;

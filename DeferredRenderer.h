@@ -2,6 +2,10 @@
 #include "CommonD.h"
 #include "VolumetricClouds.h"
 #include "PostProcessing.h"
+#include "PixelShader.h"
+#include "VolumetricLight.h"
+#include "AmbientOcclusion.h"
+
 enum RenderingStage
 {
 	stageDeferred,
@@ -27,7 +31,11 @@ public:
 	RwRaster* m_shadowScreenRaster;
 	RwRaster* m_screenRaster;
 	RwRaster* m_volumetricLight;
+
 	VolumetricClouds* mVolumetricClouds;
+	VolumetricLight* mVolumetricLight;
+	AmbientOcclusion* mAmbientOcclusion;
+
 	void BindFirstPass();
 	void BindLastPass();
 	void RenderPostProcessing();
@@ -45,15 +53,12 @@ private:
 
 	void* VS_Quad;
 
+	PixelShader* mPointSpotLightPixelShader;
 	void DirectLight();
 	void PointAndSpotLight();
 	void FinalPass();
 	void CascadedShadow();
 	void AtmosphericScattering();
-	void VolumetricLight();
-	void FXAA();
-	void Bloom();
-
 };
 
 extern DeferredRendering *DeferredContext;

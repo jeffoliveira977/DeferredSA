@@ -92,6 +92,7 @@
     <ClCompile Include="VolumetricClouds.cpp" />
     <ClCompile Include="PostProcessing.cpp" />
     <ClCompile Include="VolumetricLight.cpp" />
+    <ClCompile Include="AmbientOcclusion.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="GTADef.h" />
@@ -162,6 +163,10 @@
     <ClInclude Include="VolumetricClouds.h" />
     <ClInclude Include="PostProcessing.h" />
     <ClInclude Include="VolumetricLight.h" />
+    <ClInclude Include="AmbientOcclusion.h" />
+    <ClInclude Include="mini\ini.h">
+      <Filter>mini</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="imgui">
@@ -172,6 +177,9 @@
     </Filter>
     <Filter Include="Pipeline">
       <UniqueIdentifier>{7db76db8-2c71-4179-b66d-c15caee0dfab}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="mini">
+      <UniqueIdentifier>{7f966979-0e43-4c74-96b2-56544a16b569}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -313,18 +321,6 @@
     <FxCompile Include="shaders\WaterSkinnedMeshReflectionVS.hlsl">
       <Filter>shaders</Filter>
     </FxCompile>
-    <FxCompile Include="ColorPS.hlsl">
-      <Filter>shaders</Filter>
-    </FxCompile>
-    <FxCompile Include="ColorVS.hlsl">
-      <Filter>shaders</Filter>
-    </FxCompile>
-    <FxCompile Include="QuadVS.hlsl">
-      <Filter>shaders</Filter>
-    </FxCompile>
-    <FxCompile Include="QuadPS.hlsl">
-      <Filter>shaders</Filter>
-    </FxCompile>
     <FxCompile Include="shaders\FXAA_PS.hlsl">
       <Filter>shaders</Filter>
     </FxCompile>
@@ -344,6 +340,27 @@
       <Filter>shaders</Filter>
     </FxCompile>
     <FxCompile Include="shaders\VolumetricCloudsCombine.hlsl">
+      <Filter>shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="shaders\BloomPS.hlsl">
+      <Filter>shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="shaders\ColorPS.hlsl">
+      <Filter>shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="shaders\ColorVS.hlsl">
+      <Filter>shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="shaders\QuadPS.hlsl">
+      <Filter>shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="shaders\QuadVS.hlsl">
+      <Filter>shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="shaders\SSAO_PS.hlsl">
+      <Filter>shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="shaders\SSAOCombine_PS.hlsl">
       <Filter>shaders</Filter>
     </FxCompile>
   </ItemGroup>

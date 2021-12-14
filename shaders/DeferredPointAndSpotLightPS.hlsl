@@ -77,6 +77,8 @@ float4 main(float2 texCoord : TEXCOORD0) : COLOR
         float cosAngle = dot(LightDirection, -lightPos);
 
         atten *= smoothstep(minCos, maxCos, cosAngle);
+        atten *= 0.5;
+
     }
        
     float3 FinalDiffuseTerm = float3(0, 0, 0);

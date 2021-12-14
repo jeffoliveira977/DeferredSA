@@ -3,6 +3,7 @@
 #include "ShaderManager.h"
 #include "CTimer.h"
 #include "Quad.h"
+#include "ShaderConstant.h"
 
 VolumetricClouds::VolumetricClouds()
 {
@@ -15,9 +16,6 @@ VolumetricClouds::~VolumetricClouds()
 	delete mPixelShader;
 	delete mCombinePixelShader;
 }
-#include "ShaderConstant.h"
-
-
 
 void VolumetricClouds::Initialize()
 {
@@ -26,13 +24,6 @@ void VolumetricClouds::Initialize()
 
 	//mCombinePixelShader = new PixelShader();
 	//mCombinePixelShader->CreateFromBinary("VolumetricCloudsCombine");
-
-	//auto hr = D3DX_GetShaderConstantTable((DWORD*)mPixelShader->mBinary, &g_ConsantTable);
-	//if( hr == D3DERR_INVALIDCALL || hr == D3DXERR_INVALIDDATA || hr == E_OUTOFMEMORY || g_ConsantTable==nullptr)
-	//{
-	//	MessageBox(0, "Invalid call", "Error", MB_OK);
-	//	exit(0);
-	//}
 
 }
 

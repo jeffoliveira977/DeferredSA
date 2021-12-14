@@ -22,6 +22,7 @@ float4 FogData : register(c16);
 samplerCUBE CubeMapSampler : register(s4);
 sampler2D SphericMapSampler : register(s5);
 sampler2D ParaboloidSampler[2] : register(s6);
+sampler2D SSAOSampler: register(s8);
 
 float4 ParaboloidEnvMap(float3 normal, float3 viewDir)
 {
@@ -99,8 +100,13 @@ float4 sky(const in float3 cam_dir, float moonLight, float tf)
     
     return float4(c, 1.0);
 }
+inline float clampMap(float x, float a, float b, float c, float d)
+{
+    return saturate((x - b) / (a - b)) * (c - d) + d;
+}
 float4 main(float2 texCoord : TEXCOORD0, float2 vpos:VPOS) : COLOR
 {
+    
     float3 outColor;
     float4 target = tex2D(SamplerLightTarget, texCoord);
     float4 albedo = TEXTURE2D_ALBEDO(texCoord);
@@ -121,13 +127,21 @@ float4 main(float2 texCoord : TEXCOORD0, float2 vpos:VPOS) : COLOR
     float3 viewDir = normalize(worldPosition - ViewInverseMatrix[3].xyz);
     float H = max(dot(viewDir, SunDir), 0.0);
 
+
+    float LightStrength = length(target.rgb);
+    float AmbientOcclusion = tex2D(SSAOSampler, texCoord).r;
+    float AOSupress = saturate(pow(AmbientOcclusion, 3.0));
+     LightStrength *= clampMap(SunDir.z, 0.05, -0.05, 1.0, 0.0);
+    float A2 = saturate(pow(LightStrength / 3.0, 0.5)); //A2 is larger as more light hitting
+    A2 = AmbientOcclusion * (1 - A2) + A2; //interpolating by A2 
+	//A2 = pow(A2, 1.0);										//AO curve
+  
     float3 diffuse = target.rgb;
-    float3 specular = target.a * target.rgb;
+    float3 specular = (target.a * target.rgb ) * AmbientOcclusion * AOSupress * A2;
     
     outColor = (albedo.rgb * diffuse) + specular;
-
     float3 skyColor = lerp(HorizonColor, SkyLightColor, saturate((worldPosition.z - 20) * (1.0f / 500.0f)));
-    float3 DiffuseTerm = (target.xyz + SkyLightColor.rgb * 0.3f);
+    float3 DiffuseTerm = (target.xyz + SkyLightColor.rgb * 0.3f) ;
     float FresnelCoeff = MicrofacetFresnel(normal, -viewDir, specularFactor);
     float4 R = 0.0;
     
@@ -169,7 +183,10 @@ float4 main(float2 texCoord : TEXCOORD0, float2 vpos:VPOS) : COLOR
         }
 
         outColor = DiffuseTerm * albedo.rgb + specular * Parameters.x + R.rgb * FresnelCoeff * Parameters.x;
+        
+        
         return float4(outColor, 1);
+       
     }
     
     //float ti = SunColor.z;

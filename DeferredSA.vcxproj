@@ -117,6 +117,7 @@
     <ClCompile Include="..\imgui\imgui_tables.cpp" />
     <ClCompile Include="..\imgui\imgui_widgets.cpp" />
     <ClCompile Include="AABB.cpp" />
+    <ClCompile Include="AmbientOcclusion.cpp" />
     <ClCompile Include="BoundingSphere.cpp" />
     <ClCompile Include="BuldingMeshPipeline.cpp" />
     <ClCompile Include="CDrawable.cpp" />
@@ -174,6 +175,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="AABB.h" />
+    <ClInclude Include="AmbientOcclusion.h" />
     <ClInclude Include="BoundingSphere.h" />
     <ClInclude Include="BuldingMeshPipeline.h" />
     <ClInclude Include="CDrawable.h" />
@@ -190,6 +192,7 @@
     <ClInclude Include="Immediate3D.h" />
     <ClInclude Include="IndexBufferManager.h" />
     <ClInclude Include="Mesh.h" />
+    <ClInclude Include="mini\ini.h" />
     <ClInclude Include="PBSMaterial.h" />
     <ClInclude Include="PixelShader.h" />
     <ClInclude Include="PixelShaderConstant.h" />
@@ -238,18 +241,16 @@
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='GTASA Release|Win32'">Pixel</ShaderType>
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='GTASA zDebug|Win32'">Pixel</ShaderType>
     </FxCompile>
-    <FxCompile Include="ColorVS.hlsl">
-      <ShaderType Condition="'$(Configuration)|$(Platform)'=='GTASA Release|Win32'">Vertex</ShaderType>
-    </FxCompile>
     <FxCompile Include="DownFilter4.hlsl">
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='GTASA Release|Win32'">Pixel</ShaderType>
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='GTASA zDebug|Win32'">Pixel</ShaderType>
     </FxCompile>
-    <FxCompile Include="QuadPS.hlsl" />
-    <FxCompile Include="QuadVS.hlsl">
+    <FxCompile Include="shaders\AtmosphericScattering.hlsl" />
+    <FxCompile Include="shaders\BloomPS.hlsl" />
+    <FxCompile Include="shaders\ColorPS.hlsl" />
+    <FxCompile Include="shaders\ColorVS.hlsl">
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='GTASA Release|Win32'">Vertex</ShaderType>
     </FxCompile>
-    <FxCompile Include="shaders\AtmosphericScattering.hlsl" />
     <FxCompile Include="shaders\DefaultMeshPS.hlsl" />
     <FxCompile Include="shaders\DefaultMeshVS.hlsl">
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='GTASA Release|Win32'">Vertex</ShaderType>
@@ -301,6 +302,10 @@
     <FxCompile Include="shaders\Im3dVS.hlsl">
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='GTASA Release|Win32'">Vertex</ShaderType>
     </FxCompile>
+    <FxCompile Include="shaders\QuadPS.hlsl" />
+    <FxCompile Include="shaders\QuadVS.hlsl">
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='GTASA Release|Win32'">Vertex</ShaderType>
+    </FxCompile>
     <FxCompile Include="shaders\Shadow.hlsl">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='GTASA Release|Win32'">true</ExcludedFromBuild>
     </FxCompile>
@@ -328,6 +333,8 @@
     <FxCompile Include="shaders\SphereMap.hlsl">
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='GTASA Release|Win32'">Vertex</ShaderType>
     </FxCompile>
+    <FxCompile Include="shaders\SSAOCombine_PS.hlsl" />
+    <FxCompile Include="shaders\SSAO_PS.hlsl" />
     <FxCompile Include="shaders\Utilities.hlsl">
       <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='GTASA Release|Win32'">true</DeploymentContent>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='GTASA Release|Win32'">true</ExcludedFromBuild>
@@ -348,7 +355,6 @@
     <FxCompile Include="shaders\WaterSkinnedMeshReflectionVS.hlsl">
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='GTASA Release|Win32'">Vertex</ShaderType>
     </FxCompile>
-    <FxCompile Include="ColorPS.hlsl" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
