@@ -1,29 +1,27 @@
 #include "Utilities.hlsl"
 #include "Shadow.hlsl"
-// VS
-row_major float4x4 xView : register(c4);
 
-// VS/PS
+row_major float4x4 xView : register(c4);
 row_major float4x4 xProjection : register(c8);
+
 float Time : register(c12);
 
-// PS
 row_major float4x4 xViewInverse : register(c4);
-float3 xLightDirection : register(c13);
-float3 Fog : register(c14);
+float4 Fog : register(c13);
+float4 FogColor : register(c14);
 
-float4 FogColor : register(c15);
-float4 Watercolor : register(c16);
-float4 SunColor : register(c17);
-float4 SkyLightColor : register(c18);
-float4 HorizonColor : register(c19);
+float4 Watercolor : register(c15);
+float3 SkyLightColor : register(c16);
+float3 HorizonColor : register(c17);
+float3 SunColor : register(c18);
+float3 xLightDirection : register(c19);
 
 // variables for the BUMP MAP
 static float xDrawMode = 2.0;
 static float xWaveLength = 0.4f;
 static float xWaveHeight = 0.4f;
 static int fresnelMode = 2;
-static float specPerturb =12.0;
+static float specPerturb = 12.0;
 static float specPower = 400.0;
 static float xdullBlendFactor = 0.5f;
 static float xWindForce = 0.1;
@@ -41,14 +39,12 @@ sampler2D ShadowSampler[4] : register(s6);
 
 struct WaterVertexToPixel
 {
-    float4 Position       : POSITION;  
+    float4 Position : POSITION;
     float2 texcoor : TEXCOORD0;
-    float4 vposition     : TEXCOORD1;
+    float4 vposition : TEXCOORD1;
     float4 worldPosition : TEXCOORD2;
-    float4 waveCoord     : TEXCOORD3;
-    float2 texcoord : TEXCOORD4;
-    float2 texcoord1 : TEXCOORD5;
-    float depth          : DEPTH;
+    float4 waveCoord : TEXCOORD3;
+    float depth : DEPTH;
 };
 
 
@@ -59,9 +55,8 @@ struct WaterPixelToFrame
 
 static float flowSpeed = 0.5;
 
-static float2 ScreenSize = float2(1.0 / 1920.0, 1.0/1080.0);
 
-WaterVertexToPixel WaterVS(float4 inPos : POSITION, float2 inTex: TEXCOORD0)
+WaterVertexToPixel WaterVS(float4 inPos : POSITION, float2 inTex : TEXCOORD0)
 {
     WaterVertexToPixel Output = (WaterVertexToPixel) 0;
     float4x4 identity = float4x4(1, 0, 0, 0,
@@ -77,14 +72,12 @@ WaterVertexToPixel WaterVS(float4 inPos : POSITION, float2 inTex: TEXCOORD0)
     Output.texcoor = inTex;
     Output.Position = pPos;
     Output.vposition = pPos;
-    Output.worldPosition = position;
+    Output.worldPosition = wPos;
     Output.depth = pPos.z;
-    Output.texcoord = CalculateScreenPosition(inPos)/ ScreenSize ;
     
     float timer = fmod(Time / 12, 1) * flowSpeed;
     Output.waveCoord.xy = inTex * 3 + float2(timer, timer);
     Output.waveCoord.zw = inTex * 3 + float2(-timer, timer);
-    
     float2 uvpos1 = 0;
     float2 uvpos2 = 0;
 
@@ -98,7 +91,6 @@ WaterVertexToPixel WaterVS(float4 inPos : POSITION, float2 inTex: TEXCOORD0)
     Output.waveCoord.y = inTex.y * 1 + uvpos1.y;
     Output.waveCoord.z = inTex.x * 2 + uvpos2.x;
     Output.waveCoord.w = inTex.y * 2 + uvpos2.y;
-    Output.texcoord1 = CalculateVPos(pPos);
     return Output;
 }
 
@@ -164,98 +156,6 @@ float3 RGBtoHSV(in float3 RGB)
     float S = HCV.y / (HCV.z + Epsilon);
     return float3(HCV.x, S, HCV.z);
 }
-inline float pow5(float v)
-{
-    return v * v * v * v * v;
-}
-
-vec3 fresnelSchlick(float cosTheta, float F0)
-{
-    return F0 + (1.0 - F0) * pow(max(1.0 - cosTheta, 0.0), 5.0);
-}
-
-vec3 fresnelSchlickRoughness(float cosTheta, float F0, float roughness)
-{
-    return F0 + (max(1.0 - roughness, F0) - F0) * pow(max(1.0 - cosTheta, 0.0), 5.0);
-}
-
-float GGX_PartialGeometry(float cosThetaN, float alpha)
-{
-    float cosTheta_sqr = saturate(cosThetaN * cosThetaN);
-    float tan2 = (1 - cosTheta_sqr) / cosTheta_sqr;
-    float GP = 2 / (1 + sqrt(1 + alpha * alpha * tan2));
-    return GP;
-}
-float GGX_Distribution(float cosThetaNH, float alpha)
-{
-    float alpha2 = alpha * alpha;
-    float NH_sqr = saturate(cosThetaNH * cosThetaNH);
-    float den = NH_sqr * alpha2 + (1.0 - NH_sqr);
-    return alpha2 / (PI * den * den);
-}
-float MicrofacetNDF_GGX(in float3 vNormal, in float3 vHalfWay, in float fRoughness)
-{
-    float fRoughnessSqr = fRoughness * fRoughness;
-
-    float fCosAlphaSqr = saturate(dot(vNormal, vHalfWay)); // Alpha is angle between normal and half-way vector
-	//fCosAlphaSqr *= fCosAlphaSqr;		// need to check if can be optimized to use less instructions
-    float fDiv = ((fRoughnessSqr - 1) * fCosAlphaSqr + 1);
-    float fNDCoeff = fRoughnessSqr;
-    fNDCoeff /= PI * (fDiv * fDiv + 1e-7f);
-
-    half d = (fCosAlphaSqr * fRoughnessSqr - fCosAlphaSqr) * fCosAlphaSqr + 1.0f; // 2 mad
-    return fRoughnessSqr / (d * d + 1e-7f);
-	//return fNDCoeff;
-	//float 
-}
-inline float SmithJointGGXVisibilityTerm(float NdotL, float NdotV, float roughness)
-{
-	// Original formulation:
-	//	lambda_v	= (-1 + sqrt(a2 * (1 - NdotL2) / NdotL2 + 1)) * 0.5f;
-	//	lambda_l	= (-1 + sqrt(a2 * (1 - NdotV2) / NdotV2 + 1)) * 0.5f;
-	//	G			= 1 / (1 + lambda_v + lambda_l);
-
-	// Reorder code to be more optimal
-    float a = roughness;
-    float a2 = a * a;
-
-    float lambdaV = NdotL * sqrt((-NdotV * a2 + NdotV) * NdotV + a2);
-    float lambdaL = NdotV * sqrt((-NdotL * a2 + NdotL) * NdotL + a2);
-
-	// Simplify visibility term: (2.0f * NdotL * NdotV) /  ((4.0f * NdotL * NdotV) * (lambda_v + lambda_l + 1e-5f));
-    return 0.5f / (lambdaV + lambdaL + 1e-5f);
-}
-
-#define USE_PBR 1
-void CalculateSpecularTerm(in float3 vNormal, in float3 vLightDir, in float3 vViewDir, in float fRoughness, out float fSpecularTerm)
-{
-    float3 vHalfWay = normalize(vLightDir + vViewDir);
-    float roug_sqr = fRoughness * fRoughness;
-    float G = GGX_PartialGeometry(dot(vNormal, vViewDir), roug_sqr) * GGX_PartialGeometry(dot(vNormal, vLightDir), roug_sqr);
-    float D = GGX_Distribution(dot(vNormal, vHalfWay), roug_sqr);
-    float ndfTerm = MicrofacetNDF_GGX(vNormal, vHalfWay, fRoughness * fRoughness);
-    float ndl = saturate(dot(vNormal, vLightDir));
-    float ndv = saturate(dot(vNormal, vViewDir));
-    float visibilityTerm = SmithJointGGXVisibilityTerm(ndl, ndv, fRoughness * fRoughness);
-    /*if (ndv <= 0.0 || ndl <= 0.0)
-    {
-        fSpecularTerm = 0.0f;
-        return;
-    }*/
-	//MicrofacetGeometricShadow(vNormal, vViewDir, fRoughness);
-#if USE_PBR==1
-    fSpecularTerm = ndfTerm * 0.5f;
-#else
-    fSpecularTerm = PhongSpecular(vNormal, vLightDir, -vViewDir, fRoughness) * 4.0f;
-#endif
-    //
-    //ndfTerm * fresnelTerm;
-}
-static const float3 g_vLuminance = float3(.299, .587, .114);
-float GetLuminance(float3 Color)
-{
-    return dot(g_vLuminance, Color);
-}
 
 float3 hash1(float3 p3)
 {
@@ -319,10 +219,10 @@ float voronoi3D(vec3 n, float time)
                 float2 d;
                 
                 g = 0.27 * sin(hash(p) * 64.0 + t) + o;
-                d.x = mul(g, g);               
+                d.x = mul(g, g);
                 p.z += 0.782;
                 g = 0.27 * sin(hash(p) * 64.0 + t) + o;
-                d.y = mul(g, g);               
+                d.y = mul(g, g);
                 md = min(md, d);
             }
         }
@@ -355,8 +255,8 @@ static float normalMult = 2.6;
 float4 WaterPS(WaterVertexToPixel PSIn, float2 vpos : VPOS0) : COLOR
 {
     // Calculate water depth    
-    float2 sPixelSize = float2(1920.0, 1080.0);
-    float2 txcoord = vpos / sPixelSize;
+    float2 txcoord = vpos / Fog.zw;
+    
     
     float sceneZ = DecodeDepth(SamplerDepth, txcoord) * Fog.y;
     float objectZ = PSIn.depth;
@@ -366,7 +266,7 @@ float4 WaterPS(WaterVertexToPixel PSIn, float2 vpos : VPOS0) : COLOR
     waterDepth = sceneZ - objectZ;
    
     causDepth = saturate(waterDepth / 4.0f);
-    foamDepth = saturate(waterDepth / .3f);
+    foamDepth = saturate(waterDepth / 0.8f);
     alphaDepth = saturate(waterDepth / 2.2f);
     waterDepth = saturate(waterDepth);
  
@@ -386,7 +286,7 @@ float4 WaterPS(WaterVertexToPixel PSIn, float2 vpos : VPOS0) : COLOR
     
     // get light and view direction
     float3 lightDir = normalize(xLightDirection);
-    float3 viewDir = normalize(PSIn.worldPosition.xyz - xViewInverse[3].xyz);
+    float3 viewDir = normalize(PSIn.worldPosition.xyz-xViewInverse[3].xyz);
     
     // half vector from view and light direction;
     float3 H = normalize(-viewDir + lightDir);
@@ -405,12 +305,12 @@ float4 WaterPS(WaterVertexToPixel PSIn, float2 vpos : VPOS0) : COLOR
     float fade_strength = 0.002; // how strong the fade effect is
     float depth_difference = saturate(abs(scene_depth - water_depth) * fade_strength);
     
-    //normalMult *= (1 - depth_difference);
+    normalMult *= (1 - depth_difference);
   
     vFlakesNormal = (vFlakesNormal + vFlakesNormal2) / 2;
     vFlakesNormal = 2.0 * vFlakesNormal - 1.0;
     float3 normal = normalize(vFlakesNormal.xyz * float3(0.1 + normalMult, 0.1 + normalMult, 1));
-    normal = (normal.x * float3(1, 0, 0) + normal.y * float3(0, 1, 0));
+   // normal = (normal.x * float3(1, 0, 0) + normal.y * float3(0, 1, 0));
     float2 perturbation = normal.xy * 0.03;
     ProjectedTexCoords += perturbation;
     float4 reflectiveColor = tex2D(ReflectionSampler, ProjectedTexCoords);
@@ -420,6 +320,18 @@ float4 WaterPS(WaterVertexToPixel PSIn, float2 vpos : VPOS0) : COLOR
     float4 waterColorBase = float4(RGBVALUE(10, 51, 102), 1) * 0.7;
     waterColorBase.rgb = HSVtoRGB(HSVVALUE(206, 90, 41));
        
+    float ShadowTerm = DrawShadow(ShadowSampler, PSIn.worldPosition.xyz, sceneZ, PSIn.worldPosition.xyz, ShadowBuffer);
+    
+    float FarClip2 = 160.0;
+    float FogStart2 = 0.0;
+    float fogdist;
+    fogdist = PSIn.worldPosition.z;
+    float fadefact = (FarClip2 - sceneZ) / (FarClip2 - FogStart2);
+    fadefact = saturate(1.0 - fadefact);
+    
+    //ShadowTerm = lerp(ShadowTerm, 1.0, fadefact);
+    //ShadowTerm = lerp(1.0, ShadowTerm, 0.7);
+    
     // fresnel
     float f;
     f = clamp(1.0 - dot(normal, -viewDir), 0.0, 1.0);
@@ -428,7 +340,7 @@ float4 WaterPS(WaterVertexToPixel PSIn, float2 vpos : VPOS0) : COLOR
     
     int waterType = 1;
     if (waterType == 1)
-        combinedColor = lerp(waterColorBase * 0.7, Watercolor * 0.8, f * causDepth) * combinedColor * 0.8;
+        combinedColor = lerp(waterColorBase * 0.7 /** ShadowTerm*/, Watercolor * 0.8, f * causDepth) * combinedColor * 0.8;
     else
     {
         sWaterColor = lerp(waterColorBase, sWaterColor, f * 0.7);
@@ -443,26 +355,25 @@ float4 WaterPS(WaterVertexToPixel PSIn, float2 vpos : VPOS0) : COLOR
 
     float3 sun = SunColor.rgb;
     sun = RGBtoHSV(sun);
-    sun = HSVtoRGB(float3(sun.x, sun.y*0.7, sun.z));
-   
-    float ShadowTerm = DrawShadow(ShadowSampler, PSIn.worldPosition.xyz, length(PSIn.worldPosition.xyz - xViewInverse[3].xyz), PSIn.worldPosition.xyz, ShadowBuffer);
-
+    sun = HSVtoRGB(float3(sun.x, sun.y * 0.7, sun.z));
     
+
     // luminance
-    combinedColor.rgb += diffuse(normal, H, 40.0) * SunColor.rgb * 0.4 * ShadowTerm;
+    combinedColor.rgb += diffuse(normal, H, 40.0) * SunColor.rgb * 0.4 /** ShadowTerm*/ ;
     
     float glow = 100.0;
-    combinedColor.rgb += BlinnPhongSpecular(lightDir, -viewDir, normal, glow) * sun * ShadowTerm;
+    combinedColor.rgb += BlinnPhongSpecular(lightDir, -viewDir, normal, glow) * sun /** ShadowTerm*/ ;
+    
     
     // foam 
     float sinTimer = sin(Time);
     float2 foamuv = 7.0f * PSIn.texcoor + 0.5 * float2(sinTimer, 1);
     float4 foamColor = tex2D(WaterWake, foamuv);
-    combinedColor += foamColor * (1 - foamDepth);
+    combinedColor += foamColor * (1 - foamDepth);   
     
- 
-    combinedColor = CalculateFog(combinedColor, objectZ);
-    
+   // combinedColor += ShadowTerm;
+    combinedColor = CalculateFog(combinedColor, objectZ);  
     combinedColor.a = 1.0;
+    
     return combinedColor;
 }
