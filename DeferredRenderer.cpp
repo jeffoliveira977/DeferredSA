@@ -20,14 +20,6 @@ DeferredRendering *DeferredContext;
 
 DeferredRendering::DeferredRendering()
 {
-	m_shadowScreenRaster = nullptr;
-	m_graphicsLight      = nullptr;
-
-	m_graphicsBuffer[0]  = nullptr;
-	m_graphicsBuffer[1]  = nullptr;
-	m_graphicsBuffer[2]  = nullptr;
-	m_graphicsBuffer[3]  = nullptr;
-
 	PS_DirectLight       = nullptr;
 	PS_PointAndSpotLight = nullptr;
 	PS_TargetLight       = nullptr;
@@ -37,12 +29,6 @@ DeferredRendering::DeferredRendering()
 
 DeferredRendering::~DeferredRendering()
 {
-	RwRasterDestroy(m_shadowScreenRaster);
-	RwRasterDestroy(m_graphicsLight);
-	RwRasterDestroy(m_graphicsBuffer[0]);
-	RwRasterDestroy(m_graphicsBuffer[1]);
-	RwRasterDestroy(m_graphicsBuffer[2]);
-	RwRasterDestroy(m_graphicsBuffer[3]);
 	
 	RwD3D9DeletePixelShader(PS_DirectLight);
 	RwD3D9DeletePixelShader(PS_PointAndSpotLight);
@@ -99,15 +85,23 @@ void DeferredRendering::Initialize()
 	width = RsGlobal.maximumWidth;
 	height = RsGlobal.maximumHeight;
 
-	m_shadowScreenRaster = RwD3D9RasterCreate(width, height, D3DFMT_A16B16G16R16F, rwRASTERTYPECAMERATEXTURE);
-	m_screenRaster = RwD3D9RasterCreate(width, height, D3DFMT_A16B16G16R16F, rwRASTERTYPECAMERATEXTURE);
+	mScreenRaster = new RenderTarget(D3DFMT_A16B16G16R16F);
+	mScreenRaster->Initialize();
 
-	// For better quality we will use D3DFMT_A16B16G16R16F
-	m_graphicsLight = RwD3D9RasterCreate(width, height, D3DFMT_A16B16G16R16F, rwRASTERTYPECAMERATEXTURE);
-	m_graphicsBuffer[0] = RwD3D9RasterCreate(width, height, D3DFMT_A16B16G16R16F, rwRASTERTYPECAMERATEXTURE);
-	m_graphicsBuffer[1] = RwD3D9RasterCreate(width, height, D3DFMT_A16B16G16R16F, rwRASTERTYPECAMERATEXTURE);
-	m_graphicsBuffer[2] = RwD3D9RasterCreate(width, height, D3DFMT_A16B16G16R16F, rwRASTERTYPECAMERATEXTURE);
-	m_graphicsBuffer[3] = RwD3D9RasterCreate(width, height, D3DFMT_A16B16G16R16F, rwRASTERTYPECAMERATEXTURE);
+	mGraphicsLight = new RenderTarget(D3DFMT_A16B16G16R16F);
+	mGraphicsLight->Initialize();
+
+	mGraphicsBuffer[0] = new RenderTarget(D3DFMT_A16B16G16R16F);
+	mGraphicsBuffer[0]->Initialize();
+
+	mGraphicsBuffer[1] = new RenderTarget(D3DFMT_A16B16G16R16F);
+	mGraphicsBuffer[1]->Initialize();
+	
+	mGraphicsBuffer[2] = new RenderTarget(D3DFMT_A16B16G16R16F);
+	mGraphicsBuffer[2]->Initialize();
+	
+	mGraphicsBuffer[3] = new RenderTarget(D3DFMT_A16B16G16R16F);
+	mGraphicsBuffer[3]->Initialize();
 
 	mVolumetricClouds = new VolumetricClouds();
 	mVolumetricClouds->Initialize();
@@ -122,16 +116,22 @@ void DeferredRendering::Initialize()
 	mAmbientOcclusion->Initialize();
 }
 
-void DeferredRendering::BindFirstPass()
+void DeferredRendering::Start()
 {
 	gRenderState = stageDeferred;
 
-	rwD3D9SetRenderTargets(m_graphicsBuffer, 4, 0);
+	RwRaster* rasters[] = {
+		mGraphicsBuffer[0]->GetRaster(),
+		mGraphicsBuffer[1]->GetRaster(),
+		mGraphicsBuffer[2]->GetRaster(),
+		mGraphicsBuffer[3]->GetRaster()};
+
+	rwD3D9SetRenderTargets(rasters, 4, 0);
 	ShaderContext->SetViewProjectionMatrix(4, true);
 	ShaderContext->SetViewMatrix(4);
 }
 
-void DeferredRendering::BindLastPass()
+void DeferredRendering::Stop()
 {
 	DefinedState();
 
@@ -148,12 +148,11 @@ void DeferredRendering::BindLastPass()
 		rwD3D9SetSamplerState(i, D3DSAMP_ADDRESSW, D3DTADDRESS_WRAP);
 	}
 
-	_rwD3D9RWSetRasterStage(m_graphicsLight, 0);
-	_rwD3D9RWSetRasterStage(m_graphicsBuffer[0], 1);
-	_rwD3D9RWSetRasterStage(m_graphicsBuffer[1], 2);
-	_rwD3D9RWSetRasterStage(m_graphicsBuffer[2], 3);
-	_rwD3D9RWSetRasterStage(m_graphicsBuffer[3], 4);
-	_rwD3D9RWSetRasterStage(m_shadowScreenRaster, 5);
+	_rwD3D9RWSetRasterStage(mGraphicsLight->GetRaster(), 0);
+	_rwD3D9RWSetRasterStage(mGraphicsBuffer[0]->GetRaster(), 1);
+	_rwD3D9RWSetRasterStage(mGraphicsBuffer[1]->GetRaster(), 2);
+	_rwD3D9RWSetRasterStage(mGraphicsBuffer[2]->GetRaster(), 3);
+	_rwD3D9RWSetRasterStage(mGraphicsBuffer[3]->GetRaster(), 4);
 
 	// We need to disable Z buffer
 	RwRenderStateSet(rwRENDERSTATEZWRITEENABLE, FALSE);
@@ -166,27 +165,20 @@ void DeferredRendering::BindLastPass()
 
 	mAmbientOcclusion->Render();
 
-	RwD3D9SetRenderTarget(0, m_graphicsLight);
+	RwD3D9SetRenderTarget(0, mGraphicsLight->GetRaster());
 
 	DirectLight();
 	PointAndSpotLight();
-
 
 	// Restore render target and draw light to final raster
 	RwD3D9RestoreRenderTargets(4);
 	FinalPass();
 
-	AtmosphericScattering();
+	//AtmosphericScattering();
 
-	IDirect3DSurface9* screenSurface;
+	RwD3DDevice->StretchRect(RwD3D9RenderSurface, NULL, mScreenRaster->GetSurface(), NULL, D3DTEXF_NONE);
 
-	auto screenExt = RASTEREXTFROMRASTER(m_screenRaster);
-	screenExt->texture->GetSurfaceLevel(0, &screenSurface);
-
-	RwD3DDevice->StretchRect(RwD3D9RenderSurface, NULL, screenSurface, NULL, D3DTEXF_NONE);
-	screenSurface->Release();
-
-	mVolumetricClouds->Render(m_screenRaster);
+	//mVolumetricClouds->Render(m_screenRaster);
 	//mVolumetricLight->Render();
 
 	_rwD3D9SetPixelShader(NULL);
@@ -202,7 +194,7 @@ void DeferredRendering::RenderPostProcessing()
 	RwRenderStateSet(rwRENDERSTATECULLMODE, (void*)rwCULLMODECULLNONE);
 	RwD3D9SetRenderState(D3DRS_ALPHABLENDENABLE, TRUE);
 
-	mPostProcessing->RenderFXAA();
+	//mPostProcessing->RenderFXAA();
 	//mPostProcessing->RenderBloom();
 }
 
@@ -307,14 +299,8 @@ void DeferredRendering::AtmosphericScattering()
 {
 	ShaderContext->SetTimecyProps(8);
 
-	IDirect3DSurface9* screenSurface;
-	auto screenExt = RASTEREXTFROMRASTER(m_screenRaster);
-	screenExt->texture->GetSurfaceLevel(0, &screenSurface);
-
-	RwD3DDevice->StretchRect(RwD3D9RenderSurface, NULL, screenSurface, NULL, D3DTEXF_NONE);
-	_rwD3D9RWSetRasterStage(m_screenRaster, 4);
-
-	screenSurface->Release();
+	RwD3DDevice->StretchRect(RwD3D9RenderSurface, NULL, mScreenRaster->GetSurface(), NULL, D3DTEXF_NONE);
+	_rwD3D9RWSetRasterStage(mScreenRaster->GetRaster(), 4);
 
 	_rwD3D9SetPixelShader(PS_AtmosphereScattering);
 	DrawScreenQuad();
@@ -344,29 +330,35 @@ void DeferredRendering::UpdateImgui()
 		ImGui::InputFloat("BodyThickness", &BodyThickness, 0.01, 0.1, "%.1f");
 	}*/
 }
+D3DPRESENT_PARAMETERS& Present = *(D3DPRESENT_PARAMETERS*)0xC9C040;
 
+int width, height;
 void DeferredRendering::UpdateTextures()
 {
-	int width, height;
 	width = RsGlobal.maximumWidth;
 	height = RsGlobal.maximumHeight;
 
+	
 	//if(width != m_graphicsBuffer[0]->width || height != m_graphicsBuffer[0]->height)
 	//{
 		mPostProcessing->UpdateTextures();
 		mVolumetricLight->UpdateTextures();
 
-		for(size_t i = 0; i < 4; i++)
-		{
-			m_graphicsBuffer[i]->width = width;
-			m_graphicsBuffer[i]->height = height;
-		}
+		mGraphicsLight->Release();
+		mGraphicsLight->Initialize();
 
-		m_screenRaster->width = width;
-		m_screenRaster->height = height;
+		mScreenRaster->Release();
+		mScreenRaster->Initialize();
 
-		m_shadowScreenRaster->width = width;
-		m_shadowScreenRaster->height = height;
+		mGraphicsBuffer[0]->Release();
+		mGraphicsBuffer[1]->Release();
+		mGraphicsBuffer[2]->Release();
+		mGraphicsBuffer[3]->Release();
+
+		mGraphicsBuffer[0]->Initialize();
+		mGraphicsBuffer[1]->Initialize();
+		mGraphicsBuffer[2]->Initialize();
+		mGraphicsBuffer[3]->Initialize();
 	//}
 }
 
@@ -375,13 +367,14 @@ void DeferredRendering::CascadedShadow()
 	CascadedShadowManagement->SetParamsBuffer();
 
 	RwD3D9SetRenderState(D3DRS_ALPHABLENDENABLE, FALSE);
-	RwD3D9SetRenderTarget(0, m_shadowScreenRaster);
 
 	ShaderContext->SetSunDirection(11);
 	ShaderContext->SetFogParams(12);
 
 	_rwD3D9SetPixelShader(PS_ShadowScreen);	
-
+	D3DDISPLAYMODE mode;
+	RwD3DDevice->GetDisplayMode(0, &mode);
+	
 	for(size_t i = 0; i < CascadedShadowManagement->CascadeCount; i++)
 	{
 		//RwD3DDevice->SetSamplerState(i + 6, D3DSAMP_MINFILTER, D3DTEXF_POINT);
@@ -391,15 +384,15 @@ void DeferredRendering::CascadedShadow()
 		//RwD3DDevice->SetSamplerState(i + 6, D3DSAMP_ADDRESSV, D3DTADDRESS_CLAMP);
 		//RwD3DDevice->SetSamplerState(i + 6, D3DSAMP_BORDERCOLOR, 0xFFFFFFFF);
 
-		rwD3D9SetSamplerState(i + 6, D3DSAMP_MINFILTER, D3DTEXF_LINEAR);
+		/*rwD3D9SetSamplerState(i + 6, D3DSAMP_MINFILTER, D3DTEXF_LINEAR);
 		rwD3D9SetSamplerState(i + 6, D3DSAMP_MAGFILTER, D3DTEXF_LINEAR);
 		rwD3D9SetSamplerState(i + 6, D3DSAMP_MIPFILTER, D3DTEXF_NONE);
 		rwD3D9SetSamplerState(i + 6, D3DSAMP_ADDRESSU, D3DTADDRESS_BORDER);
-		rwD3D9SetSamplerState(i + 6, D3DSAMP_ADDRESSV, D3DTADDRESS_BORDER);
+		rwD3D9SetSamplerState(i + 6, D3DSAMP_ADDRESSV, D3DTADDRESS_BORDER);*/
 		rwD3D9RWSetRasterStage(CascadedShadowManagement->mColorRaster[i], i + 6);
 	}
 
 	_rwD3D9SetPixelShaderConstant(13, &CascadedShadowManagement->mConstantBuffer,
 								  sizeof(CascadedShadowManagement->mConstantBuffer) / sizeof(XMVECTOR));
-	DrawScreenQuad();
+	//DrawScreenQuad();
 }

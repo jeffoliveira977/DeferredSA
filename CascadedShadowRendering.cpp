@@ -43,8 +43,7 @@ void CascadedShadowRendering::Initialize()
     for(int i = 0; i < CascadeCount; i++)
         mColorRaster[i] = RwD3D9RasterCreate(ShadowSize, ShadowSize, D3DFMT_G32R32F, rwRASTERTYPECAMERATEXTURE);
 
-    mDepthRaster = RwD3D9RasterCreate(ShadowSize, ShadowSize, D3DFMT_D24S8, rwRASTERTYPEZBUFFER);
-
+    mDepthRaster = RwRasterCreate(ShadowSize, ShadowSize, 32, rwRASTERTYPEZBUFFER);
 
     mINI::INIFile file("DeferredConfig.ini");
     mINI::INIStructure ini;
@@ -140,6 +139,7 @@ void CascadedShadowRendering::UpdateImgui()
         file.write(ini);
     }
 }
+
 
 
 void CascadedShadowRendering::Update()

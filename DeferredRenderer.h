@@ -5,6 +5,7 @@
 #include "PixelShader.h"
 #include "VolumetricLight.h"
 #include "AmbientOcclusion.h"
+#include "RenderTarget.h"
 
 enum RenderingStage
 {
@@ -26,18 +27,18 @@ public:
 	~DeferredRendering();
 
 	PostProcessing* mPostProcessing;
-	RwRaster* m_graphicsLight;
-	RwRaster* m_graphicsBuffer[4];
-	RwRaster* m_shadowScreenRaster;
-	RwRaster* m_screenRaster;
-	RwRaster* m_volumetricLight;
+
+
+	RenderTarget* mScreenRaster;
+	RenderTarget* mGraphicsLight;
+	RenderTarget* mGraphicsBuffer[4];
 
 	VolumetricClouds* mVolumetricClouds;
 	VolumetricLight* mVolumetricLight;
 	AmbientOcclusion* mAmbientOcclusion;
 
-	void BindFirstPass();
-	void BindLastPass();
+	void Start();
+	void Stop();
 	void RenderPostProcessing();
 	void Initialize();
 

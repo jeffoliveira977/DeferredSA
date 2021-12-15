@@ -73,7 +73,7 @@ void SoftParticles::Render()
     rwD3D9SetSamplerState(2, D3DSAMP_ADDRESSU, D3DTADDRESS_WRAP);
     rwD3D9SetSamplerState(2, D3DSAMP_ADDRESSV, D3DTADDRESS_WRAP);
     rwD3D9SetSamplerState(2, D3DSAMP_ADDRESSW, D3DTADDRESS_WRAP);
-    _rwD3D9RWSetRasterStage(DeferredContext->m_graphicsBuffer[1], 2);
+    _rwD3D9RWSetRasterStage(DeferredContext->mGraphicsBuffer[1]->GetRaster(), 2);
 
     XMMATRIX worldMatrix = RwMatrixToXMMATRIX(g_fx.m_pTransformLTM);
     _rwD3D9SetVertexShaderConstant(0, &worldMatrix, 4);

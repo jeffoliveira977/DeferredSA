@@ -93,6 +93,7 @@
     <ClCompile Include="PostProcessing.cpp" />
     <ClCompile Include="VolumetricLight.cpp" />
     <ClCompile Include="AmbientOcclusion.cpp" />
+    <ClCompile Include="RenderTarget.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="GTADef.h" />
@@ -167,6 +168,7 @@
     <ClInclude Include="mini\ini.h">
       <Filter>mini</Filter>
     </ClInclude>
+    <ClInclude Include="RenderTarget.h" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="imgui">

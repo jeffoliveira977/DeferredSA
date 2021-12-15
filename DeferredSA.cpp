@@ -195,16 +195,17 @@ void ShutdowRenderware()
 #include "IndexBufferManager.h"
 void LostDevice()
 {
-	//CascadedShadowManagement->UpdateTextures();
 
-	CWaterLevel::UpdateTextures();
 	IndexBufferManager::Release();
-	DeferredContext->UpdateTextures();
+	
 }
 
 void ResetDevice()
 {
+	//CascadedShadowManagement->UpdateTextures();
+	CWaterLevel::UpdateTextures();
 	IndexBufferManager::Restore();
+	DeferredContext->UpdateTextures();
 }
 
 void Hook()

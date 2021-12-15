@@ -89,12 +89,12 @@ void CWaterLevel::InitShaders()
      //Wavemap = RwD3D9DDSTextureRead("DeferredSA/waves2");
 
     int width, height;
-    width = RsGlobal.maximumWidth;
-    height = RsGlobal.maximumHeight;
+    width = 1024;
+    height = 1024;
 
-    m_reflection = RwRasterCreate(width, height, 32, rwRASTERTYPECAMERATEXTURE);
-    m_refraction = RwRasterCreate(width, height, 32, rwRASTERTYPECAMERATEXTURE);
-    m_zRaster = RwRasterCreate(width, height, 32, rwRASTERTYPEZBUFFER);
+    m_reflection = RwRasterCreate(1024, 1024, 32, rwRASTERTYPECAMERATEXTURE);
+    m_refraction = RwRasterCreate(1024, 1024, 32, rwRASTERTYPECAMERATEXTURE);
+    m_zRaster = RwRasterCreate(1024, 1024, 32, rwRASTERTYPEZBUFFER);
 
     m_envCamera = RwCameraCreate();
     RwCameraSetProjection(m_envCamera, RwCameraProjection::rwPERSPECTIVE);
@@ -111,18 +111,19 @@ void CWaterLevel::InitShaders()
 
 void CWaterLevel::UpdateTextures()
 {
-    int width, height;
-    width = RsGlobal.maximumWidth;
-    height = RsGlobal.maximumHeight;
+ //   int width, height;
+ //   width = 1024;
+ //   height = 1024;
 
-    m_reflection->width = width;
-    m_reflection->height = height;
+ //   m_reflection->width = width;
+ //   m_reflection->height = height;
 
-    m_refraction->width = width;
-    m_refraction->height = height;
+ //   m_refraction->width = width;
+ //   m_refraction->height = height;
 
-    m_zRaster->width = width;
-    m_zRaster->height = height;
+ //   m_zRaster->width = width;
+ //   m_zRaster->height = height;
+
 }
 
 void CWaterLevel::UpdateImgui()
@@ -190,9 +191,11 @@ void CWaterLevel::SetupWaterShader()
     _rwD3D9SetVertexShaderConstant(12, &ti, 1);
     _rwD3D9SetPixelShaderConstant(12, &ti, 1);
 
-    float mSettings[2];
+    float mSettings[4];
     mSettings[0] = CTimeCycle::m_CurrentColours.m_fFogStart;
     mSettings[1] = CTimeCycle::m_CurrentColours.m_fFarClip;
+    mSettings[2] = RsGlobal.maximumWidth;
+    mSettings[3] = RsGlobal.maximumHeight;
     _rwD3D9SetPixelShaderConstant(13, &mSettings, 1);
 
     RwUInt32 color;
@@ -213,6 +216,7 @@ void CWaterLevel::SetupWaterShader()
     ShaderContext->SetSunColor(18);
     ShaderContext->SetSunDirection(19);
 
+   // PrintMessage("%f %f", screenSize[0], screenSize[1]);
     for(size_t i = 0; i < CascadedShadowManagement->CascadeCount; i++)
     {
         rwD3D9SetSamplerState(i + 6, D3DSAMP_MINFILTER, D3DTEXF_LINEAR);
@@ -437,7 +441,7 @@ void DrawWater()
     RwD3D9SetSamplerState(4, D3DSAMP_ADDRESSU, D3DTADDRESS_WRAP);
     RwD3D9SetSamplerState(4, D3DSAMP_ADDRESSV, D3DTADDRESS_WRAP);
     RwD3D9SetSamplerState(4, D3DSAMP_MAXANISOTROPY, 16);
-    _rwD3D9RWSetRasterStage(DeferredContext->m_graphicsBuffer[1], 4);
+    _rwD3D9RWSetRasterStage(DeferredContext->mGraphicsBuffer[1]->GetRaster(), 4);
 
     RwD3D9SetSamplerState(5, D3DSAMP_MAGFILTER, D3DTEXF_LINEAR);
     RwD3D9SetSamplerState(5, D3DSAMP_MINFILTER, D3DTEXF_LINEAR);

@@ -215,9 +215,9 @@ void CGameIdle::RenderScene(){
 	//
 
 	{
-		DeferredContext->BindFirstPass();
+		DeferredContext->Start();
 		RenderDeferred();
-		DeferredContext->BindLastPass();
+		DeferredContext->Stop();
 	}
 
 	gRenderState = stageForward;
