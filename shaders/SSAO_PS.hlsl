@@ -2,7 +2,7 @@
 row_major float4x4 ViewInverseMatrix : register(c0);
 row_major float4x4 ProjectionMatrix : register(c4);
 float4 FogData : register(c8);
-float Time;
+float Time : register(c9);
 
 float rand2dTo1d(float2 value, float2 dotDir = float2(12.9898, 78.233))
 {

@@ -9,9 +9,9 @@ public:
 
 	struct ShadowData
 	{
-		XMVECTOR mDistanceCoefficients;
-		XMVECTOR mShadowParam;
-		XMVECTOR mShadowBias;
+		XMFLOAT4 mDistanceCoefficients;
+		XMFLOAT4 mShadowParam;
+		XMFLOAT4 mShadowBias;
 		XMMATRIX mShadowMatrix[4];
 	};
 

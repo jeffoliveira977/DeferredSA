@@ -23,19 +23,15 @@ class DeferredRendering
 {
 public:
 
-	DeferredRendering();
-	~DeferredRendering();
+	unique_ptr<PostProcessing> mPostProcessing;
 
-	PostProcessing* mPostProcessing;
+	unique_ptr<RenderTarget> mScreenRT;
+	unique_ptr<RenderTarget> mGraphicsLight;
+	unique_ptr<RenderTarget> mGraphicsBuffer[4];
 
-
-	RenderTarget* mScreenRT;
-	RenderTarget* mGraphicsLight;
-	RenderTarget* mGraphicsBuffer[4];
-
-	VolumetricClouds* mVolumetricClouds;
-	VolumetricLight* mVolumetricLight;
-	AmbientOcclusion* mAmbientOcclusion;
+	unique_ptr<VolumetricClouds> mVolumetricClouds;
+	unique_ptr<VolumetricLight> mVolumetricLight;
+	unique_ptr<AmbientOcclusion> mAmbientOcclusion;
 
 	void Start();
 	void Stop();
@@ -45,21 +41,14 @@ public:
 	void UpdateImgui();
 	void UpdateTextures();
 private:
-	void* PS_DirectLight;
-	void* PS_PointAndSpotLight;
-	void* PS_TargetLight;
-	void* PS_ShadowScreen;
-	void* PS_AtmosphereScattering;
-	void* PS_VolumetricLight;
-	void* PS_VolumetricLightCombine;
+	unique_ptr<PixelShader> mDirectLightPS;
+	unique_ptr<PixelShader> mCombineLightPS;
+	unique_ptr<PixelShader> mAtmosphereScaterringPS;
+	unique_ptr<PixelShader> mPointSpotLightPS;
 
-	void* VS_Quad;
-
-	PixelShader* mPointSpotLightPixelShader;
-	void DirectLight();
-	void PointAndSpotLight();
-	void FinalPass();
-	void CascadedShadow();
+	void RenderDirectLight();
+	void RenderPointAndSpotLight();
+	void RenderFinalPass();
 	void AtmosphericScattering();
 };
 

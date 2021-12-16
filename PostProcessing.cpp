@@ -39,23 +39,20 @@ void PostProcessing::RenderBloom(RenderTarget* screenRaster)
 
 	RwD3D9SetRenderState(D3DRS_ALPHABLENDENABLE, TRUE);
 
-	int width, height;
-	width = RsGlobal.maximumWidth;
-	height = RsGlobal.maximumHeight;
 
-	_rwD3D9SetPixelShader(mBloomPS->GetObject());
-
+	mBloomPS->Apply();
 	screenRaster->CopyFromSurface(nullptr);
 	rwD3D9RWSetRasterStage(screenRaster->GetRaster(), 0);
 	RwD3D9SetRenderTarget(0, mBloomRT->GetRaster());
 	Quad::Render();
 
-	_rwD3D9SetPixelShader(mDownFilter4PS->GetObject());
+
+	mDownFilter4PS->Apply();
 	rwD3D9RWSetRasterStage(mBloomRT->GetRaster(), 0);
 	RwD3D9SetRenderTarget(0, mDownFilter4x4RT->GetRaster());
 	Quad::Render();
 
-	_rwD3D9SetPixelShader(mDownFilter4PS->GetObject());
+	mDownFilter4PS->Apply();
 	rwD3D9RWSetRasterStage(mDownFilter4x4RT->GetRaster(), 0);
 	RwD3D9SetRenderTarget(0, mBloomRT->GetRaster());
 	Quad::Render();
@@ -65,7 +62,7 @@ void PostProcessing::RenderBloom(RenderTarget* screenRaster)
 	GetGaussianOffsets(true, width / height, samplesOffsets, sampleWeights);*/
 	//_rwD3D9SetVertexShaderConstant(0, samplesOffsets, sizeof(samplesOffsets));
 	//_rwD3D9SetVertexShaderConstant(19, sampleWeights, sizeof(sampleWeights) );
-	_rwD3D9SetPixelShader(mGaussianBlurXPS->GetObject());
+	mGaussianBlurXPS->Apply();
 	rwD3D9RWSetRasterStage(mBloomRT->GetRaster(), 0);
 	RwD3D9SetRenderTarget(0, mGaussianBlurXRT->GetRaster());
 	Quad::Render();
@@ -74,12 +71,12 @@ void PostProcessing::RenderBloom(RenderTarget* screenRaster)
 	//_rwD3D9SetVertexShaderConstant(0, samplesOffsets, sizeof(samplesOffsets));
 	//_rwD3D9SetVertexShaderConstant(19, sampleWeights, sizeof(sampleWeights) );
 
-	_rwD3D9SetPixelShader(mGaussianBlurYPS->GetObject());
+	mGaussianBlurYPS->Apply();
 	rwD3D9RWSetRasterStage(mGaussianBlurXRT->GetRaster(), 0);
 	RwD3D9SetRenderTarget(0, mGaussianBlurYRT->GetRaster());
 	Quad::Render();
 
-	_rwD3D9SetPixelShader(mBloomCombinePS->GetObject());
+	mBloomCombinePS->Apply();
 	rwD3D9RWSetRasterStage(mGaussianBlurYRT->GetRaster(), 0);
 	rwD3D9RWSetRasterStage(screenRaster->GetRaster(), 1);
 	__rwD3D9SetRenderTarget(0, RwD3D9RenderSurface);

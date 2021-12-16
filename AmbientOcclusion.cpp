@@ -36,7 +36,8 @@ void AmbientOcclusion::Render()
 		ti = ti -
 		time_interval + CTimer::ms_fTimeStep;
 
-	mSSAOPixelShader->SetFloat("Time", ti);
+	//mSSAOPixelShader->SetFloat("Time", ti);
+	_rwD3D9SetPixelShaderConstant(9, &ti, 1);
 	_rwD3D9SetPixelShader(mSSAOPixelShader->GetObject());
 	RwD3D9SetRenderTarget(0, mSSAORaster);
 	//RwD3DDevice->Clear(0, NULL, D3DCLEAR_TARGET, 0, 1.0, 0);

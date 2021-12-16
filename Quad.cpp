@@ -19,10 +19,10 @@ IDirect3DVertexBuffer9* mVertexBuffer;
 ScreenVertex svQuad[4];
 QuadVertex verts[4] =
 {
+	{ RwV4d{ -1, 1, 1, 1 }, RwV2d{ 0, 0} },
 	{ RwV4d{ 1, 1, 1, 1 }, RwV2d{ 1, 0 } },
-	{ RwV4d{ 1, -1, 1, 1 }, RwV2d{ 1, 1 } },
 	{ RwV4d{ -1, -1, 1, 1 }, RwV2d{ 0, 1 } },
-	{ RwV4d{ -1, 1, 1, 1 }, RwV2d{ 0, 0 } }
+	{ RwV4d{ 1, -1, 1, 1 }, RwV2d{ 1, 1 } }
 };
 
 
@@ -204,18 +204,26 @@ void Quad::Initialize()
 	mPixelShader->CreateFromBinary("QuadPS");
 
 	mVertexBuffer = new VertexBuffer();
-	mVertexBuffer->Initialize(4, sizeof(QuadVertex));
+	mVertexBuffer->Initialize(4, sizeof(QuadVertex), false);
 	
 	mIndexBuffer = new RwIndexBuffer();
-	mIndexBuffer->Initialize(6);
+	mIndexBuffer->Initialize(6, false);
 
 
-	static RwUInt16 indices[] = {0, 1, 2, 2, 3, 0};
+	RwUInt32 stride = sizeof(QuadVertex);
+	QuadVertex* bufferMem = nullptr;
+	mVertexBuffer->Map(stride * 4, (void**)&bufferMem);
+	std::copy(verts, verts + 4, bufferMem);
+	mVertexBuffer->Unmap();
 
+	static RwUInt16 indices[] = {0, 3, 2, 0, 1, 3};
 	RwUInt16* indexBuffer = nullptr;
 	mIndexBuffer->Map(sizeof(RwUInt16) * 6, (void**)&indexBuffer);
 	std::copy(indices, indices + 6, indexBuffer);
 	mIndexBuffer->Unmap();
+
+
+
 }
 
 void Quad::Release()
@@ -230,20 +238,17 @@ void Quad::Release()
 
 void Quad::Render()
 {
-	RwUInt32 stride = sizeof(QuadVertex);
-	QuadVertex* bufferMem = nullptr;
-	mVertexBuffer->Map(stride * 4, (void**)&bufferMem);
-	std::copy(verts, verts + 4, bufferMem);
-	mVertexBuffer->Unmap();
+	DrawScreenQuad();
+	return;
 
-	_rwD3D9SetVertexShader(mVertexShader->GetObject());
+	 _rwD3D9SetVertexShader(0);
 	// _rwD3D9SetPixelShader(mPixelShader->GetObject());
 
 	RwD3D9SetStreamSource(0, mVertexBuffer->GetBuffer(), 0, sizeof(QuadVertex));
 	 _rwD3D9SetIndices(mIndexBuffer->GetBuffer());
-
-	_rwD3D9SetVertexDeclaration(mVertexDeclQuad);
-	_rwD3D9DrawIndexedPrimitive(D3DPT_TRIANGLELIST, 0, 0, 4, 0, 6);
+	 _rwD3D9SetFVF(D3DFVF_XYZRHW | D3DFVF_TEX1);
+	//_rwD3D9SetVertexDeclaration(mVertexDeclQuad);
+	_rwD3D9DrawIndexedPrimitive(D3DPT_TRIANGLELIST, 0, 0, 4, 0, 2);
 	//_rwD3D9SetVertexShader(NULL);
 }
 

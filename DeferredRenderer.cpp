@@ -18,102 +18,43 @@
 RenderingStage gRenderState;
 DeferredRendering *DeferredContext;
 
-DeferredRendering::DeferredRendering()
-{
-	PS_DirectLight       = nullptr;
-	PS_PointAndSpotLight = nullptr;
-	PS_TargetLight       = nullptr;
-	PS_ShadowScreen      = nullptr;
-	mVolumetricClouds = nullptr;
-}
-
-DeferredRendering::~DeferredRendering()
-{
-	
-	RwD3D9DeletePixelShader(PS_DirectLight);
-	RwD3D9DeletePixelShader(PS_PointAndSpotLight);
-	RwD3D9DeletePixelShader(PS_TargetLight);
-	RwD3D9DeletePixelShader(PS_ShadowScreen);
-
-	delete mVolumetricClouds;
-	delete mPostProcessing;
-}
-
-
-RwRaster* mFXAARaster = nullptr;
-
-void* mFXAAVertexShader = nullptr;
-void* mFXAAPS = nullptr;
-
-RwRaster* mGaussianBlurXRT = nullptr;
-RwRaster* mGaussianBlurYRT = nullptr;
-void* mGaussianBlurVertexShader = nullptr;
-void* mGaussianBlurXPS = nullptr;
-void* mGaussianBlurYPS = nullptr;
-
-RwRaster* mDownFilter4x4RT = nullptr;
-RwRaster* mBloomRT = nullptr;
-
-void* mBloomPS = nullptr;
-void* mDownFilter4PS = nullptr;
-void* mBloomCombinePS = nullptr;
-
 
 void DeferredRendering::Initialize()
 {
-	PS_DirectLight = RwCreateCompiledPixelShader("DeferredDirectLightPS");
-	PS_PointAndSpotLight = RwCreateCompiledPixelShader("DeferredPointAndSpotLightPS");
-	PS_TargetLight = RwCreateCompiledPixelShader("DeferredFinalPassPS");
-	PS_ShadowScreen = RwCreateCompiledPixelShader("ShadowScreen");
-	PS_AtmosphereScattering = RwCreateCompiledPixelShader("AtmosphericScattering");
-	VS_Quad = RwCreateCompiledVertexShader("GaussianBlur");
+	mPointSpotLightPS = unique_ptr<PixelShader>(new PixelShader());
+	mPointSpotLightPS->CreateFromBinary("DeferredPointAndSpotLightPS");
 
-	mPointSpotLightPixelShader = new PixelShader();
-	mPointSpotLightPixelShader->CreateFromBinary("DeferredPointAndSpotLightPS");
-	
-	mFXAAVertexShader = RwCreateCompiledVertexShader("FXAA_VS");
-	mFXAAPS = RwCreateCompiledPixelShader("FXAA_PS");
+	mDirectLightPS = unique_ptr<PixelShader>(new PixelShader());
+	mDirectLightPS->CreateFromBinary("DeferredDirectLightPS");
 
-	mGaussianBlurVertexShader = RwCreateCompiledVertexShader("GaussianBlur");
-	mGaussianBlurXPS = RwCreateCompiledPixelShader("GaussianBlurX");
-	mGaussianBlurYPS = RwCreateCompiledPixelShader("GaussianBlurY");
+	mCombineLightPS = unique_ptr<PixelShader>(new PixelShader());
+	mCombineLightPS->CreateFromBinary("DeferredFinalPassPS");
 
-	mBloomPS = RwCreateCompiledPixelShader("BloomPS");
-	mDownFilter4PS = RwCreateCompiledPixelShader("DownFilter4");
-	mBloomCombinePS = RwCreateCompiledPixelShader("BloomCombine");
+	mAtmosphereScaterringPS = unique_ptr<PixelShader>(new PixelShader());
+	mAtmosphereScaterringPS->CreateFromBinary("AtmosphericScattering");
 
-	int width, height;
-	width = RsGlobal.maximumWidth;
-	height = RsGlobal.maximumHeight;
-
-	mScreenRT = new RenderTarget(D3DFMT_A16B16G16R16F);
+	mScreenRT = unique_ptr<RenderTarget>(new RenderTarget(D3DFMT_A16B16G16R16F));
 	mScreenRT->Initialize();
 
-	mGraphicsLight = new RenderTarget(D3DFMT_A16B16G16R16F);
+	mGraphicsLight = unique_ptr<RenderTarget>(new RenderTarget(D3DFMT_A16B16G16R16F));
 	mGraphicsLight->Initialize();
 
-	mGraphicsBuffer[0] = new RenderTarget(D3DFMT_A16B16G16R16F);
-	mGraphicsBuffer[0]->Initialize();
+	for(size_t i = 0; i < 4; i++)
+	{
+		mGraphicsBuffer[i] = unique_ptr<RenderTarget>(new RenderTarget(D3DFMT_A16B16G16R16F));
+		mGraphicsBuffer[i]->Initialize();
+	}
 
-	mGraphicsBuffer[1] = new RenderTarget(D3DFMT_A16B16G16R16F);
-	mGraphicsBuffer[1]->Initialize();
-	
-	mGraphicsBuffer[2] = new RenderTarget(D3DFMT_A16B16G16R16F);
-	mGraphicsBuffer[2]->Initialize();
-	
-	mGraphicsBuffer[3] = new RenderTarget(D3DFMT_A16B16G16R16F);
-	mGraphicsBuffer[3]->Initialize();
-
-	mVolumetricClouds = new VolumetricClouds();
+	mVolumetricClouds = unique_ptr<VolumetricClouds>(new VolumetricClouds());
 	mVolumetricClouds->Initialize();
 
-	mPostProcessing = new PostProcessing();
+	mPostProcessing = unique_ptr<PostProcessing>(new PostProcessing());
 	mPostProcessing->Initialize();
 
-	mVolumetricLight = new VolumetricLight();
+	mVolumetricLight = unique_ptr<VolumetricLight>(new VolumetricLight());
 	mVolumetricLight->Initialize();
 
-	mAmbientOcclusion = new AmbientOcclusion();
+	mAmbientOcclusion = unique_ptr<AmbientOcclusion>(new AmbientOcclusion());
 	mAmbientOcclusion->Initialize();
 }
 
@@ -161,24 +102,22 @@ void DeferredRendering::Stop()
 	RwRenderStateSet(rwRENDERSTATECULLMODE, (void*)rwCULLMODECULLNONE);
 	RwD3D9SetRenderState(D3DRS_ALPHATESTENABLE, FALSE);
 
-	if(!CGame::currArea && CGameIdle::m_fShadowDNBalance < 1.0)
-		CascadedShadow();
-
 	mAmbientOcclusion->Render();
 
 	RwD3D9SetRenderTarget(0, mGraphicsLight->GetRaster());
 
-	DirectLight();
-	PointAndSpotLight();
+	RenderDirectLight();
+	RenderPointAndSpotLight();
 
 	// Restore render target and draw light to final raster
 	RwD3D9RestoreRenderTargets(4);
-	FinalPass();
+	RenderFinalPass();
 
 	AtmosphericScattering();
 
-	mVolumetricClouds->Render(mScreenRT);
-	mVolumetricLight->Render(mScreenRT);
+
+	mVolumetricClouds->Render(mScreenRT.get());
+	mVolumetricLight->Render(mScreenRT.get());
 
 	_rwD3D9SetPixelShader(NULL);
 	_rwD3D9SetVertexShader(NULL);
@@ -186,47 +125,44 @@ void DeferredRendering::Stop()
 
 void DeferredRendering::RenderPostProcessing()
 {
-	DefinedState();
+	//DefinedState();
 	RwRenderStateSet(rwRENDERSTATEZWRITEENABLE, (void*)FALSE);
 	RwRenderStateSet(rwRENDERSTATEZTESTENABLE, (void*)FALSE);
 	RwD3D9SetRenderState(D3DRS_ALPHATESTENABLE, TRUE);
 	RwRenderStateSet(rwRENDERSTATECULLMODE, (void*)rwCULLMODECULLNONE);
 	RwD3D9SetRenderState(D3DRS_ALPHABLENDENABLE, TRUE);
 
-	mPostProcessing->RenderFXAA(mScreenRT);
+	mPostProcessing->RenderFXAA(mScreenRT.get());
 	//mPostProcessing->RenderBloom(mScreenRT);
 }
 
-void DeferredRendering::DirectLight()
+void DeferredRendering::RenderDirectLight()
 {
 	ShaderContext->SetTimecyProps(8);
-	//for(size_t i = 0; i < CascadedShadowManagement->CascadeCount; i++)
-	//{
-	//	//RwD3DDevice->SetSamplerState(i + 6, D3DSAMP_MINFILTER, D3DTEXF_POINT);
-	//	//RwD3DDevice->SetSamplerState(i + 6, D3DSAMP_MAGFILTER, D3DTEXF_POINT);
-	//	//RwD3DDevice->SetSamplerState(i + 6, D3DSAMP_MIPFILTER, D3DTEXF_POINT);
-	//	//RwD3DDevice->SetSamplerState(i + 6, D3DSAMP_ADDRESSU, D3DTADDRESS_CLAMP);
-	//	//RwD3DDevice->SetSamplerState(i + 6, D3DSAMP_ADDRESSV, D3DTADDRESS_CLAMP);
-	//	//RwD3DDevice->SetSamplerState(i + 6, D3DSAMP_BORDERCOLOR, 0xFFFFFFFF);
 
-	//	rwD3D9SetSamplerState(i + 4, D3DSAMP_MINFILTER, D3DTEXF_LINEAR);
-	//	rwD3D9SetSamplerState(i + 4, D3DSAMP_MAGFILTER, D3DTEXF_LINEAR);
-	//	rwD3D9SetSamplerState(i + 4, D3DSAMP_MIPFILTER, D3DTEXF_NONE);
-	//	rwD3D9SetSamplerState(i + 4, D3DSAMP_ADDRESSU, D3DTADDRESS_BORDER);
-	//	rwD3D9SetSamplerState(i + 4, D3DSAMP_ADDRESSV, D3DTADDRESS_BORDER);
-	//	rwD3D9RWSetRasterStage(CascadedShadowManagement->mColorRaster[i], i + 4);
-	//}
+	CascadedShadowManagement->SetParamsBuffer();
 
-	_rwD3D9SetPixelShaderConstant(13, &CascadedShadowManagement->mConstantBuffer,
-								  sizeof(CascadedShadowManagement->mConstantBuffer) / sizeof(XMVECTOR));
+	ShaderContext->SetSunDirection(11);
+	ShaderContext->SetFogParams(12);
+
+	if(!CGame::currArea && CGameIdle::m_fShadowDNBalance < 1.0)
+	{
+		for(size_t i = 0; i < CascadedShadowManagement->CascadeCount; i++)
+			rwD3D9RWSetRasterStage(CascadedShadowManagement->mColorRaster[i], i + 6);
+
+		_rwD3D9SetPixelShaderConstant(13, &CascadedShadowManagement->mConstantBuffer,
+									  sizeof(CascadedShadowManagement->mConstantBuffer) / sizeof(XMVECTOR));
+
+	}
+
 	RwD3D9SetRenderState(D3DRS_ALPHABLENDENABLE, FALSE);
-	_rwD3D9SetPixelShader(PS_DirectLight);
-	DrawScreenQuad();
+	mDirectLightPS->Apply();
+	Quad::Render();
 }
 
 #include "CCamera.h"
 
-void DeferredRendering::PointAndSpotLight()
+void DeferredRendering::RenderPointAndSpotLight()
 {
 	_rwD3D9SetPixelShaderConstant(8, &Scene.m_pRwCamera->farPlane, 1);
 	
@@ -234,19 +170,10 @@ void DeferredRendering::PointAndSpotLight()
 	RwRenderStateSet(rwRENDERSTATESRCBLEND, (void*)rwBLENDONE);
 	RwRenderStateSet(rwRENDERSTATEDESTBLEND, (void*)rwBLENDONE);
 
-	_rwD3D9SetPixelShader(mPointSpotLightPixelShader->GetObject());
-
+	mPointSpotLightPS->Apply();
 	Lights::SortByDistance(TheCamera.GetPosition().ToRwV3d());
 
 	XMVECTOR value[4];
-
-
-	XMMATRIX view, projection;
-
-	RwD3D9GetTransform(D3DTS_VIEW, &view);
-	view = XMMatrixInverse(NULL, view);
-
-	RwD3D9GetTransform(D3DTS_PROJECTION, &projection);
 	
 	// Spot and point light 
 	for(int i = 0; i < Lights::m_nLightCount; i++)
@@ -255,43 +182,38 @@ void DeferredRendering::PointAndSpotLight()
 		_rwD3D9SetPixelShaderConstant(9, value, 
 									  sizeof(LightData)); 
 
-		DrawScreenQuad();
+		Quad::Render();
 	}
-	//PrintMessage("%d", Lights::m_nLightCount);
 }
 
-void DeferredRendering::FinalPass()
+void DeferredRendering::RenderFinalPass()
 {
 	_rwD3D9SetPixelShaderConstant(8, EnvironmentMapping::m_paraboloidBasis, 4);
 
 	ShaderContext->SetTimecyProps(12);
 
-	RwRaster* reflectionRasters[] = {CubemapReflection::m_cubeRaster,
-									 EnvironmentMapping::m_sphericalRaster,
-									 DualParaboloidReflection::m_raster[0],
-									 DualParaboloidReflection::m_raster[1],
+	RwRaster* rasters[] = {
+		CubemapReflection::m_cubeRaster,
+		EnvironmentMapping::m_sphericalRaster,
+		DualParaboloidReflection::m_raster[0],
+		DualParaboloidReflection::m_raster[1],
 		mAmbientOcclusion->mSSAORaster};
 
-	float fMipMapLODBias = -1000;
 	for(size_t i = 0; i < 5; i++)
 	{
-		RwD3DDevice->SetSamplerState(i + 4, D3DSAMP_BORDERCOLOR, 0x0);
-		RwD3DDevice->SetSamplerState(i + 4, D3DSAMP_MAGFILTER, D3DTEXF_LINEAR);
-		RwD3DDevice->SetSamplerState(i + 4, D3DSAMP_MINFILTER, D3DTEXF_LINEAR);
-		RwD3DDevice->SetSamplerState(i + 4, D3DSAMP_MIPFILTER, D3DTEXF_LINEAR);
-		RwD3DDevice->SetSamplerState(i + 4, D3DSAMP_ADDRESSU, D3DTADDRESS_BORDER);
-		RwD3DDevice->SetSamplerState(i + 4, D3DSAMP_ADDRESSV, D3DTADDRESS_BORDER);
-		RwD3DDevice->SetSamplerState(i + 4, D3DSAMP_ADDRESSW, D3DTADDRESS_BORDER);
-		
-		auto rasExt = RASTEREXTFROMRASTER(reflectionRasters[i]);
-		RwD3DDevice->SetTexture(i + 4, rasExt->texture);
-		
-		//	_rwD3D9RWSetRasterStage(reflectionRasters[i], i + 4);
+		rwD3D9SetSamplerState(i + 4, D3DSAMP_BORDERCOLOR, 0x0);
+		rwD3D9SetSamplerState(i + 4, D3DSAMP_MAGFILTER, D3DTEXF_LINEAR);
+		rwD3D9SetSamplerState(i + 4, D3DSAMP_MINFILTER, D3DTEXF_LINEAR);
+		rwD3D9SetSamplerState(i + 4, D3DSAMP_MIPFILTER, D3DTEXF_LINEAR);
+		rwD3D9SetSamplerState(i + 4, D3DSAMP_ADDRESSU, D3DTADDRESS_BORDER);
+		rwD3D9SetSamplerState(i + 4, D3DSAMP_ADDRESSV, D3DTADDRESS_BORDER);
+		rwD3D9SetSamplerState(i + 4, D3DSAMP_ADDRESSW, D3DTADDRESS_BORDER);
+		rwD3D9RWSetRasterStage(rasters[i], i + 4);
 	}
 
 	RwD3D9SetRenderState(D3DRS_ALPHABLENDENABLE, FALSE);
-	_rwD3D9SetPixelShader(PS_TargetLight);
-	DrawScreenQuad();
+	mCombineLightPS->Apply();
+	Quad::Render();
 }
 
 void DeferredRendering::AtmosphericScattering()
@@ -302,8 +224,8 @@ void DeferredRendering::AtmosphericScattering()
 	
 	_rwD3D9RWSetRasterStage(mScreenRT->GetRaster(), 4);
 
-	_rwD3D9SetPixelShader(PS_AtmosphereScattering);
-	DrawScreenQuad();
+	mAtmosphereScaterringPS->Apply();
+	Quad::Render();;
 }
 
 #include "imgui.h"
@@ -335,37 +257,4 @@ D3DPRESENT_PARAMETERS& Present = *(D3DPRESENT_PARAMETERS*)0xC9C040;
 
 void DeferredRendering::UpdateTextures()
 {
-}
-
-void DeferredRendering::CascadedShadow()
-{
-	CascadedShadowManagement->SetParamsBuffer();
-
-	RwD3D9SetRenderState(D3DRS_ALPHABLENDENABLE, FALSE);
-
-	ShaderContext->SetSunDirection(11);
-	ShaderContext->SetFogParams(12);
-
-	_rwD3D9SetPixelShader(PS_ShadowScreen);	
-
-	for(size_t i = 0; i < CascadedShadowManagement->CascadeCount; i++)
-	{
-		//RwD3DDevice->SetSamplerState(i + 6, D3DSAMP_MINFILTER, D3DTEXF_POINT);
-		//RwD3DDevice->SetSamplerState(i + 6, D3DSAMP_MAGFILTER, D3DTEXF_POINT);
-		//RwD3DDevice->SetSamplerState(i + 6, D3DSAMP_MIPFILTER, D3DTEXF_POINT);
-		//RwD3DDevice->SetSamplerState(i + 6, D3DSAMP_ADDRESSU, D3DTADDRESS_CLAMP);
-		//RwD3DDevice->SetSamplerState(i + 6, D3DSAMP_ADDRESSV, D3DTADDRESS_CLAMP);
-		//RwD3DDevice->SetSamplerState(i + 6, D3DSAMP_BORDERCOLOR, 0xFFFFFFFF);
-
-		/*rwD3D9SetSamplerState(i + 6, D3DSAMP_MINFILTER, D3DTEXF_LINEAR);
-		rwD3D9SetSamplerState(i + 6, D3DSAMP_MAGFILTER, D3DTEXF_LINEAR);
-		rwD3D9SetSamplerState(i + 6, D3DSAMP_MIPFILTER, D3DTEXF_NONE);
-		rwD3D9SetSamplerState(i + 6, D3DSAMP_ADDRESSU, D3DTADDRESS_BORDER);
-		rwD3D9SetSamplerState(i + 6, D3DSAMP_ADDRESSV, D3DTADDRESS_BORDER);*/
-		rwD3D9RWSetRasterStage(CascadedShadowManagement->mColorRaster[i], i + 6);
-	}
-
-	_rwD3D9SetPixelShaderConstant(13, &CascadedShadowManagement->mConstantBuffer,
-								  sizeof(CascadedShadowManagement->mConstantBuffer) / sizeof(XMVECTOR));
-	//DrawScreenQuad();
 }

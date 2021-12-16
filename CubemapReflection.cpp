@@ -184,30 +184,40 @@ void CubemapReflection::RenderScene()
 	for(int i = 0; i < 6; i++)
 	{
 		_rwD3D9CubeRasterSelectFace(m_cubeRaster, i);
-		RwCameraSetRaster(m_camera, m_cubeRaster);
-		RwCameraClear(m_camera, &ambient, rwCAMERACLEARIMAGE | rwCAMERACLEARZ);
-		RwCameraBeginUpdate(m_camera);
+		RwD3D9SetRenderTarget(0, m_cubeRaster);
+		rwD3D9SetDepthStencil(m_depthRaster);
 
-		RwD3D9SetTransform(D3DTS_VIEW, &m_viewMatrix[i]);
-		RwD3D9SetTransform(D3DTS_PROJECTION, &m_projectionMatrix);
+		D3DVIEWPORT9 viewport;
+		viewport.X = 0;
+		viewport.Y = 0;
+		viewport.Width = m_cubeRaster->width;
+		viewport.Height = m_cubeRaster->height;
+		viewport.MinZ = 0;
+		viewport.MaxZ = 1;
+		RwD3DDevice->SetViewport(&viewport);
 
-		ShaderContext->SetViewProjectionMatrix(4, true);
-
-		for(auto& entity : m_renderableList[i])
+		rwD3D9Clear(&ambient, rwCAMERACLEARIMAGE | rwCAMERACLEARZ);
+		if(rwD3D9TestState())
 		{
-			if(entity->m_pRwObject == nullptr)
-				continue;
+			RwD3D9SetTransform(D3DTS_VIEW, &m_viewMatrix[i]);
+			RwD3D9SetTransform(D3DTS_PROJECTION, &m_projectionMatrix);
 
-			if(!entity->m_bBackfaceCulled)
+			ShaderContext->SetViewProjectionMatrix(4, true);
+
+			for(auto& entity : m_renderableList[i])
 			{
-				RwRenderStateSet(rwRENDERSTATECULLMODE, (void*)rwCULLMODECULLNONE);
+				if(entity->m_pRwObject == nullptr)
+					continue;
+
+				if(!entity->m_bBackfaceCulled)
+				{
+					RwRenderStateSet(rwRENDERSTATECULLMODE, (void*)rwCULLMODECULLNONE);
+				}
+
+				entity->m_bImBeingRendered = true;
+				entity->Render();
+				entity->m_bImBeingRendered = false;
 			}
-
-			entity->m_bImBeingRendered = true;
-			entity->Render();
-			entity->m_bImBeingRendered = false;
 		}
-
-		RwCameraEndUpdate(m_camera);
 	}
 }

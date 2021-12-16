@@ -67,6 +67,11 @@ void PixelShader::CreateFromFile(string file, string profile)
 	vsCodeBlob->Release();
 }
 
+void PixelShader::Apply()
+{
+	_rwD3D9SetPixelShader(mPixelShader);
+}
+
 void* PixelShader::GetObject()
 {
     return mPixelShader;

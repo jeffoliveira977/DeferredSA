@@ -110,14 +110,14 @@ uint32_t calc_bytes(D3DXCONSTANT_DESC* desc)
     return 4 * desc->Elements * desc->Rows * desc->Columns;
 }
 
-inline ctab_constant* constant_from_handle(D3DXHANDLE handle)
+inline ctab_constant* constant_from_handle(const std::string handle)
 {
-    return (ctab_constant*)handle;
+    return (ctab_constant*)handle.c_str();
 }
 
-inline D3DXHANDLE handle_from_constant( ctab_constant *constant)
+inline const std::string handle_from_constant( ctab_constant *constant)
 {
-    return (D3DXHANDLE)constant;
+    return reinterpret_cast<const char*> (constant);
 }
 
 ctab_constant* get_constant_by_name(ID3DXConstantTableImpl*, ctab_constant*, const char*);
@@ -175,6 +175,7 @@ ctab_constant* get_constant_by_name(ID3DXConstantTableImpl* table,
         handles = constant->constants;
     }
 
+
     length = strcspn(name, "[.");
     part = name + length;
 
@@ -221,9 +222,9 @@ ctab_constant* is_valid_sub_constant(ctab_constant* parent, ctab_constant* const
     return NULL;
 }
 
-inline ctab_constant* is_valid_constant(ID3DXConstantTableImpl* table, D3DXHANDLE handle)
+inline ctab_constant* is_valid_constant(ID3DXConstantTableImpl* table, const std::string handle)
 {
-    ctab_constant* c = (ctab_constant*)handle;
+    ctab_constant* c = (ctab_constant*)handle.c_str();
     uint32_t i;
 
     if(!c) return NULL;
@@ -240,12 +241,12 @@ inline ctab_constant* is_valid_constant(ID3DXConstantTableImpl* table, D3DXHANDL
     return NULL;
 }
 
- inline ctab_constant* get_valid_constant(ID3DXConstantTableImpl* table, D3DXHANDLE handle)
+ inline ctab_constant* get_valid_constant(ID3DXConstantTableImpl* table, const std::string handle)
 {
     ctab_constant* constant = is_valid_constant(table, handle);
 
     if(!constant) 
-        constant = get_constant_by_name(table, NULL, handle);
+        constant = get_constant_by_name(table, NULL, handle.c_str());
 
     return constant;
 }
@@ -259,7 +260,7 @@ inline void set_float_shader_constant(ID3DXConstantTableImpl* table,
         _rwD3D9SetPixelShaderConstant(register_index, data, count);
 }
 
- HRESULT ID3DXConstantTableImpl_GetConstantDesc(ID3DXConstantTableImpl* This, D3DXHANDLE constant,
+ HRESULT ID3DXConstantTableImpl_GetConstantDesc(ID3DXConstantTableImpl* This, const std::string constant,
                                                              D3DXCONSTANT_DESC* desc, uint32_t* count)
 {
     ctab_constant* c = get_valid_constant(This, constant);
@@ -278,11 +279,11 @@ inline void set_float_shader_constant(ID3DXConstantTableImpl* table,
     return D3D_OK;
 }
 
-D3DXHANDLE ID3DXConstantTableImpl_GetConstant(ID3DXConstantTableImpl* This, D3DXHANDLE constant, uint32_t index)
+const std::string ID3DXConstantTableImpl_GetConstant(ID3DXConstantTableImpl* This, const std::string constant, uint32_t index)
 {
     ctab_constant* c;
 
-    if(constant)
+    if(constant.size())
     {
         c = get_valid_constant(This, constant);
         if(c && index < c->desc.StructMembers)
@@ -303,7 +304,7 @@ D3DXHANDLE ID3DXConstantTableImpl_GetConstant(ID3DXConstantTableImpl* This, D3DX
     return NULL;
 }
 
-D3DXHANDLE WINAPI ID3DXConstantTableImpl_GetConstantByName(ID3DXConstantTableImpl* This, D3DXHANDLE constant, const char* name)
+const std::string WINAPI ID3DXConstantTableImpl_GetConstantByName(ID3DXConstantTableImpl* This, const std::string constant, const char* name)
 {
     ctab_constant* c = get_valid_constant(This, constant);
 
@@ -312,7 +313,7 @@ D3DXHANDLE WINAPI ID3DXConstantTableImpl_GetConstantByName(ID3DXConstantTableImp
     return handle_from_constant(c);
 }
 
-D3DXHANDLE WINAPI ID3DXConstantTableImpl_GetConstantElement(ID3DXConstantTableImpl* This, D3DXHANDLE constant, uint32_t index)
+const std::string WINAPI ID3DXConstantTableImpl_GetConstantElement(ID3DXConstantTableImpl* This, const std::string constant, uint32_t index)
 {
     ctab_constant* c = get_valid_constant(This, constant);
 
@@ -326,7 +327,7 @@ D3DXHANDLE WINAPI ID3DXConstantTableImpl_GetConstantElement(ID3DXConstantTableIm
     return NULL;
 }
 
-HRESULT set_scalar_array(ID3DXConstantTableImpl* This, D3DXHANDLE constant, void* data,
+HRESULT set_scalar_array(ID3DXConstantTableImpl* This, const std::string constant, void* data,
                                 uint32_t count, D3DXPARAMETER_TYPE type)
 {
     D3DXCONSTANT_DESC desc;
@@ -373,7 +374,7 @@ HRESULT set_scalar_array(ID3DXConstantTableImpl* This, D3DXHANDLE constant, void
     return D3D_OK;
 }
 
-HRESULT set_vector_array(ID3DXConstantTableImpl* This, D3DXHANDLE constant,  void* data,
+HRESULT set_vector_array(ID3DXConstantTableImpl* This, const std::string constant,  void* data,
                                 uint32_t count, D3DXPARAMETER_TYPE type)
 {
     D3DXCONSTANT_DESC desc;
@@ -451,7 +452,7 @@ HRESULT set_float_matrix(float* matrix, const D3DXCONSTANT_DESC* desc,
     return D3D_OK;
 }
 
-HRESULT set_matrix_array(ID3DXConstantTableImpl* This, D3DXHANDLE constant, void* data,
+HRESULT set_matrix_array(ID3DXConstantTableImpl* This, const std::string constant, void* data,
                          uint32_t count, D3DXPARAMETER_CLASS classa, D3DXPARAMETER_TYPE type, uint32_t rows, uint32_t columns)
 {
     ctab_constant* c = get_valid_constant(This, constant);
@@ -524,7 +525,7 @@ HRESULT set_matrix_array(ID3DXConstantTableImpl* This, D3DXHANDLE constant, void
     return D3D_OK;
 }
 
-HRESULT set_matrix_pointer_array(ID3DXConstantTableImpl* This, D3DXHANDLE constant,
+HRESULT set_matrix_pointer_array(ID3DXConstantTableImpl* This, const std::string constant,
                                  XMMATRIX** data, uint32_t count, D3DXPARAMETER_CLASS classa)
 {
     D3DXCONSTANT_DESC desc;
@@ -837,14 +838,14 @@ void ConstantTable::Release()
     delete[] mConstantTable;
 }
 
-void ConstantTable::SetValue(D3DXHANDLE constant, void* data, uint32_t bytes)
+void ConstantTable::SetValue(const std::string constant, void* data, uint32_t bytes)
 {
     HRESULT hr;
     uint32_t elements;
     uint32_t count = 1;
     D3DXCONSTANT_DESC desc;
 
-    if( !constant || !data)
+    if( !data)
         return;
 
     hr = ID3DXConstantTableImpl_GetConstantDesc(mConstantTable, constant, &desc, &count);
@@ -867,72 +868,72 @@ void ConstantTable::SetValue(D3DXHANDLE constant, void* data, uint32_t bytes)
     }
 }
 
-void ConstantTable::SetBool(D3DXHANDLE constant, bool b)
+void ConstantTable::SetBool(const std::string constant, bool b)
 {
     set_scalar_array(mConstantTable, constant, &b, 1, D3DXPT_BOOL);
 }
 
-void ConstantTable::SetBoolArray(D3DXHANDLE constant, bool* b, uint32_t count)
+void ConstantTable::SetBoolArray(const std::string constant, bool* b, uint32_t count)
 {
     set_scalar_array(mConstantTable, constant, &b, count, D3DXPT_BOOL);
 }
 
-void ConstantTable::SetInt(D3DXHANDLE constant, int n)
+void ConstantTable::SetInt(const std::string constant, int n)
 {
     set_scalar_array(mConstantTable, constant, &n, 1, D3DXPT_INT);
 }
 
-void ConstantTable::SetIntArray(D3DXHANDLE constant, int* n, uint32_t count)
+void ConstantTable::SetIntArray(const std::string constant, int* n, uint32_t count)
 {
     set_scalar_array(mConstantTable, constant, n, count, D3DXPT_INT);
 }
 
-void ConstantTable::SetFloat(D3DXHANDLE constant, float f)
+void ConstantTable::SetFloat(const std::string constant, float f)
 {
     set_scalar_array(mConstantTable, constant, &f, 1, D3DXPT_FLOAT);
 }
 
-void ConstantTable::SetFloatArray(D3DXHANDLE constant, float* f, uint32_t count)
+void ConstantTable::SetFloatArray(const std::string constant, float* f, uint32_t count)
 {
     set_scalar_array(mConstantTable, constant, f, count, D3DXPT_FLOAT);
 }
 
-void ConstantTable::SetVector(D3DXHANDLE constant, XMVECTOR* vector)
+void ConstantTable::SetVector(const std::string constant, XMVECTOR* vector)
 {
     set_vector_array(mConstantTable, constant, vector, 1, D3DXPT_FLOAT);
 }
 
-void ConstantTable::SetVectorArray(D3DXHANDLE constant, XMVECTOR* vector, uint32_t count)
+void ConstantTable::SetVectorArray(const std::string constant, XMVECTOR* vector, uint32_t count)
 {
     set_vector_array(mConstantTable, constant, vector, count, D3DXPT_FLOAT);
 }
 
-void ConstantTable::SetMatrix(D3DXHANDLE constant, XMMATRIX* matrix)
+void ConstantTable::SetMatrix(const std::string constant, XMMATRIX* matrix)
 {
     set_matrix_array(mConstantTable, constant, matrix, 1, D3DXPC_MATRIX_ROWS, D3DXPT_FLOAT, 4, 4);
 }
 
-void ConstantTable::SetMatrixArray(D3DXHANDLE constant, XMMATRIX* matrix, uint32_t count)
+void ConstantTable::SetMatrixArray(const std::string constant, XMMATRIX* matrix, uint32_t count)
 {
     set_matrix_array(mConstantTable, constant, matrix, count, D3DXPC_MATRIX_ROWS, D3DXPT_FLOAT, 4, 4);
 }
 
-void ConstantTable::SetMatrixPointerArray(D3DXHANDLE constant, XMMATRIX** matrix, uint32_t count)
+void ConstantTable::SetMatrixPointerArray(const std::string constant, XMMATRIX** matrix, uint32_t count)
 {
     set_matrix_pointer_array(mConstantTable, constant, matrix, count, D3DXPC_MATRIX_ROWS);
 }
 
-void ConstantTable::SetMatrixTranspose(D3DXHANDLE constant, XMMATRIX* matrix)
+void ConstantTable::SetMatrixTranspose(const std::string constant, XMMATRIX* matrix)
 {
     set_matrix_array(mConstantTable, constant, matrix, 1, D3DXPC_MATRIX_COLUMNS, D3DXPT_FLOAT, 4, 4);
 }
 
-void ConstantTable::SetMatrixTransposeArray(D3DXHANDLE constant, XMMATRIX* matrix, uint32_t count)
+void ConstantTable::SetMatrixTransposeArray(const std::string constant, XMMATRIX* matrix, uint32_t count)
 {
     set_matrix_array(mConstantTable, constant, matrix, count, D3DXPC_MATRIX_COLUMNS, D3DXPT_FLOAT, 4, 4);
 }
 
-void ConstantTable::SetMatrixTransposePointerArray(D3DXHANDLE constant, XMMATRIX** matrix, uint32_t count)
+void ConstantTable::SetMatrixTransposePointerArray(const std::string constant, XMMATRIX** matrix, uint32_t count)
 {
     set_matrix_pointer_array(mConstantTable, constant, matrix, count, D3DXPC_MATRIX_COLUMNS);
 }

@@ -23,25 +23,25 @@ protected:
     HRESULT Initialize(void* byteCode);
     void Release();
 public:
-    void SetValue(D3DXHANDLE constant, void* data, uint32_t bytes);
+    void SetValue(const std::string constant, void* data, uint32_t bytes);
 
-    void SetBool(D3DXHANDLE constant, bool b);
-    void SetBoolArray(D3DXHANDLE constant, bool* b, uint32_t count);
+    void SetBool(const std::string constant, bool b);
+    void SetBoolArray(const std::string constant, bool* b, uint32_t count);
 
-    void SetInt(D3DXHANDLE constant, int n);
-    void SetIntArray(D3DXHANDLE constant, int* n, uint32_t count);
+    void SetInt(const std::string constant, int n);
+    void SetIntArray(const std::string constant, int* n, uint32_t count);
 
-    void SetFloat(D3DXHANDLE constant, float f);
-    void SetFloatArray(D3DXHANDLE constant, float* f, uint32_t count);
+    void SetFloat(const std::string constant, float f);
+    void SetFloatArray(const std::string constant, float* f, uint32_t count);
 
 
-    void SetVector(D3DXHANDLE constant, XMVECTOR* vector);
-    void SetVectorArray(D3DXHANDLE constant, XMVECTOR* vector, uint32_t count);
+    void SetVector(const std::string constant, XMVECTOR* vector);
+    void SetVectorArray(const std::string constant, XMVECTOR* vector, uint32_t count);
 
-    void SetMatrix(D3DXHANDLE constant, XMMATRIX* matrix);
-    void SetMatrixArray(D3DXHANDLE constant, XMMATRIX* matrix, uint32_t count);
-    void SetMatrixPointerArray(D3DXHANDLE constant, XMMATRIX** matrix, uint32_t count);
-    void SetMatrixTranspose(D3DXHANDLE constant, XMMATRIX* matrix);
-    void SetMatrixTransposeArray(D3DXHANDLE constant, XMMATRIX* matrix, uint32_t count);
-    void SetMatrixTransposePointerArray(D3DXHANDLE constant, XMMATRIX** matrix, uint32_t count);
+    void SetMatrix(const std::string constant, XMMATRIX* matrix);
+    void SetMatrixArray(const std::string constant, XMMATRIX* matrix, uint32_t count);
+    void SetMatrixPointerArray(const std::string constant, XMMATRIX** matrix, uint32_t count);
+    void SetMatrixTranspose(const std::string constant, XMMATRIX* matrix);
+    void SetMatrixTransposeArray(const std::string constant, XMMATRIX* matrix, uint32_t count);
+    void SetMatrixTransposePointerArray(const std::string constant, XMMATRIX** matrix, uint32_t count);
 };
