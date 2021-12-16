@@ -34,13 +34,13 @@ void PixelShader::CreateFromBinary(string file)
 		MessageBox(0, &message[0], "Error", MB_OK);
 	}
 
-	auto bytes = fileread(path.c_str());
-	mBinary = bytes;
-	RwD3D9CreatePixelShader((RwUInt32*)bytes, &mPixelShader);
-	Initialize(bytes);
+	unique_ptr<DWORD> bytes(fileread(path.c_str()));
 
-	delete[] bytes;
+	mBinary = bytes.get();
+	RwD3D9CreatePixelShader((RwUInt32*)bytes.get(), &mPixelShader);
+	Initialize(bytes.get());
 }
+
 void PixelShader::CreateFromFile(string file, string profile)
 {
 	string path = DEFERREDSHADERPATH + file + ".hlsl";

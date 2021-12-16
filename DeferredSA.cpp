@@ -181,23 +181,24 @@ void GameProcess()
 void ShutdowRenderware()
 {
 	delete CascadedShadowManagement;
-	delete DeferredContext;
+	//delete DeferredContext;
 	delete ShaderContext;
 	delete SkinnedMeshPipe;
 	delete BuldingMeshPipe;
 	delete DefaultMeshPipe;
 	delete VehicleMeshPipe;
 
+	
 	Quad::Release();
 	SoftParticles::Release();
 }
 
 #include "IndexBufferManager.h"
+#include "RenderTargetManager.h"
 void LostDevice()
 {
 
 	IndexBufferManager::Release();
-	
 }
 
 void ResetDevice()
@@ -206,6 +207,7 @@ void ResetDevice()
 	CWaterLevel::UpdateTextures();
 	IndexBufferManager::Restore();
 	DeferredContext->UpdateTextures();
+	RenderTargetManager::Rebuild();
 }
 
 void Hook()

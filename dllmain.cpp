@@ -1,5 +1,7 @@
 #include <Windows.h>
 #include "DeferredSA.h"
+#include <fstream>
+#include "DeferredRenderer.h"
 
 BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpReserved)
 {
@@ -12,6 +14,7 @@ BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpReserved)
             break;
 
         case DLL_PROCESS_DETACH:
+            delete DeferredContext;
             break;
     }
     return TRUE;

@@ -1,6 +1,6 @@
 #pragma once
 #include "CommonD.h"
-
+#include "RenderTarget.h"
 class VolumetricLight
 {
 public:
@@ -8,13 +8,12 @@ public:
 	~VolumetricLight();
 
 	void Initialize();
-	void Render();
+	void Render(RenderTarget* screenSource);
 	void UpdateImgui();
-	void UpdateTextures();
 private:
 	void* PS_VolumetricLight;
 	void* PS_VolumetricLightCombine;
-	RwRaster* m_volumetricLight;
-	RwRaster* m_screenRaster;
+
+	RenderTarget* mVolumetricLightRaster;
 };
 

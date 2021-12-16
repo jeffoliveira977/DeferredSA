@@ -416,7 +416,7 @@ float4 main(float4 position : POSITION, float2 texcoord : TEXCOORD, float2 vPos 
     float
         ti = SunDirection.z,
         moon = 0.0,
-        sunny = 0.9,
+        sunny = 1.1,
         dist = length(WorldPos - ViewPos);
 
     float3 direction = normalize(WorldPos.xyz);

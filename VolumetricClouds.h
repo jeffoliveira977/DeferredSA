@@ -1,5 +1,6 @@
 #pragma once
 #include "PixelShader.h"
+#include "RenderTarget.h"
 
 class VolumetricClouds
 {
@@ -8,7 +9,7 @@ public:
 	~VolumetricClouds();
 
 	void Initialize();
-	void Render(RwRaster* screenSource);
+	void Render(RenderTarget* screenSource);
 
 private:
 	PixelShader* mPixelShader;

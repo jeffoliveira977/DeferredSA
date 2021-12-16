@@ -145,6 +145,7 @@
     <ClCompile Include="RenderableScene.cpp" />
     <ClCompile Include="RenderableSphere.cpp" />
     <ClCompile Include="RenderTarget.cpp" />
+    <ClCompile Include="RenderTargetManager.cpp" />
     <ClCompile Include="RwIndexBuffer.cpp" />
     <ClCompile Include="ShaderConstant.cpp" />
     <ClCompile Include="ShaderManager.cpp" />
@@ -205,6 +206,7 @@
     <ClInclude Include="RenderableScene.h" />
     <ClInclude Include="RenderableSphere.h" />
     <ClInclude Include="RenderTarget.h" />
+    <ClInclude Include="RenderTargetManager.h" />
     <ClInclude Include="RwIndexBuffer.h" />
     <ClInclude Include="ShaderConstant.h" />
     <ClInclude Include="ShaderManager.h" />

@@ -8,6 +8,8 @@ public:
 
 	void Initialize();
 	void Release();
+	void CopyFromSurface(LPSURFACE surface);
+
 	RwRaster* GetRaster();
 	LPSURFACE GetSurface();
 private:

@@ -29,7 +29,7 @@ public:
 	PostProcessing* mPostProcessing;
 
 
-	RenderTarget* mScreenRaster;
+	RenderTarget* mScreenRT;
 	RenderTarget* mGraphicsLight;
 	RenderTarget* mGraphicsBuffer[4];
 

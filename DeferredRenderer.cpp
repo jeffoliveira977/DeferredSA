@@ -36,26 +36,27 @@ DeferredRendering::~DeferredRendering()
 	RwD3D9DeletePixelShader(PS_ShadowScreen);
 
 	delete mVolumetricClouds;
+	delete mPostProcessing;
 }
 
 
 RwRaster* mFXAARaster = nullptr;
 
 void* mFXAAVertexShader = nullptr;
-void* mFXAAPixelShader = nullptr;
+void* mFXAAPS = nullptr;
 
-RwRaster* mGaussianBlurXRaster = nullptr;
-RwRaster* mGaussianBlurYRaster = nullptr;
+RwRaster* mGaussianBlurXRT = nullptr;
+RwRaster* mGaussianBlurYRT = nullptr;
 void* mGaussianBlurVertexShader = nullptr;
-void* mGaussianBlurXPixelShader = nullptr;
-void* mGaussianBlurYPixelShader = nullptr;
+void* mGaussianBlurXPS = nullptr;
+void* mGaussianBlurYPS = nullptr;
 
-RwRaster* mDownFilter4Raster = nullptr;
-RwRaster* mBloomRaster = nullptr;
+RwRaster* mDownFilter4x4RT = nullptr;
+RwRaster* mBloomRT = nullptr;
 
-void* mBloomPixelShader = nullptr;
-void* mDownFilter4PixelShader = nullptr;
-void* mBloomCombinePixelShader = nullptr;
+void* mBloomPS = nullptr;
+void* mDownFilter4PS = nullptr;
+void* mBloomCombinePS = nullptr;
 
 
 void DeferredRendering::Initialize()
@@ -71,22 +72,22 @@ void DeferredRendering::Initialize()
 	mPointSpotLightPixelShader->CreateFromBinary("DeferredPointAndSpotLightPS");
 	
 	mFXAAVertexShader = RwCreateCompiledVertexShader("FXAA_VS");
-	mFXAAPixelShader = RwCreateCompiledPixelShader("FXAA_PS");
+	mFXAAPS = RwCreateCompiledPixelShader("FXAA_PS");
 
 	mGaussianBlurVertexShader = RwCreateCompiledVertexShader("GaussianBlur");
-	mGaussianBlurXPixelShader = RwCreateCompiledPixelShader("GaussianBlurX");
-	mGaussianBlurYPixelShader = RwCreateCompiledPixelShader("GaussianBlurY");
+	mGaussianBlurXPS = RwCreateCompiledPixelShader("GaussianBlurX");
+	mGaussianBlurYPS = RwCreateCompiledPixelShader("GaussianBlurY");
 
-	mBloomPixelShader = RwCreateCompiledPixelShader("BloomPS");
-	mDownFilter4PixelShader = RwCreateCompiledPixelShader("DownFilter4");
-	mBloomCombinePixelShader = RwCreateCompiledPixelShader("BloomCombine");
+	mBloomPS = RwCreateCompiledPixelShader("BloomPS");
+	mDownFilter4PS = RwCreateCompiledPixelShader("DownFilter4");
+	mBloomCombinePS = RwCreateCompiledPixelShader("BloomCombine");
 
 	int width, height;
 	width = RsGlobal.maximumWidth;
 	height = RsGlobal.maximumHeight;
 
-	mScreenRaster = new RenderTarget(D3DFMT_A16B16G16R16F);
-	mScreenRaster->Initialize();
+	mScreenRT = new RenderTarget(D3DFMT_A16B16G16R16F);
+	mScreenRT->Initialize();
 
 	mGraphicsLight = new RenderTarget(D3DFMT_A16B16G16R16F);
 	mGraphicsLight->Initialize();
@@ -174,12 +175,10 @@ void DeferredRendering::Stop()
 	RwD3D9RestoreRenderTargets(4);
 	FinalPass();
 
-	//AtmosphericScattering();
+	AtmosphericScattering();
 
-	RwD3DDevice->StretchRect(RwD3D9RenderSurface, NULL, mScreenRaster->GetSurface(), NULL, D3DTEXF_NONE);
-
-	//mVolumetricClouds->Render(m_screenRaster);
-	//mVolumetricLight->Render();
+	mVolumetricClouds->Render(mScreenRT);
+	mVolumetricLight->Render(mScreenRT);
 
 	_rwD3D9SetPixelShader(NULL);
 	_rwD3D9SetVertexShader(NULL);
@@ -194,8 +193,8 @@ void DeferredRendering::RenderPostProcessing()
 	RwRenderStateSet(rwRENDERSTATECULLMODE, (void*)rwCULLMODECULLNONE);
 	RwD3D9SetRenderState(D3DRS_ALPHABLENDENABLE, TRUE);
 
-	//mPostProcessing->RenderFXAA();
-	//mPostProcessing->RenderBloom();
+	mPostProcessing->RenderFXAA(mScreenRT);
+	//mPostProcessing->RenderBloom(mScreenRT);
 }
 
 void DeferredRendering::DirectLight()
@@ -299,8 +298,9 @@ void DeferredRendering::AtmosphericScattering()
 {
 	ShaderContext->SetTimecyProps(8);
 
-	RwD3DDevice->StretchRect(RwD3D9RenderSurface, NULL, mScreenRaster->GetSurface(), NULL, D3DTEXF_NONE);
-	_rwD3D9RWSetRasterStage(mScreenRaster->GetRaster(), 4);
+	mScreenRT->CopyFromSurface(nullptr);
+	
+	_rwD3D9RWSetRasterStage(mScreenRT->GetRaster(), 4);
 
 	_rwD3D9SetPixelShader(PS_AtmosphereScattering);
 	DrawScreenQuad();
@@ -332,34 +332,9 @@ void DeferredRendering::UpdateImgui()
 }
 D3DPRESENT_PARAMETERS& Present = *(D3DPRESENT_PARAMETERS*)0xC9C040;
 
-int width, height;
+
 void DeferredRendering::UpdateTextures()
 {
-	width = RsGlobal.maximumWidth;
-	height = RsGlobal.maximumHeight;
-
-	
-	//if(width != m_graphicsBuffer[0]->width || height != m_graphicsBuffer[0]->height)
-	//{
-		mPostProcessing->UpdateTextures();
-		mVolumetricLight->UpdateTextures();
-
-		mGraphicsLight->Release();
-		mGraphicsLight->Initialize();
-
-		mScreenRaster->Release();
-		mScreenRaster->Initialize();
-
-		mGraphicsBuffer[0]->Release();
-		mGraphicsBuffer[1]->Release();
-		mGraphicsBuffer[2]->Release();
-		mGraphicsBuffer[3]->Release();
-
-		mGraphicsBuffer[0]->Initialize();
-		mGraphicsBuffer[1]->Initialize();
-		mGraphicsBuffer[2]->Initialize();
-		mGraphicsBuffer[3]->Initialize();
-	//}
 }
 
 void DeferredRendering::CascadedShadow()
@@ -372,9 +347,7 @@ void DeferredRendering::CascadedShadow()
 	ShaderContext->SetFogParams(12);
 
 	_rwD3D9SetPixelShader(PS_ShadowScreen);	
-	D3DDISPLAYMODE mode;
-	RwD3DDevice->GetDisplayMode(0, &mode);
-	
+
 	for(size_t i = 0; i < CascadedShadowManagement->CascadeCount; i++)
 	{
 		//RwD3DDevice->SetSamplerState(i + 6, D3DSAMP_MINFILTER, D3DTEXF_POINT);

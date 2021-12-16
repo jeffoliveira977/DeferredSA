@@ -8,8 +8,7 @@ float VolumetricLightParam[3];
 
 VolumetricLight::VolumetricLight()
 {
-	m_volumetricLight = nullptr;
-	m_volumetricLight = nullptr;
+	mVolumetricLightRaster = nullptr;
 }
 
 VolumetricLight::~VolumetricLight()
@@ -17,8 +16,8 @@ VolumetricLight::~VolumetricLight()
 
 void VolumetricLight::Initialize()
 {
-	m_volumetricLight = RwD3D9RasterCreate(RsGlobal.maximumWidth, RsGlobal.maximumHeight, D3DFMT_A8R8G8B8, rwRASTERTYPECAMERATEXTURE);
-	m_screenRaster = RwD3D9RasterCreate(RsGlobal.maximumWidth, RsGlobal.maximumHeight, D3DFMT_A16B16G16R16F, rwRASTERTYPECAMERATEXTURE);
+	mVolumetricLightRaster = new RenderTarget(D3DFMT_A16B16G16R16F);
+	mVolumetricLightRaster->Initialize();
 
 	PS_VolumetricLight = RwCreateCompiledPixelShader("VolumetricLight");
 	PS_VolumetricLightCombine = RwCreateCompiledPixelShader("VolumetricLightCombine");
@@ -28,7 +27,7 @@ void VolumetricLight::Initialize()
 	VolumetricLightParam[2] = 0.107;
 }
 
-void VolumetricLight::Render()
+void VolumetricLight::Render(RenderTarget* screenSource)
 {
 	ShaderContext->SetTimecyProps(8);
 
@@ -49,17 +48,13 @@ void VolumetricLight::Render()
 
 	_rwD3D9SetPixelShader(PS_VolumetricLight);
 	_rwD3D9SetVertexShader(0);
-	RwD3D9SetRenderTarget(0, m_volumetricLight);
+	RwD3D9SetRenderTarget(0, mVolumetricLightRaster->GetRaster());
 	DrawScreenQuad();
 
-	IDirect3DSurface9* screenSurface;
-	auto screenExt = RASTEREXTFROMRASTER(m_screenRaster);
-	screenExt->texture->GetSurfaceLevel(0, &screenSurface);
-	RwD3DDevice->StretchRect(RwD3D9RenderSurface, NULL, screenSurface, NULL, D3DTEXF_NONE);
+	screenSource->CopyFromSurface(nullptr);
 
-	screenSurface->Release();
-	rwD3D9RWSetRasterStage(m_screenRaster, 4);
-	rwD3D9RWSetRasterStage(m_volumetricLight, 5);
+	rwD3D9RWSetRasterStage(screenSource->GetRaster(), 4);
+	rwD3D9RWSetRasterStage(mVolumetricLightRaster->GetRaster(), 5);
 
 	_rwD3D9SetPixelShader(PS_VolumetricLightCombine);
 	__rwD3D9SetRenderTarget(0, RwD3D9RenderSurface);
@@ -75,21 +70,4 @@ void VolumetricLight::UpdateImgui()
 		ImGui::InputFloat("SunlightBlendOffset", &VolumetricLightParam[1], 0.01, 0.1, "%.6f");
 		ImGui::InputFloat("SunlightIntensity", &VolumetricLightParam[2], 0.01, 0.1, "%.3f");
 	}
-}
-
-void VolumetricLight::UpdateTextures()
-{
-	int width, height;
-	width = RsGlobal.maximumWidth;
-	height = RsGlobal.maximumHeight;
-
-	//if(width != m_screenRaster->width || height != m_screenRaster->height)
-	//{
-		m_screenRaster->width = width;
-		m_screenRaster->height = height;
-
-		m_volumetricLight->width = width;
-		m_volumetricLight->height = height;
-
-	//}
 }

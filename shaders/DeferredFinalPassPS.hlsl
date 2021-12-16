@@ -137,7 +137,7 @@ float4 main(float2 texCoord : TEXCOORD0, float2 vpos:VPOS) : COLOR
 	//A2 = pow(A2, 1.0);										//AO curve
   
     float3 diffuse = target.rgb;
-    float3 specular = (target.a * target.rgb ) /** AmbientOcclusion * AOSupress * A2*/;
+    float3 specular = (target.a * target.rgb ) * AmbientOcclusion * AOSupress * A2;
     
     outColor = (albedo.rgb * diffuse) + specular;
     float3 skyColor = lerp(HorizonColor, SkyLightColor, saturate((worldPosition.z - 20) * (1.0f / 500.0f)));

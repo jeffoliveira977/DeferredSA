@@ -29,7 +29,7 @@ void VolumetricClouds::Initialize()
 
 #include "CTimeCycle.h"
 #include "CScene.h"
-void VolumetricClouds::Render(RwRaster* screenSource)
+void VolumetricClouds::Render(RenderTarget* screenSource)
 {
 	/*ShaderContext->SetInverseViewMatrix(0);
 	ShaderContext->SetProjectionMatrix(4);
@@ -88,7 +88,9 @@ void VolumetricClouds::Render(RwRaster* screenSource)
 	rwD3D9SetSamplerState(4, D3DSAMP_MAXMIPLEVEL, 16);
 
 	_rwD3D9SetPixelShader(mPixelShader->GetObject());
-	rwD3D9RWSetRasterStage(screenSource, 4);
+
+	screenSource->CopyFromSurface(nullptr);
+	rwD3D9RWSetRasterStage(screenSource->GetRaster(), 4);
 	__rwD3D9SetRenderTarget(0, RwD3D9RenderSurface);
 	Quad::Render();
 }
