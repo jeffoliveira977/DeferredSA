@@ -9,6 +9,11 @@
 #include "AABB.h"
 #include "CCamera.h"
 
+#include "CGame.h"
+#include "CVisibilityPlugins.h"
+#include "CScene.h"
+#include "VisibilityPlugins.h"
+
 ShadowCaster* ShadowCasterEntity;
 
 ShadowCaster::ShadowCaster()
@@ -61,7 +66,7 @@ void ShadowCaster::AddObject(CEntity* entity)
     //if(renderDistance > 100.0 && isVehicle)
     //    return;
 
-    float sphereRadius = col->m_boundSphere.m_fRadius + CRenderer::ms_fFarClipPlane;
+    float sphereRadius = col->m_boundSphere.m_fRadius + Scene.m_pRwCamera->farPlane;
     float minDistance = std::min(TheCamera.m_fLODDistMultiplier * modelinfo->m_fDrawDistance, sphereRadius);
 
     float fadingDistance = MAX_FADING_DISTANCE;
@@ -84,10 +89,10 @@ void ShadowCaster::AddObject(CEntity* entity)
     {
         bool intersects = CascadedShadowManagement->Desc[i].mFrustumCulling.Intersects(aabb);
 
-        if(intersects)
+   /*     if(intersects)
             ObjectInFrustum[i][entity] = true;
         else
-            ObjectInFrustum[i][entity] = false;
+            ObjectInFrustum[i][entity] = false;*/
 
         if(intersects)
         {
@@ -194,10 +199,6 @@ void ShadowCaster::Update(int x, int y)
         
 }
 
-#include "CGame.h"
-#include "CVisibilityPlugins.h"
-#include "CScene.h"
-#include "VisibilityPlugins.h"
 
 void ShadowCaster::Render(int i)
 {
@@ -236,6 +237,7 @@ void ShadowCaster::Render(int i)
             RwRenderStateSet(rwRENDERSTATECULLMODE, (void*)rwCULLMODECULLNONE);
         }
         entity->Render();
+
 
         if(entity->m_nType == ENTITY_TYPE_VEHICLE)
         {   

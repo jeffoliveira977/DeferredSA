@@ -32,12 +32,6 @@ void RenderTarget::Initialize()
 	if(mRaster == nullptr)
 		throw std::runtime_error("RenderTarget::Initialize");
 
-	auto texture = RASTEREXTFROMRASTER(mRaster)->texture;
-	texture->GetSurfaceLevel(0, &mSurface);
-
-	// we need to release to decrease reference count
-	mSurface->Release();
-
 	RenderTargetManager::Add(this);
 }
 
@@ -49,7 +43,12 @@ void RenderTarget::Release()
 
 void RenderTarget::CopyFromSurface(LPSURFACE surface)
 {
+	auto texture = RASTEREXTFROMRASTER(mRaster)->texture;
+	texture->GetSurfaceLevel(0, &mSurface);
+
 	RwD3DDevice->StretchRect(surface == nullptr ? RwD3D9RenderSurface : surface, NULL, mSurface, NULL, D3DTEXF_NONE);
+	
+	mSurface->Release();
 }
 
 RwRaster* RenderTarget::GetRaster()
@@ -59,5 +58,11 @@ RwRaster* RenderTarget::GetRaster()
 
 LPSURFACE RenderTarget::GetSurface()
 {
+	auto texture = RASTEREXTFROMRASTER(mRaster)->texture;
+	texture->GetSurfaceLevel(0, &mSurface);
+
+	// Release after GetSurfaceLevel to decrease reference count.
+	mSurface->Release();
+
 	return mSurface;
 }

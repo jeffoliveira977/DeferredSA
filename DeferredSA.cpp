@@ -111,8 +111,10 @@ void Render()
 	ImGui::End();
 
 	ImguiManager::Unbind();
-	
-	int weight = 512;
+
+
+	float weight = 512.0f* (float)RsGlobal.maximumHeight / (float)RsGlobal.maximumWidth;
+
 	RwRenderStateSet(rwRENDERSTATETEXTURERASTER, (void*)RenderableScene::m_raster);
 	DrawScreenQuad(0, 0, weight, weight);
 
@@ -206,7 +208,7 @@ void ResetDevice()
 	//CascadedShadowManagement->UpdateTextures();
 	CWaterLevel::UpdateTextures();
 	IndexBufferManager::Restore();
-	DeferredContext->UpdateTextures();
+	//DeferredContext->UpdateTextures();
 	RenderTargetManager::Rebuild();
 }
 

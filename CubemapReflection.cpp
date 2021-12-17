@@ -175,12 +175,14 @@ void CubemapReflection::Update()
 		}
 	}
 }
-
+#include "CScene.h"
 void CubemapReflection::RenderScene()
 {
 	gRenderState = stageReflectionCubemap;
 	RwRGBA ambient = {CTimeCycle::m_CurrentColours.m_nSkyTopRed, CTimeCycle::m_CurrentColours.m_nSkyTopGreen, CTimeCycle::m_CurrentColours.m_nSkyTopBlue, 255};
-
+	
+	RWSRCGLOBAL(curCamera) = Scene.m_pRwCamera;
+	
 	for(int i = 0; i < 6; i++)
 	{
 		_rwD3D9CubeRasterSelectFace(m_cubeRaster, i);
@@ -220,4 +222,5 @@ void CubemapReflection::RenderScene()
 			}
 		}
 	}
+	RWSRCGLOBAL(curCamera) = NULL;
 }

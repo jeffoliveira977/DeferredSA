@@ -77,7 +77,7 @@ void CascadedShadowRendering::Initialize()
     }
 }
 
-void CascadedShadowRendering::SetParamsBuffer()
+void CascadedShadowRendering::UpdateBuffer()
 {
     mConstantBuffer.mDistanceCoefficients = {m_fShadowDistances[0], m_fShadowDistances[1], m_fShadowDistances[2], m_fShadowDistances[3]};
     mConstantBuffer.mShadowBias = {BiasCoefficients[0], BiasCoefficients[1], BiasCoefficients[2], BiasCoefficients[3]};
@@ -150,6 +150,8 @@ void CascadedShadowRendering::Update()
     // Render in red channel
     RwD3D9SetRenderState(D3DRS_COLORWRITEENABLE, D3DCOLORWRITEENABLE_RED);
 
+    RWSRCGLOBAL(curCamera) = Scene.m_pRwCamera;
+   
     // Render cascades
     for(size_t i = 0; i < CascadeCount; i++)
     {
@@ -179,6 +181,8 @@ void CascadedShadowRendering::Update()
         }
 
     }
+
+    RWSRCGLOBAL(curCamera) = NULL;
 
     // Restore all channels colors
     RwD3D9SetRenderState(D3DRS_COLORWRITEENABLE,

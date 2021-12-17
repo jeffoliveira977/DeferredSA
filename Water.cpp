@@ -292,10 +292,9 @@ void CRenderer_RenderRoadsAndBuildings(void)
     
     DefinedState();
 
-    CClouds__Render();
+
     CCoronas__RenderReflections();
     CCoronas__Render();
-    CClouds__RenderBottomFromHeight();
     CWeather__RenderRainStreaks();
     CCoronas__RenderSunReflection();
 
@@ -310,10 +309,8 @@ void CRenderer_RenderRoadsAndBuildings(void)
            (type == ENTITY_TYPE_BUILDING && ObjectType.buldings) ||
            (type == ENTITY_TYPE_OBJECT && ObjectType.objects))
         {
-            //if(reinterpret_cast<CBaseModelInfo*>(CModelInfo::ms_modelInfoPtrs[e->m_nModelIndex])->nSpecialType)
-            // CRenderer__RenderOneRoad(e);
-            //else
-            CRenderer::RenderOneNonRoad(e);
+            //CRenderer::RenderOneRoad(e);
+           // e->Render();
         }
     }
 
@@ -326,7 +323,8 @@ void CRenderer_RenderRoadsAndBuildings(void)
            (type == ENTITY_TYPE_BUILDING && ObjectType.buldings) ||
            (type == ENTITY_TYPE_OBJECT && ObjectType.objects))
         {
-            CRenderer::RenderOneNonRoad(CRenderer::ms_aVisibleLodPtrs[i]);
+            //CRenderer::RenderOneRoad(CRenderer::ms_aVisibleLodPtrs[i]);
+           // e->Render();
         }
     }
 

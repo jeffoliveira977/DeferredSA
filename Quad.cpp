@@ -241,13 +241,13 @@ void Quad::Render()
 	DrawScreenQuad();
 	return;
 
-	 _rwD3D9SetVertexShader(0);
+	 _rwD3D9SetVertexShader(mVertexShader->GetObject());
 	// _rwD3D9SetPixelShader(mPixelShader->GetObject());
 
 	RwD3D9SetStreamSource(0, mVertexBuffer->GetBuffer(), 0, sizeof(QuadVertex));
 	 _rwD3D9SetIndices(mIndexBuffer->GetBuffer());
-	 _rwD3D9SetFVF(D3DFVF_XYZRHW | D3DFVF_TEX1);
-	//_rwD3D9SetVertexDeclaration(mVertexDeclQuad);
+	// _rwD3D9SetFVF(D3DFVF_XYZRHW | D3DFVF_TEX1);
+	_rwD3D9SetVertexDeclaration(mVertexDeclQuad);
 	_rwD3D9DrawIndexedPrimitive(D3DPT_TRIANGLELIST, 0, 0, 4, 0, 2);
 	//_rwD3D9SetVertexShader(NULL);
 }

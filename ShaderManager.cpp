@@ -10,7 +10,7 @@ ShaderManager* ShaderContext;
 std::vector<char*> ShaderList;
 void ShaderManager::LoadShaders()
 {
-	//std::make_tuple(3.8, 'A', "Lisa Simpson");
+
 }
 
 void ShaderManager::SetTimecyProps(int idx)

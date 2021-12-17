@@ -151,11 +151,12 @@ inline float GetLodSectorPosY(std::int32_t sector)
     const float fTotalMapUnitsY = MAX_WORLD_UNITS / MAX_LOD_PTR_LISTS_Y;
     return (sector - HalfOfTotalSectorsY) * fTotalMapUnitsY + (fTotalMapUnitsY / 2);
 }
-
+extern float fNewFarClip ;
 extern std::map<CEntity*, bool> ObjectInFrustum[4];
 class Renderer
 {
 public:
+    static bool SetupLightingForEntity(CPhysical* entity);
     static void RenderRoads();
     static void RenderCubemapEntities();
     static void RenderEverythingBarRoads();

@@ -22,7 +22,7 @@ public:
 
 	void Initialize();
 	void Update();
-	void SetParamsBuffer();
+	void UpdateBuffer();
 	void UpdateImgui();
 	void UpdateTextures();
 };

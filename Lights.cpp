@@ -63,7 +63,7 @@ void Lights::AddOmniLight(ePointLightType defaultType, CVector pos, CVector dir,
 {
 	if(gRenderState == stageSphereMap)
 		return;
-
+	
 	CVector camPos = TheCamera.GetPosition();
 	float visibleRadius = radius + 15.0f;
 	CVector dx = pos - camPos;
@@ -75,31 +75,31 @@ void Lights::AddOmniLight(ePointLightType defaultType, CVector pos, CVector dir,
 	//{
 	//	return;
 	//}
-	if(CPointLights::NumLights >= 32)
+	/*if(CPointLights::NumLights >= 32)
 	{
 		return;
-	}
+	}*/
 	//if(dx.Magnitude() >= visibleRadius)
 	//{
 	//	return;
 	//}
 	size_t id = CPointLights::NumLights;
-	CPointLights::aLights[id].m_nType = defaultType;
-	CPointLights::aLights[id].m_nFogType = fogType;
-	CPointLights::aLights[id].m_vecPosn = pos;
-	CPointLights::aLights[id].m_vecDirection = dir;
-	CPointLights::aLights[id].m_fRange = radius;
-	CPointLights::aLights[id].m_bGenerateShadows = generateExtraShadows;
-	CPointLights::aLights[id].m_pEntityToLight = entityAffected;
-	float intensity = 1.0;
-	if(visibleRadius * 0.75f <= dx.Magnitude())
-	{
-		intensity = 1.0 - (dx.Magnitude() / visibleRadius - 0.75f) * 4.0;
-	}
-	CPointLights::aLights[id].m_fColorRed = red * intensity;
-	CPointLights::aLights[id].m_fColorGreen = green * intensity;
-	CPointLights::aLights[id].m_fColorBlue = blue * intensity;
-	CPointLights::NumLights++;
+	//CPointLights::aLights[id].m_nType = defaultType;
+	//CPointLights::aLights[id].m_nFogType = fogType;
+	//CPointLights::aLights[id].m_vecPosn = pos;
+	//CPointLights::aLights[id].m_vecDirection = dir;
+	//CPointLights::aLights[id].m_fRange = radius;
+	//CPointLights::aLights[id].m_bGenerateShadows = generateExtraShadows;
+	//CPointLights::aLights[id].m_pEntityToLight = entityAffected;
+	//float intensity = 1.0;
+	//if(visibleRadius * 0.75f <= dx.Magnitude())
+	//{
+	//	intensity = 1.0 - (dx.Magnitude() / visibleRadius - 0.75f) * 4.0;
+	//}
+	//CPointLights::aLights[id].m_fColorRed = red * intensity;
+	//CPointLights::aLights[id].m_fColorGreen = green * intensity;
+	//CPointLights::aLights[id].m_fColorBlue = blue * intensity;
+	//CPointLights::NumLights++;
 
 
 	LightData light;
@@ -116,11 +116,12 @@ void Lights::AddOmniLight(ePointLightType defaultType, CVector pos, CVector dir,
 		lightpos.z = pos.z - dir.z;
 	}
 
+	float intensity = 10.0;
 	light.pos = {lightpos.x, lightpos.y, lightpos.z};
 	light.radius = radius;
 	light.dir = dir;
 	light.type = 0;
-	light.color = {red, green, blue};
+	light.color = {red * intensity, green * intensity, blue* intensity };
 
 	//LightList.push_back(light);
 	AddLight(light);
@@ -130,8 +131,8 @@ void Lights::AddOmniLight(ePointLightType defaultType, CVector pos, CVector dir,
 
 void Lights::AddSpotLight(CVehicle* vehicle, int a, CMatrix* matrix, bool isRight)
 {
-	if(gRenderState == stageSphereMap)
-		return;
+	/*if(gRenderState == stageSphereMap)
+		return;*/
 
 	CVehicleModelInfo* pModelinfo = reinterpret_cast<CVehicleModelInfo*>(CModelInfo::ms_modelInfoPtrs[vehicle->m_nModelIndex]);
 	CVector headlightPos = pModelinfo->m_pVehicleStruct->m_avDummyPos[a];
