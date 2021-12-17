@@ -150,6 +150,7 @@ void DeferredRendering::RenderLights()
 
 	}
 
+
 	RwD3D9SetRenderTarget(0, mGraphicsLight->GetRaster());
 	RwD3D9SetRenderState(D3DRS_ALPHABLENDENABLE, FALSE);
 	mDirectLightPS->Apply();
