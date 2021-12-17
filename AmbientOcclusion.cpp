@@ -9,6 +9,7 @@ AmbientOcclusion::AmbientOcclusion()
 	mSSAOPixelShader = nullptr;
 }
 
+
 AmbientOcclusion::~AmbientOcclusion()
 {}
 
