@@ -6,6 +6,8 @@
 #include "CTimeCycle.h"
 #include "SkinnedMeshPipeline.h"
 #include "SkinnedMeshInstance.h"
+#include "CScene.h"
+
 SkinnedMeshPipeline* SkinnedMeshPipe;
 
 RxPipeline* _rpSkinD3D9CreatePlainPipe()
@@ -152,7 +154,7 @@ void SkinnedMeshPipeline::ShadowRendering(RwResEntry* entry, void* object, RwUIn
 
 		hasAlpha = instance->vertexAlpha || matcolor->alpha != 255;
 		//RwRenderStateSet(rwRENDERSTATEVERTEXALPHAENABLE, (void*)hasAlpha);
-		_rwD3D9SetPixelShaderConstant(1, &CTimeCycle::m_CurrentColours.m_fFarClip, 1);
+		_rwD3D9SetPixelShaderConstant(1, &Scene.m_pRwCamera->farPlane, 1);
 
 		D3D9Render(header, instance, texture, flags);
 		instance++;

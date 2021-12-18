@@ -238,8 +238,8 @@ void Quad::Release()
 
 void Quad::Render()
 {
-	//DrawScreenQuad();
-	//return;
+	DrawScreenQuad();
+	return;
 
 	 _rwD3D9SetVertexShader(mVertexShader->GetObject());
 	// _rwD3D9SetPixelShader(mPixelShader->GetObject());

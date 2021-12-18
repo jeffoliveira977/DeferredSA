@@ -271,7 +271,7 @@ void Renderer::RenderOneNonRoad(CEntity* entity)
     CVehicle* pVehicle = static_cast<CVehicle*>(entity);
     if(entity->m_nType != ENTITY_TYPE_PED || pPed->m_nPedState != PEDSTATE_DRIVING)
     {
-        bool bSetupLighting = entity->SetupLighting();
+        bool bSetupLighting = false/*entity->SetupLighting()*/;
         if(entity->m_nType == ENTITY_TYPE_VEHICLE)
         {
             CVisibilityPlugins::SetupVehicleVariables(entity->m_pRwClump);
@@ -312,6 +312,21 @@ void Renderer::RenderOneNonRoad(CEntity* entity)
             entity->RemoveLighting(bSetupLighting);
         }
     }
+}
+
+#include "CPointLights.h"
+
+bool Renderer::SetupLightingForEntity(CPhysical* entity) {
+    if (entity->m_nPhysicalFlags.bDestroyed) {
+        WorldReplaceNormalLightsWithScorched(Scene.m_pRpWorld, 0.18f);
+        return false;
+    }
+    entity->m_fDynamicLighting = 0.0f;
+  //  CVector point = entity->GetPosition();
+  //  float generatedLightings = CPointLights::GenerateLightsAffectingObject(&point, &entity->m_fDynamicLighting, entity);
+  //  float lightingMultiplier = (entity->GetLightingFromCol(true) * (1.0f - 0.05f) + 0.05f) * generatedLightings;
+  //  SetLightColoursForPedsCarsAndObjects(lightingMultiplier);
+    return true;
 }
 
 void Renderer::AddEntityToRenderList(CEntity* pEntity, float fDistance)
@@ -526,16 +541,17 @@ void Renderer::ScanBigBuildingList(int sectorX, int sectorY)
     }
 }
 
+
 void Renderer::ConstructRenderList()
 {
-    if(CGame::currArea == 0 && CGameIdle::m_fShadowDNBalance <= 1.0)
-    {
-        CascadedShadowManagement->CalculateShadowDistances(Scene.m_pRwCamera->nearPlane, Scene.m_pRwCamera->farPlane);
-        const auto sunDirs = reinterpret_cast<RwV3d*>(0xB7CA50);
-        const auto curr_sun_dir = *reinterpret_cast<int*>(0xB79FD0);
-        const auto curr_sun_dirvec = &sunDirs[curr_sun_dir];
-        CascadedShadowManagement->DirectionalLightTransform(Scene.m_pRwCamera, sunDirs[curr_sun_dir], 0);
-    }
+    //if(CGame::currArea == 0 && CGameIdle::m_fShadowDNBalance <= 1.0)
+    //{
+    //    CascadedShadowManagement->CalculateShadowDistances(Scene.m_pRwCamera->nearPlane, Scene.m_pRwCamera->farPlane);
+    //    const auto sunDirs = reinterpret_cast<RwV3d*>(0xB7CA50);
+    //    const auto curr_sun_dir = *reinterpret_cast<int*>(0xB79FD0);
+    //    const auto curr_sun_dirvec = &sunDirs[curr_sun_dir];
+    //    CascadedShadowManagement->DirectionalLightTransform(Scene.m_pRwCamera, sunDirs[curr_sun_dir], 0);
+    //}
 
     eZoneAttributes zoneAttributes = CCullZones__FindTunnelAttributesForCoors(TheCamera.GetPosition());
     CRenderer::ms_bRenderTunnels = (zoneAttributes & (eZoneAttributes::UNKNOWN_2 | eZoneAttributes::UNKNOWN_1)) != 0;
@@ -574,9 +590,9 @@ void Renderer::ConstructRenderList()
     CRenderer::ms_nNoOfInVisibleEntities = 0;
     CRenderer::ms_vecCameraPosition = TheCamera.GetPosition();
     CRenderer::ms_fCameraHeading = TheCamera.GetHeading();
-    CRenderer::ms_fFarClipPlane = TheCamera.m_pRwCamera->farPlane;
+    CRenderer::ms_fFarClipPlane = fNewFarClip;
     CRenderer::ResetLodRenderLists();
-    ScanWorld();
+    CRenderer::ScanWorld();
 
     CRenderer::ProcessLodRenderLists();
     CStreaming::StartRenderEntities();

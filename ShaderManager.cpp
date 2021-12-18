@@ -157,5 +157,5 @@ void ShaderManager::Update()
 	m_planeData[0] = CTimeCycle::m_CurrentColours.m_fFogStart;
 	m_planeData[1] = Scene.m_pRwCamera->farPlane;
 	m_planeData[2] = 1.0f - (CGame::currArea == 0 ? CGameIdle::m_fShadowDNBalance : 1.0f);
-	m_planeData[3] = CTimeCycle::m_CurrentColours.m_fFarClip - CTimeCycle::m_CurrentColours.m_fFogStart;
+	m_planeData[3] = Scene.m_pRwCamera->farPlane - CTimeCycle::m_CurrentColours.m_fFogStart;
 }

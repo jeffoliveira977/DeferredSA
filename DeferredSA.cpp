@@ -111,8 +111,10 @@ void Render()
 	ImGui::End();
 
 	ImguiManager::Unbind();
-	
-	int weight = 512;
+
+
+	float weight = 512.0f* (float)RsGlobal.maximumHeight / (float)RsGlobal.maximumWidth;
+
 	RwRenderStateSet(rwRENDERSTATETEXTURERASTER, (void*)RenderableScene::m_raster);
 	DrawScreenQuad(0, 0, weight, weight);
 
@@ -218,7 +220,7 @@ void Hook()
 	plugin::Events::attachRwPluginsEvent += PipelinePlugins;
 	plugin::Events::gameProcessEvent += GameProcess;
 	plugin::Events::shutdownRwEvent += ShutdowRenderware;
-	//plugin::Events::drawingEvent += Render;
+	plugin::Events::drawingEvent += Render;
 	plugin::Events::d3dLostEvent += LostDevice;
 	plugin::Events::d3dResetEvent += ResetDevice;
 	GameHooks();

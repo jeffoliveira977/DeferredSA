@@ -4,6 +4,7 @@
 #include "DeferredRenderer.h"
 #include "CTimeCycle.h"
 #include "DeferredSA.h"
+#include "CScene.h"
 
 void MeshRenderingMode::createShaders()
 {
@@ -129,7 +130,7 @@ void MeshRenderingMode::ShadowRendering(RwResEntry* entry, void* object, RwUInt3
 		
 		hasAlpha = instance->vertexAlpha || matcolor->alpha != 255;
 		RwRenderStateSet(rwRENDERSTATEVERTEXALPHAENABLE, (void*)hasAlpha);
-		_rwD3D9SetPixelShaderConstant(1, &CTimeCycle::m_CurrentColours.m_fFarClip, 1);
+		_rwD3D9SetPixelShaderConstant(1, &Scene.m_pRwCamera->farPlane, 1);
 		D3D9Render(header, instance, texture, flags);
 		instance++;
 	}
@@ -158,7 +159,7 @@ void MeshRenderingMode::ReflectionRendering(RwResEntry* entry, void* object, RwU
 
 	float fog[2];
 	fog[0] = CTimeCycle::m_CurrentColours.m_fFogStart;
-	fog[1] = CTimeCycle::m_CurrentColours.m_fFarClip;
+	fog[1] = Scene.m_pRwCamera->farPlane;
 	_rwD3D9SetPixelShaderConstant(4, fog, 1);
 
 	_rwD3D9SetVertexShader(VS_forward);
@@ -170,7 +171,7 @@ void MeshRenderingMode::DeferredRendering(RwResEntry * entry, void* object, RwUI
 	RwD3D9SetRenderState(D3DRS_ALPHABLENDENABLE, FALSE);
 	RwD3D9SetRenderState(D3DRS_ALPHATESTENABLE, TRUE);
 
-	_rwD3D9SetPixelShaderConstant(0, &CTimeCycle::m_CurrentColours.m_fFarClip, 1);
+	_rwD3D9SetPixelShaderConstant(0, &Scene.m_pRwCamera->farPlane, 1);
 }
 
 void MeshRenderingMode::ForwardRendering(RwResEntry * entry, void* object, RwUInt32 flags)
@@ -188,7 +189,7 @@ void MeshRenderingMode::ForwardRendering(RwResEntry * entry, void* object, RwUIn
 
 	float fog[2];
 	fog[0] = CTimeCycle::m_CurrentColours.m_fFogStart;
-	fog[1] = CTimeCycle::m_CurrentColours.m_fFarClip;
+	fog[1] = Scene.m_pRwCamera->farPlane;
 	_rwD3D9SetPixelShaderConstant(4, fog, 1);
 
 	_rwD3D9SetVertexShader(VS_forward);

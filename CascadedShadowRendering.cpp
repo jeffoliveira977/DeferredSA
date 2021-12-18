@@ -150,6 +150,8 @@ void CascadedShadowRendering::Update()
     // Render in red channel
     RwD3D9SetRenderState(D3DRS_COLORWRITEENABLE, D3DCOLORWRITEENABLE_RED);
 
+    RWSRCGLOBAL(curCamera) = Scene.m_pRwCamera;
+   
     // Render cascades
     for(size_t i = 0; i < CascadeCount; i++)
     {
@@ -179,6 +181,8 @@ void CascadedShadowRendering::Update()
         }
 
     }
+
+    RWSRCGLOBAL(curCamera) = NULL;
 
     // Restore all channels colors
     RwD3D9SetRenderState(D3DRS_COLORWRITEENABLE,

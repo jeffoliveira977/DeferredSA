@@ -29,10 +29,6 @@ public:
 	unique_ptr<RenderTarget> mGraphicsLight;
 	unique_ptr<RenderTarget> mGraphicsBuffer[4];
 
-	unique_ptr<VolumetricClouds> mVolumetricClouds;
-	unique_ptr<VolumetricLight> mVolumetricLight;
-	unique_ptr<AmbientOcclusion> mAmbientOcclusion;
-
 	void Start();
 	void Stop();
 	void RenderPostProcessing();
@@ -45,6 +41,10 @@ private:
 	unique_ptr<PixelShader> mCombineLightPS;
 	unique_ptr<PixelShader> mAtmosphereScaterringPS;
 	unique_ptr<PixelShader> mPointSpotLightPS;
+
+	unique_ptr<VolumetricClouds> mVolumetricClouds;
+	unique_ptr<VolumetricLight> mVolumetricLight;
+	unique_ptr<AmbientOcclusion> mAmbientOcclusion;
 
 	void RenderLights();
 	void RenderPointAndSpotLight();

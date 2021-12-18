@@ -33,9 +33,23 @@ void RsMouseSetPos_hook(RwV2d* screen)
 	CTimer::m_UserPause = g_bDrawGUI;
 
 }
+#include "CScene.h"
+#include "CCamera.h"
+
+
+
 
 void CRealTimeShadowManager__Update()
 {
+	if (CGame::currArea == 0 && CGameIdle::m_fShadowDNBalance <= 1.0)
+	{
+		CascadedShadowManagement->CalculateShadowDistances(Scene.m_pRwCamera->nearPlane, Scene.m_pRwCamera->farPlane);
+		const auto sunDirs = reinterpret_cast<RwV3d*>(0xB7CA50);
+		const auto curr_sun_dir = *reinterpret_cast<int*>(0xB79FD0);
+		const auto curr_sun_dirvec = &sunDirs[curr_sun_dir];
+		CascadedShadowManagement->DirectionalLightTransform(Scene.m_pRwCamera, sunDirs[curr_sun_dir], 0);
+	}
+
 	ShadowCasterEntity->Update(1, 1);
 
 	CascadedShadowManagement->Update();
@@ -132,9 +146,87 @@ RpGeometry* CreateGeometryCheckNormals(int numVerts, int numTriangles, unsigned 
 	return geometry;
 }
 
+float fNewFarClip = 500.0f;
 
+void CLODLightManager__DrawDistanceChanger()
+{
+
+	// float fNewFarClip = 500.0f;
+	static DWORD* pPlayerPed = (DWORD*)0xB6F5F0;
+	float& CTimeCycle__m_fCurrentFarClip = *(float*)(0xB7C4F0);
+
+	float fMinDrawDistanceOnTheGround = 1000.0;
+	float fMaxPossibleDrawDistance = 5000.0;
+	float fFactor1 = 8.0;
+	float fFactor2 = 3.0;
+	if (*pPlayerPed)
+	{
+		if (*(BYTE*)((*pPlayerPed) + 0x2F) != 8) //[byte] Location status
+		{
+			//if (*ActiveInterior == 0)
+			//{
+
+			/*if (CWeather__UnderWaterness <= 0.339731634f)
+				fNewFarClip = (fFactor1 / fFactor2) * (TheCamera.GetPosition().z) + fMinDrawDistanceOnTheGround;
+			else
+				fNewFarClip = CTimeCycle__m_fCurrentFarClip;*/
+			//}
+		}
+	}
+}
+#include "CTimeCycle.h"
+void __cdecl HookedCameraUpdateZShiftScale(RwCamera* camera) {
+	CLODLightManager__DrawDistanceChanger();
+	//if (camera->farPlane == CTimeCycle::m_CurrentColours.m_fFarClip) {
+		//float newFarClip = *p2dfxFarClip;
+
+		//if (newFarClip < 200.0f) newFarClip = 200.0f;
+		//else if (newFarClip > 2000.0f) newFarClip = 2000.0f;
+
+		camera->farPlane = fNewFarClip;
+		//*p2dfxFarClip = newFarClip;
+		CTimeCycle::m_CurrentColours.m_fFarClip = fNewFarClip;
+	//}
+	Call<0x7EE200, RwCamera*>(camera);
+}
+
+void StoreRealTimeShadow(CPhysical* physical, float displacementX, float displacementY,
+	float frontX, float frontY, float sideX, float sideY)
+{
+
+}
+void StoreShadowForPole(CEntity* entity, float offsetX, float offsetY, float offsetZ, 
+	float poleHeight, float poleWidth, uint32_t localId)
+{
+
+}
+
+void StoreShadowForPedObject(CEntity* ped, float displacementX, float displacementY, 
+	float frontX, float frontY, float sideX, float sideY)
+{
+
+}
+
+#include "CRenderer.h"
 void GameHooks()
 {
+	//injector::MakeCALL(0x53EBE4, CLODLightManager__DrawDistanceChanger, true);
+
+	//patch::RedirectCall(0x7EE2B0, HookedCameraUpdateZShiftScale);
+	//injector::WriteMemory(0x40C524, &fNewFarClip, true);
+	//injector::WriteMemory(0x553F79, &fNewFarClip, true);
+	//injector::WriteMemory(0x5556A7, &fNewFarClip, true);
+	//injector::WriteMemory(0x732515, &fNewFarClip, true);
+
+	//injector::WriteMemory(0x53D532, &fNewFarClip, true);
+	//injector::WriteMemory(0x53DC7B, &fNewFarClip, true);
+	//injector::WriteMemory(0x53DCB8, &fNewFarClip, true);
+	//injector::WriteMemory(0x53EA95, &fNewFarClip, true);
+
+	plugin::patch::RedirectJump(0x00707CA0, StoreRealTimeShadow);
+	plugin::patch::RedirectJump(0x0070C750, StoreShadowForPole);
+	plugin::patch::RedirectJump(0x00707B40, StoreShadowForPedObject);
+
 	patch::RedirectCall(0x4CDCA4, LockLevel);
 	patch::RedirectCall(0x4CDCD9, ReadLevel);
 
@@ -145,6 +237,17 @@ void GameHooks()
 	// Remove stencil shadows
 	plugin::patch::Nop(0x0053C1AB, 5); // CStencilShadows::Process
 
+	plugin::patch::Nop(0x006E15E2, 5); // car headlight shadow
+	plugin::patch::Nop(0x006E170F, 5);// car headlight shadow
+
+	plugin::patch::Nop(0x0070C3F8, 5); // car light shadow
+	plugin::patch::Nop(0x0070C33F, 5); // car light shadow
+
+	plugin::patch::Nop(0x006FD42C, 5); // corona shadow
+	plugin::patch::Nop(0x006FD47C, 5); // corona shadow
+
+	plugin::patch::Nop(0x00553A04, 5); // CShadows::RenderExtraPlayerShadows
+
 	//plugin::patch::RedirectJump(0x00706AB0, CRealTimeShadowManager__Update);
 	//plugin::patch::RedirectCall(0x0053EA12, CMirrors__BeforeMainRender);
 	//plugin::patch::RedirectJump(0x00734570, Renderer::InsertEntityIntoSortedList);
@@ -152,9 +255,13 @@ void GameHooks()
 	//plugin::patch::RedirectJump(0x00553710, Renderer::AddToLodRenderList);
 	//plugin::patch::RedirectJump(0x00553260, Renderer::RenderOneNonRoad);
 	//plugin::patch::RedirectJump(0x00553AA0, Renderer::RenderEverythingBarRoads);
+	//plugin::patch::RedirectJump(0x553910, Renderer::PreRender);
 	//plugin::patch::RedirectJump(0x00553A10, Renderer::RenderRoads);
-	plugin::patch::RedirectJump(0x005556E0, Renderer::ConstructRenderList);
-	plugin::patch::RedirectJump(0x00553910, Renderer::PreRender);
+	plugin::patch::RedirectJump(0x553E40, Renderer::SetupLightingForEntity);
+	//plugin::patch::RedirectJump(0x005556E0, Renderer::ConstructRenderList);
+	//plugin::patch::RedirectJump(0x00553910, Renderer::PreRender);
+
+//	plugin::patch::Nop(0x535FCD, 5);
 
 	plugin::patch::RedirectCall(0x0053E9F1, RsMouseSetPos_hook);
 
