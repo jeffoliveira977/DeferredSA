@@ -55,8 +55,8 @@ float4 main(float2 texCoord : TEXCOORD0, float2 vpos:VPOS) : COLOR
     float fadefact = (FarClip2 - depth) / (FarClip2 - FogStart2);
     fadefact = saturate(1.0 - fadefact);
     
-    Shadow = lerp(Shadow, 1.0, fadefact); 
-    Shadow = lerp(1.0, Shadow, 0.7); 
+  //  Shadow = lerp(Shadow, 1.0, fadefact); 
+ //   Shadow = lerp(1.0, Shadow, 0.7); 
     float3 lightDir = normalize(sunDir);
     float3 ViewDir = normalize(worldPosition.xyz - ViewInverseMatrix[3].xyz); // View direction vector
 
@@ -66,7 +66,7 @@ float4 main(float2 texCoord : TEXCOORD0, float2 vpos:VPOS) : COLOR
     
     float3 Radiance = tex2D(RadianceSampler, texCoord);
     
-    float2 Lighting = float2(DiffuseTerm, SpecularTerm * SpecIntensity) * (ShadowDNBalance <= 0.0 ? 1.0 : Shadow);
+    float2 Lighting = float2(DiffuseTerm, SpecularTerm * SpecIntensity /** ShadowDNBalance*/) * (ShadowDNBalance <= 0.0 ? 1.0 : Shadow);
     color = float4(Lighting.x * sunColor.rgb + 0.1 + Radiance * saturate(1.0f - ShadowDNBalance + 0.2f), Lighting.y);
     
     return color;

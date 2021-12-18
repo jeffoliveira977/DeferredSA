@@ -12,9 +12,13 @@ LightData Lights::m_aLights[1024];
 
 void Lights::Patch()
 {
-	patch::Nop(0x6E27E6, 5); // fix
-	patch::RedirectJump(0x6E0E20, AddSpotLight);
+	patch::Nop(0x6E2718, 2);
+	patch::Nop(0x6E27E6, 5);
+
 	patch::RedirectJump(0x7000E0, AddOmniLight);
+	patch::RedirectJump(0x6E0E20, AddSpotLight);
+	patch::RedirectJump(0x006E1720, DoHeadLightReflection);
+
 }
 float rwV3D_Dist(const CVector& a, const CVector& b)
 {
@@ -65,42 +69,20 @@ void Lights::AddOmniLight(ePointLightType defaultType, CVector pos, CVector dir,
 		return;
 	
 	CVector camPos = TheCamera.GetPosition();
-	float visibleRadius = radius + 15.0f;
+	float visibleRadius = 250.0;
 	CVector dx = pos - camPos;
-	//if(dx.x >= visibleRadius || dx.x <= -visibleRadius)
-	//{
-	//	return;
-	//}
-	//if(dx.y >= visibleRadius || dx.y <= -visibleRadius)
-	//{
-	//	return;
-	//}
-	/*if(CPointLights::NumLights >= 32)
+
+	if (dx.Magnitude() >= visibleRadius)
 	{
 		return;
-	}*/
-	//if(dx.Magnitude() >= visibleRadius)
-	//{
-	//	return;
-	//}
-	size_t id = CPointLights::NumLights;
-	//CPointLights::aLights[id].m_nType = defaultType;
-	//CPointLights::aLights[id].m_nFogType = fogType;
-	//CPointLights::aLights[id].m_vecPosn = pos;
-	//CPointLights::aLights[id].m_vecDirection = dir;
-	//CPointLights::aLights[id].m_fRange = radius;
-	//CPointLights::aLights[id].m_bGenerateShadows = generateExtraShadows;
-	//CPointLights::aLights[id].m_pEntityToLight = entityAffected;
-	//float intensity = 1.0;
-	//if(visibleRadius * 0.75f <= dx.Magnitude())
-	//{
-	//	intensity = 1.0 - (dx.Magnitude() / visibleRadius - 0.75f) * 4.0;
-	//}
-	//CPointLights::aLights[id].m_fColorRed = red * intensity;
-	//CPointLights::aLights[id].m_fColorGreen = green * intensity;
-	//CPointLights::aLights[id].m_fColorBlue = blue * intensity;
-	//CPointLights::NumLights++;
+	}
 
+	if(CPointLights::NumLights >= 46)
+	{
+		return;
+	}
+
+	float intensity = 3.0;
 
 	LightData light;
 	CVector lightpos;
@@ -116,7 +98,7 @@ void Lights::AddOmniLight(ePointLightType defaultType, CVector pos, CVector dir,
 		lightpos.z = pos.z - dir.z;
 	}
 
-	float intensity = 10.0;
+	//float intensity = 10.0;
 	light.pos = {lightpos.x, lightpos.y, lightpos.z};
 	light.radius = radius;
 	light.dir = dir;
@@ -131,35 +113,46 @@ void Lights::AddOmniLight(ePointLightType defaultType, CVector pos, CVector dir,
 
 void Lights::AddSpotLight(CVehicle* vehicle, int a, CMatrix* matrix, bool isRight)
 {
-	/*if(gRenderState == stageSphereMap)
-		return;*/
 
+}
+
+void __thiscall Lights::DoHeadLightReflection(CVehicle* vehicle, CMatrix* matrix, unsigned int flags, unsigned char left, unsigned char right)
+{
 	CVehicleModelInfo* pModelinfo = reinterpret_cast<CVehicleModelInfo*>(CModelInfo::ms_modelInfoPtrs[vehicle->m_nModelIndex]);
-	CVector headlightPos = pModelinfo->m_pVehicleStruct->m_avDummyPos[a];
+	CVector headlightPos = pModelinfo->m_pVehicleStruct->m_avDummyPos[0];
 
-	if(a != 1 || headlightPos.x != 0.0f || headlightPos.y != 0.0f || headlightPos.z != 0.0f)
+	if (headlightPos.x != 0.0f || headlightPos.y != 0.0f || headlightPos.z != 0.0f)
 	{
-		CVector pos;
-		MultiplyMatrixWithVector(&pos, matrix, &headlightPos);
-		if(!isRight)
-		{
-			float dist = headlightPos.x + headlightPos.x;
-			pos = {pos.x - dist * matrix->right.x,
-				   pos.y - dist * matrix->right.y,
-				   pos.z - dist * matrix->right.z};
-		}
-
 		float distance = 0.05f;
-		if(vehicle->m_nModelIndex == 530)
+		if (vehicle->m_nModelIndex == 530)
 			distance = 0.5f;
 
 		LightData light;
 
-		light.pos = {pos.x + matrix->up.x * distance, pos.y + matrix->up.y * distance, pos.z + matrix->up.z * distance};
-		light.radius = 10.0f;
-		light.dir = {matrix->up.x, matrix->up.y, matrix->up.z};
+		light.radius = 30.0f;
+		light.dir = { matrix->up.x, matrix->up.y, matrix->up.z };
 		light.type = 1;
-		light.color = {1.0f, 1.0f, 1.0f};
-		AddLight(light);
+		float intensity = 1.0;
+		light.color = { 1.0f * intensity, 1.0f * intensity, 1.0f * intensity };
+		
+		CVector pos;
+		MultiplyMatrixWithVector(&pos, matrix, &headlightPos);
+
+		if (right)
+		{
+			light.pos = { pos.x + matrix->up.x * distance, pos.y + matrix->up.y * distance, pos.z + matrix->up.z * distance };
+			AddLight(light);
+		}
+
+		if (left)
+		{
+			float of = headlightPos.x + headlightPos.x;
+			pos = { pos.x - of * matrix->right.x,
+				  pos.y - of * matrix->right.y,
+				  pos.z - of * matrix->right.z};
+
+			light.pos = { pos.x + matrix->up.x * distance, pos.y + matrix->up.y * distance, pos.z + matrix->up.z * distance };
+			AddLight(light);
+		}
 	}
 }

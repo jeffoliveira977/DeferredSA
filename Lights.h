@@ -45,8 +45,8 @@ public:
 	static void ClearLights();
 	static LightData* Buffer();
 	static void AddOmniLight(ePointLightType, CVector, CVector, float, float, float, float, unsigned char, bool, CEntity*);
-	static void AddOmniSpotLight(ePointLightType, CVector, CVector, float, float, float, float, unsigned char, bool, CEntity*);
 	static void __thiscall AddSpotLight(CVehicle* vehicle, int a, CMatrix* matrix, bool isRight);
+	static void __thiscall DoHeadLightReflection(CVehicle* vechile, CMatrix* matrix, unsigned int flags, unsigned char left, unsigned char right);
 	static void Patch();
 };
 

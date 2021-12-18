@@ -3,6 +3,7 @@
 #include "DeferredRenderer.h"
 #include "DefaultMeshPipeline.h"
 #include "CommonD.h"
+#include "CScene.h"
 
 using namespace plugin;
 DefaultMeshPipeline* DefaultMeshPipe;
@@ -351,8 +352,8 @@ void DefaultMeshPipeline::ForwardRendering(RwResEntry* entry, void* object, RwUI
 
 	float fog[3];
 	fog[0] = CTimeCycle::m_CurrentColours.m_fFogStart;
-	fog[1] = CTimeCycle::m_CurrentColours.m_fFarClip;
-	fog[2] = CTimeCycle::m_CurrentColours.m_fFarClip - CTimeCycle::m_CurrentColours.m_fFogStart;
+	fog[1] = Scene.m_pRwCamera->farPlane;
+	fog[2] = Scene.m_pRwCamera->farPlane - CTimeCycle::m_CurrentColours.m_fFogStart;
 	_rwD3D9SetPixelShaderConstant(12, fog, 1);
 	_rwD3D9SetPixelShaderConstant(13, &TheCamera.GetPosition(), 1);
 	

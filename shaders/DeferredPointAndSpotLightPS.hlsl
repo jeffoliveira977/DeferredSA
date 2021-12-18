@@ -77,7 +77,7 @@ float4 main(float2 texCoord : TEXCOORD0) : COLOR
         float cosAngle = dot(LightDirection, -lightPos);
 
         atten *= smoothstep(minCos, maxCos, cosAngle);
-        atten *= 0.5;
+        //atten *= 0.5;
 
     }
        

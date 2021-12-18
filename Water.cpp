@@ -193,7 +193,7 @@ void CWaterLevel::SetupWaterShader()
 
     float mSettings[4];
     mSettings[0] = CTimeCycle::m_CurrentColours.m_fFogStart;
-    mSettings[1] = CTimeCycle::m_CurrentColours.m_fFarClip;
+    mSettings[1] = Scene.m_pRwCamera->farPlane;
     mSettings[2] = RsGlobal.maximumWidth;
     mSettings[3] = RsGlobal.maximumHeight;
     _rwD3D9SetPixelShaderConstant(13, &mSettings, 1);
@@ -286,9 +286,9 @@ std::vector<CEntity*>CWaterLevel::m_renderableList;
 void CRenderer_RenderRoadsAndBuildings(void)
 {
     ObjectType.buldings = true;
-    ObjectType.vehicles = true;
-    ObjectType.objects = true;
-    ObjectType.peds = true;
+    ObjectType.vehicles = false;
+    ObjectType.objects = false;
+    ObjectType.peds = false;
     
     DefinedState();
 
@@ -309,8 +309,8 @@ void CRenderer_RenderRoadsAndBuildings(void)
            (type == ENTITY_TYPE_BUILDING && ObjectType.buldings) ||
            (type == ENTITY_TYPE_OBJECT && ObjectType.objects))
         {
-            //CRenderer::RenderOneRoad(e);
-           // e->Render();
+           // CRenderer::RenderOneRoad(e);
+            e->Render();
         }
     }
 
@@ -323,8 +323,8 @@ void CRenderer_RenderRoadsAndBuildings(void)
            (type == ENTITY_TYPE_BUILDING && ObjectType.buldings) ||
            (type == ENTITY_TYPE_OBJECT && ObjectType.objects))
         {
-            //CRenderer::RenderOneRoad(CRenderer::ms_aVisibleLodPtrs[i]);
-           // e->Render();
+           // CRenderer::RenderOneRoad(CRenderer::ms_aVisibleLodPtrs[i]);
+            e->Render();
         }
     }
 
@@ -345,6 +345,7 @@ void CWaterLevel::RenderReflection(RenderCallback renderCallback)
 
     RwCamera *camera = Scene.m_pRwCamera;
     RwCameraSetViewWindow(m_envCamera, &camera->viewWindow);
+    RwCameraSetFarClipPlane(m_envCamera, Scene.m_pRwCamera->farPlane);
     RwFrameTransform(m_envFrame, &RwCameraGetFrame(camera)->ltm, rwCOMBINEREPLACE);
     RwCameraSetZRaster(m_envCamera, m_zRaster);
 

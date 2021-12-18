@@ -17,8 +17,8 @@ CascadedShadowRendering* CascadedShadowManagement;
 
 CascadedShadowRendering::CascadedShadowRendering()
 {
-    ShadowSize = 1024 * 2;
-    CascadeCount = 3;
+    ShadowSize = 1024 * 4;
+    CascadeCount = 4;
     FilterSize = 40.0f;
     MinDistance = 2.0;
     MaxDistance = 100.0;

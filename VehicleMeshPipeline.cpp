@@ -7,6 +7,8 @@
 #include "CommonD.h"
 #include "CCamera.h"
 #include "CTimeCycle.h"
+#include "CScene.h"
+
 using namespace plugin;
 
 VehicleMeshPipeline* VehicleMeshPipe;
@@ -204,7 +206,7 @@ void VehicleMeshPipeline::ForwardRendering(RwResEntry* entry, void* object, RwUI
 
 	float fog[2];
 	fog[0] = CTimeCycle::m_CurrentColours.m_fFogStart;
-	fog[1] = CTimeCycle::m_CurrentColours.m_fFarClip;
+	fog[1] = Scene.m_pRwCamera->farPlane;
 	_rwD3D9SetPixelShaderConstant(12, fog, 1);
 	_rwD3D9SetPixelShaderConstant(13, &TheCamera.GetPosition(), 1);
 	RwRenderStateSet(rwRENDERSTATESRCBLEND, (void*)rwBLENDSRCALPHA);

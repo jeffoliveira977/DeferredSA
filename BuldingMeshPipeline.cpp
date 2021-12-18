@@ -8,7 +8,7 @@
 #include "CTimeCycle.h"
 #include "PBSMaterial.h"
 #include "DualParaboloidReflection.h"
-
+#include "CScene.h"
 using namespace plugin;
 
 BuldingMeshPipeline* BuldingMeshPipe;
