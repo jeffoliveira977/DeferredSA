@@ -201,7 +201,6 @@ void ShadowCaster::Update(int x, int y)
         
 }
 
-
 void ShadowCaster::Render(int i)
 {
     RwRenderStateSet(rwRENDERSTATEVERTEXALPHAENABLE, (void*)TRUE);

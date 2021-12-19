@@ -95,6 +95,8 @@
     <ClCompile Include="AmbientOcclusion.cpp" />
     <ClCompile Include="RenderTarget.cpp" />
     <ClCompile Include="RenderTargetManager.cpp" />
+    <ClCompile Include="SpotLight.cpp" />
+    <ClCompile Include="PointLight.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="GTADef.h" />
@@ -171,6 +173,8 @@
     </ClInclude>
     <ClInclude Include="RenderTarget.h" />
     <ClInclude Include="RenderTargetManager.h" />
+    <ClInclude Include="SpotLight.h" />
+    <ClInclude Include="PointLight.h" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="imgui">

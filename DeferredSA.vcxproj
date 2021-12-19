@@ -138,6 +138,7 @@
     <ClCompile Include="PixelShader.cpp" />
     <ClCompile Include="PixelShaderConstant.cpp" />
     <ClCompile Include="PixelShaderState.cpp" />
+    <ClCompile Include="PointLight.cpp" />
     <ClCompile Include="PostProcessing.cpp" />
     <ClCompile Include="RenderableAABB.cpp" />
     <ClCompile Include="RenderableFrustum.cpp" />
@@ -154,6 +155,7 @@
     <ClCompile Include="ShadowFrustum.cpp" />
     <ClCompile Include="SkinnedMeshPipeline.cpp" />
     <ClCompile Include="SoftParticles.cpp" />
+    <ClCompile Include="SpotLight.cpp" />
     <ClCompile Include="SpotlightShadow.cpp" />
     <ClCompile Include="Texture.cpp" />
     <ClCompile Include="VehicleMeshPipeline.cpp" />
@@ -199,6 +201,7 @@
     <ClInclude Include="PixelShader.h" />
     <ClInclude Include="PixelShaderConstant.h" />
     <ClInclude Include="PixelShaderState.h" />
+    <ClInclude Include="PointLight.h" />
     <ClInclude Include="PostProcessing.h" />
     <ClInclude Include="RenderableAABB.h" />
     <ClInclude Include="RenderableFrustum.h" />
@@ -215,6 +218,7 @@
     <ClInclude Include="ShadowFrustum.h" />
     <ClInclude Include="SkinnedMeshPipeline.h" />
     <ClInclude Include="SoftParticles.h" />
+    <ClInclude Include="SpotLight.h" />
     <ClInclude Include="SpotlightShadow.h" />
     <ClInclude Include="Texture.h" />
     <ClInclude Include="VehicleMeshPipeline.h" />

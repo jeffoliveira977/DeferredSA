@@ -19,6 +19,8 @@ void Lights::Patch()
 	patch::RedirectJump(0x6E0E20, AddSpotLight);
 	patch::RedirectJump(0x006E1720, DoHeadLightReflection);
 
+	//patch::RedirectJump(0x0070BDA0, StoreShadowForVehicle);
+
 }
 float rwV3D_Dist(const CVector& a, const CVector& b)
 {
@@ -118,6 +120,7 @@ void Lights::AddSpotLight(CVehicle* vehicle, int a, CMatrix* matrix, bool isRigh
 
 void __thiscall Lights::DoHeadLightReflection(CVehicle* vehicle, CMatrix* matrix, unsigned int flags, unsigned char left, unsigned char right)
 {
+	return;
 	CVehicleModelInfo* pModelinfo = reinterpret_cast<CVehicleModelInfo*>(CModelInfo::ms_modelInfoPtrs[vehicle->m_nModelIndex]);
 	CVector headlightPos = pModelinfo->m_pVehicleStruct->m_avDummyPos[0];
 
@@ -156,3 +159,75 @@ void __thiscall Lights::DoHeadLightReflection(CVehicle* vehicle, CMatrix* matrix
 		}
 	}
 }
+
+ void Lights::StoreShadowForVehicle(CVehicle* vehicle, int32_t vehShadowType)
+ {
+	 CVehicleModelInfo* pModelinfo = reinterpret_cast<CVehicleModelInfo*>(CModelInfo::ms_modelInfoPtrs[vehicle->m_nModelIndex]);
+	 CVector headlightPos = pModelinfo->m_pVehicleStruct->m_avDummyPos[0];
+
+	 CVector camPos = TheCamera.GetPosition();
+	 float visibleRadius = 250.0;
+	 CVector dx = vehicle->GetPosition() - camPos;
+
+	 if (dx.Magnitude() >= visibleRadius)
+	 {
+		 return;
+	 }
+
+	 if (m_nLightCount >= 46)
+	 {
+		 return;
+	 }
+
+	 bool lightOn = vehicle->GetVehicleLightsStatus();
+	 auto lights  = vehicle->m_renderLights;
+	 //flagLightsOn = (vehicle->m_nFlags[0] >> 6) & 1;
+	 if (!lightOn)
+		 return;
+
+	 auto autom =(CAutomobile*)vehicle;
+
+	 auto bHEAD_R = (autom && !autom->m_damageManager.GetLightStatus(eLights::LIGHT_FRONT_RIGHT));
+	 auto bHEAD_L = (autom && !autom->m_damageManager.GetLightStatus(eLights::LIGHT_FRONT_LEFT));
+
+	 auto matrix = vehicle->GetMatrix();
+	 if (headlightPos.x != 0.0f || headlightPos.y != 0.0f || headlightPos.z != 0.0f)
+	 {
+		 float distance = 0.05f;
+		 if (vehicle->m_nModelIndex == 530)
+			 distance = 0.5f;
+
+		 LightData light;
+
+		 light.radius = 30.0f;
+		 light.dir = { matrix->up.x, matrix->up.y, matrix->up.z };
+		 light.type = 1;
+		 float intensity = 1.0;
+		 light.color = { 1.0f * intensity, 1.0f * intensity, 1.0f * intensity };
+
+		 CVector pos;
+		 MultiplyMatrixWithVector(&pos, matrix, &headlightPos);
+
+		 if (bHEAD_L)
+		 {
+			 light.pos = { pos.x + matrix->up.x * distance, pos.y + matrix->up.y * distance, pos.z + matrix->up.z * distance };
+			 AddLight(light);
+		 }
+
+		 if (bHEAD_R)
+		 {
+			 float of = headlightPos.x + headlightPos.x;
+			 pos = { pos.x - of * matrix->right.x,
+				   pos.y - of * matrix->right.y,
+				   pos.z - of * matrix->right.z };
+
+			 light.pos = { pos.x + matrix->up.x * distance, pos.y + matrix->up.y * distance, pos.z + matrix->up.z * distance };
+			 AddLight(light);
+		 }
+	 }
+ }
+
+ void Lights::StoreCarLightShadow(CVehicle* vehicle, int32_t id, RwTexture* texture, CVector* posn, float frontX, float frontY, float sideX, float sideY, int8_t red, int8_t green, int8_t blue, float maxViewAngle)
+ {
+	 
+ }

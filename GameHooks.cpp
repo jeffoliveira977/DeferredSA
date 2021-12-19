@@ -166,6 +166,7 @@ void StoreShadowForPedObject(CEntity* ped, float displacementX, float displaceme
 {
 
 }
+
 void __cdecl HookedCameraUpdateZShiftScale(RwCamera* camera) {
 	//if (camera->farPlane == CTimeCycle::m_CurrentColours.m_fFarClip) {
 		float newFarClip = camera->farPlane;
@@ -180,6 +181,7 @@ void __cdecl HookedCameraUpdateZShiftScale(RwCamera* camera) {
 }
 
 #include "CRenderer.h"
+
 void GameHooks()
 {
 	//patch::RedirectCall(0x7EE2B0, HookedCameraUpdateZShiftScale);
@@ -202,23 +204,34 @@ void GameHooks()
 	// Remove stencil shadows
 	plugin::patch::Nop(0x0053C1AB, 5); // CStencilShadows::Process
 
-	plugin::patch::Nop(0x006E15E2, 5); // car headlight shadow
-	plugin::patch::Nop(0x006E170F, 5);// car headlight shadow
+	//plugin::patch::Nop(0x006E15E2, 5); // car headlight shadow
+	//plugin::patch::Nop(0x006E170F, 5);// car headlight shadow
 
-	plugin::patch::Nop(0x0070C3F8, 5); // car light shadow
-	plugin::patch::Nop(0x0070C33F, 5); // car light shadow
+	//plugin::patch::Nop(0x0070C3F8, 5); // car light shadow
+	//plugin::patch::Nop(0x0070C33F, 5); // car light shadow
 
-	plugin::patch::Nop(0x006FD42C, 5); // corona shadow
-	plugin::patch::Nop(0x006FD47C, 5); // corona shadow
-
+	//plugin::patch::Nop(0x006FD42C, 5); // corona shadow
+	//plugin::patch::Nop(0x006FD47C, 5); // corona shadow
+	
+	plugin::Events::gameProcessEvent += []() {
+		Lights::ClearLights();
+		auto pool = CPools::ms_pVehiclePool;
+		for (int i = 0; i < pool->m_nSize; ++i)
+		{
+			auto* e = pool->GetAt(i);
+			if (e)
+				Lights::StoreShadowForVehicle(e, 0);
+		}
+	};
 
 	plugin::patch::Nop(0x00553A04, 5); // CShadows::RenderExtraPlayerShadows
 
-	plugin::patch::RedirectJump(0x00706AB0, CRealTimeShadowManager__Update);
-	plugin::patch::RedirectCall(0x0053EA12, CMirrors__BeforeMainRender);
+	//plugin::patch::RedirectJump(0x00706AB0, CRealTimeShadowManager__Update);
+	//plugin::patch::RedirectCall(0x0053EA12, CMirrors__BeforeMainRender);
 	
 	 Renderer::Hook();
 //	plugin::patch::Nop(0x535FCD, 5);
+
 
 	plugin::patch::RedirectCall(0x0053E9F1, RsMouseSetPos_hook);
 

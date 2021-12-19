@@ -47,6 +47,9 @@ public:
 	static void AddOmniLight(ePointLightType, CVector, CVector, float, float, float, float, unsigned char, bool, CEntity*);
 	static void __thiscall AddSpotLight(CVehicle* vehicle, int a, CMatrix* matrix, bool isRight);
 	static void __thiscall DoHeadLightReflection(CVehicle* vechile, CMatrix* matrix, unsigned int flags, unsigned char left, unsigned char right);
+	static void __thiscall StoreShadowForVehicle(CVehicle* vehicle, int32_t vehShadowType);
+	static void __cdecl StoreCarLightShadow(CVehicle* vehicle, int32_t id, RwTexture* texture, CVector* posn, float frontX, float frontY, float sideX, float sideY, int8_t red, int8_t green, int8_t blue, float maxViewAngle);
+
 	static void Patch();
 };
 
