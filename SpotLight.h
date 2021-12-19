@@ -6,6 +6,7 @@ class SpotLight
 public:
 
 	SpotLight();
+
 	void SetMatrix(XMMATRIX matrix);
 	void SetColor(XMFLOAT3 color);
 	void SetAngle(float angle);
@@ -14,6 +15,7 @@ public:
 	void SetIntensity(float intensity);
 	void SetRadius(float radius);
 
+	Math::Frustum GetFrustum();
 	XMMATRIX GetViewMatrix();
 	XMMATRIX GetProjection();
 	XMFLOAT3 GetColor();

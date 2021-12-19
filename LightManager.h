@@ -15,8 +15,8 @@ public:
 	void AddPointLight(XMFLOAT3 position, XMFLOAT3 direction, XMFLOAT3 color, float radius, float intensity);
 	void ClearLights();
 
-	void GetSpotLightCount();
-	void GetPointLightCount();
+	size_t GetSpotLightCount();
+	size_t GetPointLightCount();
 	SpotLight GetSpotLightAt(int i);
 	PointLight GetPointLightAt(int i);
 private:

@@ -272,6 +272,7 @@
     <FxCompile Include="shaders\DeferredDirectLightPS.hlsl" />
     <FxCompile Include="shaders\DeferredFinalPassPS.hlsl" />
     <FxCompile Include="shaders\DeferredPointAndSpotLightPS.hlsl" />
+    <FxCompile Include="shaders\DeferredPointLightPS.hlsl" />
     <FxCompile Include="shaders\DeferredVehiclePS.hlsl" />
     <FxCompile Include="shaders\DeferredVehicleVS.hlsl">
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='GTASA Release|Win32'">Vertex</ShaderType>

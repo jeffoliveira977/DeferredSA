@@ -22,6 +22,9 @@ void CPointLights__AddLight(unsigned char, XMFLOAT3 point, XMFLOAT3 direction, f
 
 void AddVehicleSpotLight(CVehicle* vehicle)
 {
+	if (gLightManager.GetSpotLightCount() > 28)
+			return;
+
 	CVehicleModelInfo* pModelinfo = reinterpret_cast<CVehicleModelInfo*>(CModelInfo::ms_modelInfoPtrs[vehicle->m_nModelIndex]);
 	CVector headlightPos = pModelinfo->m_pVehicleStruct->m_avDummyPos[0];
 
@@ -29,7 +32,7 @@ void AddVehicleSpotLight(CVehicle* vehicle)
 	float visibleRadius = 250.0;
 	CVector dx = vehicle->GetPosition() - camPos;
 
-	if (dx.Magnitude() >= visibleRadius)	
+	if (dx.Magnitude() >= visibleRadius)
 		return;
 
 	bool lightOn = vehicle->GetVehicleLightsStatus();
@@ -51,39 +54,48 @@ void AddVehicleSpotLight(CVehicle* vehicle)
 			distance = 0.5f;
 
 		SpotLight light;
+
+		// Initialize the spot light
+
 		light.SetRadius(30.0f);
-		light.SetDirection({matrix->up.x, matrix->up.y, matrix->up.z});
-		
-		light.SetColor({1.0f, 1.0f, 1.0f});
+		light.SetDirection({ matrix->up.x, matrix->up.y, matrix->up.z });
+		light.SetColor({ 1.0f, 1.0f, 1.0f });
 		light.SetIntensity(1.0);
+		light.SetAngle(30.0);
 
 		CVector position;
 		MultiplyMatrixWithVector(&position, matrix, &headlightPos);
 
 		if (bHEAD_L)
 		{
-			light.SetPosition({position.x + matrix->up.x * distance,
+			light.SetPosition({ position.x + matrix->up.x * distance,
 							   position.y + matrix->up.y * distance,
-							   position.z + matrix->up.z * distance});
-			
+							   position.z + matrix->up.z * distance });
+			light.Update();
 			gLightManager.AddSpotLight(light);
 		};
 
 		if (bHEAD_R)
 		{
 			float of = headlightPos.x + headlightPos.x;
-			position = {position.x - of * matrix->right.x,
+			position = { position.x - of * matrix->right.x,
 						position.y - of * matrix->right.y,
 						position.z - of * matrix->right.z };
 
-			light.SetPosition({position.x + matrix->up.x * distance,
+			light.SetPosition({ position.x + matrix->up.x * distance,
 							   position.y + matrix->up.y * distance,
-							   position.z + matrix->up.z * distance});
-
+							   position.z + matrix->up.z * distance });
+			light.Update();
 			gLightManager.AddSpotLight(light);
 		}
 	}
 }
+
+void __stdcall CVehicle__DoHeadLightReflection(CVehicle*, int, CMatrix*, bool)
+{}
+
+void __fastcall CVehicle__DoHeadLightBeam(CVehicle*, CMatrix*, unsigned int, unsigned char, unsigned char)
+{}
 
 LightManager::LightManager()
 {}
@@ -103,9 +115,10 @@ void LightManager::Hook()
 		}
 	};
 
-	plugin::patch::Nop(0x6E2718, 2);
 	plugin::patch::Nop(0x6E27E6, 5);
 	plugin::patch::RedirectJump(0x7000E0, CPointLights__AddLight);
+	plugin::patch::RedirectJump(0x6E0E20, CVehicle__DoHeadLightBeam);
+	plugin::patch::RedirectJump(0x6E1720, CVehicle__DoHeadLightReflection);
 }
 
 void LightManager::AddSpotLight(SpotLight spotlight)
@@ -151,14 +164,14 @@ void LightManager::ClearLights()
 	mSpotLightList.clear();
 }
 
-void LightManager::GetSpotLightCount()
+size_t LightManager::GetSpotLightCount()
 {
-	mSpotLightList.size();
+	return mSpotLightList.size();
 }
 
-void LightManager::GetPointLightCount()
+size_t LightManager::GetPointLightCount()
 {
-	mPointLightList.size();
+	return mPointLightList.size();
 }
 
 SpotLight LightManager::GetSpotLightAt(int i)

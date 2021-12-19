@@ -38,6 +38,11 @@ void SpotLight::SetRadius(float radius)
 	mRadius = radius;
 }
 
+Math::Frustum SpotLight::GetFrustum()
+{
+	return mFrustum;
+}
+
 XMMATRIX SpotLight::GetViewMatrix()
 {
 	return mView;
@@ -82,14 +87,50 @@ float SpotLight::GetRadius()
 	return mRadius;
 }
 
+#include "CCamera.h"
+#include "CScene.h"
+#include "GTADef.h"
 void SpotLight::Update()
 {
+	TheCamera.m_mViewMatrix;
+
+	RwMatrixToXMMATRIX(RwFrameGetMatrix(RwCameraGetFrame(Scene.m_pRwCamera)));
+
 	float w = static_cast<float>(RsGlobal.maximumWidth);
 	float h = static_cast<float>(RsGlobal.maximumHeight);
 
-	mView = XMMatrixLookAtLH(mDirection, mPosition, XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f));
-	mProjection = XMMatrixPerspectiveFovLH(mAngle, w / h, 0.01f * mRadius, mRadius);
-	mMatrix = mView * mProjection;
+	XMMATRIX matSpotView;
+	XMVECTOR vLookAt = mPosition + mDirection * mRadius;
+	XMVECTOR vUp = (XMVectorGetY(mDirection) > 0.9 || XMVectorGetY(mDirection) < -0.9) ? XMVectorSet(0.0f, 0.0f, XMVectorGetY(mDirection), 1.0) : XMVectorSet(0.0f, 1.0f, 0.0f, 1.0);
+	XMVECTOR vRight;
+	vRight = XMVector3Cross(vUp, mDirection);
+	XMVector3Normalize(vRight);
+	vUp = XMVector3Cross(mDirection, vRight);
+	XMVector3Normalize(vUp);
+
+	XMVECTOR vCenterPos = mPosition + 0.5f * mDirection;
+	XMVECTOR vAt = vCenterPos + mDirection;
+	XMMATRIX m_LightWorldTransRotate = XMMatrixIdentity();
+
+	m_LightWorldTransRotate.r[0] = vRight;
+	m_LightWorldTransRotate.r[1] = vUp;
+	m_LightWorldTransRotate.r[2] = mDirection;
+	m_LightWorldTransRotate.r[3] = vCenterPos;
+
+
+	mView = XMMatrixLookAtRH(mPosition, vLookAt, XMVectorSet(0.0f, 0.0f, 1.0f, 1.0));
+	//	mView= XMMatrixInverse(nullptr, mView);
+
+	//	mView = XMMatrixLookAtRH(mDirection, mPosition, XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f));
+
+	mProjection = XMMatrixPerspectiveFovRH(XMConvertToRadians(mAngle), w / h, 0.01f * mRadius, mRadius);
+	CVector pos = FindPlayerCoors(0);
+	XMMATRIX translation = XMMatrixTranslation(pos.x, pos.y, pos.z);
+
+	//mView = XMMatrixLookAtRH(XMVectorZero(), -g_XMIdentityR1, -g_XMIdentityR2);
+//	mView = XMMatrixInverse(nullptr, mView * translation);
+	mProjection = XMMatrixPerspectiveFovRH(XMConvertToRadians(90.0f), 1.7777f, 0.01f, 3000.0f);
+	mMatrix = m_LightWorldTransRotate * mView * mProjection;
 
 	mFrustum.SetMatrix(mMatrix);
 }

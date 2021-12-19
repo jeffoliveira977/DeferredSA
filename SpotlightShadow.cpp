@@ -9,7 +9,7 @@
 #include "CRenderer.h"
 #include "CGame.h"
 #include "CVisibilityPlugins.h"
-
+#include "LightManager.h"
 SpotlightShadow* SpotShadow;
 
 SpotlightShadow::SpotlightShadow()
@@ -33,8 +33,8 @@ void SpotlightShadow::Initialize()
 	m_nShadowSize = 512.0;
 
 	for (size_t i = 0; i < 30; i++)
-		mColorRaster[i] = RwD3D9RasterCreate(m_nShadowSize, m_nShadowSize, D3DFMT_R32F, rwRASTERTYPECAMERATEXTURE);
-
+		mColorRaster[i] = RwD3D9RasterCreate(m_nShadowSize, m_nShadowSize, D3DFMT_G32R32F, rwRASTERTYPECAMERATEXTURE);
+		//mColorRaster[i] = RwRasterCreate(m_nShadowSize, m_nShadowSize, 32, rwRASTERTYPECAMERATEXTURE);
 	mDepthRaster = RwRasterCreate(m_nShadowSize, m_nShadowSize, 32, rwRASTERTYPEZBUFFER);
 }
 
@@ -78,18 +78,14 @@ void SpotlightShadow::SectorList(CPtrList& ptrList)
 			Math::AABB aabb(min, max);
 			aabb.Transform(world);
 
-			int n = 0;
-			for (int i = 0; i < Lights::LightList.size(); i++)
+			for (size_t i = 0; i < gLightManager.GetSpotLightCount(); i++)
 			{
-				LightData* data = &Lights::LightList[i];
-				if (data && data->type)
-				{
-					if (m_frustum[n].Intersects(aabb))
-					{
-						AddObject(n, entity, distance);
-					}
-					n++;
-				}
+				auto data = gLightManager.GetSpotLightAt(i);
+
+				//if (data.GetFrustum().Intersects(aabb))
+				//{
+					AddObject(i, entity, distance);
+				//}
 			}
 		}
 	}
@@ -102,39 +98,18 @@ void SpotlightShadow::ScanSectorList(int sectorX, int sectorY)
 		CSector* sector = GetSector(sectorX, sectorY);
 		CRepeatSector* repeatSector = GetRepeatSector(sectorX, sectorY);
 
-		//SectorList(sector->m_buildings);
+		SectorList(sector->m_buildings);
 		//SectorList(sector->m_dummies);
 		 SectorList(repeatSector->m_lists[REPEATSECTOR_VEHICLES]);
-		 SectorList(repeatSector->m_lists[REPEATSECTOR_PEDS]);
-		//SectorList(repeatSector->m_lists[REPEATSECTOR_OBJECTS]);
+		  SectorList(repeatSector->m_lists[REPEATSECTOR_PEDS]);
+		SectorList(repeatSector->m_lists[REPEATSECTOR_OBJECTS]);
 	}
 }
-
+#include "CTimeCycle.h"
 void SpotlightShadow::Update()
 {
-	for (size_t i = 0; i < 2; i++)
+	for (size_t i = 0; i < 30; i++)
 		m_renderableList[i].clear();
-
-	int n = 0;
-	for (int i = 0; i < Lights::LightList.size(); i++)
-	{
-		LightData* data = &Lights::LightList[i];
-		if (data && data->type)
-		{
-			m_spotPos = XMVectorSet(data->pos.x, data->pos.y, data->pos.z, 1.0);
-			m_spotDir = XMVectorSet(data->dir.x, data->dir.y, data->dir.z, 1.0);
-
-			float angle = 30.0;
-			float minCos = DegreesToRadians(angle);
-			m_spotAngle = minCos;
-			m_spotRadius = data->radius;
-
-			m_viewMatrix[n] = XMMatrixLookAtLH(m_spotDir, m_spotPos, XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f));
-			m_projectionMatrix[n] = XMMatrixPerspectiveFovLH(m_spotAngle, 1.777, 0.01f * m_spotRadius, m_spotRadius);
-			m_shadowMatrix[n] = m_viewMatrix[n] * m_projectionMatrix[n];
-			n++;
-		}
-	}
 
 	// Scan entity list
 	SetNextScanCode();
@@ -151,43 +126,45 @@ void SpotlightShadow::Update()
 		}
 	}
 
-	n = 0;
-	for(int i = 0; i < Lights::LightList.size(); i++)
+	RwRGBA ambient = { CTimeCycle::m_CurrentColours.m_nSkyTopRed, CTimeCycle::m_CurrentColours.m_nSkyTopGreen, CTimeCycle::m_CurrentColours.m_nSkyTopBlue, 255 };
+
+	RWSRCGLOBAL(curCamera) = Scene.m_pRwCamera;
+	for (size_t i = 0; i < gLightManager.GetSpotLightCount(); i++)
 	{
-		LightData* data = &Lights::LightList[i];
-		//PrintMessage("%f", data->type);
-		if(data && data->type)
+		auto data = gLightManager.GetSpotLightAt(i);
+
+		m_viewMatrix[i] = data.GetViewMatrix();
+		m_projectionMatrix[i] = data.GetProjection();
+
+		gRenderState = stageCascadeShadow;
+		//gRenderState = stageReflectionCubemap;
+		
+		RwD3D9SetRenderTarget(0, mColorRaster[i]);
+		rwD3D9SetDepthStencil(mDepthRaster);
+
+		D3DVIEWPORT9 viewport;
+		viewport.X = 0;
+		viewport.Y = 0;
+		viewport.Width = mColorRaster[i]->width;
+		viewport.Height = mColorRaster[i]->height;
+		viewport.MinZ = 0;
+		viewport.MaxZ = 1;
+		RwD3DDevice->SetViewport(&viewport);
+
+		rwD3D9Clear(nullptr, rwCAMERACLEARIMAGE | rwCAMERACLEARZ);
+
+		if (rwD3D9TestState())
 		{
-			gRenderState = stageCascadeShadow;
+			RwD3D9SetTransform(D3DTS_VIEW, &m_viewMatrix[i]);
+			RwD3D9SetTransform(D3DTS_PROJECTION, &m_projectionMatrix[i]);
 
-			RwD3D9SetRenderTarget(0, mColorRaster[n]);
-			rwD3D9SetDepthStencil(mDepthRaster);
+			_rwD3D9SetVertexShaderConstant(4, &m_viewMatrix[i], 4);
+			_rwD3D9SetVertexShaderConstant(8, &m_projectionMatrix[i], 4);
 
-			D3DVIEWPORT9 viewport;
-			viewport.X = 0;
-			viewport.Y = 0;
-			viewport.Width = mColorRaster[n]->width;
-			viewport.Height = mColorRaster[n]->height;
-			viewport.MinZ = 0;
-			viewport.MaxZ = 1;
-			RwD3DDevice->SetViewport(&viewport);
-
-			rwD3D9Clear(nullptr, rwCAMERACLEARIMAGE | rwCAMERACLEARZ);
-
-			if (rwD3D9TestState())
-			{
-				RwD3D9SetTransform(D3DTS_VIEW, &m_viewMatrix[n]);
-				RwD3D9SetTransform(D3DTS_PROJECTION, &m_projectionMatrix[n]);
-
-				_rwD3D9SetVertexShaderConstant(4, &m_viewMatrix[n], 4);
-				_rwD3D9SetVertexShaderConstant(8, &m_projectionMatrix[n], 4);
-
-				RenderEntities(n);
-			}
-
-			n++;
+			RenderEntities(i);
 		}
-	}
+	}	
+	RWSRCGLOBAL(curCamera) = NULL;
 }
 
 void SpotlightShadow::RenderEntities(int i)
@@ -199,7 +176,10 @@ void SpotlightShadow::RenderEntities(int i)
 
 	RwRenderStateSet(rwRENDERSTATEZWRITEENABLE, (void*)TRUE);
 	RwRenderStateSet(rwRENDERSTATEZTESTENABLE, (void*)TRUE);
+	//if (!CGame::currArea)
+	//	RwRenderStateSet(rwRENDERSTATEALPHATESTFUNCTIONREF, (void*)140);
 
+	RwRenderStateSet(rwRENDERSTATECULLMODE, (void*)rwCULLMODECULLBACK);
 	for (auto& entity : m_renderableList[i])
 	{
 		if (entity->m_pRwObject == nullptr)

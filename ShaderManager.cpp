@@ -151,20 +151,20 @@ void ShaderManager::Update()
 		  static_cast<float>(CTimeCycle::m_CurrentColours.m_nSunCoreGreen) / 255.0f,
 		  static_cast<float>(CTimeCycle::m_CurrentColours.m_nSunCoreBlue) / 255.0f};
 
-	//if (CGameIdle::m_fShadowDNBalance <= 0.99f)
-	//{
+	if (CGameIdle::m_fShadowDNBalance <= 0.99f)
+	{
 		auto sunDirs2 = (CVector*)0xB7CA50;
 		int sunDirIndex = *(int*)0xB79FD0;
 		sunDirs2[sunDirIndex];
 		sunDirs = *sunDirs2;
-	//}
-	//else
-	//{
-	//	sunDirs = { 0.0f, -0.98893635f, 0.14834045f };
-	//	float value = m_sunColor.x * CGameIdle::m_fShadowDNBalance * 0.2f;
+	}
+	else
+	{
+		sunDirs = { 0.0f, -0.98893635f, 0.14834045f };
+		float value = m_sunColor.x * CGameIdle::m_fShadowDNBalance * 0.2f;
 
-	//	m_sunColor = { value, value, value };
-	//}
+		m_sunColor = { value, value, value };
+	}
 	CTimeCycle::m_CurrentColours.m_fFarClip = Scene.m_pRwCamera->farPlane;
 	m_planeData[0] = CTimeCycle::m_CurrentColours.m_fFogStart;
 	m_planeData[1] = CTimeCycle::m_CurrentColours.m_fFarClip;

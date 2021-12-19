@@ -16,6 +16,7 @@
 #include "Renderer.h"
 #include "DefaultPipeline.h"
 #include "Lights.h"
+#include "SpotlightShadow.h"
 
 using namespace plugin;
 
@@ -41,6 +42,9 @@ void RsMouseSetPos_hook(RwV2d* screen)
 
 void CRealTimeShadowManager__Update()
 {
+	if (CGameIdle::m_fShadowDNBalance)
+		SpotShadow->Update();
+
 	/*if (CGame::currArea == 0 && CGameIdle::m_fShadowDNBalance <= 1.0)
 	{
 		CascadedShadowManagement->CalculateShadowDistances(Scene.m_pRwCamera->nearPlane, Scene.m_pRwCamera->farPlane);
@@ -52,7 +56,7 @@ void CRealTimeShadowManager__Update()
 
 	//ShadowCasterEntity->Update(1, 1);
 
-	CascadedShadowManagement->Update();
+	 CascadedShadowManagement->Update();
 
 	CubemapReflection::Update();
 	CubemapReflection::RenderScene();
@@ -181,7 +185,7 @@ void __cdecl HookedCameraUpdateZShiftScale(RwCamera* camera) {
 }
 
 #include "CRenderer.h"
-
+#include "LightManager.h"
 void GameHooks()
 {
 	//patch::RedirectCall(0x7EE2B0, HookedCameraUpdateZShiftScale);
@@ -213,20 +217,10 @@ void GameHooks()
 	//plugin::patch::Nop(0x006FD42C, 5); // corona shadow
 	//plugin::patch::Nop(0x006FD47C, 5); // corona shadow
 	
-	plugin::Events::gameProcessEvent += []() {
-		Lights::ClearLights();
-		auto pool = CPools::ms_pVehiclePool;
-		for (int i = 0; i < pool->m_nSize; ++i)
-		{
-			auto* e = pool->GetAt(i);
-			if (e)
-				Lights::StoreShadowForVehicle(e, 0);
-		}
-	};
-
+	gLightManager.Hook();
 	plugin::patch::Nop(0x00553A04, 5); // CShadows::RenderExtraPlayerShadows
 
-	//plugin::patch::RedirectJump(0x00706AB0, CRealTimeShadowManager__Update);
+	plugin::patch::RedirectJump(0x00706AB0, CRealTimeShadowManager__Update);
 	//plugin::patch::RedirectCall(0x0053EA12, CMirrors__BeforeMainRender);
 	
 	 Renderer::Hook();
@@ -235,7 +229,6 @@ void GameHooks()
 
 	plugin::patch::RedirectCall(0x0053E9F1, RsMouseSetPos_hook);
 
-	Lights::Patch();
 	plugin::patch::RedirectJump(0x7578C0, D3D9AtomicDefaultInstanceCallback);
 
 	plugin::patch::RedirectCall(0x74D234, CreateGeometryCheckNormals);

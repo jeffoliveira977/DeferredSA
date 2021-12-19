@@ -40,7 +40,8 @@ private:
 	unique_ptr<PixelShader> mDirectLightPS;
 	unique_ptr<PixelShader> mCombineLightPS;
 	unique_ptr<PixelShader> mAtmosphereScaterringPS;
-	unique_ptr<PixelShader> mPointSpotLightPS;
+	unique_ptr<PixelShader> mPointLightPS;
+	unique_ptr<PixelShader> mSpotLightPS;
 
 	unique_ptr<VolumetricClouds> mVolumetricClouds;
 	unique_ptr<VolumetricLight> mVolumetricLight;

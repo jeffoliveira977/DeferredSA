@@ -14,6 +14,7 @@
 #include "ShaderConstant.h"
 #include "VolumetricClouds.h"
 #include "PixelShader.h"
+#include "SpotlightShadow.h"
 
 RenderingStage gRenderState;
 DeferredRendering *DeferredContext;
@@ -21,8 +22,11 @@ DeferredRendering *DeferredContext;
 
 void DeferredRendering::Initialize()
 {
-	mPointSpotLightPS = unique_ptr<PixelShader>(new PixelShader());
-	mPointSpotLightPS->CreateFromBinary("DeferredPointAndSpotLightPS");
+	mPointLightPS = unique_ptr<PixelShader>(new PixelShader());
+	mPointLightPS->CreateFromBinary("DeferredPointLightPS");
+
+	mSpotLightPS = unique_ptr<PixelShader>(new PixelShader());
+	mSpotLightPS->CreateFromBinary("DeferredPointAndSpotLightPS");
 
 	mDirectLightPS = unique_ptr<PixelShader>(new PixelShader());
 	mDirectLightPS->CreateFromBinary("DeferredDirectLightPS");
@@ -127,7 +131,7 @@ void DeferredRendering::RenderPostProcessing()
 }
 
 #include "CCamera.h"
-
+#include "LightManager.h"
 void DeferredRendering::RenderLights()
 {
 	ShaderContext->SetTimecyProps(8);
@@ -159,24 +163,55 @@ void DeferredRendering::RenderLights()
 	RwRenderStateSet(rwRENDERSTATESRCBLEND, (void*)rwBLENDONE);
 	RwRenderStateSet(rwRENDERSTATEDESTBLEND, (void*)rwBLENDONE);
 
-	mPointSpotLightPS->Apply();
-//	Lights::SortByDistance(TheCamera.GetPosition().ToRwV3d());
+	//mPointLightPS->Apply();
+	//for (int i = 0; i < gLightManager.GetPointLightCount(); i++)
+	//{
+	//	auto light = gLightManager.GetPointLightAt(i);
 
-	//float constData[16];
-	XMVECTOR value[4];
-	// Spot and point light 
-	for (int i = 0; i < Lights::m_nLightCount; i++)
+	//	auto radius = light.GetRadius();
+	//	auto intensity = light.GetIntensity();
+
+	//	_rwD3D9SetPixelShaderConstant(9, &light.GetPosition(), 1);
+	//	_rwD3D9SetPixelShaderConstant(10, &light.GetDirection(), 1);
+	//	_rwD3D9SetPixelShaderConstant(11, &light.GetColor(), 1);
+	//	_rwD3D9SetPixelShaderConstant(12, &radius, 1);
+	//	_rwD3D9SetPixelShaderConstant(13, &intensity, 1);
+	//	Quad::Render();
+	//}
+
+	mSpotLightPS->Apply();
+	for (size_t i = 0; i < gLightManager.GetSpotLightCount(); i++)
 	{
-		//auto lightData = reinterpret_cast<float*>(&Lights::Buffer()[i]);
-		//std::copy(lightData, lightData + (sizeof(LightData) / 4), constData);
-		memcpy(value, &Lights::Buffer()[i], sizeof(LightData));
-		_rwD3D9SetPixelShaderConstant(9, &Lights::Buffer()[i], sizeof(LightData)/ sizeof(float[4]));
+		auto light = gLightManager.GetSpotLightAt(i);
+
+		auto radius = light.GetRadius();
+		auto intensity = light.GetIntensity();
+		auto coneAngle = light.GetAngle();
+
+		rwD3D9SetSamplerState(5, D3DSAMP_BORDERCOLOR, 0x0);
+		rwD3D9SetSamplerState(5, D3DSAMP_MAGFILTER, D3DTEXF_POINT);
+		rwD3D9SetSamplerState(5, D3DSAMP_MINFILTER, D3DTEXF_POINT);
+		rwD3D9SetSamplerState(5, D3DSAMP_MIPFILTER, D3DTEXF_POINT);
+		rwD3D9SetSamplerState(5, D3DSAMP_ADDRESSU, D3DTADDRESS_CLAMP);
+		rwD3D9SetSamplerState(5, D3DSAMP_ADDRESSV, D3DTADDRESS_CLAMP);
+		rwD3D9SetSamplerState(5, D3DSAMP_ADDRESSW, D3DTADDRESS_CLAMP);
+		 _rwD3D9RWSetRasterStage(SpotShadow->mColorRaster[i], 5);
+
+		_rwD3D9SetPixelShaderConstant(9, &light.GetPosition(), 1);
+		_rwD3D9SetPixelShaderConstant(10, &light.GetDirection(), 1);
+		_rwD3D9SetPixelShaderConstant(11, &light.GetColor(), 1);
+		_rwD3D9SetPixelShaderConstant(12, &radius, 1);
+		_rwD3D9SetPixelShaderConstant(13, &intensity, 1);
+		_rwD3D9SetPixelShaderConstant(14, &coneAngle, 1);
+		_rwD3D9SetPixelShaderConstant(15, &(light.GetViewMatrix() * light.GetProjection()) , 4);
+
 		Quad::Render();
 	}
-	
-	static int maxlight = 0;
-	maxlight = max(maxlight, Lights::m_nLightCount);
-	//PrintMessage("%d", maxlight);
+
+
+	static uint maxlight = 0;
+	maxlight = max(maxlight, gLightManager.GetSpotLightCount()+ gLightManager.GetPointLightCount());
+	PrintMessage("%d", maxlight);
 
 
 	// Render to default surface
