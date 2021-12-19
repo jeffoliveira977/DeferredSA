@@ -16,6 +16,8 @@ public:
 	RwRaster* mColorRaster[30];
 	RwRaster* mDepthRaster;
 	XMMATRIX m_shadowMatrix[30];
+	XMMATRIX m_projectionMatrix[30];
+	XMMATRIX m_viewMatrix[30];
 	RwCamera* mCamera;
 	 XMMATRIX m_viewMatrix[6];
 	 Math::Frustum m_frustum[30];

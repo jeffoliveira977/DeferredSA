@@ -102,7 +102,7 @@ void SpotlightShadow::ScanSectorList(int sectorX, int sectorY)
 		CSector* sector = GetSector(sectorX, sectorY);
 		CRepeatSector* repeatSector = GetRepeatSector(sectorX, sectorY);
 
-		SectorList(sector->m_buildings);
+		//SectorList(sector->m_buildings);
 		//SectorList(sector->m_dummies);
 		 SectorList(repeatSector->m_lists[REPEATSECTOR_VEHICLES]);
 		 SectorList(repeatSector->m_lists[REPEATSECTOR_PEDS]);
@@ -112,14 +112,15 @@ void SpotlightShadow::ScanSectorList(int sectorX, int sectorY)
 
 void SpotlightShadow::Update()
 {
-	static int n = 0;
-	for(int i = 0; i < Lights::LightList.size(); i++)
+	for (size_t i = 0; i < 2; i++)
+		m_renderableList[i].clear();
+
+	int n = 0;
+	for (int i = 0; i < Lights::LightList.size(); i++)
 	{
 		LightData* data = &Lights::LightList[i];
-		//PrintMessage("%f", data->type);
-		if(data && data->type)
+		if (data && data->type)
 		{
-		
 			m_spotPos = XMVectorSet(data->pos.x, data->pos.y, data->pos.z, 1.0);
 			m_spotDir = XMVectorSet(data->dir.x, data->dir.y, data->dir.z, 1.0);
 
@@ -128,20 +129,45 @@ void SpotlightShadow::Update()
 			m_spotAngle = minCos;
 			m_spotRadius = data->radius;
 
-			XMMATRIX view = XMMatrixLookAtLH(m_spotDir, m_spotPos, XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f));
-			XMMATRIX projection = XMMatrixPerspectiveFovLH(m_spotAngle, 1.777, 0.01f * m_spotRadius, m_spotRadius);
+			m_viewMatrix[n] = XMMatrixLookAtLH(m_spotDir, m_spotPos, XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f));
+			m_projectionMatrix[n] = XMMatrixPerspectiveFovLH(m_spotAngle, 1.777, 0.01f * m_spotRadius, m_spotRadius);
+			m_shadowMatrix[n] = m_viewMatrix[n] * m_projectionMatrix[n];
+			n++;
+		}
+	}
 
-			m_shadowMatrix[n] = view * projection;
+	// Scan entity list
+	SetNextScanCode();
+
+	int x = GetSectorX(CRenderer::ms_vecCameraPosition.x);
+	int y = GetSectorY(CRenderer::ms_vecCameraPosition.y);
+
+	int sectorCount = 10;
+	for (int j = -sectorCount; j < sectorCount; j++)
+	{
+		for (int i = -sectorCount; i < sectorCount; i++)
+		{
+			ScanSectorList(x + i, y + j);
+		}
+	}
+
+	static int n = 0;
+	for(int i = 0; i < Lights::LightList.size(); i++)
+	{
+		LightData* data = &Lights::LightList[i];
+		//PrintMessage("%f", data->type);
+		if(data && data->type)
+		{
 			gRenderState = stageCascadeShadow;
 
-			RwD3D9SetRenderTarget(0, mColorRaster[i]);
+			RwD3D9SetRenderTarget(0, mColorRaster[n]);
 			rwD3D9SetDepthStencil(mDepthRaster);
 
 			D3DVIEWPORT9 viewport;
 			viewport.X = 0;
 			viewport.Y = 0;
-			viewport.Width = mColorRaster[i]->width;
-			viewport.Height = mColorRaster[i]->height;
+			viewport.Width = mColorRaster[n]->width;
+			viewport.Height = mColorRaster[n]->height;
 			viewport.MinZ = 0;
 			viewport.MaxZ = 1;
 			RwD3DDevice->SetViewport(&viewport);
@@ -150,11 +176,11 @@ void SpotlightShadow::Update()
 
 			if (rwD3D9TestState())
 			{
-				RwD3D9SetTransform(D3DTS_VIEW, &view);
-				RwD3D9SetTransform(D3DTS_PROJECTION, &projection);
+				RwD3D9SetTransform(D3DTS_VIEW, &m_viewMatrix[n]);
+				RwD3D9SetTransform(D3DTS_PROJECTION, &m_projectionMatrix[n]);
 
-				_rwD3D9SetVertexShaderConstant(4, &view, 4);
-				_rwD3D9SetVertexShaderConstant(8, &projection, 4);
+				_rwD3D9SetVertexShaderConstant(4, &m_viewMatrix[n], 4);
+				_rwD3D9SetVertexShaderConstant(8, &m_projectionMatrix[n], 4);
 
 				RenderEntities(n);
 			}
