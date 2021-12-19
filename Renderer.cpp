@@ -589,6 +589,7 @@ void Renderer::Hook()
     //plugin::patch::RedirectJump(0x00553910, Renderer::PreRender);
     plugin::patch::RedirectJump(0x005556E0, Renderer::ConstructRenderList);
 
+    // Compatibility with Open Limit Adjuster
     patch::RedirectJump(0x55352E, CRenderer__AddEntityToRenderList___VisibleEntity_HOOK);
     patch::RedirectJump(0x5534FA, CRenderer__AddEntityToRenderList___VisibleLod_HOOK);
 
