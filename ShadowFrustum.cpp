@@ -100,12 +100,13 @@ void ShadowFrustum::DirectionalLightTransform(RwCamera* mainCam, const RW::V3d& 
         XMStoreFloat3(&extents, maxExtents - minExtents);
 
         float longEdge = max(extents.x, extents.y);
-        longEdge *= 0.5;
-        float nearZ = -(extents.z < 500.0f ? 500.0f : extents.z);
+        //longEdge *= 0.5;
+        float nearZ =-2500;
         float farZ = 50.0f + -nearZ;
+        PrintMessage("%f", farZ);
 
         // Get position of the shadow camera
-        XMVECTOR shadowPosition = frustumCenter + lightDirection * -XMVectorGetZ(minExtents);
+        XMVECTOR shadowPosition = frustumCenter + lightDirection /** -XMVectorGetZ(minExtents)*/;
 
         Desc[i].mLightViewMatrix = XMMatrixLookAtRH(shadowPosition, frustumCenter, cameraUpVector);
         Desc[i].mLightOrthoMatrix = XMMatrixOrthographicRH(longEdge, longEdge, nearZ, farZ);
@@ -128,8 +129,8 @@ void ShadowFrustum::DirectionalLightTransform(RwCamera* mainCam, const RW::V3d& 
         }
 
         XMMATRIX projection = Desc[i].mLightOrthoMatrix;
-        projection.r[0] *= 0.5f;
-        projection.r[1] *= 0.5f;
+       // projection.r[0] *= 0.5f;
+       // projection.r[1] *= 0.5f;
         Desc[i].mFrustumCulling.SetMatrix(Desc[i].mLightViewMatrix * projection);
     }
 }
@@ -144,7 +145,16 @@ void ShadowFrustum::CalculateShadowDistances(const RwReal nearClip, const RwReal
     //    m_fShadowDistances[i] = nearClip + (farClip - nearClip) * pow((i / (float)CascadeCount), 2);
 
     //return;
-
+    m_fShadowDistances[0] = nearClip;
+    /*for (auto i = 0; i < 4; i++)
+    {
+        m_fShadowDistances[i] = fNear * powf(farDist / fNear, i / (float)gShadowSettings.ShadowCascadeCount);
+    }*/
+    m_fShadowDistances[1] = nearClip + farClip * mDistanceCoefficients[0];
+    m_fShadowDistances[2] = nearClip + farClip * mDistanceCoefficients[1];
+    m_fShadowDistances[3] = nearClip + farClip * mDistanceCoefficients[2];
+    m_fShadowDistances[4] = farClip;
+    return;
     m_partitionMode = PartitionMode_Manual;
     if(m_partitionMode == PartitionMode_Manual)
     {

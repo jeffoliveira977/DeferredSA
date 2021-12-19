@@ -19,7 +19,7 @@ void ShaderManager::SetTimecyProps(int idx)
 	_rwD3D9SetPixelShaderConstant(idx, &m_skyTop, 1); idx++;
 	_rwD3D9SetPixelShaderConstant(idx, &m_skyBottom, 1); idx++;
 	_rwD3D9SetPixelShaderConstant(idx, &m_sunColor, 1); idx++;
-	_rwD3D9SetPixelShaderConstant(idx, sunDirs, 1); idx++;
+	_rwD3D9SetPixelShaderConstant(idx, &sunDirs, 1); idx++;
 	_rwD3D9SetPixelShaderConstant(idx, m_planeData, 1);
 }
 
@@ -44,7 +44,7 @@ void ShaderManager::SetSunDirection(int idx)
 	/*sunDirs = (CVector*)0xB7CA50;
 	int sunDirIndex = *(int*)0xB79FD0;
 	sunDirs[sunDirIndex];*/
-	_rwD3D9SetPixelShaderConstant(idx, sunDirs, 1);
+	_rwD3D9SetPixelShaderConstant(idx, &sunDirs, 1);
 }
 
 void ShaderManager::SetViewMatrix(int idx, bool vs)
@@ -133,6 +133,7 @@ void ShaderManager::SetFogParams(int idx)
 	_rwD3D9SetPixelShaderConstant(idx, m_planeData, 1);
 }
 
+#include "CCamera.h"
 void ShaderManager::Update()
 {
 	m_skyTop = {
@@ -150,12 +151,25 @@ void ShaderManager::Update()
 		  static_cast<float>(CTimeCycle::m_CurrentColours.m_nSunCoreGreen) / 255.0f,
 		  static_cast<float>(CTimeCycle::m_CurrentColours.m_nSunCoreBlue) / 255.0f};
 
-	sunDirs = (CVector*)0xB7CA50;
-	int sunDirIndex = *(int*)0xB79FD0;
-	sunDirs[sunDirIndex];
+	//if (CGameIdle::m_fShadowDNBalance <= 0.99f)
+	//{
+		auto sunDirs2 = (CVector*)0xB7CA50;
+		int sunDirIndex = *(int*)0xB79FD0;
+		sunDirs2[sunDirIndex];
+		sunDirs = *sunDirs2;
+	//}
+	//else
+	//{
+	//	sunDirs = { 0.0f, -0.98893635f, 0.14834045f };
+	//	float value = m_sunColor.x * CGameIdle::m_fShadowDNBalance * 0.2f;
 
+	//	m_sunColor = { value, value, value };
+	//}
+	CTimeCycle::m_CurrentColours.m_fFarClip = Scene.m_pRwCamera->farPlane;
 	m_planeData[0] = CTimeCycle::m_CurrentColours.m_fFogStart;
-	m_planeData[1] = Scene.m_pRwCamera->farPlane;
+	m_planeData[1] = CTimeCycle::m_CurrentColours.m_fFarClip;
 	m_planeData[2] = 1.0f - (CGame::currArea == 0 ? CGameIdle::m_fShadowDNBalance : 1.0f);
-	m_planeData[3] = Scene.m_pRwCamera->farPlane - CTimeCycle::m_CurrentColours.m_fFogStart;
+	m_planeData[3] = CTimeCycle::m_CurrentColours.m_fFarClip - CTimeCycle::m_CurrentColours.m_fFogStart;
+	//
+	//PrintMessage("%f %f", CTimeCycle::m_CurrentColours.m_fFarClip, Scene.m_pRwCamera->farPlane );
 }

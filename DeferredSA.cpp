@@ -176,7 +176,7 @@ LRESULT CALLBACK MessageProc(int code, WPARAM wParam, LPARAM lParam)
 
 void GameProcess()
 {
-	Lights::ClearLights();
+//	Lights::ClearLights();
 	CGameIdle::UpdateShadowDNBalance();
 }
 

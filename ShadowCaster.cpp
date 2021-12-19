@@ -172,12 +172,14 @@ void ShadowCaster::ScanSectorList(int sectorX, int sectorY)
     }
 }
 
+
 void ShadowCaster::Update(int x, int y)
 {
-    for(size_t i = 0; i < 4; i++)
-        m_castEntity[i].clear();
+    //for(size_t i = 0; i < 4; i++)
+    //    m_castEntity[i].clear();
 
     SetNextScanCode();
+
 
     x = GetSectorX(CRenderer::ms_vecCameraPosition.x);
     y = GetSectorY(CRenderer::ms_vecCameraPosition.y);
@@ -198,7 +200,6 @@ void ShadowCaster::Update(int x, int y)
             ScanSectorList( x+i,y+  j);
         
 }
-
 
 void ShadowCaster::Render(int i)
 {

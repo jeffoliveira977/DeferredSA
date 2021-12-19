@@ -7,7 +7,7 @@ class ShaderManager
 	CVector m_skyBottom;
 	CVector m_sunColor;
 	float m_planeData[4];
-	CVector* sunDirs;
+	CVector sunDirs;
 
 public:
 

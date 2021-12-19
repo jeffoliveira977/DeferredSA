@@ -102,21 +102,7 @@ void DeferredRendering::Stop()
 	RwRenderStateSet(rwRENDERSTATECULLMODE, (void*)rwCULLMODECULLNONE);
 	RwD3D9SetRenderState(D3DRS_ALPHATESTENABLE, FALSE);
 
-	//mAmbientOcclusion->Render();
-
-
 	RenderLights();
-
-	//RenderPointAndSpotLight();
-
-	//// Render to default surface
-	//__rwD3D9SetRenderTarget(0, RwD3D9RenderSurface);
-
-	//for (size_t i = 1; i < 4; i++)
-	//	__rwD3D9SetRenderTarget(i, NULL);
-
-	//RenderFinalPass();
-
 	AtmosphericScattering();
 
 
@@ -161,19 +147,20 @@ void DeferredRendering::RenderLights()
 	}
 
 	RwD3D9SetRenderTarget(0, mGraphicsLight->GetRaster());
+
 	RwD3D9SetRenderState(D3DRS_ALPHABLENDENABLE, FALSE);
 	mDirectLightPS->Apply();
 	Quad::Render();
 	//return;
 
-	_rwD3D9SetPixelShaderConstant(8, &Scene.m_pRwCamera->farPlane, 1);
+	_rwD3D9SetPixelShaderConstant(8, &CTimeCycle::m_CurrentColours.m_fFarClip, 1);
 
 	RwD3D9SetRenderState(D3DRS_ALPHABLENDENABLE, TRUE);
 	RwRenderStateSet(rwRENDERSTATESRCBLEND, (void*)rwBLENDONE);
 	RwRenderStateSet(rwRENDERSTATEDESTBLEND, (void*)rwBLENDONE);
 
 	mPointSpotLightPS->Apply();
-	Lights::SortByDistance(TheCamera.GetPosition().ToRwV3d());
+//	Lights::SortByDistance(TheCamera.GetPosition().ToRwV3d());
 
 	//float constData[16];
 	XMVECTOR value[4];
@@ -226,62 +213,6 @@ void DeferredRendering::RenderLights()
 	Quad::Render();
 }
 
-
-#include "CCamera.h"
-
-void DeferredRendering::RenderPointAndSpotLight()
-{
-	_rwD3D9SetPixelShaderConstant(8, &Scene.m_pRwCamera->farPlane, 1);
-
-	RwD3D9SetRenderState(D3DRS_ALPHABLENDENABLE, TRUE);
-	RwRenderStateSet(rwRENDERSTATESRCBLEND, (void*)rwBLENDONE);
-	RwRenderStateSet(rwRENDERSTATEDESTBLEND, (void*)rwBLENDONE);
-
-	mPointSpotLightPS->Apply();
-	Lights::SortByDistance(TheCamera.GetPosition().ToRwV3d());
-
-	XMVECTOR value[4];
-
-	// Spot and point light 
-	for (int i = 0; i < Lights::m_nLightCount; i++)
-	{
-		memcpy(value, &Lights::Buffer()[i], sizeof(LightData));
-		_rwD3D9SetPixelShaderConstant(9, value,
-			sizeof(LightData));
-
-		Quad::Render();
-	}
-}
-
-void DeferredRendering::RenderFinalPass()
-{
-	_rwD3D9SetPixelShaderConstant(8, EnvironmentMapping::m_paraboloidBasis, 4);
-
-	ShaderContext->SetTimecyProps(12);
-
-	RwRaster* rasters[] = {
-		CubemapReflection::m_cubeRaster,
-		EnvironmentMapping::m_sphericalRaster,
-		DualParaboloidReflection::m_raster[0],
-		DualParaboloidReflection::m_raster[1],
-		mAmbientOcclusion->mSSAORaster };
-
-	for (size_t i = 0; i < 5; i++)
-	{
-		rwD3D9SetSamplerState(i + 4, D3DSAMP_BORDERCOLOR, 0x0);
-		rwD3D9SetSamplerState(i + 4, D3DSAMP_MAGFILTER, D3DTEXF_LINEAR);
-		rwD3D9SetSamplerState(i + 4, D3DSAMP_MINFILTER, D3DTEXF_LINEAR);
-		rwD3D9SetSamplerState(i + 4, D3DSAMP_MIPFILTER, D3DTEXF_LINEAR);
-		rwD3D9SetSamplerState(i + 4, D3DSAMP_ADDRESSU, D3DTADDRESS_BORDER);
-		rwD3D9SetSamplerState(i + 4, D3DSAMP_ADDRESSV, D3DTADDRESS_BORDER);
-		rwD3D9SetSamplerState(i + 4, D3DSAMP_ADDRESSW, D3DTADDRESS_BORDER);
-		rwD3D9RWSetRasterStage(rasters[i], i + 4);
-	}
-
-	RwD3D9SetRenderState(D3DRS_ALPHABLENDENABLE, FALSE);
-	mCombineLightPS->Apply();
-	Quad::Render();
-}
 
 void DeferredRendering::AtmosphericScattering()
 {
