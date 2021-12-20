@@ -3,13 +3,14 @@
 
 class ShaderManager
 {
+public:
 	CVector m_skyTop;
 	CVector m_skyBottom;
 	CVector m_sunColor;
 	float m_planeData[4];
 	CVector sunDirs;
 
-public:
+
 
 	void LoadShaders();
 	void SetTimecyProps(int idx);

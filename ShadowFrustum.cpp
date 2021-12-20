@@ -34,9 +34,9 @@ void GetCameraFrustumCorners(RwCamera* camera, RwReal nearClip, RwReal farClip, 
 //#define RWCAMERA_TRANS
 
 #include "CScene.h"
-void ShadowFrustum::DirectionalLightTransform(RwCamera* mainCam, const RW::V3d& lightDir, int shadowCascade)
+void ShadowFrustum::DirectionalLightTransform(RwCamera* mainCam, CVector lightDir, int shadowCascade)
 {
-    XMVECTOR lightDirection = XMVectorSet(lightDir.getX(), lightDir.getY(), lightDir.getZ(), 1.0f);
+    XMVECTOR lightDirection = XMVectorSet(lightDir.x, lightDir.y, lightDir.z, 1.0f);
 
     float lastSplitDist = 0.0;
     for(size_t i = 0; i < CascadeCount; i++)

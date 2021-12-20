@@ -502,8 +502,8 @@ float ComputeShadow4Samples(sampler2D samplerShadow[4], int cascade, float shado
 float4 DrawShadow(sampler2D samplerShadow[4],float3 sunDir, float depthTest, float3 worldPosition, ShadowData shadowBuffer)
 { 
     // early fail
-    if (shadowBuffer.params.w <= 0)
-        return 0.0f;
+    //if (shadowBuffer.params.w <= 0)
+    //    return 0.0f;
     
     float4 WorldPos = float4(worldPosition, 1.0);
     int nCascadeFound = 0;

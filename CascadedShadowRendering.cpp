@@ -142,8 +142,8 @@ void CascadedShadowRendering::UpdateImgui()
 
 void CascadedShadowRendering::Update()
 {
-    if(CGame::currArea != 0 || CGameIdle::m_fShadowDNBalance >= 1.0)
-        return;
+   // if(CGame::currArea != 0 || CGameIdle::m_fShadowDNBalance >= 1.0)
+    //   return;
 
     gRenderState = stageCascadeShadow;
 

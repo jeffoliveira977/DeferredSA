@@ -7,7 +7,7 @@ void main(inout float4 position : POSITION0,
           in float4 iColor      : TEXCOORD1,
           out float2 oTexcoord  : TEXCOORD0, 
           out float4 oColor     : TEXCOORD1, 
-          out float depth       : DEPTH)
+          out float2 depth : TEXCOORD2)
 {
     position = mul(position, World);
     position = mul(position, View);
@@ -15,5 +15,5 @@ void main(inout float4 position : POSITION0,
     
     oTexcoord = iTexcoord;
     oColor    = iColor;
-    depth     = position.z; 
+    depth     = position.zw; 
 }

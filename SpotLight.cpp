@@ -117,20 +117,13 @@ void SpotLight::Update()
 	m_LightWorldTransRotate.r[2] = mDirection;
 	m_LightWorldTransRotate.r[3] = vCenterPos;
 
+	mView = XMMatrixLookAtRH(mPosition, vLookAt, vUp);
 
-	mView = XMMatrixLookAtRH(mPosition, vLookAt, XMVectorSet(0.0f, 0.0f, 1.0f, 1.0));
-	//	mView= XMMatrixInverse(nullptr, mView);
-
-	//	mView = XMMatrixLookAtRH(mDirection, mPosition, XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f));
-
-	mProjection = XMMatrixPerspectiveFovRH(XMConvertToRadians(mAngle), w / h, 0.01f * mRadius, mRadius);
 	CVector pos = FindPlayerCoors(0);
 	XMMATRIX translation = XMMatrixTranslation(pos.x, pos.y, pos.z);
 
-	//mView = XMMatrixLookAtRH(XMVectorZero(), -g_XMIdentityR1, -g_XMIdentityR2);
-//	mView = XMMatrixInverse(nullptr, mView * translation);
-	mProjection = XMMatrixPerspectiveFovRH(XMConvertToRadians(90.0f), 1.7777f, 0.01f, 3000.0f);
-	mMatrix = m_LightWorldTransRotate * mView * mProjection;
+	mProjection = XMMatrixPerspectiveFovRH(cos(DegreesToRadians(mAngle)), 1., 0.01f, mRadius);
+	mMatrix = /*m_LightWorldTransRotate **/ mView * mProjection;
 
 	mFrustum.SetMatrix(mMatrix);
 }

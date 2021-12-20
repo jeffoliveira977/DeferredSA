@@ -111,7 +111,7 @@ void DeferredRendering::Stop()
 
 
 	//mVolumetricClouds->Render(mScreenRT.get());
-	//mVolumetricLight->Render(mScreenRT.get());
+	mVolumetricLight->Render(mScreenRT.get());
 
 	_rwD3D9SetPixelShader(NULL);
 	_rwD3D9SetVertexShader(NULL);
@@ -138,8 +138,8 @@ void DeferredRendering::RenderLights()
 	ShaderContext->SetSunDirection(11);
 	ShaderContext->SetFogParams(12);
 
-	if(!CGame::currArea && CGameIdle::m_fShadowDNBalance < 1.0)
-	{
+	//if(!CGame::currArea && CGameIdle::m_fShadowDNBalance < 1.0)
+	//{
 		CascadedShadowManagement->UpdateBuffer();
 
 		for(size_t i = 0; i < CascadedShadowManagement->CascadeCount; i++)
@@ -148,7 +148,7 @@ void DeferredRendering::RenderLights()
 		_rwD3D9SetPixelShaderConstant(13, &CascadedShadowManagement->mConstantBuffer,
 									  sizeof(CascadedShadowManagement->mConstantBuffer) / sizeof(float[4]));
 
-	}
+	//}
 
 	RwD3D9SetRenderTarget(0, mGraphicsLight->GetRaster());
 

@@ -82,10 +82,10 @@ void SpotlightShadow::SectorList(CPtrList& ptrList)
 			{
 				auto data = gLightManager.GetSpotLightAt(i);
 
-				//if (data.GetFrustum().Intersects(aabb))
-				//{
+				if (data.GetFrustum().Intersects(aabb))
+				{
 					AddObject(i, entity, distance);
-				//}
+				}
 			}
 		}
 	}
@@ -176,13 +176,10 @@ void SpotlightShadow::RenderEntities(int i)
 
 	RwRenderStateSet(rwRENDERSTATEZWRITEENABLE, (void*)TRUE);
 	RwRenderStateSet(rwRENDERSTATEZTESTENABLE, (void*)TRUE);
-	//if (!CGame::currArea)
-	//	RwRenderStateSet(rwRENDERSTATEALPHATESTFUNCTIONREF, (void*)140);
 
-	RwRenderStateSet(rwRENDERSTATECULLMODE, (void*)rwCULLMODECULLBACK);
-	for (auto& entity : m_renderableList[i])
+	for (auto entity : m_renderableList[i])
 	{
-		if (entity->m_pRwObject == nullptr)
+		if (entity == nullptr || entity->m_pRwObject == nullptr)
 			continue;
 
 		if (entity->m_nType == ENTITY_TYPE_PED)
@@ -193,15 +190,34 @@ void SpotlightShadow::RenderEntities(int i)
 				RpClumpRender(jetPack->m_pJetPackClump);
 		}
 
-		if (!entity->m_bBackfaceCulled)
+		entity->m_bImBeingRendered = true;
+
+		CVehicle* vehicle = static_cast<CVehicle*>(entity);
+		if (entity->m_nType == ENTITY_TYPE_VEHICLE)
+		{
+			CVisibilityPlugins::SetupVehicleVariables(entity->m_pRwClump);
+			CVisibilityPlugins::InitAlphaAtomicList();
+			vehicle->SetupRender();
+		}
+		else if (!entity->m_bBackfaceCulled)
 		{
 			RwRenderStateSet(rwRENDERSTATECULLMODE, (void*)rwCULLMODECULLNONE);
 		}
-
-		entity->m_bImBeingRendered = true;
 		entity->Render();
+
+
+		if (entity->m_nType == ENTITY_TYPE_VEHICLE)
+		{
+			CVisibilityPlugins::RenderAlphaAtomics();
+			vehicle->ResetAfterRender();
+		}
+		else if (!entity->m_bBackfaceCulled)
+		{
+			RwRenderStateSet(rwRENDERSTATECULLMODE, (void*)rwCULLMODECULLBACK);
+		}
+
 		entity->m_bImBeingRendered = false;
-	} 
+	}
 	CVisibilityPlugins::RenderWeaponPedsForPC();
 }
 
