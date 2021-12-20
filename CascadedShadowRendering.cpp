@@ -41,7 +41,7 @@ CascadedShadowRendering::~CascadedShadowRendering()
 void CascadedShadowRendering::Initialize()
 {
     for(int i = 0; i < CascadeCount; i++)
-        mColorRaster[i] = RwD3D9RasterCreate(ShadowSize, ShadowSize, D3DFMT_G32R32F, rwRASTERTYPECAMERATEXTURE);
+        mColorRaster[i] = RwD3D9RasterCreate(ShadowSize, ShadowSize, D3DFMT_R32F, rwRASTERTYPECAMERATEXTURE);
 
     mDepthRaster = RwRasterCreate(ShadowSize, ShadowSize, 32, rwRASTERTYPEZBUFFER);
 
@@ -142,13 +142,13 @@ void CascadedShadowRendering::UpdateImgui()
 
 void CascadedShadowRendering::Update()
 {
-   // if(CGame::currArea != 0 || CGameIdle::m_fShadowDNBalance >= 1.0)
-    //   return;
+    if(CGame::currArea != 0 || CGameIdle::m_fShadowDNBalance >= 1.0)
+       return;
 
     gRenderState = stageCascadeShadow;
 
     // Render in red channel
-    RwD3D9SetRenderState(D3DRS_COLORWRITEENABLE, D3DCOLORWRITEENABLE_RED);
+    // RwD3D9SetRenderState(D3DRS_COLORWRITEENABLE, D3DCOLORWRITEENABLE_RED);
 
     RWSRCGLOBAL(curCamera) = Scene.m_pRwCamera;
    

@@ -183,8 +183,7 @@ float4 main(float2 texCoord : TEXCOORD0, float2 vpos:VPOS) : COLOR
         }
 
         outColor = DiffuseTerm * albedo.rgb + specular * Parameters.x + R.rgb * FresnelCoeff * Parameters.x;
-        
-        
+            
         return float4(outColor, 1);
        
     }

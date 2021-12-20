@@ -140,6 +140,7 @@
     <ClCompile Include="PixelShaderConstant.cpp" />
     <ClCompile Include="PixelShaderState.cpp" />
     <ClCompile Include="PointLight.cpp" />
+    <ClCompile Include="PointLightShadow.cpp" />
     <ClCompile Include="PostProcessing.cpp" />
     <ClCompile Include="RenderableAABB.cpp" />
     <ClCompile Include="RenderableFrustum.cpp" />
@@ -204,6 +205,7 @@
     <ClInclude Include="PixelShaderConstant.h" />
     <ClInclude Include="PixelShaderState.h" />
     <ClInclude Include="PointLight.h" />
+    <ClInclude Include="PointLightShadow.h" />
     <ClInclude Include="PostProcessing.h" />
     <ClInclude Include="RenderableAABB.h" />
     <ClInclude Include="RenderableFrustum.h" />

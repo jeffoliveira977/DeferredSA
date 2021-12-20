@@ -17,6 +17,7 @@
 #include "DefaultPipeline.h"
 #include "Lights.h"
 #include "SpotlightShadow.h"
+#include "PointLightShadow.h"
 
 using namespace plugin;
 
@@ -43,7 +44,10 @@ void RsMouseSetPos_hook(RwV2d* screen)
 void CRealTimeShadowManager__Update()
 {
 	if (CGameIdle::m_fShadowDNBalance)
+	{
+		//PointShadow->Update();
 		SpotShadow->Update();
+	}
 
 	/*if (CGame::currArea == 0 && CGameIdle::m_fShadowDNBalance <= 1.0)
 	{
@@ -224,8 +228,8 @@ void GameHooks()
 	//plugin::patch::RedirectCall(0x0053EA12, CMirrors__BeforeMainRender);
 	
 	 Renderer::Hook();
-//	plugin::patch::Nop(0x535FCD, 5);
-
+	plugin::patch::Nop(0x006FD42C, 5);
+	plugin::patch::Nop(0x006FD47C, 5);
 
 	plugin::patch::RedirectCall(0x0053E9F1, RsMouseSetPos_hook);
 

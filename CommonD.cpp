@@ -260,7 +260,7 @@ RwBool rwD3D9CubeRasterCreate(RwRaster* raster, RwUInt32 d3dformat, RwInt32 mipm
 
 	rasExt->cube = TRUE;
 
-	//rasExt->d3dFormat = (D3DFORMAT)d3dformat;
+	rasExt->d3dFormat = (D3DFORMAT)d3dformat;
 
 	if(RwD3D9DeviceCaps->CubeTextureFilterCaps & (D3DPTFILTERCAPS_MIPFPOINT | D3DPTFILTERCAPS_MIPFLINEAR))
 	{

@@ -98,6 +98,7 @@
     <ClCompile Include="SpotLight.cpp" />
     <ClCompile Include="PointLight.cpp" />
     <ClCompile Include="LightManager.cpp" />
+    <ClCompile Include="PointLightShadow.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="GTADef.h" />
@@ -177,6 +178,7 @@
     <ClInclude Include="SpotLight.h" />
     <ClInclude Include="PointLight.h" />
     <ClInclude Include="LightManager.h" />
+    <ClInclude Include="PointLightShadow.h" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="imgui">

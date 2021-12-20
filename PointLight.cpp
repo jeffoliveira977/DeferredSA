@@ -29,9 +29,14 @@ void PointLight::SetRadius(float radius)
 	mRadius = radius;
 }
 
-XMMATRIX PointLight::GetViewMatrix()
+Math::Frustum PointLight::GetFrustum(int i)
 {
-	return mView;
+	return mFrustum[i];
+}
+
+XMMATRIX PointLight::GetViewMatrix(int i)
+{
+	return mView[i];
 }
 
 XMMATRIX PointLight::GetProjection()
@@ -51,7 +56,7 @@ XMFLOAT3 PointLight::GetDirection()
 	return direction;
 }
 
-XMFLOAT3 PointLight::GetPosition()
+ XMFLOAT3 PointLight::GetPosition()
 {
 	XMFLOAT3 position;
 	XMStoreFloat3(&position, mPosition);
@@ -66,4 +71,46 @@ float PointLight::GetIntensity()
 float PointLight::GetRadius()
 {
 	return mRadius;
+}
+
+void PointLight::Update()
+{
+	mProjection = XMMatrixPerspectiveFovRH(XM_PI / 2.0f, 1.0f, 0.1f, mRadius);
+
+	XMVECTOR lookAt;
+	XMVECTOR up;
+
+	for (size_t i = 0; i < 6; i++)
+	{
+		switch (static_cast<D3DCUBEMAP_FACES>(i))
+		{
+		case D3DCUBEMAP_FACE_POSITIVE_X:
+			lookAt = g_XMIdentityR0;
+			up = g_XMIdentityR1;
+			break;
+		case D3DCUBEMAP_FACE_NEGATIVE_X:
+			lookAt = -g_XMIdentityR0;
+			up = g_XMIdentityR1;
+			break;
+		case D3DCUBEMAP_FACE_POSITIVE_Y:
+			lookAt = g_XMIdentityR1;
+			up = -g_XMIdentityR2;
+			break;
+		case D3DCUBEMAP_FACE_NEGATIVE_Y:
+			lookAt = -g_XMIdentityR1;
+			up = g_XMIdentityR2;
+			break;
+		case D3DCUBEMAP_FACE_POSITIVE_Z:
+			lookAt = g_XMIdentityR2;
+			up = g_XMIdentityR1;
+			break;
+		case D3DCUBEMAP_FACE_NEGATIVE_Z:
+			lookAt = -g_XMIdentityR2;
+			up = g_XMIdentityR1;
+			break;
+		}
+		mView[i] = XMMatrixLookAtRH(mPosition, lookAt, up);
+		mMatrix = mView[i] * mProjection;
+		mFrustum[i].SetMatrix(mMatrix);
+	}
 }

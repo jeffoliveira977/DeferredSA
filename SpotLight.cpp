@@ -87,43 +87,26 @@ float SpotLight::GetRadius()
 	return mRadius;
 }
 
-#include "CCamera.h"
-#include "CScene.h"
-#include "GTADef.h"
 void SpotLight::Update()
 {
-	TheCamera.m_mViewMatrix;
-
-	RwMatrixToXMMATRIX(RwFrameGetMatrix(RwCameraGetFrame(Scene.m_pRwCamera)));
-
 	float w = static_cast<float>(RsGlobal.maximumWidth);
 	float h = static_cast<float>(RsGlobal.maximumHeight);
 
-	XMMATRIX matSpotView;
-	XMVECTOR vLookAt = mPosition + mDirection * mRadius;
-	XMVECTOR vUp = (XMVectorGetY(mDirection) > 0.9 || XMVectorGetY(mDirection) < -0.9) ? XMVectorSet(0.0f, 0.0f, XMVectorGetY(mDirection), 1.0) : XMVectorSet(0.0f, 1.0f, 0.0f, 1.0);
-	XMVECTOR vRight;
-	vRight = XMVector3Cross(vUp, mDirection);
-	XMVector3Normalize(vRight);
-	vUp = XMVector3Cross(mDirection, vRight);
-	XMVector3Normalize(vUp);
+	XMVECTOR right, lookAt, up;
+	
+	up = XMVectorSet(0.0f, 1.0f, 0.0f, 1.0f);
+	if (XMVectorGetY(mDirection) > 0.9f || XMVectorGetY(mDirection) < -0.9f)
+		up = XMVectorSet(0.0f, 0.0f, XMVectorGetY(mDirection), 1.0f);
 
-	XMVECTOR vCenterPos = mPosition + 0.5f * mDirection;
-	XMVECTOR vAt = vCenterPos + mDirection;
-	XMMATRIX m_LightWorldTransRotate = XMMatrixIdentity();
+	right = XMVector3Cross(up, mDirection);
+	right = XMVector3Normalize(right);
+	up = XMVector3Cross(mDirection, right);
+	up = XMVector3Normalize(up);
 
-	m_LightWorldTransRotate.r[0] = vRight;
-	m_LightWorldTransRotate.r[1] = vUp;
-	m_LightWorldTransRotate.r[2] = mDirection;
-	m_LightWorldTransRotate.r[3] = vCenterPos;
-
-	mView = XMMatrixLookAtRH(mPosition, vLookAt, vUp);
-
-	CVector pos = FindPlayerCoors(0);
-	XMMATRIX translation = XMMatrixTranslation(pos.x, pos.y, pos.z);
-
-	mProjection = XMMatrixPerspectiveFovRH(cos(DegreesToRadians(mAngle)), 1., 0.01f, mRadius);
-	mMatrix = /*m_LightWorldTransRotate **/ mView * mProjection;
+	lookAt = mPosition + mDirection * mRadius;
+	mView = XMMatrixLookAtRH(mPosition, lookAt, up);
+	mProjection = XMMatrixPerspectiveFovRH(cos(XMConvertToRadians(mAngle)), w / h, 0.01f, mRadius);
+	mMatrix = mView * mProjection;
 
 	mFrustum.SetMatrix(mMatrix);
 }

@@ -597,14 +597,14 @@ void Renderer::Hook()
 
 void Renderer::ConstructRenderList()
 {
-   // if (CGame::currArea == 0 && CGameIdle::m_fShadowDNBalance <= 1.0)
-    //{
+    if (CGame::currArea == 0 && CGameIdle::m_fShadowDNBalance <= 1.0)
+    {
         CascadedShadowManagement->CalculateShadowDistances(Scene.m_pRwCamera->nearPlane, Scene.m_pRwCamera->farPlane);
         const auto sunDirs = reinterpret_cast<RwV3d*>(0xB7CA50);
         const auto curr_sun_dir = *reinterpret_cast<int*>(0xB79FD0);
-        const auto curr_sun_dirvec = &sunDirs[curr_sun_dir];
-        CascadedShadowManagement->DirectionalLightTransform(Scene.m_pRwCamera, { 0.0f, -0.98893635f, 0.14834045f }, 0);
-   // }
+        const auto curr_sun_dirvec = sunDirs[curr_sun_dir];
+        CascadedShadowManagement->DirectionalLightTransform(Scene.m_pRwCamera, curr_sun_dirvec, 0);
+    }
 
     eZoneAttributes zoneAttributes = CCullZones__FindTunnelAttributesForCoors(TheCamera.GetPosition());
     CRenderer::ms_bRenderTunnels = (zoneAttributes & (eZoneAttributes::UNKNOWN_2 | eZoneAttributes::UNKNOWN_1)) != 0;

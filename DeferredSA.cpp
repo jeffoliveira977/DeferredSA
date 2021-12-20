@@ -35,6 +35,8 @@ void PipelinePlugins()
 #include "PBSMaterial.h"
 
 #include "SpotlightShadow.h"
+#include "PointLightShadow.h"
+
 void Initialize()
 {
 	CascadedShadowManagement = new CascadedShadowRendering();
@@ -44,6 +46,9 @@ void Initialize()
 
 	SpotShadow = new SpotlightShadow();
 	SpotShadow->Initialize();
+
+	PointShadow = new PointLightShadow();
+	PointShadow->Initialize();
 
 	CWaterLevel::InitShaders();
 	EnvironmentMapping::InitializeGraphics();

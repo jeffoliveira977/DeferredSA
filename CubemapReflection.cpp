@@ -119,43 +119,43 @@ void CubemapReflection::Update()
 	
 	CVector pos = FindPlayerCoors(0);
 
-	for(size_t i = 0; i < 6; i++)
+	for (size_t i = 0; i < 6; i++)
 	{
 		m_renderableList[i].clear();
 
 		XMVECTOR lookAt;
 		XMVECTOR up;
 
-		switch(static_cast<D3DCUBEMAP_FACES>(i))
+		switch (static_cast<D3DCUBEMAP_FACES>(i))
 		{
-			case D3DCUBEMAP_FACE_POSITIVE_X:
-				lookAt = g_XMIdentityR0;
-				up = g_XMIdentityR1;
-				break;
-			case D3DCUBEMAP_FACE_NEGATIVE_X:
-				lookAt = -g_XMIdentityR0;
-				up = g_XMIdentityR1;
-				break;
-			case D3DCUBEMAP_FACE_POSITIVE_Y:
-				lookAt = g_XMIdentityR1;
-				up = -g_XMIdentityR2;
-				break;
-			case D3DCUBEMAP_FACE_NEGATIVE_Y:
-				lookAt = -g_XMIdentityR1;
-				up = g_XMIdentityR2;
-				break;
-			case D3DCUBEMAP_FACE_POSITIVE_Z:
-				lookAt = g_XMIdentityR2;
-				up = g_XMIdentityR1;
-				break;
-			case D3DCUBEMAP_FACE_NEGATIVE_Z:
-				lookAt = -g_XMIdentityR2;
-				up = g_XMIdentityR1;
-				break;
+		case D3DCUBEMAP_FACE_POSITIVE_X:
+			lookAt = g_XMIdentityR0;
+			up = g_XMIdentityR1;
+			break;
+		case D3DCUBEMAP_FACE_NEGATIVE_X:
+			lookAt = -g_XMIdentityR0;
+			up = g_XMIdentityR1;
+			break;
+		case D3DCUBEMAP_FACE_POSITIVE_Y:
+			lookAt = g_XMIdentityR1;
+			up = -g_XMIdentityR2;
+			break;
+		case D3DCUBEMAP_FACE_NEGATIVE_Y:
+			lookAt = -g_XMIdentityR1;
+			up = g_XMIdentityR2;
+			break;
+		case D3DCUBEMAP_FACE_POSITIVE_Z:
+			lookAt = g_XMIdentityR2;
+			up = g_XMIdentityR1;
+			break;
+		case D3DCUBEMAP_FACE_NEGATIVE_Z:
+			lookAt = -g_XMIdentityR2;
+			up = g_XMIdentityR1;
+			break;
 		}
 
 		XMMATRIX translation = XMMatrixTranslation(pos.x, pos.y, pos.z);
-		m_viewMatrix[i] = XMMatrixLookAtRH(XMVectorZero(), lookAt, up);
+		m_viewMatrix[i] = XMMatrixLookAtRH(g_XMZero, lookAt, up);
 		m_viewMatrix[i] = XMMatrixInverse(nullptr, m_viewMatrix[i] * translation);
 		m_frustum[i].SetMatrix(m_viewMatrix[i] * m_projectionMatrix);
 	}

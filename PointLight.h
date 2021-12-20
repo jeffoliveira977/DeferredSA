@@ -1,5 +1,6 @@
 #pragma once
 #include "CommonD.h"
+#include "Frustum.h"
 
 class PointLight
 {
@@ -11,23 +12,25 @@ public:
 	void SetIntensity(float intensity);
 	void SetRadius(float radius);
 
-	XMMATRIX GetViewMatrix();
+	Math::Frustum GetFrustum(int i);
+	XMMATRIX GetViewMatrix(int i);
 	XMMATRIX GetProjection();
 	XMFLOAT3 GetColor();
 	XMFLOAT3 GetDirection();
-	XMFLOAT3 GetPosition();
+	 XMFLOAT3 GetPosition();
 	float GetIntensity();
 	float GetRadius();
 
 	void Update();
+	float mPriority;
 private:
 	XMMATRIX mMatrix;
-	XMMATRIX mView;
+	XMMATRIX mView[6];
 	XMMATRIX mProjection;
 	XMFLOAT3 mColor;
 	XMVECTOR mPosition;
 	XMVECTOR mDirection;
-
+	Math::Frustum mFrustum[6];
 	float mRadius;
 	float mIntensity;
 };
