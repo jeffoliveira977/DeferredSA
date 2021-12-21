@@ -194,6 +194,8 @@ enum eZoneAttributes : uint16_t
 };
 
 #define SAFE_RELEASE(p) {if(p){(p)->Release();(p)=NULL;}}
+
+#define MultiplyMatrixWithVector(outPoint, m, point) ((CVector* ( __cdecl*)(CVector*, CMatrix*, CVector*))0x0059C890)(outPoint, m, point) 
 #define CWorldScan__ScanWorld(a1,a2,a3) ((void (__cdecl *)(CVector2D *, signed int , void (__cdecl *)(int, int) ) )0x72CAE0)(a1,a2,a3)
 #define CRenderer__ScanSectorList(a1,a2) ((void (__cdecl *)(int, int))0x554840)(a1,a2)
 #define CRenderer__ScanBigBuildingList(a1,a2) ((void (__cdecl *)(int, int))0x554B10)(a1,a2)

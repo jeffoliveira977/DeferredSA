@@ -42,7 +42,7 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='GTASA Release|Win32'">
-    <OutDir>..\GTA SAN ANDREAS</OutDir>
+    <OutDir>$(GTA_SA_DIR)</OutDir>
     <IntDir>$(ProjectDir).obj\GTASA\Release\</IntDir>
     <TargetName>DeferredSA</TargetName>
     <TargetExt>.asi</TargetExt>
@@ -65,7 +65,7 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
-      <AdditionalIncludeDirectories>C:\Users\Je\OneDrive\Área de Trabalho\projetos\imgui\backends;C:\Users\Je\OneDrive\Área de Trabalho\projetos\imgui;$(PLUGIN_SDK_DIR)\plugin_sa\;$(PLUGIN_SDK_DIR)\plugin_sa\game_sa\;$(PLUGIN_SDK_DIR)\shared\;$(PLUGIN_SDK_DIR)\shared\game\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\Users\Je\OneDrive\Área de Trabalho\projetos\imgui;C:\Users\Je\OneDrive\Área de Trabalho\projetos\imgui\backends;D:\Jogos\GTA API\imgui;$(PLUGIN_SDK_DIR)\plugin_sa\;$(PLUGIN_SDK_DIR)\plugin_sa\game_sa\;$(PLUGIN_SDK_DIR)\shared\;$(PLUGIN_SDK_DIR)\shared\game\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>_NDEBUG;_CRT_SECURE_NO_WARNINGS;_CRT_NON_CONFORMING_SWPRINTFS;GTASA;GTAGAME_NAME="San Andreas";GTAGAME_ABBR="SA";GTAGAME_ABBRLOW="sa";GTAGAME_PROTAGONISTNAME="CJ";GTAGAME_CITYNAME="San Andreas";_DX9_SDK_INSTALLED;PLUGIN_SGV_10US;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <LanguageStandard>stdcpp17</LanguageStandard>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
@@ -133,11 +133,14 @@
     <ClCompile Include="ImguiManager.cpp" />
     <ClCompile Include="Immediate3D.cpp" />
     <ClCompile Include="IndexBufferManager.cpp" />
+    <ClCompile Include="LightManager.cpp" />
     <ClCompile Include="Mesh.cpp" />
     <ClCompile Include="PBSMaterial.cpp" />
     <ClCompile Include="PixelShader.cpp" />
     <ClCompile Include="PixelShaderConstant.cpp" />
     <ClCompile Include="PixelShaderState.cpp" />
+    <ClCompile Include="PointLight.cpp" />
+    <ClCompile Include="PointLightShadow.cpp" />
     <ClCompile Include="PostProcessing.cpp" />
     <ClCompile Include="RenderableAABB.cpp" />
     <ClCompile Include="RenderableFrustum.cpp" />
@@ -154,6 +157,7 @@
     <ClCompile Include="ShadowFrustum.cpp" />
     <ClCompile Include="SkinnedMeshPipeline.cpp" />
     <ClCompile Include="SoftParticles.cpp" />
+    <ClCompile Include="SpotLight.cpp" />
     <ClCompile Include="SpotlightShadow.cpp" />
     <ClCompile Include="Texture.cpp" />
     <ClCompile Include="VehicleMeshPipeline.cpp" />
@@ -193,12 +197,15 @@
     <ClInclude Include="ImguiManager.h" />
     <ClInclude Include="Immediate3D.h" />
     <ClInclude Include="IndexBufferManager.h" />
+    <ClInclude Include="LightManager.h" />
     <ClInclude Include="Mesh.h" />
     <ClInclude Include="mini\ini.h" />
     <ClInclude Include="PBSMaterial.h" />
     <ClInclude Include="PixelShader.h" />
     <ClInclude Include="PixelShaderConstant.h" />
     <ClInclude Include="PixelShaderState.h" />
+    <ClInclude Include="PointLight.h" />
+    <ClInclude Include="PointLightShadow.h" />
     <ClInclude Include="PostProcessing.h" />
     <ClInclude Include="RenderableAABB.h" />
     <ClInclude Include="RenderableFrustum.h" />
@@ -215,6 +222,7 @@
     <ClInclude Include="ShadowFrustum.h" />
     <ClInclude Include="SkinnedMeshPipeline.h" />
     <ClInclude Include="SoftParticles.h" />
+    <ClInclude Include="SpotLight.h" />
     <ClInclude Include="SpotlightShadow.h" />
     <ClInclude Include="Texture.h" />
     <ClInclude Include="VehicleMeshPipeline.h" />
@@ -266,6 +274,7 @@
     <FxCompile Include="shaders\DeferredDirectLightPS.hlsl" />
     <FxCompile Include="shaders\DeferredFinalPassPS.hlsl" />
     <FxCompile Include="shaders\DeferredPointAndSpotLightPS.hlsl" />
+    <FxCompile Include="shaders\DeferredPointLightPS.hlsl" />
     <FxCompile Include="shaders\DeferredVehiclePS.hlsl" />
     <FxCompile Include="shaders\DeferredVehicleVS.hlsl">
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='GTASA Release|Win32'">Vertex</ShaderType>

@@ -35,6 +35,8 @@ void PipelinePlugins()
 #include "PBSMaterial.h"
 
 #include "SpotlightShadow.h"
+#include "PointLightShadow.h"
+
 void Initialize()
 {
 	CascadedShadowManagement = new CascadedShadowRendering();
@@ -44,6 +46,9 @@ void Initialize()
 
 	SpotShadow = new SpotlightShadow();
 	SpotShadow->Initialize();
+
+	PointShadow = new PointLightShadow();
+	PointShadow->Initialize();
 
 	CWaterLevel::InitShaders();
 	EnvironmentMapping::InitializeGraphics();
@@ -115,7 +120,7 @@ void Render()
 
 	float weight = 512.0f* (float)RsGlobal.maximumHeight / (float)RsGlobal.maximumWidth;
 
-	RwRenderStateSet(rwRENDERSTATETEXTURERASTER, (void*)RenderableScene::m_raster);
+	RwRenderStateSet(rwRENDERSTATETEXTURERASTER, (void*)SpotShadow->mColorRaster[0]);
 	DrawScreenQuad(0, 0, weight, weight);
 
 	/*MakeScreenQuad(0, 0, weight, weight);

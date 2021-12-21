@@ -52,8 +52,14 @@ float4 PS_Unlit(sampler2D shadowmap, float2 shadowCoord, float Z) : COLOR0
     fShadowTerm /= 9.0f;
     return fShadowTerm;
 }
+//unpack the depth from a 32-bit rgba color
+float getDepthFromARGB32(const float4 value)
+{
+    const float4 bitSh = float4(1.0 / (256.0 * 256.0 * 256.0), 1.0 / (256.0 * 256.0), 1.0 / 256.0, 1.0);
+    return (dot(value, bitSh));
+}
 
-float4 tex2DShadow(sampler2D arrays[4], float2 texcoord, int count)
+float tex2DShadow(sampler2D arrays[4], float2 texcoord, int count)
 {
  
     float4 texels = 0;
@@ -72,7 +78,7 @@ float4 tex2DShadow(sampler2D arrays[4], float2 texcoord, int count)
             texels = tex2D(arrays[3], texcoord);
             break;
     }
-    return texels;
+    return (texels);
 }
 
 
@@ -609,7 +615,7 @@ float4 DrawShadow(sampler2D samplerShadow[4],float3 sunDir, float depthTest, flo
     float fShadow = 0.0;
     for (int i = 0; i < NUM_TAPS; i++)
     {
-        fShadow += (z < tex2DShadow(samplerShadow, lightDepthUV + fTaps_Poisson[i] * 1.2 * lightDepthMapTexSize, nCascadeIndex).r);
+        fShadow += (z < tex2DShadow(samplerShadow, lightDepthUV + fTaps_Poisson[i] * 1.2 * lightDepthMapTexSize, nCascadeIndex));
     }
     fShadow *= 1.0 / NUM_TAPS;
     return fShadow;
@@ -617,7 +623,7 @@ float4 DrawShadow(sampler2D samplerShadow[4],float3 sunDir, float depthTest, flo
     float s;
     float d = length(sunDir.xyz-WorldPos.xyz);
 
-    float2 sd = tex2DShadow(samplerShadow, lightDepthUV, nCascadeIndex).rg;
+    float2 sd = tex2DShadow(samplerShadow, lightDepthUV, nCascadeIndex);
 
     float mean = sd.x;
     float variance = max(sd.y - sd.x * sd.x, 0.0002f);

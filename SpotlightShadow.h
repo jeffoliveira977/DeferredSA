@@ -19,7 +19,6 @@ public:
 	XMMATRIX m_projectionMatrix[30];
 	XMMATRIX m_viewMatrix[30];
 	RwCamera* mCamera;
-	 XMMATRIX m_viewMatrix[6];
 	 Math::Frustum m_frustum[30];
 	 std::vector<CEntity*> m_renderableList[30];
 	  void AddObject(int i, CEntity* entity, float distance);

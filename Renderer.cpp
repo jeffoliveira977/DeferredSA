@@ -589,6 +589,7 @@ void Renderer::Hook()
     //plugin::patch::RedirectJump(0x00553910, Renderer::PreRender);
     plugin::patch::RedirectJump(0x005556E0, Renderer::ConstructRenderList);
 
+    // Compatibility with Open Limit Adjuster
     patch::RedirectJump(0x55352E, CRenderer__AddEntityToRenderList___VisibleEntity_HOOK);
     patch::RedirectJump(0x5534FA, CRenderer__AddEntityToRenderList___VisibleLod_HOOK);
 
@@ -601,8 +602,8 @@ void Renderer::ConstructRenderList()
         CascadedShadowManagement->CalculateShadowDistances(Scene.m_pRwCamera->nearPlane, Scene.m_pRwCamera->farPlane);
         const auto sunDirs = reinterpret_cast<RwV3d*>(0xB7CA50);
         const auto curr_sun_dir = *reinterpret_cast<int*>(0xB79FD0);
-        const auto curr_sun_dirvec = &sunDirs[curr_sun_dir];
-        CascadedShadowManagement->DirectionalLightTransform(Scene.m_pRwCamera, sunDirs[curr_sun_dir], 0);
+        const auto curr_sun_dirvec = sunDirs[curr_sun_dir];
+        CascadedShadowManagement->DirectionalLightTransform(Scene.m_pRwCamera, curr_sun_dirvec, 0);
     }
 
     eZoneAttributes zoneAttributes = CCullZones__FindTunnelAttributesForCoors(TheCamera.GetPosition());
@@ -648,7 +649,7 @@ void Renderer::ConstructRenderList()
     CRenderer::ResetLodRenderLists();
     CRenderer::ScanWorld();
 
-    if (CGame::currArea == 0 && CGameIdle::m_fShadowDNBalance <= 1.0)
+   // if (CGame::currArea == 0 && CGameIdle::m_fShadowDNBalance <= 1.0)
         ShadowCasterEntity->Update(GetSectorX(CRenderer::ms_vecCameraPosition.x), GetSectorY(CRenderer::ms_vecCameraPosition.y));
 
     CRenderer::ProcessLodRenderLists();
@@ -733,8 +734,8 @@ void Renderer::ScanWorld()
     points[4].y = GetLodSectorfY(frustumPoints[4].y);
 
     CWorldScan__ScanWorld(points, 5, ScanBigBuildingList);
-    if(CGame::currArea != 0 || (CGameIdle::m_fShadowDNBalance >= 1.0))
-        return;
+   // if(CGame::currArea != 0 || (CGameIdle::m_fShadowDNBalance >= 1.0))
+   //     return;
 
      ShadowCasterEntity->Update(GetSectorX(CRenderer::ms_vecCameraPosition.x), GetSectorY(CRenderer::ms_vecCameraPosition.y));
 

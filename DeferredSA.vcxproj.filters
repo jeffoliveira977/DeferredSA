@@ -95,6 +95,10 @@
     <ClCompile Include="AmbientOcclusion.cpp" />
     <ClCompile Include="RenderTarget.cpp" />
     <ClCompile Include="RenderTargetManager.cpp" />
+    <ClCompile Include="SpotLight.cpp" />
+    <ClCompile Include="PointLight.cpp" />
+    <ClCompile Include="LightManager.cpp" />
+    <ClCompile Include="PointLightShadow.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="GTADef.h" />
@@ -171,6 +175,10 @@
     </ClInclude>
     <ClInclude Include="RenderTarget.h" />
     <ClInclude Include="RenderTargetManager.h" />
+    <ClInclude Include="SpotLight.h" />
+    <ClInclude Include="PointLight.h" />
+    <ClInclude Include="LightManager.h" />
+    <ClInclude Include="PointLightShadow.h" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="imgui">
@@ -365,6 +373,9 @@
       <Filter>shaders</Filter>
     </FxCompile>
     <FxCompile Include="shaders\SSAOCombine_PS.hlsl">
+      <Filter>shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="shaders\DeferredPointLightPS.hlsl">
       <Filter>shaders</Filter>
     </FxCompile>
   </ItemGroup>
