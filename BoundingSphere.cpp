@@ -72,38 +72,50 @@ namespace Math
 		return ContainmentType::DISJOINT;
 	}
 
-	PlaneIntersectionType BoundingSphere::Intersects(XMFLOAT4 plane)
+	bool BoundingSphere::Intersects(XMFLOAT4 plane)
 	{
-		PlaneIntersectionType result;
-		XMVECTOR P = XMLoadFloat4(&plane);
-		XMVECTOR V = XMLoadFloat3(&Center);
+		XMVECTOR p = XMLoadFloat4(&plane);
+		XMVECTOR v = XMLoadFloat3(&Center);
 
-	/*	float distance = XMVectorGetX(XMPlaneDotCoord(P, V));
-		if(distance > Radius)
-		{
-			return false;
-		}
-		
-		return true;*/
+		float dist = XMVectorGetX(XMPlaneDotCoord(p, v));
 
-		//float distance = XMVectorGetX(XMPlaneDotCoord(P, V));
+		if (-dist > Radius) return false;
 
-		float distance = XMVectorGetX(XMVector3Dot(P, V));
-		distance += plane.w;
-
-		if (distance > Radius)
-		{
-			result = PlaneIntersectionType::FRONT;
-		}
-		else if (distance < -Radius)
-		{
-			result = PlaneIntersectionType::BACK;
-		}
-		else
-		{
-			result = PlaneIntersectionType::INTERSECTING;
-		}
-
-		return result;
+		return true;
 	}
+
+//	PlaneIntersectionType BoundingSphere::Intersects(XMFLOAT4 plane)
+//	{
+//		PlaneIntersectionType result;
+//		XMVECTOR P = XMLoadFloat4(&plane);
+//		XMVECTOR V = XMLoadFloat3(&Center);
+//
+//	/*	float distance = XMVectorGetX(XMPlaneDotCoord(P, V));
+//		if(distance > Radius)
+//		{
+//			return false;
+//		}
+//		
+//		return true;*/
+//
+//		//float distance = XMVectorGetX(XMPlaneDotCoord(P, V));
+//
+//		float distance = XMVectorGetX(XMVector3Dot(P, V));
+//		distance += plane.w;
+//
+//		if (distance > Radius)
+//		{
+//			result = PlaneIntersectionType::FRONT;
+//		}
+//		else if (distance < -Radius)
+//		{
+//			result = PlaneIntersectionType::BACK;
+//		}
+//		else
+//		{
+//			result = PlaneIntersectionType::INTERSECTING;
+//		}
+//
+//		return result;
+//	}
 }

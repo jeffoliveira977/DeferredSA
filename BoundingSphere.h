@@ -16,6 +16,7 @@ namespace Math
 		void CreateFromAABB(AABB aabb);
 		ContainmentType Contains(XMFLOAT3 point);
 		ContainmentType Contains(Frustum frustum);
-		PlaneIntersectionType Intersects(XMFLOAT4 plane);
+		//PlaneIntersectionType Intersects(XMFLOAT4 plane);
+		bool Intersects(XMFLOAT4 plane);
 	};
 }

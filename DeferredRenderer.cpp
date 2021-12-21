@@ -189,7 +189,7 @@ void DeferredRendering::RenderLights()
 		sphere.Center.x = light.GetPosition().x ;
 		sphere.Center.y = light.GetPosition().y ;
 		sphere.Center.z = light.GetPosition().z;
-		sphere.Radius = light.GetRadius()* light.GetRadius();
+		sphere.Radius = light.GetRadius();
 
 		//if (RwCameraFrustumTestSphere(Scene.m_pRwCamera, &sphere) !=RwFrustumTestResult::rwSPHEREOUTSIDE)
 		if(frustum.Intersects(sphere))
