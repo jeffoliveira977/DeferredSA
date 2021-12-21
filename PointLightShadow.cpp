@@ -34,8 +34,8 @@ void PointLightShadow::Initialize()
 
 	for (size_t i = 0; i < 30; i++)
 	{
-		mColorRaster[i] = RwD3D9RasterCreate(m_nShadowSize, m_nShadowSize, D3DFMT_R32F, rwRASTERTYPECAMERATEXTURE);
-		rwD3D9CubeRasterCreate(mColorRaster[i], D3DFMT_R32F, 1);
+		mColorRaster[i] = RwD3D9RasterCreate(m_nShadowSize, m_nShadowSize, D3DFMT_G32R32F, rwRASTERTYPECAMERATEXTURE);
+		rwD3D9CubeRasterCreate(mColorRaster[i], D3DFMT_G32R32F, 1);
 	}
 
 	//mColorRaster[i] = RwRasterCreate(m_nShadowSize, m_nShadowSize, 32, rwRASTERTYPECAMERATEXTURE);
@@ -85,9 +85,6 @@ void PointLightShadow::SectorList(CPtrList& ptrList)
 
 			for (size_t i = 0; i < gLightManager.GetPointLightCount(); i++)
 			{
-				//if (i > 8)
-				//	return;
-
 				auto light = gLightManager.GetPointLightAt(i);
 
 				for (size_t j = 0; j < 6; j++)
@@ -112,7 +109,7 @@ void PointLightShadow::ScanSectorList(int sectorX, int sectorY)
 		// SectorList(sector->m_buildings);
 		//SectorList(sector->m_dummies);
 		SectorList(repeatSector->m_lists[REPEATSECTOR_VEHICLES]);
-		SectorList(repeatSector->m_lists[REPEATSECTOR_PEDS]);
+			SectorList(repeatSector->m_lists[REPEATSECTOR_PEDS]);
 		//SectorList(repeatSector->m_lists[REPEATSECTOR_OBJECTS]);
 	}
 }
@@ -122,6 +119,9 @@ void PointLightShadow::Update()
 {
 	for (size_t i = 0; i < 30; i++)
 		m_renderableList[i].clear();
+
+	CVector pos = FindPlayerCoors(0);
+	XMMATRIX translation = XMMatrixTranslation(pos.x, pos.y, pos.z);
 
 	// Scan entity list
 	SetNextScanCode();
@@ -152,7 +152,12 @@ void PointLightShadow::Update()
 		auto data = gLightManager.GetPointLightAt(i);
 
 		gRenderState = stageCascadeShadow;
+		//gRenderState = stageDualParaboloidMapShadow;
 		//gRenderState = stageReflectionCubemap;
+
+		_rwD3D9SetPixelShaderConstant(1, &data.GetPosition(), 1);
+
+		_rwD3D9SetPixelShaderConstant(2, &CTimeCycle::m_CurrentColours.m_fFarClip, 1);
 
 		for (size_t j = 0; j < 6; j++)
 		{

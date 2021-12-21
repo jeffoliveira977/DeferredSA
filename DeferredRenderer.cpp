@@ -164,7 +164,7 @@ void DeferredRendering::RenderLights()
 	RwRenderStateSet(rwRENDERSTATEDESTBLEND, (void*)rwBLENDONE);
 
 	mPointLightPS->Apply();
-	gLightManager.SortByDistance({ TheCamera.GetPosition().x,TheCamera.GetPosition().y ,TheCamera.GetPosition().z });
+	//gLightManager.SortByDistance({ TheCamera.GetPosition().x,TheCamera.GetPosition().y ,TheCamera.GetPosition().z });
 	for (int i = 0; i < gLightManager.GetPointLightCount(); i++)
 	{
 		auto light = gLightManager.GetPointLightAt(i);
@@ -179,7 +179,7 @@ void DeferredRendering::RenderLights()
 		rwD3D9SetSamplerState(5, D3DSAMP_ADDRESSU, D3DTADDRESS_CLAMP);
 		rwD3D9SetSamplerState(5, D3DSAMP_ADDRESSV, D3DTADDRESS_CLAMP);
 		rwD3D9SetSamplerState(5, D3DSAMP_ADDRESSW, D3DTADDRESS_CLAMP);
-		//_rwD3D9RWSetRasterStage(PointShadow->mColorRaster[i], 5);
+		_rwD3D9RWSetRasterStage(PointShadow->mColorRaster[i], 5);
 
 		_rwD3D9SetPixelShaderConstant(9, &light.GetPosition(), 1);
 		_rwD3D9SetPixelShaderConstant(10, &light.GetDirection(), 1);
@@ -190,7 +190,7 @@ void DeferredRendering::RenderLights()
 		Quad::Render();
 	}
 
-	/*mSpotLightPS->Apply();
+	mSpotLightPS->Apply();
 	for (size_t i = 0; i < gLightManager.GetSpotLightCount(); i++)
 	{
 		auto light = gLightManager.GetSpotLightAt(i);
@@ -217,7 +217,7 @@ void DeferredRendering::RenderLights()
 		_rwD3D9SetPixelShaderConstant(15, &(light.GetViewMatrix() * light.GetProjection()) , 4);
 
 		Quad::Render();
-	}*/
+	}
 
 
 	static uint maxlight = 0;

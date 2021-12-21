@@ -45,7 +45,7 @@ void CRealTimeShadowManager__Update()
 {
 	if (CGameIdle::m_fShadowDNBalance)
 	{
-		//PointShadow->Update();
+		PointShadow->Update();
 		SpotShadow->Update();
 	}
 

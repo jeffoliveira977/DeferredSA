@@ -204,7 +204,7 @@ void LightManager::AddPointLight(XMFLOAT3 position, XMFLOAT3 direction, XMFLOAT3
 	light.SetColor(color);
 	light.SetRadius(radius);
 	light.SetIntensity(intensity);
-
+	light.Update();
 	mPointLightList.push_back(light);
 }
 

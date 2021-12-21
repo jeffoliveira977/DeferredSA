@@ -19,9 +19,9 @@ struct LightData
 
 LightData lightData : register(c9);
 
-float3 LightPosition: register(c9);
-float3 LightDirection:  register(c10);
-float3 LightColor: register(c11);
+float3 LightPosition : register(c9);
+float3 LightDirection : register(c10);
+float3 LightColor : register(c11);
 float LightRadius : register(c12);
 float LightIntensity : register(c13);
 float4x4 ShadowMatrix : register(c14);
@@ -68,28 +68,44 @@ float4 main(float2 texCoord : TEXCOORD0) : COLOR
     float3 lightPos = -normalize(worldPosition.xyz - LightPosition.xyz);
     float dirLen = length(worldPosition - LightPosition);
     
-    float s = 0.2f;
-    float atten = 1.0f - smoothstep(LightRadius * s, LightRadius, dirLen);
+    float s2 = 0.2f;
+    float atten = 1.0f - smoothstep(LightRadius * s2, LightRadius, dirLen);
     atten = 1.0f - pow(saturate(dirLen / LightRadius), 2);
        
-    float3 n = normal;
-    float3 v = lightPos;
+    float4 wpos = mul(worldPosition, ShadowMatrix);
+    //wpos /= wpos.w;
+    
+    float3 ldir = LightPosition.xyz - worldPosition.xyz;;
+    ldir.x *= -1.0;
+    // shadow term
+    float2 sd = texCUBE(SamplerShadow, -ldir).rg;
+    float d = length(ldir);
 
-    v = reflect(v, n);
-    float3 refl = texCUBE(SamplerShadow, v);
+    float mean = sd.x;
+    mean *= FarClip;
+    float variance = max(sd.y - sd.x * sd.x, 0.0002f);
 
-    float ndotv = dot(n, v);
-    float fresnel = (1 - ndotv);
+    float md = mean - d;
+    float pmax = variance / (variance + md * md);
 
+    float t = max(d <= mean, pmax);
+    float s = ((sd.x < 0.01f) ? 1.0f : t);
+
+    s = saturate(s);
+    
+    float currentDepth = length(LightPosition.xyz - worldPosition.xyz);
+    // test for shadows
+    float bias = 0.00005; // we use a much larger bias since depth is now in [near_plane, far_plane] range
+    float shadow = currentDepth - bias > mean ? 1.0 : 0.0;
 
     float3 FinalDiffuseTerm = float3(0, 0, 0);
     float FinalSpecularTerm = 0;
     float DiffuseTerm, SpecularTerm;
     CalculateDiffuseTerm_ViewDependent(normal, lightPos.xyz, -ViewDir, DiffuseTerm, Roughness);
     CalculateSpecularTerm(normal, lightPos.xyz, -ViewDir, Roughness, SpecularTerm);
-    FinalDiffuseTerm += DiffuseTerm * atten * LightColor * LightIntensity;
-   // FinalDiffuseTerm = lerp(FinalDiffuseTerm, refl, fresnel);
-    FinalSpecularTerm += SpecularTerm * atten  * SpecIntensity;
+    FinalDiffuseTerm += DiffuseTerm * atten * shadow * LightColor * LightIntensity;
+  //  FinalDiffuseTerm = lerp(FinalDiffuseTerm, refl, fresnel);
+    FinalSpecularTerm += SpecularTerm * atten * SpecIntensity;
     float4 Lighting = float4(FinalDiffuseTerm, FinalSpecularTerm);
     color.xyzw = Lighting;
     return color;

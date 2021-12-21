@@ -1,7 +1,7 @@
 #pragma once
 #include "CommonD.h"
 #include "Frustum.h"
-
+#include "BoundingSphere.h"
 class PointLight
 {
 public:
@@ -20,10 +20,13 @@ public:
 	 XMFLOAT3 GetPosition();
 	float GetIntensity();
 	float GetRadius();
-
+	XMMATRIX GetWorld();
 	void Update();
 	float mPriority;
 private:
+	Math::BoundingSphere mSphere;
+
+	XMMATRIX mWorld;
 	XMMATRIX mMatrix;
 	XMMATRIX mView[6];
 	XMMATRIX mProjection;
