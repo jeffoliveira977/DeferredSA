@@ -97,7 +97,7 @@ float4 main(float2 texCoord : TEXCOORD0) : COLOR
     // test for shadows
     float bias = 0.00005; // we use a much larger bias since depth is now in [near_plane, far_plane] range
     float shadow = currentDepth - bias > mean ? 1.0 : 0.0;
-
+    shadow += 0.1;
     float3 FinalDiffuseTerm = float3(0, 0, 0);
     float FinalSpecularTerm = 0;
     float DiffuseTerm, SpecularTerm;

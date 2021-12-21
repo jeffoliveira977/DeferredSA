@@ -60,7 +60,7 @@ void AddVehicleSpotLight(CVehicle* vehicle)
 		light.SetRadius(30.0f);
 		light.SetDirection({ matrix->up.x, matrix->up.y, matrix->up.z });
 		light.SetColor({ 1.0f, 1.0f, 1.0f });
-		light.SetIntensity(1.0);
+		light.SetIntensity(3.0);
 		light.SetAngle(30.0);
 
 		CVector position;
