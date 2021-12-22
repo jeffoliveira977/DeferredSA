@@ -14,8 +14,8 @@ void CPointLights__AddLight(unsigned char, XMFLOAT3 point, XMFLOAT3 direction, f
 	//		//PrintMessage("%f %f %f %d", point.x, point.y, point.z, e->m_nModelIndex);
 	//		return;
 	direction = point;
-	if (direction.z <= 30.0)
-		direction.z += 4.0;
+	//if (direction.z <= 30.0)
+	//	direction.z += 4.0;
 	
 	CVector camPos = TheCamera.GetPosition();
 	float visibleRadius = 100.0;
