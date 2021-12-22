@@ -10,6 +10,7 @@ void main(inout float4 position : POSITION0,
           out float2 depth : TEXCOORD2)
 {
     position = mul(position, World);
+   // depth = position.xyz;
     position = mul(position, View);
     position = mul(position, Projection);
     

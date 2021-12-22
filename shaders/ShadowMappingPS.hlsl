@@ -3,6 +3,8 @@ float4 Diffuse : register(c0);
 
 sampler2D DiffuseSampler : register(s0);
 
+float3 lightPos : register(c1);
+float FarClip : register(c2);
 
 
 float4 mapDepthToARGB32(const float value)
@@ -25,5 +27,6 @@ void main(float2 Texcoord : TEXCOORD0,
     float depth = Depth.x / Depth.y;
     color = (depth);
 
-
+    //float depth = Depth.x / Depth.y;
+    //color = length(Depth-lightPos) / FarClip;
 }

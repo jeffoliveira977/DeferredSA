@@ -43,11 +43,11 @@ void RsMouseSetPos_hook(RwV2d* screen)
 
 void CRealTimeShadowManager__Update()
 {
-	if (CGameIdle::m_fShadowDNBalance)
-	{
+	//if (CGameIdle::m_fShadowDNBalance)
+	//{
 		PointShadow->Update();
 		SpotShadow->Update();
-	}
+	//}
 
 	/*if (CGame::currArea == 0 && CGameIdle::m_fShadowDNBalance <= 1.0)
 	{

@@ -222,7 +222,7 @@ void DeferredRendering::RenderLights()
 
 	static uint maxlight = 0;
 	maxlight = max(maxlight, gLightManager.GetPointLightCount());
-	PrintMessage("%d", maxlight);
+	//PrintMessage("%d", maxlight);
 
 
 	// Render to default surface

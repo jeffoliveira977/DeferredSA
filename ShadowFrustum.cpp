@@ -103,7 +103,7 @@ void ShadowFrustum::DirectionalLightTransform(RwCamera* mainCam, CVector lightDi
         //longEdge *= 0.5;
         float nearZ =-2500;
         float farZ = 50.0f + -nearZ;
-        PrintMessage("%f", farZ);
+      //  PrintMessage("%f", farZ);
 
         // Get position of the shadow camera
         XMVECTOR shadowPosition = frustumCenter + lightDirection /** -XMVectorGetZ(minExtents)*/;

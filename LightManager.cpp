@@ -6,8 +6,17 @@
 
 LightManager gLightManager;
 
-void CPointLights__AddLight(unsigned char, XMFLOAT3 point, XMFLOAT3 direction, float radius, float red, float green, float blue, unsigned char, bool, CEntity*)
+void CPointLights__AddLight(unsigned char, XMFLOAT3 point, XMFLOAT3 direction, float radius, float red, float green, float blue, unsigned char, bool, CEntity*e)
 {
+
+	//if (e)
+	//	if (e->m_nModelIndex == 1215)
+	//		//PrintMessage("%f %f %f %d", point.x, point.y, point.z, e->m_nModelIndex);
+	//		return;
+	direction = point;
+	if (direction.z <= 30.0)
+		direction.z += 4.0;
+	
 	CVector camPos = TheCamera.GetPosition();
 	float visibleRadius = 100.0;
 	CVector dx = CVector(point.x, point.y, point.z) - camPos;
@@ -15,7 +24,7 @@ void CPointLights__AddLight(unsigned char, XMFLOAT3 point, XMFLOAT3 direction, f
 	if (gLightManager.GetPointLightCount() > 29 || dx.Magnitude() >= visibleRadius)
 		return;
 
-	float intensity = 3.0;
+	float intensity = 1.0;
 
 	gLightManager.AddPointLight(point, direction, { red, green, blue }, radius, intensity);
 }
@@ -105,6 +114,11 @@ void LightManager::Hook()
 	plugin::Events::gameProcessEvent += []() 
 	{
 		gLightManager.ClearLights();
+
+	
+		auto coors = FindPlayerCoors(0);
+		PrintMessage("%f %f %f", coors.x, coors.y, coors.z);
+		//gLightManager.AddPointLight({ coors.x,coors.y,coors.z }, {0.32, 0.8, 0.5}, { 1, 1, 1 }, 20.0f, 1);
 
 		auto pool = CPools::ms_pVehiclePool;
 		for (int i = 0; i < pool->m_nSize; ++i)

@@ -545,11 +545,20 @@ void Renderer::ScanBigBuildingList(int sectorX, int sectorY)
 
 #include "plugin.h"
 #include "..\injector\assembly.hpp"
+
+#include "PointLightShadow.h"
 using namespace plugin;
 using namespace injector;
 
 void AddEntity(CEntity* entity)
 {
+    
+        //if (entity->m_nModelIndex == 1215)
+       //     PrintMessage("%f %f %f %d", entity->GetPosition() .x, entity->GetPosition().y, entity->GetPosition().z, entity->m_nModelIndex);
+
+    if(entity->m_nType == eEntityType::ENTITY_TYPE_PED || entity->m_nType == eEntityType::ENTITY_TYPE_VEHICLE || entity->m_nType == eEntityType::ENTITY_TYPE_OBJECT)
+    PointShadow->AddObject(0, entity, 0);
+
     ShadowCasterEntity->AddObject(entity);
 }
 
@@ -575,8 +584,37 @@ void __declspec(naked) CRenderer__AddEntityToRenderList___VisibleLod_HOOK()
     }
 }
 
+void __declspec(naked) Hook_light()
+{
+    _asm
+    {
+       // mov     ecx, ebp
+        push    ebp; entityAffected
+        mov edx, 006FD09Ch
+        jmp edx;
+    }
+}
+
+void __declspec(naked) Hook_light2()
+{
+    _asm
+    {
+       // mov     ecx, ebp
+        push    ebp; entityAffected
+        mov edx, 006FD12Bh
+        jmp edx;
+    }
+}
+
+
 void Renderer::Hook()
+
 {     // update ms_aVisibleEntityPtrs
+
+   // patch::Nop(0x006FD105, 5);
+    patch::RedirectJump(0x006FD129, Hook_light);
+
+    patch::RedirectJump(0x006FD09A, Hook_light2);
 
     //plugin::patch::RedirectJump(0x00734570, Renderer::InsertEntityIntoSortedList);
     //plugin::patch::RedirectJump(0x005534B0, Renderer::AddEntityToRenderList);
@@ -637,7 +675,8 @@ void Renderer::ConstructRenderList()
     }
 
     ShadowCasterEntity->ClearCullList();
-
+    for (size_t i = 0; i < 30; i++)
+        PointShadow-> m_renderableList[i].clear();
     CRenderer::ms_lowLodDistScale *= CTimeCycle::m_CurrentColours.m_fLodDistMult;
     COcclusion__ProcessBeforeRendering();
     CRenderer::ms_nNoOfVisibleEntities = 0;

@@ -81,7 +81,7 @@ XMMATRIX PointLight::GetWorld()
  const XMVECTOR DXCubeForward[6] =
 {
 	{1, 0, 0, 0},
-{-1, 0, 0, 0 },
+	{-1, 0, 0, 0 },
 	{0, 1, 0, 0},
 	{0, -1, 0, 0},
 	{0, 0, 1, 0},
@@ -100,21 +100,58 @@ XMMATRIX PointLight::GetWorld()
 
 void PointLight::Update()
 {
-	XMStoreFloat3(&mSphere.Center, mPosition);
+	mRadius = max(1.0f, mRadius);
+
+	XMStoreFloat3(&mSphere.Center, mDirection);
 	mSphere.Radius = mRadius;
 
 	XMMATRIX scaling = XMMatrixScaling(mRadius, mRadius, mRadius);
-	XMMATRIX translation = XMMatrixTranslationFromVector(mPosition);
+	XMMATRIX translation = XMMatrixTranslationFromVector(mDirection);
 
 	mWorld = scaling * translation;
-	mProjection = XMMatrixPerspectiveFovRH(XM_PI / 2.0f, 1.0, 0.1f, mRadius);
+	mProjection = XMMatrixPerspectiveFovRH(XMConvertToRadians(90.0f), 1.0f, 0.1f, mRadius);
 
 	XMVECTOR lookAt;
 	XMVECTOR up;
 
+
 	for (size_t i = 0; i < 6; i++)
 	{
-		mView[i] = XMMatrixLookAtRH(mPosition, (mPosition + DXCubeForward[i]), DXCubeUp[i]);
+	//	mView[i] = XMMatrixLookAtRH(-mPosition, (mPosition + DXCubeForward[i]), DXCubeUp[i]);
+		switch (static_cast<D3DCUBEMAP_FACES>(i))
+		{
+		case D3DCUBEMAP_FACE_POSITIVE_X:
+			lookAt = g_XMIdentityR0;
+			up = g_XMIdentityR1;
+			mView[i] = XMMatrixLookAtRH(mDirection, mDirection + g_XMIdentityR0, -g_XMIdentityR1);
+			break;
+		case D3DCUBEMAP_FACE_NEGATIVE_X:
+			lookAt = -g_XMIdentityR0;
+			up = g_XMIdentityR1;
+			mView[i] = XMMatrixLookAtRH(mDirection, mDirection + -g_XMIdentityR0, -g_XMIdentityR1);
+			break;
+		case D3DCUBEMAP_FACE_POSITIVE_Y:
+			lookAt = g_XMIdentityR1;
+			up = -g_XMIdentityR2;
+			mView[i] = XMMatrixLookAtRH(mDirection, mDirection + g_XMIdentityR1, g_XMIdentityR2);
+			break;
+		case D3DCUBEMAP_FACE_NEGATIVE_Y:
+			lookAt = -g_XMIdentityR1;
+			up = g_XMIdentityR2;
+			mView[i] = XMMatrixLookAtRH(mDirection, mDirection + -g_XMIdentityR1, -g_XMIdentityR2);
+			break;
+		case D3DCUBEMAP_FACE_POSITIVE_Z:
+			lookAt = g_XMIdentityR2;
+			up = g_XMIdentityR1;
+			mView[i] = XMMatrixLookAtRH(mDirection, mDirection + g_XMIdentityR2, -g_XMIdentityR0);
+			break;
+		case D3DCUBEMAP_FACE_NEGATIVE_Z:
+			lookAt = -g_XMIdentityR2;
+			up = g_XMIdentityR1;
+			mView[i] = XMMatrixLookAtRH(mDirection, mDirection + -g_XMIdentityR2, -g_XMIdentityR1);
+			break;
+		}
+		//mView[i] = XMMatrixLookAtRH(mPosition, lookAt, up);
 		mMatrix = mView[i] * mProjection;
 		mFrustum[i].SetMatrix(mMatrix);
 	}

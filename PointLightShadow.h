@@ -1,6 +1,9 @@
 #pragma once
 #include "CommonD.h"
 #include "Frustum.h"
+
+#include "PointLight.h"
+
 class PointLightShadow
 {
 public:
@@ -26,7 +29,7 @@ public:
 	void SectorList(CPtrList& ptrList);
 	void ScanSectorList(int sectorX, int sectorY);
 
-	void RenderEntities(int i);
+	void RenderEntities(PointLight light, int i, int j);
 	void Initialize();
 	void Update();
 };

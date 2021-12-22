@@ -75,29 +75,48 @@ float4 main(float2 texCoord : TEXCOORD0) : COLOR
     float4 wpos = mul(worldPosition, ShadowMatrix);
     //wpos /= wpos.w;
     
-    float3 ldir = LightPosition.xyz - worldPosition.xyz;;
-    ldir.x *= -1.0;
+    float3 ToPixelAbs = abs(worldPosition.xyz-LightPosition.xyz);
+    float Z = max(ToPixelAbs.x, max(ToPixelAbs.y, -ToPixelAbs.z));
+    float Depth = (ProjectionMatrix[2][2] * Z + ProjectionMatrix[3][2]) / Z;
+    float back = dot(InverseViewMatrix[3].xyz, normal);
+    float3 LightPositio = LightDirection.xyz;
+   // LightPositio.x = abs(LightPositio.x);
+   // worldPosition.x *=-1.0;
+  
+    float3 l = LightDirection;
+   // if (l. z <= 30.0)
+  //      l.z += 0.1;
+
+    float3 ldir = l.xyz- worldPosition.xyz;
+    ldir.y*= -1.0;
+    if (dot(normal, ViewDir) > 0.0)
+       // ldir.x *= -1.0;
+   // else
+    {
+   //     ldir.z *= -1.0;
+       /// ldir.z *= -1.0;
+    }
     // shadow term
     float2 sd = texCUBE(SamplerShadow, -ldir).rg;
     float d = length(ldir);
 
     float mean = sd.x;
-    mean *= FarClip;
+   // mean *= FarClip;
     float variance = max(sd.y - sd.x * sd.x, 0.0002f);
 
     float md = mean - d;
     float pmax = variance / (variance + md * md);
 
     float t = max(d <= mean, pmax);
-    float s = ((sd.x < 0.01f) ? 1.0f : t);
+    float s = ((sd.x < 0.001f) ? 1.0f : t);
 
     s = saturate(s);
     
-    float currentDepth = length(LightPosition.xyz - worldPosition.xyz);
+    float currentDepth = length(l.xyz - worldPosition.xyz);
     // test for shadows
     float bias = 0.00005; // we use a much larger bias since depth is now in [near_plane, far_plane] range
-    float shadow = currentDepth - bias > mean ? 1.0 : 0.0;
-    shadow += 0.1;
+    float shadow = Depth - bias > mean ? 1.0 : 0.0;
+    
     float3 FinalDiffuseTerm = float3(0, 0, 0);
     float FinalSpecularTerm = 0;
     float DiffuseTerm, SpecularTerm;
