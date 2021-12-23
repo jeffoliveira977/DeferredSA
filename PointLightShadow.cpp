@@ -34,21 +34,57 @@ void PointLightShadow::Initialize()
 
 	for (size_t i = 0; i < 30; i++)
 	{
-		mColorRaster[i] = RwD3D9RasterCreate(m_nShadowSize, m_nShadowSize, D3DFMT_R32F, rwRASTERTYPECAMERATEXTURE);
-		rwD3D9CubeRasterCreate(mColorRaster[i], D3DFMT_R32F, 1);
+		mColorRaster[i] = RwD3D9RasterCreate(m_nShadowSize, m_nShadowSize, D3DFMT_G32R32F, rwRASTERTYPECAMERATEXTURE);
+		rwD3D9CubeRasterCreate(mColorRaster[i], D3DFMT_G32R32F, 1);
 	}
 
 	//mColorRaster[i] = RwRasterCreate(m_nShadowSize, m_nShadowSize, 32, rwRASTERTYPECAMERATEXTURE);
 	mDepthRaster = RwRasterCreate(m_nShadowSize, m_nShadowSize, 32, rwRASTERTYPEZBUFFER);
 }
 
-
-void PointLightShadow::AddObject(int i, CEntity* entity, float distance)
+void PointLightShadow::AddObject(int i, CEntity* entity, float distance )
 {
+	//CColModel* col = entity->GetColModel();
+	//if (col == nullptr)
+	//	return;
+
+	//CVector position = entity->GetPosition();
+	//if (entity->m_pLod)
+	//	position = entity->m_pLod->GetPosition();
+
+	//float distance = (position - CRenderer::ms_vecCameraPosition).Magnitude();
+	////XMMATRIX world = RwMatrixToXMMATRIX(reinterpret_cast<RwMatrix*>(entity->GetMatrix()));
+
+	////CBoundingBox modelAABB = col->m_boundBox;
+
+	////XMFLOAT3 min, max;
+	////min = *reinterpret_cast<XMFLOAT3*>(&modelAABB.m_vecMin);
+	////max = *reinterpret_cast<XMFLOAT3*>(&modelAABB.m_vecMax);
+
+	////Math::AABB aabb(min, max);
+	////aabb.Transform(world);
+	////
+	////for (size_t i = 0; i < gLightManager.GetPointLightCount(); i++)
+	////{
+	//	//auto light = gLightManager.GetPointLightAt(i);
+	//	//PrintMessage("%d", 1);
+	//	//for (size_t j = 0; j < 6; j++)
+	//	//{
+	//	//	if (light.GetFrustum(j).Intersects(aabb))
+	//	//	{
+	//			
+	//			//AddObject(i, entity, distance);
+	//			if (distance < 100)
+	//				m_renderableList[0].push_back(entity);
+	//			//else if (entity->m_pLod != NULL)
+	//			//	m_renderableList[i].push_back(entity->m_pLod);
+	////		}
+	////	}
+	////}
 	if (distance > 200)
 		return;
 
-	if (distance < 50)
+	if (distance < 100)
 		m_renderableList[i].push_back(entity);
 	else if (entity->m_pLod != NULL)
 		m_renderableList[i].push_back(entity->m_pLod);
@@ -85,9 +121,6 @@ void PointLightShadow::SectorList(CPtrList& ptrList)
 
 			for (size_t i = 0; i < gLightManager.GetPointLightCount(); i++)
 			{
-				//if (i > 8)
-				//	return;
-
 				auto light = gLightManager.GetPointLightAt(i);
 
 				for (size_t j = 0; j < 6; j++)
@@ -112,7 +145,7 @@ void PointLightShadow::ScanSectorList(int sectorX, int sectorY)
 		// SectorList(sector->m_buildings);
 		//SectorList(sector->m_dummies);
 		SectorList(repeatSector->m_lists[REPEATSECTOR_VEHICLES]);
-		SectorList(repeatSector->m_lists[REPEATSECTOR_PEDS]);
+			SectorList(repeatSector->m_lists[REPEATSECTOR_PEDS]);
 		//SectorList(repeatSector->m_lists[REPEATSECTOR_OBJECTS]);
 	}
 }
@@ -122,6 +155,9 @@ void PointLightShadow::Update()
 {
 	for (size_t i = 0; i < 30; i++)
 		m_renderableList[i].clear();
+
+	CVector pos = FindPlayerCoors(0);
+	XMMATRIX translation = XMMatrixTranslation(pos.x, pos.y, pos.z);
 
 	// Scan entity list
 	SetNextScanCode();
@@ -143,22 +179,20 @@ void PointLightShadow::Update()
 	RWSRCGLOBAL(curCamera) = Scene.m_pRwCamera;
 	for (size_t i = 0; i < gLightManager.GetPointLightCount(); i++)
 	{
-		//if (i > 8)
-		//{
-		//	RWSRCGLOBAL(curCamera) = NULL;
-		//	return;
-		//}
 
 		auto data = gLightManager.GetPointLightAt(i);
 
 		gRenderState = stageCascadeShadow;
-		//gRenderState = stageReflectionCubemap;
+
+		_rwD3D9SetPixelShaderConstant(1, &data.GetPosition(), 1);
+
+		_rwD3D9SetPixelShaderConstant(2, &CTimeCycle::m_CurrentColours.m_fFarClip, 1);
 
 		for (size_t j = 0; j < 6; j++)
 		{
 			m_viewMatrix[i] = data.GetViewMatrix(j);
 			m_projectionMatrix[i] = data.GetProjection();
-
+			
 			_rwD3D9CubeRasterSelectFace(mColorRaster[i], j);
 			RwD3D9SetRenderTarget(0, mColorRaster[i]);
 			rwD3D9SetDepthStencil(mDepthRaster);
@@ -182,14 +216,14 @@ void PointLightShadow::Update()
 				_rwD3D9SetVertexShaderConstant(4, &m_viewMatrix[i], 4);
 				_rwD3D9SetVertexShaderConstant(8, &m_projectionMatrix[i], 4);
 
-				RenderEntities(i);
+				RenderEntities(data, i, j);
 			}
 		}
 	}
 	RWSRCGLOBAL(curCamera) = NULL;
 }
 
-void PointLightShadow::RenderEntities(int i)
+void PointLightShadow::RenderEntities(PointLight light, int i, int j)
 {
 	RwRenderStateSet(rwRENDERSTATEVERTEXALPHAENABLE, (void*)TRUE);
 	RwRenderStateSet(rwRENDERSTATECULLMODE, (void*)rwCULLMODECULLNONE);
@@ -204,41 +238,65 @@ void PointLightShadow::RenderEntities(int i)
 		if (entity == nullptr || entity->m_pRwObject == nullptr)
 			continue;
 
-		if (entity->m_nType == ENTITY_TYPE_PED)
-		{
-			CPed* ped = static_cast<CPed*>(entity);
-			CTaskSimpleJetPack* jetPack = ped->m_pIntelligence->GetTaskJetPack();
-			if (jetPack && jetPack->m_pJetPackClump)
-				RpClumpRender(jetPack->m_pJetPackClump);
-		}
+		//CColModel* col = entity->GetColModel();
+		////if (col == nullptr)
+		////	continue;
 
-		entity->m_bImBeingRendered = true;
+		//CVector position = entity->GetPosition();
+		//if (entity->m_pLod)
+		//	position = entity->m_pLod->GetPosition();
 
-		CVehicle* vehicle = static_cast<CVehicle*>(entity);
-		if (entity->m_nType == ENTITY_TYPE_VEHICLE)
-		{
-			CVisibilityPlugins::SetupVehicleVariables(entity->m_pRwClump);
-			CVisibilityPlugins::InitAlphaAtomicList();
-			vehicle->SetupRender();
-		}
-		else if (!entity->m_bBackfaceCulled)
-		{
-			RwRenderStateSet(rwRENDERSTATECULLMODE, (void*)rwCULLMODECULLNONE);
-		}
-		entity->Render();
+		//float distance = (position - CRenderer::ms_vecCameraPosition).Magnitude();
+		//XMMATRIX world = RwMatrixToXMMATRIX(reinterpret_cast<RwMatrix*>(entity->GetMatrix()));
+
+		//CBoundingBox modelAABB = col->m_boundBox;
+
+		//XMFLOAT3 min, max;
+		//min = *reinterpret_cast<XMFLOAT3*>(&modelAABB.m_vecMin);
+		//max = *reinterpret_cast<XMFLOAT3*>(&modelAABB.m_vecMax);
+
+		//Math::AABB aabb(min, max);
+		//aabb.Transform(world);
+
+		//if (light.GetFrustum(j).Intersects(aabb))
+
+		//{
+			if (entity->m_nType == ENTITY_TYPE_PED)
+			{
+				CPed* ped = static_cast<CPed*>(entity);
+				CTaskSimpleJetPack* jetPack = ped->m_pIntelligence->GetTaskJetPack();
+				if (jetPack && jetPack->m_pJetPackClump)
+					RpClumpRender(jetPack->m_pJetPackClump);
+			}
+
+			entity->m_bImBeingRendered = true;
+
+			CVehicle* vehicle = static_cast<CVehicle*>(entity);
+			if (entity->m_nType == ENTITY_TYPE_VEHICLE)
+			{
+				CVisibilityPlugins::SetupVehicleVariables(entity->m_pRwClump);
+				CVisibilityPlugins::InitAlphaAtomicList();
+				vehicle->SetupRender();
+			}
+			else if (!entity->m_bBackfaceCulled)
+			{
+				RwRenderStateSet(rwRENDERSTATECULLMODE, (void*)rwCULLMODECULLNONE);
+			}
+			entity->Render();
 
 
-		if (entity->m_nType == ENTITY_TYPE_VEHICLE)
-		{
-			CVisibilityPlugins::RenderAlphaAtomics();
-			vehicle->ResetAfterRender();
-		}
-		else if (!entity->m_bBackfaceCulled)
-		{
-			RwRenderStateSet(rwRENDERSTATECULLMODE, (void*)rwCULLMODECULLBACK);
-		}
+			if (entity->m_nType == ENTITY_TYPE_VEHICLE)
+			{
+				CVisibilityPlugins::RenderAlphaAtomics();
+				vehicle->ResetAfterRender();
+			}
+			else if (!entity->m_bBackfaceCulled)
+			{
+				RwRenderStateSet(rwRENDERSTATECULLMODE, (void*)rwCULLMODECULLBACK);
+			}
 
-		entity->m_bImBeingRendered = false;
+			entity->m_bImBeingRendered = false;
+		//}
 	}
 	CVisibilityPlugins::RenderWeaponPedsForPC();
 }

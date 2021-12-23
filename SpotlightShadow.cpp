@@ -43,7 +43,7 @@ void SpotlightShadow::AddObject(int i, CEntity* entity, float distance)
 	if (distance > 200)
 		return;
 
-	if (distance < 50)
+	if (distance < 100)
 		m_renderableList[i].push_back(entity);
 	else if (entity->m_pLod != NULL)
 		m_renderableList[i].push_back(entity->m_pLod);

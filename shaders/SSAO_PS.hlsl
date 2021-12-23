@@ -93,9 +93,6 @@ float MySuckAmbientOcclusion(float ViewZ, float2 texcoord, float3 worldpos, floa
         float distance = length(ntz);
         float w = clampMap(distance, 0.0, 1.5, 1.0, 0.0);
 		
-        if (isinf(w) || isnan(w))
-            w = 0.0f;
-        
         if (w <= 0.0)
             continue;
         

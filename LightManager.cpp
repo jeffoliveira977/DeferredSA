@@ -4,15 +4,25 @@
 #include "CModelInfo.h"
 #include "CCamera.h"
 
-LightManager gLightManager;
 
-void CPointLights__AddLight(unsigned char, XMFLOAT3 point, XMFLOAT3 direction, float radius, float red, float green, float blue, unsigned char, bool, CEntity*)
+LightManager gLightManager;
+void CPointLights__AddLight(unsigned char, XMFLOAT3 point, XMFLOAT3 direction, float radius, float red, float green, float blue, unsigned char, bool, CEntity*e)
 {
+
+	//if (e)
+		//if (e->m_nModelIndex == 1215)
+		//	PrintMessage("%f %f %f %d", point.x, point.y, point.z, e->m_nModelIndex);
+	//		return;
+	//direction = point;
+	//if (direction.z <= 10.0)
+	//	return;
+	//	direction.z += 4.0;
+	
 	CVector camPos = TheCamera.GetPosition();
-	float visibleRadius = 200.0;
+	float visibleRadius = 100.0;
 	CVector dx = CVector(point.x, point.y, point.z) - camPos;
 
-	if (/*gLightManager.GetPointLightCount() > 29 ||*/ dx.Magnitude() >= visibleRadius)
+	if (gLightManager.GetPointLightCount() > 29 || dx.Magnitude() >= visibleRadius)
 		return;
 
 	float intensity = 3.0;
@@ -60,7 +70,7 @@ void AddVehicleSpotLight(CVehicle* vehicle)
 		light.SetRadius(30.0f);
 		light.SetDirection({ matrix->up.x, matrix->up.y, matrix->up.z });
 		light.SetColor({ 1.0f, 1.0f, 1.0f });
-		light.SetIntensity(1.0);
+		light.SetIntensity(3.0);
 		light.SetAngle(30.0);
 
 		CVector position;
@@ -105,6 +115,11 @@ void LightManager::Hook()
 	plugin::Events::gameProcessEvent += []() 
 	{
 		gLightManager.ClearLights();
+
+	
+		//auto coors = FindPlayerCoors(0);
+		//PrintMessage("%f %f %f", coors.x, coors.y, coors.z);
+		//gLightManager.AddPointLight({ coors.x,coors.y,coors.z }, {0.32, 0.8, 0.5}, { 1, 1, 1 }, 20.0f, 1);
 
 		auto pool = CPools::ms_pVehiclePool;
 		for (int i = 0; i < pool->m_nSize; ++i)
@@ -204,7 +219,7 @@ void LightManager::AddPointLight(XMFLOAT3 position, XMFLOAT3 direction, XMFLOAT3
 	light.SetColor(color);
 	light.SetRadius(radius);
 	light.SetIntensity(intensity);
-
+	light.Update();
 	mPointLightList.push_back(light);
 }
 

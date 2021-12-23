@@ -132,7 +132,6 @@ void DeferredRendering::RenderPostProcessing()
 
 #include "CCamera.h"
 #include "LightManager.h"
-#include "BoundingSphere.h"
 void DeferredRendering::RenderLights()
 {
 	ShaderContext->SetTimecyProps(8);
@@ -164,19 +163,8 @@ void DeferredRendering::RenderLights()
 	RwRenderStateSet(rwRENDERSTATESRCBLEND, (void*)rwBLENDONE);
 	RwRenderStateSet(rwRENDERSTATEDESTBLEND, (void*)rwBLENDONE);
 
-	XMMATRIX view, projection;
-	RwD3D9GetTransform(D3DTS_VIEW, &view);
-	RwD3D9GetTransform(D3DTS_PROJECTION, &projection);
-	//BoundingFrustum frustum;
-	//frustum.CreateFromMatrix(frustum, projection);
-	//frustum.Transform(frustum, XMMatrixInverse(0, view));
-
-	Math::Frustum frustum;
-	frustum.SetMatrix(view * projection);
-
 	mPointLightPS->Apply();
-	gLightManager.SortByDistance({ TheCamera.GetPosition().x,TheCamera.GetPosition().y ,TheCamera.GetPosition().z });
-	int m = 0, n = 0;
+	//gLightManager.SortByDistance({ TheCamera.GetPosition().x,TheCamera.GetPosition().y ,TheCamera.GetPosition().z });
 	for (int i = 0; i < gLightManager.GetPointLightCount(); i++)
 	{
 		auto light = gLightManager.GetPointLightAt(i);
@@ -184,36 +172,22 @@ void DeferredRendering::RenderLights()
 		auto radius = light.GetRadius();
 		auto intensity = light.GetIntensity();
 
-		//RwSphere sphere;
-		Math::BoundingSphere sphere;
-		sphere.Center.x = light.GetPosition().x ;
-		sphere.Center.y = light.GetPosition().y ;
-		sphere.Center.z = light.GetPosition().z;
-		sphere.Radius = light.GetRadius();
+		rwD3D9SetSamplerState(5, D3DSAMP_BORDERCOLOR, 0x0);
+		rwD3D9SetSamplerState(5, D3DSAMP_MAGFILTER, D3DTEXF_POINT);
+		rwD3D9SetSamplerState(5, D3DSAMP_MINFILTER, D3DTEXF_POINT);
+		rwD3D9SetSamplerState(5, D3DSAMP_MIPFILTER, D3DTEXF_POINT);
+		rwD3D9SetSamplerState(5, D3DSAMP_ADDRESSU, D3DTADDRESS_CLAMP);
+		rwD3D9SetSamplerState(5, D3DSAMP_ADDRESSV, D3DTADDRESS_CLAMP);
+		rwD3D9SetSamplerState(5, D3DSAMP_ADDRESSW, D3DTADDRESS_CLAMP);
+		_rwD3D9RWSetRasterStage(PointShadow->mColorRaster[i], 5);
 
-		//if (RwCameraFrustumTestSphere(Scene.m_pRwCamera, &sphere) !=RwFrustumTestResult::rwSPHEREOUTSIDE)
-		if(frustum.Intersects(sphere))
-		{
-			rwD3D9SetSamplerState(5, D3DSAMP_BORDERCOLOR, 0x0);
-			rwD3D9SetSamplerState(5, D3DSAMP_MAGFILTER, D3DTEXF_POINT);
-			rwD3D9SetSamplerState(5, D3DSAMP_MINFILTER, D3DTEXF_POINT);
-			rwD3D9SetSamplerState(5, D3DSAMP_MIPFILTER, D3DTEXF_POINT);
-			rwD3D9SetSamplerState(5, D3DSAMP_ADDRESSU, D3DTADDRESS_CLAMP);
-			rwD3D9SetSamplerState(5, D3DSAMP_ADDRESSV, D3DTADDRESS_CLAMP);
-			rwD3D9SetSamplerState(5, D3DSAMP_ADDRESSW, D3DTADDRESS_CLAMP);
-			//_rwD3D9RWSetRasterStage(PointShadow->mColorRaster[i], 5);
-
-			_rwD3D9SetPixelShaderConstant(9, &light.GetPosition(), 1);
-			_rwD3D9SetPixelShaderConstant(10, &light.GetDirection(), 1);
-			_rwD3D9SetPixelShaderConstant(11, &light.GetColor(), 1);
-			_rwD3D9SetPixelShaderConstant(12, &radius, 1);
-			_rwD3D9SetPixelShaderConstant(13, &intensity, 1);
-			//_rwD3D9SetPixelShaderConstant(14, &(light.GetViewMatrix(0) * light.GetProjection()), 4);
-			Quad::Render();
-			m++;
-		}
-		else
-			n++;
+		_rwD3D9SetPixelShaderConstant(9, &light.GetPosition(), 1);
+		_rwD3D9SetPixelShaderConstant(10, &light.GetDirection(), 1);
+		_rwD3D9SetPixelShaderConstant(11, &light.GetColor(), 1);
+		_rwD3D9SetPixelShaderConstant(12, &radius, 1);
+		_rwD3D9SetPixelShaderConstant(13, &intensity, 1);
+		//_rwD3D9SetPixelShaderConstant(14, &(light.GetViewMatrix(0) * light.GetProjection()), 4);
+		Quad::Render();
 	}
 
 	/*mSpotLightPS->Apply();
@@ -246,9 +220,9 @@ void DeferredRendering::RenderLights()
 	}*/
 
 
-	 uint maxlight = 0;
+	static uint maxlight = 0;
 	maxlight = max(maxlight, gLightManager.GetPointLightCount());
-	PrintMessage("total: %d culled: %d not culled: %d", maxlight, n, m);
+	//PrintMessage("%d", maxlight);
 
 
 	// Render to default surface

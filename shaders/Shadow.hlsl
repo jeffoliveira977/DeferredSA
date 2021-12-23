@@ -81,6 +81,34 @@ float tex2DShadow(sampler2D arrays[4], float2 texcoord, int count)
     return (texels);
 }
 
+float4 tex2DShadow6x6(sampler2D arrays[6], float2 texcoord, int count)
+{
+ 
+    float4 texels = 0.0f;
+    switch (count)
+    {
+        case 0:
+            texels = tex2D(arrays[0], texcoord);
+            break;
+        case 1:
+            texels = tex2D(arrays[1], texcoord);
+            break;
+        case 2:
+            texels = tex2D(arrays[2], texcoord);
+            break;
+        case 3:
+            texels = tex2D(arrays[3], texcoord);
+            break;
+        case 4:
+            texels = tex2D(arrays[4], texcoord);
+            break;
+        case 5:
+            texels = tex2D(arrays[5], texcoord);
+            break;
+    }
+    return texels;
+}
+
 
 // -------------------------------------
 // STEP 1: Search for potential blockers

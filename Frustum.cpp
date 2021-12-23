@@ -206,27 +206,5 @@ namespace Math
 		}
 
 		return true;
-
-		//ContainmentType result;
-		//bool intersects = false;
-		//for (auto& plane : Planes)
-		//{
-		//	PlaneIntersectionType planeIntersectionType;
-
-		//	// TODO: We might want to inline this for performance reasons.
-		//	planeIntersectionType = sphere.Intersects(plane);
-		//	switch (planeIntersectionType)
-		//	{
-		//	case PlaneIntersectionType::FRONT:
-		//		result = ContainmentType::DISJOINT;
-		//		return false;
-		//	case PlaneIntersectionType::INTERSECTING:
-		//		intersects = true;
-		//		break;
-		//	}
-		//}
-		//intersects= intersects ? ContainmentType::INTERSECTS : ContainmentType::CONTAINS;
-
-		//return intersects != ContainmentType::DISJOINT;
 	}
 }

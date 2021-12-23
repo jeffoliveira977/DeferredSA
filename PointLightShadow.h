@@ -1,6 +1,9 @@
 #pragma once
 #include "CommonD.h"
 #include "Frustum.h"
+
+#include "PointLight.h"
+
 class PointLightShadow
 {
 public:
@@ -13,6 +16,8 @@ public:
 	float m_spotRadius;
 	float m_nShadowSize;
 	RwRaster* mColorRaster[30];
+	RwRaster* mDualParaboloidFront[30];
+	RwRaster* mDualParaboloidBack[30];
 	RwRaster* mDepthRaster;
 	XMMATRIX m_shadowMatrix[30];
 	XMMATRIX m_projectionMatrix[30];
@@ -24,7 +29,7 @@ public:
 	void SectorList(CPtrList& ptrList);
 	void ScanSectorList(int sectorX, int sectorY);
 
-	void RenderEntities(int i);
+	void RenderEntities(PointLight light, int i, int j);
 	void Initialize();
 	void Update();
 };

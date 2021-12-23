@@ -19,9 +19,9 @@ struct LightData
 
 LightData lightData : register(c9);
 
-float3 LightPosition: register(c9);
-float3 LightDirection:  register(c10);
-float3 LightColor: register(c11);
+float3 LightPosition : register(c9);
+float3 LightDirection : register(c10);
+float3 LightColor : register(c11);
 float LightRadius : register(c12);
 float LightIntensity : register(c13);
 float4x4 ShadowMatrix : register(c14);
@@ -47,6 +47,14 @@ float ComputeAttenuation(float3 lDir, float len)
     return 1 - saturate(dot(lDir, lDir) * len);
 }
 
+static float3 sampleOffsetDirections[20] = {
+    float3(1, 1, 1), float3(1, -1, 1), float3(-1, -1, 1), float3(-1, 1, 1),
+    float3(1, 1,-1), float3(1, -1,-1), float3(-1, -1,-1), float3(-1, 1,-1),
+    float3(1, 1, 0), float3(1, -1, 0), float3(-1, -1, 0), float3(-1, 1, 0),
+    float3(1, 0, 1), float3(-1, 0, 1), float3(1,  0, -1), float3(-1, 0,-1),
+    float3(0, 1, 1), float3(0, -1, 1), float3(0, -1, -1), float3(0, 1, -1)
+};
+
 float4 main(float2 texCoord : TEXCOORD0) : COLOR
 {
     float4 Parameters = TEXTURE2D_MATERIALPROPS(texCoord);
@@ -68,28 +76,82 @@ float4 main(float2 texCoord : TEXCOORD0) : COLOR
     float3 lightPos = -normalize(worldPosition.xyz - LightPosition.xyz);
     float dirLen = length(worldPosition - LightPosition);
     
-    float s = 0.2f;
-    float atten = 1.0f - smoothstep(LightRadius * s, LightRadius, dirLen);
+    float s2 = 0.2f;
+    float atten = 1.0f - smoothstep(LightRadius * s2, LightRadius, dirLen);
     atten = 1.0f - pow(saturate(dirLen / LightRadius), 2);
        
-    float3 n = normal;
-    float3 v = lightPos;
+    float4 wpos = mul(worldPosition, ShadowMatrix);
+    //wpos /= wpos.w;
+    
+    float3 ToPixelAbs = abs(worldPosition.xyz-LightPosition.xyz);
+    float Z = max(ToPixelAbs.x, max(ToPixelAbs.y, -ToPixelAbs.z));
+    float Depth = (ProjectionMatrix[2][2] * Z + ProjectionMatrix[3][2]) / Z;
+    float back = dot(InverseViewMatrix[3].xyz, normal);
+    float3 LightPositio = LightPosition.xyz;
+   // LightPositio.x = abs(LightPositio.x);
+   // worldPosition.x *=-1.0;
+  
+    float3 l = LightPosition;
+   // if (l. z <= 30.0)
+   //     l.z += 1.0;
 
-    v = reflect(v, n);
-    float3 refl = texCUBE(SamplerShadow, v);
+    float3 ldir = worldPosition.xyz- l.xyz;
+    ldir.y*= -1.0;
+    if (dot(normal, ViewDir) > 0.0)
+       // ldir.x *= -1.0;
+   // else
+    {
+   //     ldir.z *= -1.0;
+       /// ldir.z *= -1.0;
+    }
+    // shadow term
+    float2 sd = texCUBE(SamplerShadow, ldir).rg;
+    float d = length(ldir);
 
-    float ndotv = dot(n, v);
-    float fresnel = (1 - ndotv);
+    float mean = sd.x;
+    mean *= FarClip;
+    float variance = max(sd.y - sd.x * sd.x, 0.2f);
 
+    float md = mean - d;
+    float pmax = variance / (variance + md * md);
+
+    float t = max(d <= mean, pmax);
+    float s = ((sd.x < 0.1f) ? 1.0f : t);
+
+    s = saturate(s);
+    
+    float currentDepth = length(worldPosition.xyz- ldir.xyz);
+    // test for shadows
+    float bias = 0.05; // we use a much larger bias since depth is now in [near_plane, far_plane] range
+    float shadow = currentDepth - bias > mean ? 1.0 : 0.0;
+
+    //
+    //float shadow = 0.0;
+    //float bias = 0.15;
+    //int samples = 20;
+    //float viewDistance = length(InverseViewMatrix[3].xyz - worldPosition.xyz);
+    ////float diskRadius = 0.05;
+    //float diskRadius = (1.0 + (viewDistance / FarClip)) / 25.0;
+    //for (int i = 0; i < samples; ++i)
+    //{
+    //    float closestDepth = texCUBE(SamplerShadow, ldir + sampleOffsetDirections[i] * diskRadius).r;
+    //    closestDepth *= FarClip;   // Undo mapping [0;1]
+    //    if (currentDepth - bias > closestDepth)
+    //        shadow += 1.0;
+    //}
+    //shadow /= float(samples);
 
     float3 FinalDiffuseTerm = float3(0, 0, 0);
     float FinalSpecularTerm = 0;
     float DiffuseTerm, SpecularTerm;
     CalculateDiffuseTerm_ViewDependent(normal, lightPos.xyz, -ViewDir, DiffuseTerm, Roughness);
     CalculateSpecularTerm(normal, lightPos.xyz, -ViewDir, Roughness, SpecularTerm);
-    FinalDiffuseTerm += DiffuseTerm * atten * LightColor * LightIntensity;
-   // FinalDiffuseTerm = lerp(FinalDiffuseTerm, refl, fresnel);
-    FinalSpecularTerm += SpecularTerm * atten  * SpecIntensity;
+
+
+    FinalDiffuseTerm += DiffuseTerm * atten * shadow * LightColor * LightIntensity;
+
+  //  FinalDiffuseTerm = lerp(FinalDiffuseTerm, refl, fresnel);
+    FinalSpecularTerm += SpecularTerm * atten * SpecIntensity;
     float4 Lighting = float4(FinalDiffuseTerm, FinalSpecularTerm);
     color.xyzw = Lighting;
     return color;
