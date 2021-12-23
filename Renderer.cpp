@@ -612,9 +612,9 @@ void Renderer::Hook()
 {     // update ms_aVisibleEntityPtrs
 
    // patch::Nop(0x006FD105, 5);
-    patch::RedirectJump(0x006FD129, Hook_light);
+   // patch::RedirectJump(0x006FD129, Hook_light);
 
-    patch::RedirectJump(0x006FD09A, Hook_light2);
+   // patch::RedirectJump(0x006FD09A, Hook_light2);
 
     //plugin::patch::RedirectJump(0x00734570, Renderer::InsertEntityIntoSortedList);
     //plugin::patch::RedirectJump(0x005534B0, Renderer::AddEntityToRenderList);

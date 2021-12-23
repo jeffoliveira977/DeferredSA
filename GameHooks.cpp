@@ -60,10 +60,10 @@ void CRealTimeShadowManager__Update()
 
 	//ShadowCasterEntity->Update(1, 1);
 
-	 CascadedShadowManagement->Update();
+	// CascadedShadowManagement->Update();
 
-	CubemapReflection::Update();
-	CubemapReflection::RenderScene();
+	//CubemapReflection::Update();
+	// CubemapReflection::RenderScene();
 
 	//DualParaboloidReflection::Update();
 	//DualParaboloidReflection::RenderScene();

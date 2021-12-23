@@ -15,7 +15,8 @@ public:
 	float m_spotAngle;
 	float m_spotRadius;
 	float m_nShadowSize;
-	RwRaster* mColorRaster[30];
+
+	 RwRaster* mColorRaster[30];
 	RwRaster* mDualParaboloidFront[30];
 	RwRaster* mDualParaboloidBack[30];
 	RwRaster* mDepthRaster;
@@ -29,7 +30,7 @@ public:
 	void SectorList(CPtrList& ptrList);
 	void ScanSectorList(int sectorX, int sectorY);
 
-	void RenderEntities(PointLight light, int i, int j);
+	void RenderEntities(PointLight* light, int i, int j);
 	void Initialize();
 	void Update();
 };

@@ -164,29 +164,36 @@ void DeferredRendering::RenderLights()
 	RwRenderStateSet(rwRENDERSTATEDESTBLEND, (void*)rwBLENDONE);
 
 	mPointLightPS->Apply();
-	//gLightManager.SortByDistance({ TheCamera.GetPosition().x,TheCamera.GetPosition().y ,TheCamera.GetPosition().z });
+	// gLightManager.SortLights();
+	CVector camPos = TheCamera.GetPosition();
+	PrintMessage("%d", gLightManager.GetPointLightAt(0)->mShadowRaster);
 	for (int i = 0; i < gLightManager.GetPointLightCount(); i++)
 	{
 		auto light = gLightManager.GetPointLightAt(i);
+		auto radius = light->GetRadius();
+		auto intensity = light->GetIntensity();
+		
+		CVector dx = CVector(light->GetPosition().x, light->GetPosition().y, light->GetPosition().z) - camPos;
 
-		auto radius = light.GetRadius();
-		auto intensity = light.GetIntensity();
+		if (dx.Magnitude() < 30.0)
 
-		rwD3D9SetSamplerState(5, D3DSAMP_BORDERCOLOR, 0x0);
-		rwD3D9SetSamplerState(5, D3DSAMP_MAGFILTER, D3DTEXF_POINT);
-		rwD3D9SetSamplerState(5, D3DSAMP_MINFILTER, D3DTEXF_POINT);
-		rwD3D9SetSamplerState(5, D3DSAMP_MIPFILTER, D3DTEXF_POINT);
-		rwD3D9SetSamplerState(5, D3DSAMP_ADDRESSU, D3DTADDRESS_CLAMP);
-		rwD3D9SetSamplerState(5, D3DSAMP_ADDRESSV, D3DTADDRESS_CLAMP);
-		rwD3D9SetSamplerState(5, D3DSAMP_ADDRESSW, D3DTADDRESS_CLAMP);
-		_rwD3D9RWSetRasterStage(PointShadow->mColorRaster[i], 5);
-
-		_rwD3D9SetPixelShaderConstant(9, &light.GetPosition(), 1);
-		_rwD3D9SetPixelShaderConstant(10, &light.GetDirection(), 1);
-		_rwD3D9SetPixelShaderConstant(11, &light.GetColor(), 1);
+			//	rwD3D9SetSamplerState(5, D3DSAMP_BORDERCOLOR, 0x0);
+		{
+			
+			rwD3D9SetSamplerState(5, D3DSAMP_MAGFILTER, D3DTEXF_LINEAR);
+			rwD3D9SetSamplerState(5, D3DSAMP_MINFILTER, D3DTEXF_LINEAR);
+			rwD3D9SetSamplerState(5, D3DSAMP_MIPFILTER, D3DTEXF_NONE);
+			rwD3D9SetSamplerState(5, D3DSAMP_ADDRESSU, D3DTADDRESS_CLAMP);
+			rwD3D9SetSamplerState(5, D3DSAMP_ADDRESSV, D3DTADDRESS_CLAMP);
+			//rwD3D9SetSamplerState(5, D3DSAMP_ADDRESSW, D3DTADDRESS_CLAMP);
+			_rwD3D9RWSetRasterStage(light->mShadowRaster, 5);
+		}
+		_rwD3D9SetPixelShaderConstant(9, &light->GetPosition(), 1);
+		_rwD3D9SetPixelShaderConstant(10, &light->GetDirection(), 1);
+		_rwD3D9SetPixelShaderConstant(11, &light->GetColor(), 1);
 		_rwD3D9SetPixelShaderConstant(12, &radius, 1);
 		_rwD3D9SetPixelShaderConstant(13, &intensity, 1);
-		//_rwD3D9SetPixelShaderConstant(14, &(light.GetViewMatrix(0) * light.GetProjection()), 4);
+		_rwD3D9SetPixelShaderConstant(14, &(light->GetViewMatrix(0) * light->GetProjection()), 4);
 		Quad::Render();
 	}
 
@@ -222,7 +229,7 @@ void DeferredRendering::RenderLights()
 
 	static uint maxlight = 0;
 	maxlight = max(maxlight, gLightManager.GetPointLightCount());
-	//PrintMessage("%d", maxlight);
+	// PrintMessage("%d %d", maxlight, gLightManager.GetPointLightCount());
 
 
 	// Render to default surface

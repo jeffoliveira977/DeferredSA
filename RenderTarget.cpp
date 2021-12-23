@@ -10,13 +10,7 @@ RenderTarget::RenderTarget(D3DFORMAT format):mFormat(format)
 RenderTarget::~RenderTarget()
 {
   
-			std::ofstream myfile;
-			myfile.open("example2.txt");
-			myfile << "Writing this to a file.\n";
-			myfile << "Writing this to a file.\n";
-			myfile << "Writing this to a file.\n";
-			myfile << "Writing this to a file.\n";
-			myfile.close();
+		
 
 	RwRasterDestroy(mRaster);
 	RenderTargetManager::Remove(this);

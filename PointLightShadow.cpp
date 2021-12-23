@@ -24,22 +24,24 @@ PointLightShadow::PointLightShadow()
 PointLightShadow::~PointLightShadow()
 {
 	for (size_t i = 0; i < 30; i++)
-		RwRasterDestroy(mColorRaster[i]);
-
+	{
+		//RwRasterDestroy(mColorRaster[i]);
+	}
 	RwRasterDestroy(mDepthRaster);
 }
 void PointLightShadow::Initialize()
 {
 	m_nShadowSize = 512.0;
 
+
 	for (size_t i = 0; i < 30; i++)
 	{
-		mColorRaster[i] = RwD3D9RasterCreate(m_nShadowSize, m_nShadowSize, D3DFMT_G32R32F, rwRASTERTYPECAMERATEXTURE);
+		mColorRaster[i] = RwD3D9RasterCreate(512, 512, D3DFMT_G32R32F, rwRASTERTYPECAMERATEXTURE);
 		rwD3D9CubeRasterCreate(mColorRaster[i], D3DFMT_G32R32F, 1);
 	}
 
 	//mColorRaster[i] = RwRasterCreate(m_nShadowSize, m_nShadowSize, 32, rwRASTERTYPECAMERATEXTURE);
-	mDepthRaster = RwRasterCreate(m_nShadowSize, m_nShadowSize, 32, rwRASTERTYPEZBUFFER);
+	mDepthRaster = RwRasterCreate(512, 512, 32, rwRASTERTYPEZBUFFER);
 }
 
 void PointLightShadow::AddObject(int i, CEntity* entity, float )
@@ -125,7 +127,7 @@ void PointLightShadow::SectorList(CPtrList& ptrList)
 
 				for (size_t j = 0; j < 6; j++)
 				{
-					if (light.GetFrustum(j).Intersects(aabb))
+					if (light->GetFrustum(j).Intersects(aabb))
 					{
 						AddObject(i, entity, distance);
 					}
@@ -149,7 +151,8 @@ void PointLightShadow::ScanSectorList(int sectorX, int sectorY)
 		//SectorList(repeatSector->m_lists[REPEATSECTOR_OBJECTS]);
 	}
 }
-
+#include "CPointLights.h"
+#include "CCamera.h"
 #include "CTimeCycle.h"
 void PointLightShadow::Update()
 {
@@ -179,20 +182,28 @@ void PointLightShadow::Update()
 	RWSRCGLOBAL(curCamera) = Scene.m_pRwCamera;
 	for (size_t i = 0; i < gLightManager.GetPointLightCount(); i++)
 	{
+		PointLight* data = gLightManager.GetPointLightAt(i);
 
-		auto data = gLightManager.GetPointLightAt(i);
+		CVector camPos = TheCamera.GetPosition();
+		float visibleRadius = 30.0;
+		CVector dx = CVector(data->GetPosition().x, data->GetPosition().y, data->GetPosition().z) - camPos;
+		float intensity = 1.0;
+
+		if (dx.Magnitude() > visibleRadius)
+			continue;
 
 		gRenderState = stageCascadeShadow;
 
-		_rwD3D9SetPixelShaderConstant(1, &data.GetPosition(), 1);
-
+		_rwD3D9SetPixelShaderConstant(1, &data->GetPosition(), 1);
 		_rwD3D9SetPixelShaderConstant(2, &CTimeCycle::m_CurrentColours.m_fFarClip, 1);
+		gLightManager.mPointLightList[i].mShadowRaster = mColorRaster[i];
+
 
 		for (size_t j = 0; j < 6; j++)
 		{
-			m_viewMatrix[i] = data.GetViewMatrix(j);
-			m_projectionMatrix[i] = data.GetProjection();
-			
+			m_viewMatrix[i] = data->GetViewMatrix(j);
+			m_projectionMatrix[i] = data->GetProjection();
+				
 			_rwD3D9CubeRasterSelectFace(mColorRaster[i], j);
 			RwD3D9SetRenderTarget(0, mColorRaster[i]);
 			rwD3D9SetDepthStencil(mDepthRaster);
@@ -200,8 +211,8 @@ void PointLightShadow::Update()
 			D3DVIEWPORT9 viewport;
 			viewport.X = 0;
 			viewport.Y = 0;
-			viewport.Width = mColorRaster[i]->width;
-			viewport.Height = mColorRaster[i]->height;
+			viewport.Width = 512;
+			viewport.Height = 512;
 			viewport.MinZ = 0;
 			viewport.MaxZ = 1;
 			RwD3DDevice->SetViewport(&viewport);
@@ -223,15 +234,15 @@ void PointLightShadow::Update()
 	RWSRCGLOBAL(curCamera) = NULL;
 }
 
-void PointLightShadow::RenderEntities(PointLight light, int i, int j)
+void PointLightShadow::RenderEntities(PointLight* light, int i, int j)
 {
-	RwRenderStateSet(rwRENDERSTATEVERTEXALPHAENABLE, (void*)TRUE);
-	RwRenderStateSet(rwRENDERSTATECULLMODE, (void*)rwCULLMODECULLNONE);
-	if (!CGame::currArea)
-		RwRenderStateSet(rwRENDERSTATEALPHATESTFUNCTIONREF, (void*)140);
+	//RwRenderStateSet(rwRENDERSTATEVERTEXALPHAENABLE, (void*)TRUE);
+	//RwRenderStateSet(rwRENDERSTATECULLMODE, (void*)rwCULLMODECULLNONE);
+	//if (!CGame::currArea)
+	//	RwRenderStateSet(rwRENDERSTATEALPHATESTFUNCTIONREF, (void*)140);
 
-	RwRenderStateSet(rwRENDERSTATEZWRITEENABLE, (void*)TRUE);
-	RwRenderStateSet(rwRENDERSTATEZTESTENABLE, (void*)TRUE);
+	//RwRenderStateSet(rwRENDERSTATEZWRITEENABLE, (void*)TRUE);
+	//RwRenderStateSet(rwRENDERSTATEZTESTENABLE, (void*)TRUE);
 
 	for (auto entity : m_renderableList[0])
 	{
@@ -258,7 +269,7 @@ void PointLightShadow::RenderEntities(PointLight light, int i, int j)
 		Math::AABB aabb(min, max);
 		aabb.Transform(world);
 
-		if (light.GetFrustum(j).Intersects(aabb))
+		if (light->GetFrustum(j).Intersects(aabb))
 
 		{
 			if (entity->m_nType == ENTITY_TYPE_PED)

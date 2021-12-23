@@ -67,6 +67,90 @@ static float2 pcfOffsets[8] =
     { 0, -1 }
 };
 
+
+// GGX/Towbridge-Reitz normal distribution function.
+// Uses Disney's reparametrization of alpha = roughness^2.
+float ndfGGX(float cosLh, float roughness)
+{
+    float alpha = roughness * roughness;
+    float alphaSq = alpha * alpha;
+
+    float denom = (cosLh * cosLh) * (alphaSq - 1.0) + 1.0;
+    return alphaSq / (PI * denom * denom);
+}
+
+// Single term for separable Schlick-GGX below.
+float gaSchlickG1(float cosTheta, float k)
+{
+    return cosTheta / (cosTheta * (1.0 - k) + k);
+}
+
+// Schlick-GGX approximation of geometric attenuation function using Smith's method.
+float gaSchlickGGX(float cosLi, float cosLo, float roughness)
+{
+    float r = roughness + 1.0;
+    float k = (r * r) / 8.0; // Epic suggests using this roughness remapping for analytic lights.
+    return gaSchlickG1(cosLi, k) * gaSchlickG1(cosLo, k);
+}
+
+// Shlick's approximation of the Fresnel factor.
+float3 fresnelSchlick(float3 F0, float cosTheta)
+{
+    return F0 + (1.0 - F0) * pow(1.0 - cosTheta, 5.0);
+}
+
+
+float3 CalculateLighing(float3 albedo, float3 normal, float3 lightPosition, float3 viewDir, float roughness, float specularIntensity)
+{
+    // Outgoing light direction (vector from world-space fragment position to the "eye").
+    float3 Lo = viewDir;
+
+	// Get current fragment's normal and transform to world space.
+    float3 N = normal;
+	
+	// Angle between surface normal and outgoing light direction.
+    float cosLo = max(0.0, dot(N, Lo));
+		
+	// Specular reflection vector.
+    float3 Lr = 2.0 * cosLo * N - Lo;
+    
+    float metalness = 0.1;
+    const float3 Fdielectric = 0.04;
+	// Fresnel reflectance at normal incidence (for metals use albedo color).
+    float3 F0 = lerp(Fdielectric, albedo, metalness);
+
+    // Half-vector between Li and Lo.
+    float3 Lh = normalize(lightPosition + Lo);
+
+		// Calculate angles between surface normal and various light vectors.
+    float cosLi = max(0.0, dot(N, lightPosition));
+    float cosLh = max(0.0, dot(N, Lh));
+
+		// Calculate Fresnel term for direct lighting. 
+    float3 F = fresnelSchlick(F0, max(0.0, dot(Lh, Lo)));
+		// Calculate normal distribution for specular BRDF.
+    float D = ndfGGX(cosLh, roughness);
+		// Calculate geometric attenuation for specular BRDF.
+    float G = gaSchlickGGX(cosLi, cosLo, roughness);
+
+		// Diffuse scattering happens due to light being refracted multiple times by a dielectric medium.
+		// Metals on the other hand either reflect or absorb energy, so diffuse contribution is always zero.
+		// To be energy conserving we must scale diffuse BRDF contribution based on Fresnel factor & metalness.
+    float3 kd = lerp(float3(1, 1, 1) - F, float3(0, 0, 0), metalness);
+
+		// Lambert diffuse BRDF.
+		// We don't scale by 1/PI for lighting & material units to be more convenient.
+		// See: https://seblagarde.wordpress.com/2012/01/08/pi-or-not-to-pi-in-game-lighting-equation/
+    float3 diffuseBRDF = kd  * LightColor * LightIntensity;
+
+		// Cook-Torrance specular microfacet BRDF.
+    float3 specularBRDF = (F * D * G) / max(0.00001, 4.0 * cosLi * cosLo) * specularIntensity;
+   
+    return (diffuseBRDF + specularBRDF) * cosLi;
+}
+
+
+
 float4 main(float2 texCoord : TEXCOORD0) : COLOR
 {
     float4 Parameters = TEXTURE2D_MATERIALPROPS(texCoord);
@@ -96,10 +180,13 @@ float4 main(float2 texCoord : TEXCOORD0) : COLOR
     float minCos = cos(radians(LightConeAngle));
     float maxCos = lerp(minCos, 1, 0.9f);
     float cosAngle = dot(LightDirection, -lightPos);
-
+    float distance = length(worldPosition - LightPosition);
+    
+    float attenuation = pow(clamp(1 - pow((distance / LightRadius), 4.0), 0.0, 1.0), 2.0) / (1.0 + (distance * distance));
+    
     atten *= smoothstep(minCos, maxCos, cosAngle);
     
-    float fSpot = SpotLightIntensity(max(dot(-lightPos, LightDirection), 0.0f), PI / 3.0f, PI / 6.0f); //pow(, 4.0f);
+    float fSpot = SpotLightIntensity(max(dot(-lightPos, LightDirection), 0.0f), radians(60), radians(30)); //pow(, 4.0f);
     //atten *= fSpot;
     //atten *= 0.5;
     
@@ -129,14 +216,14 @@ float4 main(float2 texCoord : TEXCOORD0) : COLOR
     float DiffuseTerm, SpecularTerm;
     CalculateDiffuseTerm_ViewDependent(normal, lightPos.xyz, -ViewDir, DiffuseTerm, Roughness);
     CalculateSpecularTerm(normal, lightPos.xyz, -ViewDir, Roughness, SpecularTerm);
+    float3 albedo = TEXTURE2D_ALBEDO(texCoord).rgb;
 
-    //if (dot(-lightPos, LightDirection) > 0.9917) // Light must face the pixel (within Theta)  
-    //    FinalDiffuseTerm += shadow ;
-    //else
-        FinalDiffuseTerm += DiffuseTerm * atten * s * LightColor * LightIntensity;
+    color.xyz = atten * s * CalculateLighing(albedo, normal, lightPos, -ViewDir, Roughness, SpecIntensity);
+
+    FinalDiffuseTerm += DiffuseTerm * atten * s * LightColor * LightIntensity;
    
-    FinalSpecularTerm += SpecularTerm * atten * SpecIntensity;
+    FinalSpecularTerm += SpecularTerm * atten * s * SpecIntensity;
     float4 Lighting = float4(FinalDiffuseTerm, FinalSpecularTerm);
-    color.xyzw = Lighting;
+  //  color.xyzw = Lighting;
     return color;
 }

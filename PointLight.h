@@ -2,9 +2,14 @@
 #include "CommonD.h"
 #include "Frustum.h"
 #include "BoundingSphere.h"
+
 class PointLight
 {
 public:
+	PointLight();
+	PointLight(int width, int height);
+	~PointLight();
+
 	void SetMatrix(XMMATRIX matrix);
 	void SetColor(XMFLOAT3 color);
 	void SetPosition(XMFLOAT3 position);
@@ -23,6 +28,7 @@ public:
 	XMMATRIX GetWorld();
 	void Update();
 	float mPriority;
+	 RwRaster *mShadowRaster;
 private:
 	Math::BoundingSphere mSphere;
 

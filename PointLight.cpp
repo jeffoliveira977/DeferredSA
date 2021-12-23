@@ -1,5 +1,35 @@
 #include "PointLight.h"
 
+ //RwRaster* PointLight::mShadowRaster[60];
+
+PointLight::PointLight()
+{
+	
+	//mShadowRaster = nullptr;
+}
+
+PointLight::PointLight(int width, int height)
+{
+	//mShadowRaster = RwD3D9RasterCreate(width, height, D3DFMT_G32R32F, rwRASTERTYPECAMERATEXTURE);
+	// rwD3D9CubeRasterCreate(mShadowRaster, D3DFMT_G32R32F, 1);
+}
+
+PointLight::~PointLight()
+{
+	//if (mShadowRaster == nullptr)
+	//	return;
+
+	//RwRasterDestroy(mShadowRaster);
+
+	//std::ofstream myfile;
+	//myfile.open("example2.txt");
+	//myfile << "Writing this to a file.\n";
+	//myfile << "Writing this to a file.\n";
+	//myfile << "Writing this to a file.\n";
+	//myfile << "Writing this to a file.\n";
+	//myfile.close();
+}
+
 void PointLight::SetMatrix(XMMATRIX matrix)
 {
 }
@@ -123,32 +153,32 @@ void PointLight::Update()
 		case D3DCUBEMAP_FACE_POSITIVE_X:
 			lookAt = g_XMIdentityR0;
 			up = g_XMIdentityR1;
-			mView[i] = XMMatrixLookAtRH(mDirection, mDirection + g_XMIdentityR0, -g_XMIdentityR1);
+			mView[i] = XMMatrixLookAtRH(mPosition, mPosition + g_XMIdentityR0, -g_XMIdentityR1);
 			break;
 		case D3DCUBEMAP_FACE_NEGATIVE_X:
 			lookAt = -g_XMIdentityR0;
 			up = g_XMIdentityR1;
-			mView[i] = XMMatrixLookAtRH(mDirection, mDirection + -g_XMIdentityR0, -g_XMIdentityR1);
+			mView[i] = XMMatrixLookAtRH(mPosition, mPosition + -g_XMIdentityR0, -g_XMIdentityR1);
 			break;
 		case D3DCUBEMAP_FACE_POSITIVE_Y:
 			lookAt = g_XMIdentityR1;
 			up = -g_XMIdentityR2;
-			mView[i] = XMMatrixLookAtRH(mDirection, mDirection + g_XMIdentityR1, g_XMIdentityR2);
+			mView[i] = XMMatrixLookAtRH(mPosition, mPosition + -g_XMIdentityR1, -g_XMIdentityR2);
 			break;
 		case D3DCUBEMAP_FACE_NEGATIVE_Y:
 			lookAt = -g_XMIdentityR1;
 			up = g_XMIdentityR2;
-			mView[i] = XMMatrixLookAtRH(mDirection, mDirection + -g_XMIdentityR1, -g_XMIdentityR2);
+			mView[i] = XMMatrixLookAtRH(mPosition, mPosition + g_XMIdentityR1, g_XMIdentityR2);
 			break;
 		case D3DCUBEMAP_FACE_POSITIVE_Z:
 			lookAt = g_XMIdentityR2;
 			up = g_XMIdentityR1;
-			mView[i] = XMMatrixLookAtRH(mDirection, mDirection + g_XMIdentityR2, -g_XMIdentityR0);
+			mView[i] = XMMatrixLookAtRH(mPosition, mPosition + g_XMIdentityR2, -g_XMIdentityR1);
 			break;
 		case D3DCUBEMAP_FACE_NEGATIVE_Z:
 			lookAt = -g_XMIdentityR2;
 			up = g_XMIdentityR1;
-			mView[i] = XMMatrixLookAtRH(mDirection, mDirection + -g_XMIdentityR2, -g_XMIdentityR1);
+			mView[i] = XMMatrixLookAtRH(mPosition, mPosition + -g_XMIdentityR2, -g_XMIdentityR1);
 			break;
 		}
 		//mView[i] = XMMatrixLookAtRH(mPosition, lookAt, up);
