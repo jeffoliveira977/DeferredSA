@@ -244,6 +244,28 @@ inline void DecodeDepthNormal(float2 texCoord, float farPlane, out float depth, 
     depth = depth <= 0.0 ? farPlane : depth;
 }
 
+float3 GetFrustumRay(in float2 texCoord, float3 frustumCorners[4])
+{
+    float index = texCoord.x + (texCoord.y * 2);
+    return frustumCorners[index];
+}
+
+float2 PostProjectionSpaceToScreenSpace(float4 pos)
+{
+    float2 screenPos = pos.xy / pos.w;
+    return (0.5f * (float2(screenPos.x, -screenPos.y) + 1));
+}
+
+half2 EncodeNormal(half3 n)
+{
+    float kScale = 1.7777;
+    float2 enc;
+    enc = n.xy / (n.z + 1);
+    enc /= kScale;
+    enc = enc * 0.5 + 0.5;
+    return enc;
+}
+
 inline float4 EncodeDepthNormal(float depth, float3 normal)
 {
     return float4(BiasD(normal.xy), EncodeFloatRG(depth));
@@ -278,6 +300,21 @@ float3 DepthToWorldPos(float depth, float2 texCoord, float4x4 projection, float4
     float4 pos = DepthToViewPos(depth, texCoord, projection);
     pos = mul(pos, viewInverse);
     return pos.xyz;
+}
+
+float3 WSPositionFromDepth(float2 vTexCoord, float depth, float4x4 gmInvViewProj)
+{
+
+    // Get the depth value for this pixel
+    float z = depth;
+    // Get x/w and y/w from the viewport position
+    float x = vTexCoord.x * 2 - 1;
+    float y = (1 - vTexCoord.y) * 2 - 1;
+    float4 vProjectedPos = float4(x, y, z, 1.0f);
+    // Transform by the inverse projection matrix
+    float4 vPositionVS = mul(gmInvViewProj, vProjectedPos);
+    // Divide by w to get the view-space position
+    return vPositionVS.xyz / vPositionVS.w;
 }
 
 float Fresnel(float3 normal, float3 view, float bias, float scale, float power)

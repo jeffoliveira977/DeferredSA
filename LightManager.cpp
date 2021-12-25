@@ -19,7 +19,7 @@ void CPointLights__AddLight(unsigned char, XMFLOAT3 point, XMFLOAT3 direction, f
 	//	direction.z += 4.0;
 	
 	CVector camPos = TheCamera.GetPosition();
-	float visibleRadius = 70.0;
+	float visibleRadius = 80.0;
 	CVector dx = CVector(point.x, point.y, point.z) - camPos;
 	float intensity = 4.0;
 
@@ -39,7 +39,7 @@ void AddVehicleSpotLight(CVehicle* vehicle)
 	CVector headlightPos = pModelinfo->m_pVehicleStruct->m_avDummyPos[0];
 
 	CVector camPos = TheCamera.GetPosition();
-	float visibleRadius = 250.0;
+	float visibleRadius = 100.0;
 	CVector dx = vehicle->GetPosition() - camPos;
 
 	if (dx.Magnitude() >= visibleRadius)
@@ -120,8 +120,8 @@ void LightManager::Hook()
 		gLightManager.ClearLights();
 
 		auto coors = FindPlayerCoors(0);
-		PrintMessage("%f %f %f", coors.x, coors.y, coors.z);
-		//gLightManager.AddPointLight({ coors.x,coors.y,coors.z+2.0f }, {0.32, 0.8, 0.5}, { 1, 1, 1 }, 10.0f, 1);
+		//PrintMessage("%f %f %f", coors.x, coors.y, coors.z);
+		gLightManager.AddPointLight({ coors.x,coors.y,coors.z+2.0f }, {0.32, 0.8, 0.5}, { 1, 1, 1 }, 10.0f, 1);
 
 		auto pool = CPools::ms_pVehiclePool;
 		for (int i = 0; i < pool->m_nSize; ++i)
@@ -163,7 +163,7 @@ void LightManager::SortLights()
 		mPointLightList[index].mPriority = 1000.0f * mPointLightList[index]. GetRadius() / std::max(1.0f, sqrDistanceToCam);
 	}
 
-	std::sort(&mPointLightList[0], &mPointLightList[29], [&](PointLight a, PointLight b)
+	std::sort(&mPointLightList[0], &mPointLightList[30], [&](PointLight a, PointLight b)
 	{
 			return (b.mPriority < a.mPriority);
 	});

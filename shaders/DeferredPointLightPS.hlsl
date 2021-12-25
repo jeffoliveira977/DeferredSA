@@ -24,7 +24,8 @@ float3 LightDirection : register(c10);
 float3 LightColor : register(c11);
 float LightRadius : register(c12);
 float LightIntensity : register(c13);
-float4x4 ShadowMatrix : register(c14);
+float3 frustumCorners[4] : register(c14);
+row_major float4x4 matProj : register(c18);
 samplerCUBE SamplerShadow : register(s5);
 
 float CalculateAttenuation(float Range, float dis, float d)
@@ -96,7 +97,7 @@ float3 fresnelSchlick(float3 F0, float cosTheta)
 }
 
 
-float3 CalculateLighing(float3 albedo, float3 normal, float3 lightPosition, float3 viewDir, float roughness, float metallicness)
+void CalculateLighing(float3 albedo, float3 normal, float3 lightPosition, float3 viewDir, float roughness, float metallicness, out float3 diffuse, out float3 specular)
 {
     // Outgoing light direction (vector from world-space fragment position to the "eye").
     float3 Lo = viewDir;
@@ -144,17 +145,38 @@ float3 CalculateLighing(float3 albedo, float3 normal, float3 lightPosition, floa
 	// Cook-Torrance specular microfacet BRDF.
     float3 specularBRDF = (F * D * G) / max(0.00001, 4.0 * cosLi * cosLo) * metallicness;
    
-    return (diffuseBRDF + specularBRDF) * cosLi;
+    diffuse = diffuseBRDF * cosLi;
+    specular = specularBRDF * cosLi;
+    //return (diffuseBRDF + specularBRDF) * cosLi;
 }
 
-float4 main(float2 texCoord : TEXCOORD0) : COLOR
+float chebyshevUpperBound(float2 moments, float distance)
+{
+
+		
+		// Surface is fully lit. as the current fragment is before the light occluder
+    //if (distance <= moments.x)
+    //    return 1.0;
+	
+		// The fragment is either in shadow or penumbra. We now use chebyshev's upperBound to check
+		// How likely this pixel is to be lit (p_max)
+    float variance = moments.y - (moments.x * moments.x);
+    variance = max(variance, 0.00002);
+	
+    float d = distance - moments.x;
+    float p_max = variance / (variance + d * d);
+	
+    return p_max;
+}
+float4 main(float2 texCoord : TEXCOORD0, float2 vpos : VPOS) : COLOR
 {
     float3 albedo = TEXTURE2D_ALBEDO(texCoord).rgb;
     float4 Parameters = TEXTURE2D_MATERIALPROPS(texCoord);
     float metallicness = Parameters.x;
     float Roughness = 1 - Parameters.y;
     
-
+    float2 g_fInverseViewportDimensions = {1/ 1920.0f, 1/1080.0f };
+    texCoord = vpos * g_fInverseViewportDimensions.xy + g_fInverseViewportDimensions.xy * 0.5;
     float depth;
     float3 normal;
     DecodeDepthNormal(texCoord, FarClip, depth, normal);
@@ -162,55 +184,76 @@ float4 main(float2 texCoord : TEXCOORD0) : COLOR
     
     float3 worldPosition;
     WorldPositionFromDepth(texCoord, depth, ProjectionMatrix, InverseViewMatrix, worldPosition);
+   // worldPosition = WSPositionFromDepth(texCoord,depth,  matProj);
+    
     float3 ViewDir = normalize(worldPosition.xyz - InverseViewMatrix[3].xyz);
 
     float4 color = 0;
    
-    float3 lightPos = normalize(LightPosition.xyz-worldPosition.xyz);
-    float dirLen = length(worldPosition - LightPosition);
+
+    //if (Parameters.w != 3)
+     //   worldPosition.xyz = wpos.xyz;
+    
+    float3 lightPos = normalize(worldPosition.xyz-LightPosition.xyz);
+    
+    
+    
+    float dirLen = length(worldPosition-LightPosition);
     
     float s2 = 0.2f;
     float atten = 1.0f - smoothstep(LightRadius * s2, LightRadius, dirLen);
     atten = 1.0f - pow(saturate(dirLen / LightRadius), 2);
        
 
-    float3 ldir = LightPosition.xyz - worldPosition.xyz;
+    float3 ldir = normalize(worldPosition.xyz - LightPosition.xyz);
     ldir.y*= -1.0;
 
     // shadow term
-    float2 sd = texCUBE(SamplerShadow, -normalize(ldir)).rg;
-    float d = length(ldir);
+    float2 sd = texCUBE(SamplerShadow, ldir).rg;
+    bool outsideShadowMap = (sd.x < 0 || sd < 0) || (sd.x >= 1 || sd.y >= 1);
+    float projectedDepth = max(max(abs(LightPosition.x), abs(LightPosition.y)), abs(LightPosition.z));
+  //  sd = ComputeMoments(sd.x);
+    float t = ChebyshevUpperBound(sd, dirLen);
+
+  //  t =ReduceLightBleeding(t, 0.001f);
+    float d = dirLen;
 
     float mean = sd.x;
-  //  mean *= FarClip;
-    float variance = max(sd.y - sd.x * sd.x, 0.0002f);
+   // mean *= FarClip;
+    float variance = max(sd.y - sd.x * sd.x, 0.0);
 
     float md = mean - d;
     float pmax = variance / (variance + md * md);
 
-    float t = max(d <= mean, pmax);
-    float s = ((sd.x < 0.001f) ? 1.0f : t);
+    float ts = max(d <= mean, pmax);
+    float s = ((sd.y < 0.001f) ? 1.0f : ts);
 
-    s = saturate(s);
+    //s = saturate(s);
 
-    float4 LightViewPos = mul(float4(worldPosition, 1.0), ShadowMatrix);
-    float currentDepth = length(LightPosition.xyz - worldPosition.xyz);
-    
-    
+
+    float currentDepth = dirLen ;
+
     // test for shadows
-    float bias = 0.00005; // we use a much larger bias since depth is now in [near_plane, far_plane] range
-    float shadow = mean + bias < LightViewPos.z / LightViewPos.w ? 1.0 : 0.0;
-    float3 ToLight = LightPosition-worldPosition.xyz;
-    float DistToLight = length(ToLight);
-    float DistToLightNorm = 1.0 - saturate(DistToLight * (1.0f / LightRadius));
-    float Attn = DistToLightNorm * DistToLightNorm;
-    Attn = attenuate(LightPosition.xyz - worldPosition.xyz, LightRadius);
+    float bias = 0.05;
+    float shadow = currentDepth - bias < mean ? 0.0 : 1.0;
+       vec3 direction = LightPosition-worldPosition;
+    float vertexDepth = clamp(length(direction), 0.0, 1.0);
+    float shadowMapDepth = mean +bias;
+
+  //  float(projectedDepth > shadowMapDepth) ? 1 : 0.0;
     
     float Attenuation = 1.0f - pow(saturate(dirLen / LightRadius), 2);
     Attenuation *= Attenuation;
     
-    		// Total contribution for this light.
-    color.xyz = Attenuation *s* CalculateLighing(albedo, normal, lightPos, -ViewDir, Roughness, metallicness);
+    float3 Diff, Spec;
+    CalculateLighing(albedo, normal, -lightPos, -ViewDir, Roughness, metallicness, Diff, Spec);
+    
+    // Total contribution for this light.
+    
+   // shadow = !outsideShadowMap ? shadow : 1.0f;
+    
+    color.xyz = Attenuation * s * Diff;
+    color.w = Attenuation * s * Spec;
    
     return color;
     float3 FinalDiffuseTerm = float3(0, 0, 0);

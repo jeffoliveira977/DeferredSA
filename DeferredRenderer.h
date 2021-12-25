@@ -27,7 +27,7 @@ public:
 
 	unique_ptr<RenderTarget> mScreenRT;
 	unique_ptr<RenderTarget> mGraphicsLight;
-	unique_ptr<RenderTarget> mGraphicsBuffer[4];
+	unique_ptr<RenderTarget> mGraphicsBuffer[5];
 
 	void Start();
 	void Stop();

@@ -131,8 +131,8 @@ void SkinnedMeshPipeline::ShadowRendering(RwResEntry* entry, void* object, RwUIn
 	RwRenderStateSet(rwRENDERSTATEFOGENABLE, FALSE);
 	RwD3D9SetRenderState(D3DRS_ALPHABLENDENABLE, FALSE);
 	RwD3D9SetRenderState(D3DRS_ALPHATESTENABLE, TRUE);
-	RwRenderStateSet(rwRENDERSTATECULLMODE, (void*)rwCULLMODECULLNONE);
-
+	//RwRenderStateSet(rwRENDERSTATECULLMODE, (void*)rwCULLMODECULLNONE);
+//	RwRenderStateSet(rwRENDERSTATECULLMODE, (void*)rwCULLMODECULLFRONT);
 	_rwD3D9SetVertexShader(VS_shadow);
 	_rwD3D9SetPixelShader(PS_shadow);
 
@@ -154,7 +154,7 @@ void SkinnedMeshPipeline::ShadowRendering(RwResEntry* entry, void* object, RwUIn
 
 		hasAlpha = instance->vertexAlpha || matcolor->alpha != 255;
 		//RwRenderStateSet(rwRENDERSTATEVERTEXALPHAENABLE, (void*)hasAlpha);
-		_rwD3D9SetPixelShaderConstant(1, &Scene.m_pRwCamera->farPlane, 1);
+		//_rwD3D9SetPixelShaderConstant(1, &Scene.m_pRwCamera->farPlane, 1);
 
 		D3D9Render(header, instance, texture, flags);
 		instance++;
