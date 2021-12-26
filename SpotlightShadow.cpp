@@ -30,7 +30,7 @@ SpotlightShadow::~SpotlightShadow()
 
 void SpotlightShadow::Initialize()
 {
-	m_nShadowSize = 512.0;
+	m_nShadowSize = 512;
 
 	for (size_t i = 0; i < 30; i++)
 		mColorRaster[i] = RwD3D9RasterCreate(m_nShadowSize, m_nShadowSize, D3DFMT_G32R32F, rwRASTERTYPECAMERATEXTURE);
@@ -169,13 +169,13 @@ void SpotlightShadow::Update()
 
 void SpotlightShadow::RenderEntities(int i)
 {
-	RwRenderStateSet(rwRENDERSTATEVERTEXALPHAENABLE, (void*)TRUE);
+	/*RwRenderStateSet(rwRENDERSTATEVERTEXALPHAENABLE, (void*)TRUE);
 	RwRenderStateSet(rwRENDERSTATECULLMODE, (void*)rwCULLMODECULLNONE);
 	if (!CGame::currArea)
 		RwRenderStateSet(rwRENDERSTATEALPHATESTFUNCTIONREF, (void*)140);
 
 	RwRenderStateSet(rwRENDERSTATEZWRITEENABLE, (void*)TRUE);
-	RwRenderStateSet(rwRENDERSTATEZTESTENABLE, (void*)TRUE);
+	RwRenderStateSet(rwRENDERSTATEZTESTENABLE, (void*)TRUE);*/
 
 	for (auto entity : m_renderableList[i])
 	{

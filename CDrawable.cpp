@@ -88,7 +88,7 @@ void MeshRenderingMode::ShadowRendering(RwResEntry* entry, void* object, RwUInt3
 	//RwRenderStateSet(rwRENDERSTATEFOGENABLE, FALSE);
 	//RwD3D9SetRenderState(D3DRS_ALPHABLENDENABLE, FALSE);
 	//RwD3D9SetRenderState(D3DRS_ALPHATESTENABLE, TRUE);
-	// RwRenderStateSet(rwRENDERSTATECULLMODE, (void*)rwCULLMODECULLNONE);
+	 RwRenderStateSet(rwRENDERSTATECULLMODE, (void*)0);
 	RwRenderStateSet(rwRENDERSTATEZWRITEENABLE, (void*)TRUE);
 	RwRenderStateSet(rwRENDERSTATEZTESTENABLE, (void*)TRUE);
 	_rwD3D9SetVertexShader(VS_shadow);

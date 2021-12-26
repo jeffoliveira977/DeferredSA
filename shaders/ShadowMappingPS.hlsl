@@ -24,11 +24,13 @@ void main(float2 Texcoord : TEXCOORD0,
     float a = tex2D(DiffuseSampler, Texcoord).a;
     clip(a - 0.5);
     
-   // float d = Depth.x / Depth.y;
-   // color = (depth);
+    //float d = Depth.x / Depth.y;
+    //color = depth;
 
     
-    float d = 1 - (length(Depth - lightPos.xyz) / FarClip);
+    float3 p = Depth - lightPos.xyz;
+    p.y *= -1.0;
+    float d = 1 - (length(p) / FarClip);
+    
     color = float4(d, d * d, 0, 1);
-
 }

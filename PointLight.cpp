@@ -56,7 +56,7 @@ void PointLight::SetIntensity(float intensity)
 
 void PointLight::SetRadius(float radius)
 {
-	mRadius = radius;
+	mRadius = max(10.0f, radius);
 }
 
 Math::Frustum PointLight::GetFrustum(int i)
@@ -130,8 +130,6 @@ XMMATRIX PointLight::GetWorld()
 
 void PointLight::Update()
 {
-	mRadius = max(1.0f, mRadius);
-
 	XMStoreFloat3(&mSphere.Center, mDirection);
 	mSphere.Radius = mRadius;
 

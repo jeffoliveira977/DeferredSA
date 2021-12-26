@@ -1,5 +1,6 @@
 #include "FillGBuffer.hlsl"
 
+
 float3 SkyTopColor : register(c0);
 float4 HorizonColor : register(c1);
 float4 MaterialColor : register(c2);

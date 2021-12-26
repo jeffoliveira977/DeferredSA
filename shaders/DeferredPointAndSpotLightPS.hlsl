@@ -169,7 +169,7 @@ float4 main(float2 texCoord : TEXCOORD0) : COLOR
 
     float4 color = 0;
    
-    float3 lightPos = -normalize(worldPosition.xyz - LightPosition.xyz);
+    float3 lightPos = normalize(worldPosition.xyz - LightPosition.xyz);
     float dirLen = length(worldPosition - LightPosition);
     
     float s2 = 1.1f;
@@ -179,14 +179,14 @@ float4 main(float2 texCoord : TEXCOORD0) : COLOR
    // atten = 1.0f - pow(saturate(LightDistance / LightRadius), 2);
     float minCos = cos(radians(LightConeAngle));
     float maxCos = lerp(minCos, 1, 0.9f);
-    float cosAngle = dot(LightDirection, -lightPos);
+    float cosAngle = dot(LightDirection, lightPos);
     float distance = length(worldPosition - LightPosition);
     
     float attenuation = pow(clamp(1 - pow((distance / LightRadius), 4.0), 0.0, 1.0), 2.0) / (1.0 + (distance * distance));
     
     atten *= smoothstep(minCos, maxCos, cosAngle);
     
-    float fSpot = SpotLightIntensity(max(dot(-lightPos, LightDirection), 0.0f), radians(60), radians(30)); //pow(, 4.0f);
+    float fSpot = SpotLightIntensity(max(dot(lightPos, LightDirection), 0.0f), radians(60), radians(30)); //pow(, 4.0f);
     //atten *= fSpot;
     //atten *= 0.5;
     
@@ -214,16 +214,15 @@ float4 main(float2 texCoord : TEXCOORD0) : COLOR
     float3 FinalDiffuseTerm = float3(0, 0, 0);
     float FinalSpecularTerm = 0;
     float DiffuseTerm, SpecularTerm;
-    CalculateDiffuseTerm_ViewDependent(normal, lightPos.xyz, -ViewDir, DiffuseTerm, Roughness);
-    CalculateSpecularTerm(normal, lightPos.xyz, -ViewDir, Roughness, SpecularTerm);
-    float3 albedo = TEXTURE2D_ALBEDO(texCoord).rgb;
+    CalculateDiffuseTerm_ViewDependent(normal, -lightPos.xyz, -ViewDir, DiffuseTerm, Roughness);
+    CalculateSpecularTerm(normal, -lightPos.xyz, -ViewDir, Roughness, SpecularTerm);
+   // float3 albedo = TEXTURE2D_ALBEDO(texCoord).rgb;
 
-    color.xyz = atten * s * CalculateLighing(albedo, normal, lightPos, -ViewDir, Roughness, SpecIntensity);
+   // color.xyz = atten * s * CalculateLighing(albedo, normal, lightPos, -ViewDir, Roughness, SpecIntensity);
 
     FinalDiffuseTerm += DiffuseTerm * atten * s * LightColor * LightIntensity;
-   
     FinalSpecularTerm += SpecularTerm * atten * s * SpecIntensity;
     float4 Lighting = float4(FinalDiffuseTerm, FinalSpecularTerm);
-  //  color.xyzw = Lighting;
+    color.xyzw = Lighting;
     return color;
 }

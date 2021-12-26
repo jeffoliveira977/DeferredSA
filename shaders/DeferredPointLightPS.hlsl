@@ -152,11 +152,9 @@ void CalculateLighing(float3 albedo, float3 normal, float3 lightPosition, float3
 
 float chebyshevUpperBound(float2 moments, float distance)
 {
-
-		
-		// Surface is fully lit. as the current fragment is before the light occluder
-    //if (distance <= moments.x)
-    //    return 1.0;
+    // Surface is fully lit. as the current fragment is before the light occluder
+    if (distance <= moments.x)
+        return 1.0;
 	
 		// The fragment is either in shadow or penumbra. We now use chebyshev's upperBound to check
 		// How likely this pixel is to be lit (p_max)
@@ -165,9 +163,17 @@ float chebyshevUpperBound(float2 moments, float distance)
 	
     float d = distance - moments.x;
     float p_max = variance / (variance + d * d);
-	
+    if(p_max > 0.0)
+        p_max = 0.0;
+    p_max = ((moments.x < 0.001f) ? 1.0f : p_max);
     return p_max;
 }
+
+float lengthSquared(float3 v1)
+{
+    return v1.x * v1.x + v1.y * v1.y + v1.z * v1.z;
+}
+
 float4 main(float2 texCoord : TEXCOORD0, float2 vpos : VPOS) : COLOR
 {
     float3 albedo = TEXTURE2D_ALBEDO(texCoord).rgb;
@@ -205,42 +211,22 @@ float4 main(float2 texCoord : TEXCOORD0, float2 vpos : VPOS) : COLOR
     atten = 1.0f - pow(saturate(dirLen / LightRadius), 2);
        
 
-    float3 ldir = normalize(worldPosition.xyz - LightPosition.xyz);
+    float3 ldir = worldPosition.xyz - LightPosition.xyz;
     ldir.y*= -1.0;
 
     // shadow term
-    float2 sd = texCUBE(SamplerShadow, ldir).rg;
-    bool outsideShadowMap = (sd.x < 0 || sd < 0) || (sd.x >= 1 || sd.y >= 1);
-    float projectedDepth = max(max(abs(LightPosition.x), abs(LightPosition.y)), abs(LightPosition.z));
-  //  sd = ComputeMoments(sd.x);
-    float t = ChebyshevUpperBound(sd, dirLen);
-
-  //  t =ReduceLightBleeding(t, 0.001f);
-    float d = dirLen;
-
-    float mean = sd.x;
-   // mean *= FarClip;
-    float variance = max(sd.y - sd.x * sd.x, 0.0);
-
-    float md = mean - d;
-    float pmax = variance / (variance + md * md);
-
-    float ts = max(d <= mean, pmax);
-    float s = ((sd.y < 0.001f) ? 1.0f : ts);
-
-    //s = saturate(s);
-
-
-    float currentDepth = dirLen ;
-
+    float2 sd = texCUBE(SamplerShadow, normalize(ldir)).rg;
+    float s = chebyshevUpperBound(sd, length(ldir));
+    
+    float currentDepth = dirLen;
+    
+    float shadow = 1;
     // test for shadows
     float bias = 0.05;
-    float shadow = currentDepth - bias < mean ? 0.0 : 1.0;
-       vec3 direction = LightPosition-worldPosition;
-    float vertexDepth = clamp(length(direction), 0.0, 1.0);
-    float shadowMapDepth = mean +bias;
+    float closestDepth = sd.x;
+    closestDepth *= LightRadius;
+    shadow = currentDepth - bias > closestDepth ? 1.0 : 0;
 
-  //  float(projectedDepth > shadowMapDepth) ? 1 : 0.0;
     
     float Attenuation = 1.0f - pow(saturate(dirLen / LightRadius), 2);
     Attenuation *= Attenuation;
@@ -250,19 +236,33 @@ float4 main(float2 texCoord : TEXCOORD0, float2 vpos : VPOS) : COLOR
     
     // Total contribution for this light.
     
-   // shadow = !outsideShadowMap ? shadow : 1.0f;
+    float DistanceSq = lengthSquared(worldPosition.xyz - LightPosition.xyz);
+    float radius = LightRadius;
+    //[branch]
+   // if (dirLen < abs(radius * radius))
+    //{
+        float Distance = sqrt(dirLen);
+
+
+        float du = Distance / (1 - dirLen / (radius * radius - 1));
+
+        float denom = du / abs(radius) + 1;
+
+            //The attenuation is the falloff of the light depending on distance basically
+      //  Attenuation = 1 / (denom * denom);
     
-    color.xyz = Attenuation * s * Diff;
-    color.w = Attenuation * s * Spec;
-   
+        color.xyz = (1 - Attenuation) * (shadow) * Diff;
+        color.w = (1 - Attenuation) * (shadow) * Spec;
+   // }
+    
     return color;
     float3 FinalDiffuseTerm = float3(0, 0, 0);
     float FinalSpecularTerm = 0;
     float DiffuseTerm, SpecularTerm;
     CalculateDiffuseTerm_ViewDependent(normal, lightPos.xyz, ViewDir, DiffuseTerm, Roughness);
     CalculateSpecularTerm(normal, lightPos.xyz, ViewDir, Roughness, SpecularTerm);
-    FinalDiffuseTerm += DiffuseTerm * Attenuation * s * LightColor * LightIntensity;
-    FinalSpecularTerm += SpecularTerm * Attenuation * s * metallicness;
+    FinalDiffuseTerm += DiffuseTerm * Attenuation * shadow * LightColor * LightIntensity;
+    FinalSpecularTerm += SpecularTerm * Attenuation * shadow * metallicness;
     //FinalDiffuseTerm += SpecularTerm * s * Attn * metallicness;
     float4 Lighting = float4(FinalDiffuseTerm, FinalSpecularTerm);
     color.xyzw = Lighting;

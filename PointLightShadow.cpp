@@ -31,7 +31,7 @@ PointLightShadow::~PointLightShadow()
 }
 void PointLightShadow::Initialize()
 {
-	m_nShadowSize = 1024;
+	m_nShadowSize = 512;
 
 	for (size_t i = 0; i < 30; i++)
 	{
@@ -194,9 +194,9 @@ void PointLightShadow::Update()
 
 
 		gRenderState = stageCascadeShadow;
-
+		auto radius = data->GetRadius();
 		_rwD3D9SetPixelShaderConstant(1, &data->GetPosition(), 1);
-		_rwD3D9SetPixelShaderConstant(2, &Scene.m_pRwCamera->farPlane, 1);
+		_rwD3D9SetPixelShaderConstant(2, &radius, 1);
 		gLightManager.mPointLightList[i].mShadowRaster = mColorRaster[i];
 
 
