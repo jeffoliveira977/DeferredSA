@@ -23,7 +23,7 @@ public:
 	void SetInverseProjectionMatrix(int idx, bool vs = false);
 	void SetProjectionMatrix(int idx, bool vs = false);
 	void SetViewProjectionMatrix(int idx, bool vs = false);
-	void SetInverseViewProjectionMatrix();
+	void SetInverseViewProjectionMatrix(int idx, bool vs);
 	void Update();
 };
 

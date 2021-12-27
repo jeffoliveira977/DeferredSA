@@ -124,6 +124,8 @@ float4 main(float2 texCoord : TEXCOORD0, float2 vpos:VPOS) : COLOR
     float depth;
     float3 normal;
     DecodeDepthNormal(texCoord, fogData.y, depth, normal);
+   
+
    // normal = normalize(normal);
    // normal = mul(normal, (float3x3) ViewInverseMatrix);
         

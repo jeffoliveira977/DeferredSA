@@ -8,7 +8,7 @@
 
 row_major float4x4 InverseViewMatrix : register(c0);
 row_major float4x4 ProjectionMatrix : register(c4);
-float FarClip : register(c8);
+float2 FarClip : register(c8);
 
 struct LightData
 {
@@ -24,8 +24,7 @@ float3 LightDirection : register(c10);
 float3 LightColor : register(c11);
 float LightRadius : register(c12);
 float LightIntensity : register(c13);
-float3 frustumCorners[4] : register(c14);
-row_major float4x4 matProj : register(c18);
+row_major float4x4 matProj : register(c14);
 samplerCUBE SamplerShadow : register(s5);
 
 float CalculateAttenuation(float Range, float dis, float d)
@@ -174,25 +173,31 @@ float lengthSquared(float3 v1)
     return v1.x * v1.x + v1.y * v1.y + v1.z * v1.z;
 }
 
-float4 main(float2 texCoord : TEXCOORD0, float2 vpos : VPOS) : COLOR
+float4 main(float3 ViewRay : TEXCOORD2, float2 texCoord : TEXCOORD0, float3 frustumRay : TEXCOORD1) : COLOR
 {
     float3 albedo = TEXTURE2D_ALBEDO(texCoord).rgb;
     float4 Parameters = TEXTURE2D_MATERIALPROPS(texCoord);
     float metallicness = Parameters.x;
     float Roughness = 1 - Parameters.y;
-    
-    float2 g_fInverseViewportDimensions = {1/ 1920.0f, 1/1080.0f };
-    texCoord = vpos * g_fInverseViewportDimensions.xy + g_fInverseViewportDimensions.xy * 0.5;
+
     float depth;
     float3 normal;
-    DecodeDepthNormal(texCoord, FarClip, depth, normal);
+    DecodeDepthNormal(texCoord, FarClip.y, depth, normal);
    // normal = mul(normal, (float3x3) InverseViewMatrix);
-    
+
     float3 worldPosition;
     WorldPositionFromDepth(texCoord, depth, ProjectionMatrix, InverseViewMatrix, worldPosition);
-   // worldPosition = WSPositionFromDepth(texCoord,depth,  matProj);
+
+    //clip(depth + 0.9999f);
     
-    float3 ViewDir = normalize(worldPosition.xyz - InverseViewMatrix[3].xyz);
+    float4 depthNormal = TEXTURE2D_DEPTHNORMAL(texCoord);
+    depth = DecodeFloatRG(depthNormal.zw, FarClip.y);
+    
+   //depth = Parameters.z;
+    float linearDepth = (depth - FarClip.x) / (FarClip.y - FarClip.x);
+    worldPosition = InverseViewMatrix[3].xyz + linearDepth * frustumRay;
+    //worldPosition = mul(float4(worldPosition, 1.0f),  InverseViewMatrix).xyz;
+    float3 ViewDir = normalize(linearDepth * frustumRay);
 
     float4 color = 0;
    
@@ -234,25 +239,9 @@ float4 main(float2 texCoord : TEXCOORD0, float2 vpos : VPOS) : COLOR
     float3 Diff, Spec;
     CalculateLighing(albedo, normal, -lightPos, -ViewDir, Roughness, metallicness, Diff, Spec);
     
-    // Total contribution for this light.
-    
-    float DistanceSq = lengthSquared(worldPosition.xyz - LightPosition.xyz);
-    float radius = LightRadius;
-    //[branch]
-   // if (dirLen < abs(radius * radius))
-    //{
-        float Distance = sqrt(dirLen);
 
-
-        float du = Distance / (1 - dirLen / (radius * radius - 1));
-
-        float denom = du / abs(radius) + 1;
-
-            //The attenuation is the falloff of the light depending on distance basically
-      //  Attenuation = 1 / (denom * denom);
-    
-        color.xyz = (1 - Attenuation) * (shadow) * Diff;
-        color.w = (1 - Attenuation) * (shadow) * Spec;
+    color.xyz = (Attenuation) * (shadow) * Diff;
+    color.w = (Attenuation) * (shadow) * Spec;
    // }
     
     return color;

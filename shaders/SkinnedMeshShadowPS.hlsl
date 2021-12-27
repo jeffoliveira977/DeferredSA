@@ -40,7 +40,7 @@ float4 main(PS_input input) : COLOR
   //  return color;
     
     float3 p = input.World - lightPos.xyz;
-    p.y *= -1.0;
-    float d = 1 - (length(p) / FarClip);
+   // p.y *= -1.0;
+    float d = 1 -(length(p) / FarClip);
     return float4(d, d*d, 0, 1);
 }

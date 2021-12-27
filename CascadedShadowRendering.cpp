@@ -8,7 +8,7 @@
 #include "CGameIdle.h"
 #include "ShaderManager.h"
 #include "ShadowCaster.h"
-#include "imgui.h"
+#include "imgui/imgui.h"
 
 #define MINI_CASE_SENSITIVE
 #include "mini/ini.h"

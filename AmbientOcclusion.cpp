@@ -1,7 +1,7 @@
 #include "AmbientOcclusion.h"
 #include "Quad.h"
 #include "CScene.h"
-#include "imgui.h"
+#include "imgui/imgui.h"
 
 AmbientOcclusion::AmbientOcclusion()
 {

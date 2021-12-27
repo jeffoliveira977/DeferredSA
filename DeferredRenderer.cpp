@@ -40,12 +40,12 @@ void DeferredRendering::Initialize()
 	mScreenRT = unique_ptr<RenderTarget>(new RenderTarget(D3DFMT_A8R8G8B8));
 	mScreenRT->Initialize();
 
-	mGraphicsLight = unique_ptr<RenderTarget>(new RenderTarget(D3DFMT_A16B16G16R16F));
+	mGraphicsLight = unique_ptr<RenderTarget>(new RenderTarget(D3DFMT_A32B32G32R32F));
 	mGraphicsLight->Initialize();
 
 	for(size_t i = 0; i < 4; i++)
 	{
-		mGraphicsBuffer[i] = unique_ptr<RenderTarget>(new RenderTarget(D3DFMT_A16B16G16R16F));
+		mGraphicsBuffer[i] = unique_ptr<RenderTarget>(new RenderTarget(D3DFMT_A32B32G32R32F));
 		mGraphicsBuffer[i]->Initialize();
 	}
 
@@ -78,8 +78,7 @@ void DeferredRendering::Start()
 	rwD3D9SetRenderTargets(rasters, 4, 0);
 	ShaderContext->SetViewProjectionMatrix(4, true);
 	ShaderContext->SetViewMatrix(4);
-	RwD3D9GetTransform(D3DTS_VIEW, &view);
-	RwD3D9GetTransform(D3DTS_PROJECTION, &projection);
+
 	_rwD3D9SetPixelShaderConstant(18, &(XMMatrixInverse(0, view* projection)), 4);
 }
 
@@ -87,8 +86,43 @@ void DeferredRendering::Stop()
 {
 	DefinedState();
 
+	RwD3D9GetTransform(D3DTS_VIEW, &view);
+	RwD3D9GetTransform(D3DTS_PROJECTION, &projection);
+
 	ShaderContext->SetInverseViewMatrix(0);
 	ShaderContext->SetProjectionMatrix(4);
+
+	static XMVECTOR vFrustumCornersWS[8] =
+	{
+		{-1.0, 1.0, 0.0, 0.0}, // near top left
+		{1.0, 1.0, 0.0, 0.0 }, // near top right
+		{-1.0, -1.0, 0.0, 0.0}, // near bottom left
+		{1.0, -1.0, 0.0, 0.0}, // near bottom right
+		{-1.0, 1.0, 1.0, 0.0}, // far top left
+		{1.0, 1.0, 1.0, 0.0}, // far top right
+		{-1.0, -1.0, 1.0, 0.0}, // far bottom left
+		{1.0, -1.0, 1.0, 0.0} // far bottom right
+	};
+
+	XMVECTOR det;
+	XMMATRIX invM = XMMatrixInverse(&det, view * projection);
+	XMFLOAT3 Corners[8];
+	for (int i = 0; i < 8; i++)
+	{
+		auto vertices = XMVector3TransformCoord(vFrustumCornersWS[i], invM);
+		XMStoreFloat3(&Corners[i], vertices);
+	}
+
+	XMFLOAT4 corners[4];
+	for (int i = 0; i < 4; ++i)
+	{
+		corners[i].x = Corners[i + 4].x -= Corners[i].x;
+		corners[i].y = Corners[i + 4].y -= Corners[i].y;
+		corners[i].z = Corners[i + 4].z -= Corners[i].z;
+	}
+
+	_rwD3D9SetVertexShaderConstant(0, corners, 4);
+	_rwD3D9SetVertexShaderConstant(4, &XMMatrixInverse(&det, view), 3);
 
 	for(size_t i = 0; i < 4; i++)
 	{
@@ -162,8 +196,10 @@ void DeferredRendering::RenderLights()
 	mDirectLightPS->Apply();
 	Quad::Render();
 	//return;
-
-	_rwD3D9SetPixelShaderConstant(8, &Scene.m_pRwCamera->farPlane, 1);
+	float farClip[] = {
+		Scene.m_pRwCamera->nearPlane,
+	CTimeCycle::m_CurrentColours.m_fFarClip };
+	_rwD3D9SetPixelShaderConstant(8, farClip, 1);
 
 	RwD3D9SetRenderState(D3DRS_ALPHABLENDENABLE, TRUE);
 	RwRenderStateSet(rwRENDERSTATESRCBLEND, (void*)rwBLENDONE);
@@ -172,6 +208,8 @@ void DeferredRendering::RenderLights()
 	mPointLightPS->Apply();
 	// gLightManager.SortLights();
 	CVector camPos = TheCamera.GetPosition();
+
+
 
 
 	for (int i = 0; i < gLightManager.GetPointLightCount(); i++)
@@ -204,38 +242,41 @@ void DeferredRendering::RenderLights()
 		_rwD3D9SetPixelShaderConstant(11, &light->GetColor(), 1);
 		_rwD3D9SetPixelShaderConstant(12, &radius, 1);
 		_rwD3D9SetPixelShaderConstant(13, &intensity, 1);
-		
+		_rwD3D9SetPixelShaderConstant(14, &XMMatrixInverse(0, view*projection), 4);
+
+		auto trans = XMMatrixTranslation(light->GetPosition().x, light->GetPosition().y, light->GetPosition().z);
+		_rwD3D9SetVertexShaderConstant(8, &(trans*view), 4);
 		Quad::Render();
 	}
 
-	mSpotLightPS->Apply();
-	for (size_t i = 0; i < gLightManager.GetSpotLightCount(); i++)
-	{
-		auto light = gLightManager.GetSpotLightAt(i);
+	//mSpotLightPS->Apply();
+	//for (size_t i = 0; i < gLightManager.GetSpotLightCount(); i++)
+	//{
+	//	auto light = gLightManager.GetSpotLightAt(i);
 
-		auto radius = light.GetRadius();
-		auto intensity = light.GetIntensity();
-		auto coneAngle = light.GetAngle();
+	//	auto radius = light.GetRadius();
+	//	auto intensity = light.GetIntensity();
+	//	auto coneAngle = light.GetAngle();
 
-		rwD3D9SetSamplerState(5, D3DSAMP_BORDERCOLOR, 0x0);
-		rwD3D9SetSamplerState(5, D3DSAMP_MAGFILTER, D3DTEXF_POINT);
-		rwD3D9SetSamplerState(5, D3DSAMP_MINFILTER, D3DTEXF_POINT);
-		rwD3D9SetSamplerState(5, D3DSAMP_MIPFILTER, D3DTEXF_POINT);
-		rwD3D9SetSamplerState(5, D3DSAMP_ADDRESSU, D3DTADDRESS_CLAMP);
-		rwD3D9SetSamplerState(5, D3DSAMP_ADDRESSV, D3DTADDRESS_CLAMP);
-		rwD3D9SetSamplerState(5, D3DSAMP_ADDRESSW, D3DTADDRESS_CLAMP);
-		 _rwD3D9RWSetRasterStage(SpotShadow->mColorRaster[i], 5);
+	//	rwD3D9SetSamplerState(5, D3DSAMP_BORDERCOLOR, 0x0);
+	//	rwD3D9SetSamplerState(5, D3DSAMP_MAGFILTER, D3DTEXF_POINT);
+	//	rwD3D9SetSamplerState(5, D3DSAMP_MINFILTER, D3DTEXF_POINT);
+	//	rwD3D9SetSamplerState(5, D3DSAMP_MIPFILTER, D3DTEXF_POINT);
+	//	rwD3D9SetSamplerState(5, D3DSAMP_ADDRESSU, D3DTADDRESS_CLAMP);
+	//	rwD3D9SetSamplerState(5, D3DSAMP_ADDRESSV, D3DTADDRESS_CLAMP);
+	//	rwD3D9SetSamplerState(5, D3DSAMP_ADDRESSW, D3DTADDRESS_CLAMP);
+	//	 _rwD3D9RWSetRasterStage(SpotShadow->mColorRaster[i], 5);
 
-		_rwD3D9SetPixelShaderConstant(9, &light.GetPosition(), 1);
-		_rwD3D9SetPixelShaderConstant(10, &light.GetDirection(), 1);
-		_rwD3D9SetPixelShaderConstant(11, &light.GetColor(), 1);
-		_rwD3D9SetPixelShaderConstant(12, &radius, 1);
-		_rwD3D9SetPixelShaderConstant(13, &intensity, 1);
-		_rwD3D9SetPixelShaderConstant(14, &coneAngle, 1);
-		_rwD3D9SetPixelShaderConstant(15, &(light.GetViewMatrix() * light.GetProjection()) , 4);
+	//	_rwD3D9SetPixelShaderConstant(9, &light.GetPosition(), 1);
+	//	_rwD3D9SetPixelShaderConstant(10, &light.GetDirection(), 1);
+	//	_rwD3D9SetPixelShaderConstant(11, &light.GetColor(), 1);
+	//	_rwD3D9SetPixelShaderConstant(12, &radius, 1);
+	//	_rwD3D9SetPixelShaderConstant(13, &intensity, 1);
+	//	_rwD3D9SetPixelShaderConstant(14, &coneAngle, 1);
+	//	_rwD3D9SetPixelShaderConstant(15, &(light.GetViewMatrix() * light.GetProjection()) , 4);
 
-		Quad::Render();
-	}
+	//	Quad::Render();
+	//}
 
 
 	static uint maxlight = 0;
