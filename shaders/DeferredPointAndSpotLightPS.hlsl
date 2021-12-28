@@ -161,7 +161,7 @@ float4 main(float2 texCoord : TEXCOORD0) : COLOR
     float depth;
     float3 normal;
     DecodeDepthNormal(texCoord, FarClip, depth, normal);
-   // normal = mul(normal, (float3x3) InverseViewMatrix);
+    normal = mul(normal, (float3x3) InverseViewMatrix);
     
     float3 worldPosition;
     WorldPositionFromDepth(texCoord, depth, ProjectionMatrix, InverseViewMatrix, worldPosition);

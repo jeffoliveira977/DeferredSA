@@ -15,7 +15,7 @@ class Quad
 public:
 	static void Initialize();
 	static void Release();
-	static void Render();
+	static void Render(bool useVS=true);
 	static void Render(float x, float y, float width, float height);
 
 private:

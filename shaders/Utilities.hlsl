@@ -138,6 +138,13 @@ inline float3 PeturbNormal(float3 localNormal, float3 position, float3 normal, f
     return normalize(mul(localNormal, TBN));
 }
 
+half3 NormalMapToSpaceNormal(half3 normalMap, float3 normal, float3 binormal, float3 tangent)
+{
+    normalMap = normalMap * 2 - 1;
+    normalMap = half3(normal * normalMap.z + normalMap.x * tangent - normalMap.y * binormal);
+    return normalMap;
+}
+
 // Calculates UV offset for parallax bump mapping
 float2 ParallaxOffset(float h, float height, float3 viewDir)
 {
@@ -227,11 +234,20 @@ inline float DecodeDepth(sampler2D samplerDepth, float2 texCoord)
     depth.x = DecodeFloatRG(depth);
     return depth.x;
 }
-
+half3 DecodeNormal(half3 enc)
+{
+    float kScale = 1.7777;
+    float3 nn = enc.xyz * float3(2 * kScale, 2 * kScale, 0) + float3(-kScale, -kScale, 1);
+    float g = 2.0 / dot(nn.xyz, nn.xyz);
+    float3 n;
+    n.xy = g * nn.xy;
+    n.z = g - 1;
+    return n;
+}
 inline void DecodeDepthNormal(sampler2D samplerDepth, float2 texCoord, float farPlane, out float depth, out float3 normal)
 {
     float4 depthNormal = tex2D(samplerDepth, texCoord);
-    normal = TwoChannelNormalX2(depthNormal.xy);
+    normal = DecodeNormal(half3(depthNormal.xy, 1.0f));
     depth = DecodeFloatRG(depthNormal.zw, farPlane);
     depth = depth <= 0 ? farPlane : depth;
 }
@@ -239,7 +255,7 @@ inline void DecodeDepthNormal(sampler2D samplerDepth, float2 texCoord, float far
 inline void DecodeDepthNormal(float2 texCoord, float farPlane, out float depth, out float3 normal)
 {
     float4 depthNormal = TEXTURE2D_DEPTHNORMAL(texCoord);
-    normal = TwoChannelNormalX2(depthNormal.xy);
+    normal = DecodeNormal(half3(depthNormal.xy, 1.0f));
     depth = DecodeFloatRG(depthNormal.zw, farPlane);
     depth = depth <= 0.0 ? farPlane : depth;
 }
@@ -268,7 +284,7 @@ half2 EncodeNormal(half3 n)
 
 inline float4 EncodeDepthNormal(float depth, float3 normal)
 {
-    return float4(BiasD(normal.xy), EncodeFloatRG(depth));
+    return float4(EncodeNormal(normal), EncodeFloatRG(depth));
 }
 
 inline void WorldPositionFromDepth(float2 texCoord, float depth, float2 scale, float4x4 inverseView, out float3 worldPosition)

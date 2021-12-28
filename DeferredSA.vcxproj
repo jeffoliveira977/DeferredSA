@@ -42,7 +42,7 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='GTASA Release|Win32'">
-    <OutDir>$(GTA_SA_DIR)</OutDir>
+    <OutDir>..\..\Gta mods\GTA San Andreas - mixmods.com.br\GTA San Andreas</OutDir>
     <IntDir>$(ProjectDir).obj\GTASA\Release\</IntDir>
     <TargetName>DeferredSA</TargetName>
     <TargetExt>.asi</TargetExt>
@@ -351,8 +351,14 @@
     <FxCompile Include="shaders\SphereMap.hlsl">
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='GTASA Release|Win32'">Vertex</ShaderType>
     </FxCompile>
+    <FxCompile Include="shaders\SSAOBlur_VS.hlsl">
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='GTASA Release|Win32'">Vertex</ShaderType>
+    </FxCompile>
     <FxCompile Include="shaders\SSAOCombine_PS.hlsl" />
     <FxCompile Include="shaders\SSAO_PS.hlsl" />
+    <FxCompile Include="shaders\SSAO_VS.hlsl">
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='GTASA Release|Win32'">Vertex</ShaderType>
+    </FxCompile>
     <FxCompile Include="shaders\Utilities.hlsl">
       <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='GTASA Release|Win32'">true</DeploymentContent>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='GTASA Release|Win32'">true</ExcludedFromBuild>

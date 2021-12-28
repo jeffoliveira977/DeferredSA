@@ -40,14 +40,26 @@ void DeferredRendering::Initialize()
 	mScreenRT = unique_ptr<RenderTarget>(new RenderTarget(D3DFMT_A8R8G8B8));
 	mScreenRT->Initialize();
 
-	mGraphicsLight = unique_ptr<RenderTarget>(new RenderTarget(D3DFMT_A32B32G32R32F));
+	mGraphicsLight = unique_ptr<RenderTarget>(new RenderTarget(D3DFMT_A16B16G16R16F));
 	mGraphicsLight->Initialize();
 
-	for(size_t i = 0; i < 4; i++)
-	{
-		mGraphicsBuffer[i] = unique_ptr<RenderTarget>(new RenderTarget(D3DFMT_A32B32G32R32F));
-		mGraphicsBuffer[i]->Initialize();
-	}
+	//for(size_t i = 0; i < 4; i++)
+	//{
+	//	mGraphicsBuffer[i] = unique_ptr<RenderTarget>(new RenderTarget(D3DFMT_A16B16G16R16F));
+	//	mGraphicsBuffer[i]->Initialize();
+	//}
+
+	mGraphicsBuffer[0] = unique_ptr<RenderTarget>(new RenderTarget(D3DFMT_A16B16G16R16F));
+	mGraphicsBuffer[0]->Initialize();
+
+	mGraphicsBuffer[1] = unique_ptr<RenderTarget>(new RenderTarget(D3DFMT_A16B16G16R16F));
+	mGraphicsBuffer[1]->Initialize();
+
+	mGraphicsBuffer[2] = unique_ptr<RenderTarget>(new RenderTarget(D3DFMT_A16B16G16R16F));
+	mGraphicsBuffer[2]->Initialize();
+
+	mGraphicsBuffer[3] = unique_ptr<RenderTarget>(new RenderTarget(D3DFMT_A16B16G16R16F));
+	mGraphicsBuffer[3]->Initialize();
 
 	mVolumetricClouds = unique_ptr<VolumetricClouds>(new VolumetricClouds());
 	mVolumetricClouds->Initialize();
@@ -146,10 +158,11 @@ void DeferredRendering::Stop()
 	RwRenderStateSet(rwRENDERSTATECULLMODE, (void*)rwCULLMODECULLNONE);
 	RwD3D9SetRenderState(D3DRS_ALPHATESTENABLE, FALSE);
 
+
 	RenderLights();
 	AtmosphericScattering();
 
-
+	//mAmbientOcclusion->Render();
 	//mVolumetricClouds->Render(mScreenRT.get());
 //	mVolumetricLight->Render(mScreenRT.get());
 
@@ -299,7 +312,7 @@ void DeferredRendering::RenderLights()
 		EnvironmentMapping::m_sphericalRaster,
 		DualParaboloidReflection::m_raster[0],
 		DualParaboloidReflection::m_raster[1],
-		mAmbientOcclusion->mSSAORaster };
+		mAmbientOcclusion->mDownSampled[1] };
 
 	for (size_t i = 0; i < 5; i++)
 	{

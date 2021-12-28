@@ -32,7 +32,7 @@ float4 main(PS_input input) : COLOR
 {
 
    // float4 color;
-   //float d = input.Depth.x / input.Depth.y;
+  // float d = input.Depth.x / input.Depth.y;
 
    // color.y = input.Depth * input.Depth;
     //color.z = 0.0;
@@ -41,6 +41,6 @@ float4 main(PS_input input) : COLOR
     
     float3 p = input.World - lightPos.xyz;
    // p.y *= -1.0;
-    float d = 1 -(length(p) / FarClip);
+    float d = (length(p)/*/FarClip*/);
     return float4(d, d*d, 0, 1);
 }

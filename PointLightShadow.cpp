@@ -178,7 +178,7 @@ void PointLightShadow::Update()
 		return;
 
 	RwRGBA ambient = { CTimeCycle::m_CurrentColours.m_nSkyTopRed, CTimeCycle::m_CurrentColours.m_nSkyTopGreen, CTimeCycle::m_CurrentColours.m_nSkyTopBlue, 255 };
-
+	 RwD3D9SetRenderState(D3DRS_COLORWRITEENABLE, D3DCOLORWRITEENABLE_RED| D3DCOLORWRITEENABLE_GREEN);
 	RWSRCGLOBAL(curCamera) = Scene.m_pRwCamera;
 	for (size_t i = 0; i < gLightManager.GetPointLightCount(); i++)
 	{
@@ -218,7 +218,7 @@ void PointLightShadow::Update()
 			viewport.MaxZ = 1;
 			RwD3DDevice->SetViewport(&viewport);
 
-			rwD3D9Clear(nullptr, rwCAMERACLEARIMAGE | rwCAMERACLEARZ);
+			rwD3D9Clear(nullptr, rwCAMERACLEARIMAGE | rwCAMERACLEARZ | rwCAMERACLEARSTENCIL);
 
 			if (rwD3D9TestState())
 			{
@@ -233,6 +233,11 @@ void PointLightShadow::Update()
 		}
 	}
 	RWSRCGLOBAL(curCamera) = NULL;
+
+	// Restore all channels colors
+	RwD3D9SetRenderState(D3DRS_COLORWRITEENABLE,
+		D3DCOLORWRITEENABLE_ALPHA | D3DCOLORWRITEENABLE_RED |
+		D3DCOLORWRITEENABLE_GREEN | D3DCOLORWRITEENABLE_BLUE);
 }
 
 void PointLightShadow::RenderEntities(PointLight* light, int i, int j)
@@ -271,7 +276,7 @@ void PointLightShadow::RenderEntities(PointLight* light, int i, int j)
 		Math::AABB aabb(min, max);
 		aabb.Transform(world);
 
-		if (light->GetFrustum(j).Intersects(aabb))
+		if (1 /*light->GetFrustum(j).Intersects(aabb)*/)
 
 		{
 			culled++;

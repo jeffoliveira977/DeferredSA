@@ -237,11 +237,12 @@ void Quad::Release()
 	rwD3D9DeleteVertexDeclaration(mVertexDeclQuad);
 }
 
-void Quad::Render()
+void Quad::Render(bool useVS)
 {
 	/*DrawScreenQuad();
 	return;*/
 
+	if(useVS)
 	 _rwD3D9SetVertexShader(mVertexShader->GetObject());
 	// _rwD3D9SetPixelShader(mPixelShader->GetObject());
 

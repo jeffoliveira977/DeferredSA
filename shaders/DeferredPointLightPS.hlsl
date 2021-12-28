@@ -42,27 +42,6 @@ float CalculateSpotCone(float3 lightDir, float3 lightPos, float spotAngle)
     return smoothstep(minCos, maxCos, cosAngle);
 }
 
-float ComputeAttenuation(float3 lDir, float len)
-{
-    return 1 - saturate(dot(lDir, lDir) * len);
-}
-
-float attenuate(float3 ldir, float r)
-{
-    ldir /= r;
-
-    float atten = dot(ldir, ldir);
-    float att_s = 15;
-
-    atten = 1.0f / (atten * att_s + 1);
-    att_s = 1.0f / (att_s + 1);
-
-    atten = atten - att_s;
-    atten /= (1.0f - att_s);
-
-    return saturate(atten);
-}
-
 
 // GGX/Towbridge-Reitz normal distribution function.
 // Uses Disney's reparametrization of alpha = roughness^2.
@@ -149,31 +128,80 @@ void CalculateLighing(float3 albedo, float3 normal, float3 lightPosition, float3
     //return (diffuseBRDF + specularBRDF) * cosLi;
 }
 
-float chebyshevUpperBound(float2 moments, float distance)
+float chebyshevUpperBound(float2 sd, float d)
 {
-    // Surface is fully lit. as the current fragment is before the light occluder
-    if (distance <= moments.x)
-        return 1.0;
+  //  // Surface is fully lit. as the current fragment is before the light occluder
+  //  if (distance <= moments.x)
+  //      return 1.0;
 	
-		// The fragment is either in shadow or penumbra. We now use chebyshev's upperBound to check
-		// How likely this pixel is to be lit (p_max)
-    float variance = moments.y - (moments.x * moments.x);
-    variance = max(variance, 0.00002);
+		//// The fragment is either in shadow or penumbra. We now use chebyshev's upperBound to check
+		//// How likely this pixel is to be lit (p_max)
+  //  float variance = moments.y - (moments.x * moments.x);
+  //  variance = max(variance, 0.00002);
 	
-    float d = distance - moments.x;
-    float p_max = variance / (variance + d * d);
-    if(p_max > 0.0)
-        p_max = 0.0;
-    p_max = ((moments.x < 0.001f) ? 1.0f : p_max);
-    return p_max;
+  //  float d = distance - moments.x;
+  //  float p_max = variance / (variance + d * d);
+  //  if (p_max > 0.0)
+  //      p_max = 0.0;
+  //  p_max = ((moments.x < 0.001f) ? 1.0f : p_max);
+  //  return p_max;
+    
+    float mean = sd.x;
+    float variance = max(sd.y - sd.x * sd.x, 0.0002f);
+
+    float md = mean - d;
+    float pmax = variance / (variance + md * md);
+
+    float t = max(d <= mean, pmax);
+    float s = ((sd.x < 0.001f) ? 1.0f : t);
+
+    s = saturate(s);
+    return s;
 }
 
-float lengthSquared(float3 v1)
+static vec3 sampleOffsetDirections[20] =
 {
-    return v1.x * v1.x + v1.y * v1.y + v1.z * v1.z;
+   vec3( 1,  1,  1), vec3( 1, -1,  1), vec3(-1, -1,  1), vec3(-1,  1,  1), 
+   vec3( 1,  1, -1), vec3( 1, -1, -1), vec3(-1, -1, -1), vec3(-1,  1, -1),
+   vec3( 1,  1,  0), vec3( 1, -1,  0), vec3(-1, -1,  0), vec3(-1,  1,  0),
+   vec3( 1,  0,  1), vec3(-1,  0,  1), vec3( 1,  0, -1), vec3(-1,  0, -1),
+   vec3( 0,  1,  1), vec3( 0, -1,  1), vec3( 0, -1, -1), vec3( 0,  1, -1)
+};   
+
+float ComputeAttenuation(float3 lDir)
+{
+    return 1 - saturate(dot(lDir, lDir) * 1.0f / (LightRadius * LightRadius));
 }
 
-float4 main(float3 ViewRay : TEXCOORD2, float2 texCoord : TEXCOORD0, float3 frustumRay : TEXCOORD1) : COLOR
+float ComputeShadowFactor(float3 lightPos, float3 viewDir, float3 position, float3 normal)
+{
+    vec3 fragToLight = position - lightPos;
+    
+    float shadow = 0.0;
+    float bias = max(0.5f * (1.0f - dot(normal, fragToLight)), 0.0005f);
+
+    int samples = 20;
+    float viewDistance = length(position-viewDir);
+    //float diskRadius = 0.05;
+    float diskRadius = (1.0 + (-viewDistance / LightRadius)) / 25.0;
+    float currentDepth = length(fragToLight);
+
+    for (int i = 0; i < samples; ++i)
+    {
+        float closestDepth = texCUBE(SamplerShadow, fragToLight + sampleOffsetDirections[i] * diskRadius).r;
+        if (closestDepth < 1)
+        {
+            closestDepth *= LightRadius; // undo mapping [0;1]
+            if (currentDepth - bias > closestDepth)
+                shadow += 0.5;
+        }
+    }
+    shadow /= float(samples);  
+    return shadow;
+}
+
+
+float4 main(float3 ViewRay : TEXCOORD2, float2 texCoord : TEXCOORD0, float3 frustumRay : TEXCOORD1, float face : VFACE) : COLOR
 {
     float3 albedo = TEXTURE2D_ALBEDO(texCoord).rgb;
     float4 Parameters = TEXTURE2D_MATERIALPROPS(texCoord);
@@ -183,77 +211,93 @@ float4 main(float3 ViewRay : TEXCOORD2, float2 texCoord : TEXCOORD0, float3 frus
     float depth;
     float3 normal;
     DecodeDepthNormal(texCoord, FarClip.y, depth, normal);
-   // normal = mul(normal, (float3x3) InverseViewMatrix);
+    normal = mul(normal, (float3x3) InverseViewMatrix);
 
     float3 worldPosition;
     WorldPositionFromDepth(texCoord, depth, ProjectionMatrix, InverseViewMatrix, worldPosition);
 
-    //clip(depth + 0.9999f);
+    clip(depth + 0.9999f);
     
     float4 depthNormal = TEXTURE2D_DEPTHNORMAL(texCoord);
-    depth = DecodeFloatRG(depthNormal.zw, FarClip.y);
-    
-   //depth = Parameters.z;
-    float linearDepth = (depth - FarClip.x) / (FarClip.y - FarClip.x);
-    worldPosition = InverseViewMatrix[3].xyz + linearDepth * frustumRay;
-    //worldPosition = mul(float4(worldPosition, 1.0f),  InverseViewMatrix).xyz;
-    float3 ViewDir = normalize(linearDepth * frustumRay);
+    depth = DecodeFloatRG(depthNormal.zw);
+
+    worldPosition = InverseViewMatrix[3].xyz + depth * frustumRay;
+    float3 ViewDir = normalize(worldPosition - InverseViewMatrix[3].xyz);
 
     float4 color = 0;
    
-
-    //if (Parameters.w != 3)
-     //   worldPosition.xyz = wpos.xyz;
-    
     float3 lightPos = normalize(worldPosition.xyz-LightPosition.xyz);
     
     
+    float distance_to_light = distance(LightPosition.xyz, worldPosition.xyz);
+
+    vec3 pl_dir = normalize(LightPosition.xyz - worldPosition.xyz);
+    float ndotl = max(0, dot(normal.xyz, pl_dir));
+    if (ndotl <= 0.0f)
+        return 0.0;
     
     float dirLen = length(worldPosition-LightPosition);
     
-    float s2 = 0.2f;
-    float atten = 1.0f - smoothstep(LightRadius * s2, LightRadius, dirLen);
-    atten = 1.0f - pow(saturate(dirLen / LightRadius), 2);
+    //float s2 = 0.2f;
+    //float atten = 1.0f - smoothstep(LightRadius * s2, LightRadius, dirLen);
+    //atten = 1.0f - pow(saturate(dirLen / LightRadius), 2);
        
+   
+    float Attenuation = 1.0f - pow(saturate(dirLen / LightRadius), 2);
+    Attenuation *= Attenuation;
+    
 
+    float currentDepth = dirLen;
+    
     float3 ldir = worldPosition.xyz - LightPosition.xyz;
-    ldir.y*= -1.0;
+
 
     // shadow term
     float2 sd = texCUBE(SamplerShadow, normalize(ldir)).rg;
-    float s = chebyshevUpperBound(sd, length(ldir));
     
-    float currentDepth = dirLen;
-    
+  //  sd = 1-sd;
+
     float shadow = 1;
-    // test for shadows
-    float bias = 0.05;
+    //if(sd.x < 1.0)
+   // {
+        shadow = chebyshevUpperBound(sd, dirLen);
+        
+        float bias = 0.05;
     float closestDepth = sd.x;
     closestDepth *= LightRadius;
-    shadow = currentDepth - bias > closestDepth ? 1.0 : 0;
+        
+    if (currentDepth - bias < closestDepth)
+    {
+       // shadow = 0.5;
+            //return Attenuation;
 
+    }
+       // shadow = ComputeShadowFactor(LightPosition.xyz, InverseViewMatrix[3].xyz, worldPosition, normal);
+    //float Distance = dirLen;
+
+    //if (Distance < sd.x + bias)
+    //        shadow = 0.5; // Inside the light
+    //    else
+    //        shadow = 0.5; // Inside the shadow
     
-    float Attenuation = 1.0f - pow(saturate(dirLen / LightRadius), 2);
-    Attenuation *= Attenuation;
+   // }
     
     float3 Diff, Spec;
     CalculateLighing(albedo, normal, -lightPos, -ViewDir, Roughness, metallicness, Diff, Spec);
     
-
-    color.xyz = (Attenuation) * (shadow) * Diff;
-    color.w = (Attenuation) * (shadow) * Spec;
-   // }
+    color.xyz = Attenuation * Diff * ( shadow);
+    color.w = Attenuation * Spec * (shadow);
     
     return color;
-    float3 FinalDiffuseTerm = float3(0, 0, 0);
-    float FinalSpecularTerm = 0;
-    float DiffuseTerm, SpecularTerm;
-    CalculateDiffuseTerm_ViewDependent(normal, lightPos.xyz, ViewDir, DiffuseTerm, Roughness);
-    CalculateSpecularTerm(normal, lightPos.xyz, ViewDir, Roughness, SpecularTerm);
-    FinalDiffuseTerm += DiffuseTerm * Attenuation * shadow * LightColor * LightIntensity;
-    FinalSpecularTerm += SpecularTerm * Attenuation * shadow * metallicness;
-    //FinalDiffuseTerm += SpecularTerm * s * Attn * metallicness;
-    float4 Lighting = float4(FinalDiffuseTerm, FinalSpecularTerm);
-    color.xyzw = Lighting;
-    return color;
+    //float3 FinalDiffuseTerm = float3(0, 0, 0);
+    //float FinalSpecularTerm = 0;
+    //float DiffuseTerm, SpecularTerm;
+    //CalculateDiffuseTerm_ViewDependent(normal, lightPos.xyz, ViewDir, DiffuseTerm, Roughness);
+    //CalculateSpecularTerm(normal, lightPos.xyz, ViewDir, Roughness, SpecularTerm);
+    //FinalDiffuseTerm += DiffuseTerm * Attenuation * shadow * LightColor * LightIntensity;
+    //FinalSpecularTerm += SpecularTerm * Attenuation * shadow * metallicness;
+    ////FinalDiffuseTerm += SpecularTerm * s * Attn * metallicness;
+    //float4 Lighting = float4(FinalDiffuseTerm, FinalSpecularTerm);
+    //color.xyzw = Lighting;
+    //return color;
 }

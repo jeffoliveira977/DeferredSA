@@ -4,6 +4,8 @@ row_major float4x4 ProjectionMatrix : register(c4);
 float4 FogData : register(c8);
 float Time : register(c9);
 
+sampler2D RandomSampler : register(s0);
+
 float rand2dTo1d(float2 value, float2 dotDir = float2(12.9898, 78.233))
 {
     float2 smallValue = sin(value);
@@ -60,111 +62,96 @@ float noise3d_timedep(float3 p, float time)
 static float fScreenWidth = 1920.0f;
 static float fScreenHeight = 1080.0f;
 
-float MySuckAmbientOcclusion(float ViewZ, float2 texcoord, float3 worldpos, float3 normal)
+static float2 Radius = { 0.005f,0.5f };
+static float Bias = 0.00001f;
+
+
+#define SAMPLE_COUNT 16
+float3 RAND_SAMPLES[SAMPLE_COUNT] =
 {
-	//early exit
-    if (ViewZ > 50.0)
-        return 0.0;
-
-    float weight = 0.0f, sum = 0.0f;
-    float shift = noise3d_timedep(worldpos * 500.0, Time * 10.15) * 16.0;
-    uint NUM = clampMap(ViewZ, 5.0, 50.0, 24, 12); //dynamic quality
-	
-    [unroll]
-    for (float i = 1.0f; i <= NUM; i++)
-    {
-        float r = 200.0f * i / (NUM - 1.0f) / pow(ViewZ, 0.35);
-        float t = 10.166406827f * i + shift;
-		
-        float2 samplecoord = texcoord + float2(cos(t) / fScreenWidth, sin(t) / fScreenHeight) * r;
-		
-        if (samplecoord.x < 0.0f || samplecoord.y < 0.0f || samplecoord.x > 1.0f || samplecoord.y > 1.0f)
-            continue;
-		
-        float sampleViewZ = 0.0;
-        float3 sampleNorm = 0.0;
-
-        DecodeDepthNormal(samplecoord, FogData.y, sampleViewZ, sampleNorm);
-        float3 sample_pos;
-        WorldPositionFromDepth(samplecoord, sampleViewZ, ProjectionMatrix, ViewInverseMatrix, sample_pos);
-        
-
-        float3 ntz = sample_pos - worldpos;
-        float distance = length(ntz);
-        float w = clampMap(distance, 0.0, 1.5, 1.0, 0.0);
-		
-        if (w <= 0.0)
-            continue;
-        
-		
-        float3 unit_vec = ntz / distance;
-		
-        sum += (abs(dot(unit_vec, sampleNorm)) + 0.5) * max(dot(unit_vec, normal), 0.0) * w;
-        weight += w;
-    }
-    sum *= smoothstep(50.0, 40.0, ViewZ); //fading
-    return weight > 0.0 ? sum / weight : 0.0;
-}
-float4 main(float2 texCoord : TEXCOORD0) : COLOR
+    float3(0.5381, 0.1856, -0.4319),
+	  float3(0.1379, 0.2486, 0.4430),
+      float3(0.3371, 0.5679, -0.0057),
+	  float3(-0.6999, -0.0451, -0.0019),
+      float3(0.0689, -0.1598, -0.8547),
+	  float3(0.0560, 0.0069, -0.1843),
+      float3(-0.0146, 0.1402, 0.0762),
+	  float3(0.0100, -0.1924, -0.0344),
+      float3(-0.3577, -0.5301, -0.4358),
+	  float3(-0.3169, 0.1063, 0.0158),
+      float3(0.0103, -0.5869, 0.0046),
+	  float3(-0.0897, -0.4940, 0.3287),
+      float3(0.7119, -0.0154, -0.0918),
+	  float3(-0.0533, 0.0596, -0.5411),
+      float3(0.0352, -0.0631, 0.5460),
+	  float3(-0.4776, 0.2847, -0.0271)
+};
+  
+float4 main(float4 texCoord : TEXCOORD0) : COLOR
 {
     
     float3 outColor;
-    float4 target = tex2D(SamplerLightTarget, texCoord);
-    float4 albedo = TEXTURE2D_ALBEDO(texCoord);
+    float4 target = tex2D(SamplerLightTarget, texCoord.xy);
+    float4 albedo = TEXTURE2D_ALBEDO(texCoord.xy);
     
     float depth;
     float3 normal;
-    DecodeDepthNormal(texCoord, FogData.y, depth, normal);
+    DecodeDepthNormal(texCoord.xy, FogData.y, depth, normal);
+    
+    float4 depthNormal = TEXTURE2D_DEPTHNORMAL(texCoord.xy);
+    depth = DecodeFloatRG(depthNormal.zw, FogData.y);
     
     float4 OutLighting = float4(1, 1, 1, 1.0);
     float3 WorldPos;
-    WorldPositionFromDepth(texCoord, depth, ProjectionMatrix, ViewInverseMatrix, WorldPos);
-    OutLighting.r -= 2.0f * MySuckAmbientOcclusion(depth, texCoord, WorldPos, normal);
+    WorldPositionFromDepth(texCoord.xy, depth, ProjectionMatrix, ViewInverseMatrix, WorldPos);
 
-    return OutLighting;
-    float2 uv = texCoord;
+	//ignore areas where we have no depth/normal information
+    clip(depth + 0.9999f);
 
-    float Occlusion = 0.07f;
+	// total occlusion
+    float totalOcclusion = 0;
+	
+	//prevent near 0 divisions
+    float scale = min(Radius.y, Radius.x / max(1, depth));
+		
+	//this will be used to avoid self-shadowing		  
+    half3 normalScaled = normal * 0.25f;
 
-    float2 rand2[16] =
+	//pick a random normal, to add some "noise" to the output
+   // half3 randNormal = (rand2dTo3d(texCoord) * 2.0 - 1.0);
+			
+	//pick a random normal, to add some "noise" to the output
+    half3 randNormal = (tex2D(RandomSampler, texCoord.zw).rgb * 2.0 - 1.0);
+			
+    for (int i = 0; i < SAMPLE_COUNT; i++)
     {
-        float2(0.53812504, 0.18565957),
-        float2(0.13790712, 0.24864247),
-        float2(0.33715037, 0.56794053),
-        float2(-0.6999805, -0.04511441),
-        float2(0.06896307, -0.15983082),
-        float2(0.056099437, 0.006954967),
-        float2(-0.014653638, 0.14027752),
-        float2(0.010019933, -0.1924225),
-        float2(-0.35775623, -0.5301969),
-        float2(-0.3169221, 0.106360726),
-        float2(0.010350345, -0.58698344),
-        float2(-0.08972908, -0.49408212),
-        float2(0.7119986, -0.0154690035),
-        float2(-0.053382345, 0.059675813),
-        float2(0.035267662, -0.063188605),
-        float2(-0.47761092, 0.2847911)
-    };
+		// reflect the pre-computed direction on the random normal 
+        half3 randomDirection = reflect(RAND_SAMPLES[i], randNormal);
+			
+		// Prevent it pointing inside the geometry
+        randomDirection *= sign(dot(normal, randomDirection));
 
-    float color = 1.0f;
+		// add that scaled normal
+        randomDirection += normalScaled;
+		
+		//we use a modified depth in the tests
+        half modifiedDepth = depth - (randomDirection.z * Radius.x);
+		//according to the distance to the camera, we should scale the direction to account the perspective
+        half2 offset = randomDirection.xy * scale;
+		
+		// Sample depth at offset location
 
-    for (int i = 0; i < 16; i++)
-    {
-        float2 d = rand2[i] * 0.003f;
-
-        float depth1, depth2;
-        DecodeDepthNormal(uv + d, FogData.y, depth1, normal);
-        DecodeDepthNormal(uv - d, FogData.y, depth2, normal);
-
-        if (depth > (depth1 + depth2) * 0.5f + 0.005f
-         && depth < (depth1 + depth2) * 0.5f + 0.02f)
-        {
-            color -= Occlusion;
-        }
+        float4 depthNormal = TEXTURE2D_DEPTHNORMAL(texCoord.xy + offset);
+        float newDepth = DecodeFloatRG(depthNormal.zw, FogData.y);
+        
+		//we only care about samples in front of our original-modifies 
+        float deltaDepth = saturate(modifiedDepth - newDepth);
+			
+		//ignore negative deltas
+        totalOcclusion += (1 - deltaDepth) * (deltaDepth > Bias);
+			      
     }
+    totalOcclusion /= SAMPLE_COUNT;
 
-    float4 outDiffuse = color;
-    outDiffuse.a = 1.0f;
-
-    return outDiffuse;
+    return totalOcclusion;
 }

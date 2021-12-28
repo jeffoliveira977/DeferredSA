@@ -121,23 +121,17 @@ float4 main(float2 texCoord : TEXCOORD0, float2 vpos:VPOS) : COLOR
     float3 worldPosition;
     DecodeDepthNormal(texCoord, FogData.y, depth, normal);
     //normal = normalize(normal);
-   // normal = mul(normal, (float3x3) ViewInverseMatrix);
+    normal = mul(normal, (float3x3) ViewInverseMatrix);
     WorldPositionFromDepth(texCoord, depth, ProjectionMatrix, ViewInverseMatrix, worldPosition);
 
     float3 viewDir = normalize(worldPosition - ViewInverseMatrix[3].xyz);
     float H = max(dot(viewDir, SunDir), 0.0);
 
 
-    float LightStrength = length(target.rgb);
-    float AmbientOcclusion = tex2D(SSAOSampler, texCoord).r;
-    float AOSupress = saturate(pow(AmbientOcclusion, 3.0));
-     LightStrength *= clampMap(SunDir.z, 0.05, -0.05, 1.0, 0.0);
-    float A2 = saturate(pow(LightStrength / 3.0, 0.5)); //A2 is larger as more light hitting
-    A2 = AmbientOcclusion * (1 - A2) + A2; //interpolating by A2 
-	//A2 = pow(A2, 1.0);										//AO curve
-  
-    float3 diffuse = target.rgb;
-    float3 specular = (target.a * target.rgb ) /** AmbientOcclusion * AOSupress * A2*/;
+    float3 AmbientOcclusion = tex2D(SSAOSampler, texCoord).rgb;
+
+    float3 diffuse = target.rgb /** AmbientOcclusion * 1.75f*/;
+    float3 specular = (target.a * target.rgb) /** AmbientOcclusion * 1.75f*/;
     
     outColor = (albedo.rgb * diffuse) + specular;
     float3 skyColor = lerp(HorizonColor, SkyLightColor, saturate((worldPosition.z - 20) * (1.0f / 500.0f)));

@@ -30,7 +30,7 @@ void main(float2 Texcoord : TEXCOORD0,
     
     float3 p = Depth - lightPos.xyz;
    // p.y *= -1.0;
-    float d = 1 - (length(p) / FarClip);
+    float d = 1-(length(p)/FarClip);
     
     color = float4(d, d * d, 0, 1);
 }

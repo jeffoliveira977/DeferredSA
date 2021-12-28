@@ -127,7 +127,7 @@ float4 main(float2 texCoord : TEXCOORD0, float2 vpos:VPOS) : COLOR
    
 
    // normal = normalize(normal);
-   // normal = mul(normal, (float3x3) ViewInverseMatrix);
+    normal = mul(normal, (float3x3) ViewInverseMatrix);
         
     float3 worldPosition;
     WorldPositionFromDepth(texCoord, depth, ProjectionMatrix, ViewInverseMatrix, worldPosition);
