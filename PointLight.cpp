@@ -138,7 +138,7 @@ void PointLight::Update()
 	XMMATRIX translation = XMMatrixTranslationFromVector(mDirection);
 
 	mWorld = scaling * translation;
-	mProjection = XMMatrixPerspectiveFovLH(XMConvertToRadians(90.0f), 1.0f, 0.1f, mRadius);
+	mProjection = XMMatrixPerspectiveFovLH(XMConvertToRadians(90.0f), 1.0f, 0.01f, mRadius);
 
 	for (size_t i = 0; i < 6; i++)
 	{
@@ -164,7 +164,7 @@ void PointLight::Update()
 			break;
 		}*/
 		mView[i] = XMMatrixLookAtLH(mPosition, mPosition + DXCubeForward[i], DXCubeUp[i]);
-		mMatrix = mView[i] * mProjection;
-		mFrustum[i].SetMatrix(mMatrix);
+		mMatrix[i] = mView[i] * mProjection;
+		mFrustum[i].SetMatrix(mMatrix[i]);
 	}
 }

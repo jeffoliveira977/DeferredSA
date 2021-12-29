@@ -29,11 +29,13 @@ public:
 	void Update();
 	float mPriority;
 	 RwRaster *mShadowRaster;
+	 bool mCastShadow;
+	 XMMATRIX mMatrix[6];
 private:
 	Math::BoundingSphere mSphere;
 
 	XMMATRIX mWorld;
-	XMMATRIX mMatrix;
+	
 	XMMATRIX mView[6];
 	XMMATRIX mProjection;
 	XMFLOAT3 mColor;

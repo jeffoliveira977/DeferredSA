@@ -21,7 +21,7 @@ void CPointLights__AddLight(unsigned char, XMFLOAT3 point, XMFLOAT3 direction, f
 	CVector camPos = TheCamera.GetPosition();
 	float visibleRadius = 80.0;
 	CVector dx = CVector(point.x, point.y, point.z) - camPos;
-	float intensity = 20.0;
+	float intensity = 3.0;
 
 	if (dx.Magnitude() >= visibleRadius)
 		return;
@@ -138,7 +138,7 @@ void LightManager::Hook()
 	plugin::patch::RedirectJump(0x6E1720, CVehicle__DoHeadLightReflection);
 }
 
-float rwV3D_Dist( XMFLOAT3 a,  XMFLOAT3 b)
+float rwV3D_Dist(XMFLOAT3 a, XMFLOAT3 b)
 {
 	float
 		dX = b.x - a.x,
@@ -153,20 +153,25 @@ float rwV3D_Dist( XMFLOAT3 a,  XMFLOAT3 b)
 
 void LightManager::SortLights()
 {
-	auto position = RwMatrixGetPos(RwFrameGetMatrix(RwCameraGetFrame(Scene.m_pRwCamera)));
+	auto position = (XMFLOAT3*)RwMatrixGetPos(RwFrameGetMatrix(RwCameraGetFrame(Scene.m_pRwCamera)));
 
-	for (int index = 0; index < mPointLightCount; index++)
-	{
-		float sqrDistanceToCam = XMVectorGetX(XMVectorMax(g_XMOne, XMVector3Length(XMLoadFloat3((XMFLOAT3*)position)) - XMLoadFloat3(&mPointLightList[index].GetPosition())));
+	//for (int index = 0; index < mPointLightCount; index++)
+	//{
+	//	float sqrDistanceToCam = XMVectorGetX(XMVectorMax(g_XMOne, XMVector3Length(XMLoadFloat3((XMFLOAT3*)position)) - XMLoadFloat3(&mPointLightList[index].GetPosition())));
 
-		//compute a value to determine light order 
-		mPointLightList[index].mPriority = 1000.0f * mPointLightList[index]. GetRadius() / std::max(1.0f, sqrDistanceToCam);
-	}
+	//	//compute a value to determine light order 
+	//	mPointLightList[index].mPriority = 1000.0f * mPointLightList[index]. GetRadius() / std::max(1.0f, sqrDistanceToCam);
+	//}
 
-	std::sort(&mPointLightList[0], &mPointLightList[30], [&](PointLight a, PointLight b)
-	{
-			return (b.mPriority < a.mPriority);
-	});
+	//std::sort(&mPointLightList[0], &mPointLightList[59], [&](PointLight a, PointLight b)
+	//{
+	//		return (b.mPriority < a.mPriority);
+	//});
+
+	sort(&mPointLightList[0], &mPointLightList[mPointLightCount-1], [&]( PointLight& a,  PointLight& b)
+		{
+			return (rwV3D_Dist(a.GetPosition(), *position) < rwV3D_Dist(b.GetPosition(), *position));
+		});
 }
 
 void LightManager::AddSpotLight(SpotLight spotlight)
@@ -190,6 +195,9 @@ void LightManager::AddSpotLight(XMFLOAT3 position, XMFLOAT3 direction, XMFLOAT3 
 
 void LightManager::AddPointLight(PointLight pointlight)
 {
+	if (mPointLightCount > 59)
+		return;
+
 	mPointLightList[mPointLightCount++] = pointlight;
 	//mPointLightList.push_back(pointlight);
 }
@@ -197,7 +205,7 @@ void LightManager::AddPointLight(PointLight pointlight)
 void LightManager::AddPointLight(XMFLOAT3 position, XMFLOAT3 direction, XMFLOAT3 color, float radius, float intensity)
 {
 	if (mPointLightCount > 59)
-		mPointLightCount = 0;
+		return;
 
 	//PointLight light;
 	mPointLightList[mPointLightCount].SetPosition(position);
@@ -218,6 +226,11 @@ void LightManager::ClearLights()
 	mPointLightCount = 0;
 	// mPointLightList.clear();
 	mSpotLightList.clear();
+
+	for (size_t i = 0; i < mPointLightCount; i++)
+	{
+		mPointLightList[i].mCastShadow = false;
+	}
 }
 
 size_t LightManager::GetSpotLightCount()

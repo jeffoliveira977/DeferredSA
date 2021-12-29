@@ -17,12 +17,9 @@ public:
 	int m_nShadowSize;
 
 	 RwRaster* mColorRaster[30];
+	 RwRaster* mColorCube[30];
 	RwRaster* mDepthRaster;
-	XMMATRIX m_shadowMatrix[30];
-	XMMATRIX m_projectionMatrix[30];
-	XMMATRIX m_viewMatrix[30];
-	RwCamera* mCamera;
-	Math::Frustum m_frustum[30];
+
 	std::vector<CEntity*> m_renderableList[30];
 	void AddObject(int i, CEntity* entity, float distance);
 	void SectorList(CPtrList& ptrList);
