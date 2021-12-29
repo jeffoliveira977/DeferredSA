@@ -65,7 +65,7 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
-      <AdditionalIncludeDirectories>C:\Users\Je\OneDrive\Área de Trabalho\projetos\imgui\backends;C:\Users\Je\OneDrive\Área de Trabalho\projetos\imgui;$(PLUGIN_SDK_DIR)\plugin_sa\;$(PLUGIN_SDK_DIR)\plugin_sa\game_sa\;$(PLUGIN_SDK_DIR)\shared\;$(PLUGIN_SDK_DIR)\shared\game\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)imgui;$(PLUGIN_SDK_DIR)\plugin_sa\;$(PLUGIN_SDK_DIR)\plugin_sa\game_sa\;$(PLUGIN_SDK_DIR)\shared\;$(PLUGIN_SDK_DIR)\shared\game\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>_NDEBUG;_CRT_SECURE_NO_WARNINGS;_CRT_NON_CONFORMING_SWPRINTFS;GTASA;GTAGAME_NAME="San Andreas";GTAGAME_ABBR="SA";GTAGAME_ABBRLOW="sa";GTAGAME_PROTAGONISTNAME="CJ";GTAGAME_CITYNAME="San Andreas";_DX9_SDK_INSTALLED;PLUGIN_SGV_10US;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <LanguageStandard>stdcpp17</LanguageStandard>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
@@ -108,14 +108,6 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="..\imgui\backends\imgui_impl_dx9.cpp" />
-    <ClCompile Include="..\imgui\backends\imgui_impl_rw.cpp" />
-    <ClCompile Include="..\imgui\backends\imgui_impl_win32.cpp" />
-    <ClCompile Include="..\imgui\imgui.cpp" />
-    <ClCompile Include="..\imgui\imgui_demo.cpp" />
-    <ClCompile Include="..\imgui\imgui_draw.cpp" />
-    <ClCompile Include="..\imgui\imgui_tables.cpp" />
-    <ClCompile Include="..\imgui\imgui_widgets.cpp" />
     <ClCompile Include="AABB.cpp" />
     <ClCompile Include="AmbientOcclusion.cpp" />
     <ClCompile Include="BoundingSphere.cpp" />
@@ -131,6 +123,14 @@
     <ClCompile Include="Frustum.cpp" />
     <ClCompile Include="GameHooks.cpp" />
     <ClCompile Include="ImguiManager.cpp" />
+    <ClCompile Include="imgui\backends\imgui_impl_dx9.cpp" />
+    <ClCompile Include="imgui\backends\imgui_impl_rw.cpp" />
+    <ClCompile Include="imgui\backends\imgui_impl_win32.cpp" />
+    <ClCompile Include="imgui\imgui.cpp" />
+    <ClCompile Include="imgui\imgui_demo.cpp" />
+    <ClCompile Include="imgui\imgui_draw.cpp" />
+    <ClCompile Include="imgui\imgui_tables.cpp" />
+    <ClCompile Include="imgui\imgui_widgets.cpp" />
     <ClCompile Include="Immediate3D.cpp" />
     <ClCompile Include="IndexBufferManager.cpp" />
     <ClCompile Include="LightManager.cpp" />
@@ -195,6 +195,11 @@
     <ClInclude Include="Frustum.h" />
     <ClInclude Include="GameHooks.h" />
     <ClInclude Include="ImguiManager.h" />
+    <ClInclude Include="imgui\backends\imgui_impl_dx9.h" />
+    <ClInclude Include="imgui\backends\imgui_impl_rw.h" />
+    <ClInclude Include="imgui\backends\imgui_impl_win32.h" />
+    <ClInclude Include="imgui\imconfig.h" />
+    <ClInclude Include="imgui\imgui.h" />
     <ClInclude Include="Immediate3D.h" />
     <ClInclude Include="IndexBufferManager.h" />
     <ClInclude Include="LightManager.h" />
@@ -346,8 +351,14 @@
     <FxCompile Include="shaders\SphereMap.hlsl">
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='GTASA Release|Win32'">Vertex</ShaderType>
     </FxCompile>
+    <FxCompile Include="shaders\SSAOBlur_VS.hlsl">
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='GTASA Release|Win32'">Vertex</ShaderType>
+    </FxCompile>
     <FxCompile Include="shaders\SSAOCombine_PS.hlsl" />
     <FxCompile Include="shaders\SSAO_PS.hlsl" />
+    <FxCompile Include="shaders\SSAO_VS.hlsl">
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='GTASA Release|Win32'">Vertex</ShaderType>
+    </FxCompile>
     <FxCompile Include="shaders\Utilities.hlsl">
       <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='GTASA Release|Win32'">true</DeploymentContent>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='GTASA Release|Win32'">true</ExcludedFromBuild>

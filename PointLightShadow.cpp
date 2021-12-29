@@ -24,70 +24,76 @@ PointLightShadow::PointLightShadow()
 PointLightShadow::~PointLightShadow()
 {
 	for (size_t i = 0; i < 30; i++)
-		RwRasterDestroy(mColorRaster[i]);
-
+	{
+		//RwRasterDestroy(mColorRaster[i]);
+	}
 	RwRasterDestroy(mDepthRaster);
 }
 void PointLightShadow::Initialize()
 {
-	m_nShadowSize = 512.0;
+	m_nShadowSize = 512;
 
 	for (size_t i = 0; i < 30; i++)
 	{
-		mColorRaster[i] = RwD3D9RasterCreate(m_nShadowSize, m_nShadowSize, D3DFMT_G32R32F, rwRASTERTYPECAMERATEXTURE);
-		rwD3D9CubeRasterCreate(mColorRaster[i], D3DFMT_G32R32F, 1);
+		//mColorRaster[i] = RwD3D9RasterCreate(m_nShadowSize, m_nShadowSize, D3DFMT_G32R32F, rwRASTERTYPECAMERATEXTURE);
+		//rwD3D9CubeRasterCreate(mColorRaster[i], D3DFMT_G32R32F, 1);
+
+		for (size_t j = 0; j < 6; j++)
+		{
+			mColorCube[i][j] = RwD3D9RasterCreate(m_nShadowSize, m_nShadowSize, D3DFMT_G32R32F, rwRASTERTYPECAMERATEXTURE);
+		}
 	}
 
 	//mColorRaster[i] = RwRasterCreate(m_nShadowSize, m_nShadowSize, 32, rwRASTERTYPECAMERATEXTURE);
 	mDepthRaster = RwRasterCreate(m_nShadowSize, m_nShadowSize, 32, rwRASTERTYPEZBUFFER);
 }
 
-void PointLightShadow::AddObject(int i, CEntity* entity, float distance )
+void PointLightShadow::AddObject(int i, CEntity* entity, float )
 {
-	//CColModel* col = entity->GetColModel();
-	//if (col == nullptr)
-	//	return;
+	CColModel* col = entity->GetColModel();
+	if (col == nullptr)
+		return;
 
-	//CVector position = entity->GetPosition();
-	//if (entity->m_pLod)
-	//	position = entity->m_pLod->GetPosition();
+	CVector position = entity->GetPosition();
+	if (entity->m_pLod)
+		position = entity->m_pLod->GetPosition();
 
-	//float distance = (position - CRenderer::ms_vecCameraPosition).Magnitude();
-	////XMMATRIX world = RwMatrixToXMMATRIX(reinterpret_cast<RwMatrix*>(entity->GetMatrix()));
+	float distance = (position - CRenderer::ms_vecCameraPosition).Magnitude();
+	//XMMATRIX world = RwMatrixToXMMATRIX(reinterpret_cast<RwMatrix*>(entity->GetMatrix()));
 
-	////CBoundingBox modelAABB = col->m_boundBox;
+	//CBoundingBox modelAABB = col->m_boundBox;
 
-	////XMFLOAT3 min, max;
-	////min = *reinterpret_cast<XMFLOAT3*>(&modelAABB.m_vecMin);
-	////max = *reinterpret_cast<XMFLOAT3*>(&modelAABB.m_vecMax);
+	//XMFLOAT3 min, max;
+	//min = *reinterpret_cast<XMFLOAT3*>(&modelAABB.m_vecMin);
+	//max = *reinterpret_cast<XMFLOAT3*>(&modelAABB.m_vecMax);
 
-	////Math::AABB aabb(min, max);
-	////aabb.Transform(world);
-	////
-	////for (size_t i = 0; i < gLightManager.GetPointLightCount(); i++)
-	////{
-	//	//auto light = gLightManager.GetPointLightAt(i);
-	//	//PrintMessage("%d", 1);
-	//	//for (size_t j = 0; j < 6; j++)
-	//	//{
-	//	//	if (light.GetFrustum(j).Intersects(aabb))
-	//	//	{
-	//			
-	//			//AddObject(i, entity, distance);
-	//			if (distance < 100)
-	//				m_renderableList[0].push_back(entity);
-	//			//else if (entity->m_pLod != NULL)
-	//			//	m_renderableList[i].push_back(entity->m_pLod);
-	////		}
-	////	}
-	////}
-	if (distance > 200)
+	//Math::AABB aabb(min, max);
+	//aabb.Transform(world);
+	//
+	//for (size_t i = 0; i < gLightManager.GetPointLightCount(); i++)
+	//{
+		//auto light = gLightManager.GetPointLightAt(i);
+		//PrintMessage("%d", 1);
+		//for (size_t j = 0; j < 6; j++)
+		//{
+		//	if (light.GetFrustum(j).Intersects(aabb))
+		//	{
+				
+				//AddObject(i, entity, distance);
+				if (distance < 100)
+					m_renderableList[0].push_back(entity);
+				//else if (entity->m_pLod != NULL)
+				//	m_renderableList[i].push_back(entity->m_pLod);
+	//		}
+	//	}
+	//}
+	/*if (distance > 200)
 		return;
 
 	if (distance < 100)
 		m_renderableList[i].push_back(entity);
 	else if (entity->m_pLod != NULL)
-		m_renderableList[i].push_back(entity->m_pLod);
+		m_renderableList[i].push_back(entity->m_pLod);*/
 }
 
 void PointLightShadow::SectorList(CPtrList& ptrList)
@@ -125,7 +131,7 @@ void PointLightShadow::SectorList(CPtrList& ptrList)
 
 				for (size_t j = 0; j < 6; j++)
 				{
-					if (light.GetFrustum(j).Intersects(aabb))
+					if (light->GetFrustum(j).Intersects(aabb))
 					{
 						AddObject(i, entity, distance);
 					}
@@ -149,118 +155,137 @@ void PointLightShadow::ScanSectorList(int sectorX, int sectorY)
 		//SectorList(repeatSector->m_lists[REPEATSECTOR_OBJECTS]);
 	}
 }
-
+#include "CPointLights.h"
+#include "CCamera.h"
 #include "CTimeCycle.h"
 void PointLightShadow::Update()
 {
-	for (size_t i = 0; i < 30; i++)
-		m_renderableList[i].clear();
 
-	CVector pos = FindPlayerCoors(0);
-	XMMATRIX translation = XMMatrixTranslation(pos.x, pos.y, pos.z);
+	//CVector pos = FindPlayerCoors(0);
+	//XMMATRIX translation = XMMatrixTranslation(pos.x, pos.y, pos.z);
 
-	// Scan entity list
-	SetNextScanCode();
+	//// Scan entity list
+	//SetNextScanCode();
 
-	int x = GetSectorX(CRenderer::ms_vecCameraPosition.x);
-	int y = GetSectorY(CRenderer::ms_vecCameraPosition.y);
+	//int x = GetSectorX(CRenderer::ms_vecCameraPosition.x);
+	//int y = GetSectorY(CRenderer::ms_vecCameraPosition.y);
 
-	int sectorCount = 10;
-	for (int j = -sectorCount; j < sectorCount; j++)
-	{
-		for (int i = -sectorCount; i < sectorCount; i++)
-		{
-			ScanSectorList(x + i, y + j);
-		}
-	}
+	//int sectorCount = 10;
+	//for (int j = -sectorCount; j < sectorCount; j++)
+	//{
+	//	for (int i = -sectorCount; i < sectorCount; i++)
+	//	{
+	//		ScanSectorList(x + i, y + j);
+	//	}
+	//}
+
+	if (gLightManager.GetPointLightCount() > 28)
+		return;
 
 	RwRGBA ambient = { CTimeCycle::m_CurrentColours.m_nSkyTopRed, CTimeCycle::m_CurrentColours.m_nSkyTopGreen, CTimeCycle::m_CurrentColours.m_nSkyTopBlue, 255 };
-
+	// RwD3D9SetRenderState(D3DRS_COLORWRITEENABLE, D3DCOLORWRITEENABLE_RED);
 	RWSRCGLOBAL(curCamera) = Scene.m_pRwCamera;
 	for (size_t i = 0; i < gLightManager.GetPointLightCount(); i++)
 	{
+		PointLight* data = gLightManager.GetPointLightAt(i);
 
-		auto data = gLightManager.GetPointLightAt(i);
+		CVector camPos = TheCamera.GetPosition();
+		float visibleRadius = 30.0;
+		CVector dx = CVector(data->GetPosition().x, data->GetPosition().y, data->GetPosition().z) - camPos;
+		float intensity = 1.0;
+
+	/*	if (dx.Magnitude() >= visibleRadius)
+			continue;*/
+
 
 		gRenderState = stageCascadeShadow;
+		auto radius = data->GetRadius();
+		_rwD3D9SetPixelShaderConstant(1, &data->GetPosition(), 1);
+		_rwD3D9SetPixelShaderConstant(2, &radius, 1);
+		
 
-		_rwD3D9SetPixelShaderConstant(1, &data.GetPosition(), 1);
-
-		_rwD3D9SetPixelShaderConstant(2, &CTimeCycle::m_CurrentColours.m_fFarClip, 1);
 
 		for (size_t j = 0; j < 6; j++)
 		{
-			m_viewMatrix[i] = data.GetViewMatrix(j);
-			m_projectionMatrix[i] = data.GetProjection();
-			
-			_rwD3D9CubeRasterSelectFace(mColorRaster[i], j);
-			RwD3D9SetRenderTarget(0, mColorRaster[i]);
+			auto m_viewMatrix = data->GetViewMatrix(j);
+			auto m_projectionMatrix = data->GetProjection();
+
+			gLightManager.mPointLightList[i].mShadowCube[j] = mColorCube[i][j];
+			//_rwD3D9CubeRasterSelectFace(mColorRaster[i], j);
+			RwD3D9SetRenderTarget(0, mColorCube[i][j]);
 			rwD3D9SetDepthStencil(mDepthRaster);
 
 			D3DVIEWPORT9 viewport;
 			viewport.X = 0;
 			viewport.Y = 0;
-			viewport.Width = mColorRaster[i]->width;
-			viewport.Height = mColorRaster[i]->height;
+			viewport.Width = m_nShadowSize;
+			viewport.Height = m_nShadowSize;
 			viewport.MinZ = 0;
 			viewport.MaxZ = 1;
 			RwD3DDevice->SetViewport(&viewport);
 
-			rwD3D9Clear(nullptr, rwCAMERACLEARIMAGE | rwCAMERACLEARZ);
+			rwD3D9Clear(nullptr, rwCAMERACLEARIMAGE | rwCAMERACLEARZ | rwCAMERACLEARSTENCIL);
 
 			if (rwD3D9TestState())
 			{
-				RwD3D9SetTransform(D3DTS_VIEW, &m_viewMatrix[i]);
-				RwD3D9SetTransform(D3DTS_PROJECTION, &m_projectionMatrix[i]);
+				RwD3D9SetTransform(D3DTS_VIEW, &m_viewMatrix);
+				RwD3D9SetTransform(D3DTS_PROJECTION, &m_projectionMatrix);
 
-				_rwD3D9SetVertexShaderConstant(4, &m_viewMatrix[i], 4);
-				_rwD3D9SetVertexShaderConstant(8, &m_projectionMatrix[i], 4);
+				_rwD3D9SetVertexShaderConstant(4, &m_viewMatrix, 4);
+				_rwD3D9SetVertexShaderConstant(8, &m_projectionMatrix, 4);
 
 				RenderEntities(data, i, j);
 			}
 		}
 	}
 	RWSRCGLOBAL(curCamera) = NULL;
+
+	// Restore all channels colors
+	RwD3D9SetRenderState(D3DRS_COLORWRITEENABLE,
+		D3DCOLORWRITEENABLE_ALPHA | D3DCOLORWRITEENABLE_RED |
+		D3DCOLORWRITEENABLE_GREEN | D3DCOLORWRITEENABLE_BLUE);
 }
 
-void PointLightShadow::RenderEntities(PointLight light, int i, int j)
+void PointLightShadow::RenderEntities(PointLight* light, int i, int j)
 {
 	RwRenderStateSet(rwRENDERSTATEVERTEXALPHAENABLE, (void*)TRUE);
-	RwRenderStateSet(rwRENDERSTATECULLMODE, (void*)rwCULLMODECULLNONE);
+	RwRenderStateSet(rwRENDERSTATECULLMODE, (void*)rwCULLMODECULLFRONT);
 	if (!CGame::currArea)
 		RwRenderStateSet(rwRENDERSTATEALPHATESTFUNCTIONREF, (void*)140);
 
 	RwRenderStateSet(rwRENDERSTATEZWRITEENABLE, (void*)TRUE);
 	RwRenderStateSet(rwRENDERSTATEZTESTENABLE, (void*)TRUE);
 
-	for (auto entity : m_renderableList[i])
+	int culled = 0;
+	for (auto entity : m_renderableList[0])
 	{
 		if (entity == nullptr || entity->m_pRwObject == nullptr)
 			continue;
 
-		//CColModel* col = entity->GetColModel();
-		////if (col == nullptr)
-		////	continue;
+		CColModel* col = entity->GetColModel();
+		//if (col == nullptr)
+		//	continue;
 
-		//CVector position = entity->GetPosition();
-		//if (entity->m_pLod)
-		//	position = entity->m_pLod->GetPosition();
+		CVector position = entity->GetPosition();
+		if (entity->m_pLod)
+			position = entity->m_pLod->GetPosition();
 
-		//float distance = (position - CRenderer::ms_vecCameraPosition).Magnitude();
-		//XMMATRIX world = RwMatrixToXMMATRIX(reinterpret_cast<RwMatrix*>(entity->GetMatrix()));
+		float distance = (position - CRenderer::ms_vecCameraPosition).Magnitude();
+		XMMATRIX world = RwMatrixToXMMATRIX(reinterpret_cast<RwMatrix*>(entity->GetMatrix()));
 
-		//CBoundingBox modelAABB = col->m_boundBox;
+		CBoundingBox modelAABB = col->m_boundBox;
 
-		//XMFLOAT3 min, max;
-		//min = *reinterpret_cast<XMFLOAT3*>(&modelAABB.m_vecMin);
-		//max = *reinterpret_cast<XMFLOAT3*>(&modelAABB.m_vecMax);
+		XMFLOAT3 min, max;
+		min = *reinterpret_cast<XMFLOAT3*>(&modelAABB.m_vecMin);
+		max = *reinterpret_cast<XMFLOAT3*>(&modelAABB.m_vecMax);
 
-		//Math::AABB aabb(min, max);
-		//aabb.Transform(world);
+		Math::AABB aabb(min, max);
+		aabb.Transform(world);
 
-		//if (light.GetFrustum(j).Intersects(aabb))
+		if (1 /*light->GetFrustum(j).Intersects(aabb)*/)
 
-		//{
+		{
+			culled++;
 			if (entity->m_nType == ENTITY_TYPE_PED)
 			{
 				CPed* ped = static_cast<CPed*>(entity);
@@ -296,7 +321,9 @@ void PointLightShadow::RenderEntities(PointLight light, int i, int j)
 			}
 
 			entity->m_bImBeingRendered = false;
-		//}
+		}
 	}
+
+	PrintMessage("%d %d",culled, m_renderableList[0].size());
 	CVisibilityPlugins::RenderWeaponPedsForPC();
 }

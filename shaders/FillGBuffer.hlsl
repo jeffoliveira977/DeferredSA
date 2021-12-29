@@ -23,6 +23,7 @@ struct VS_DeferredOutput
     float3 Binormal : TEXCOORD3;
     float3 Tangent : TEXCOORD4;
     float4 WorldPosition : TEXCOORD5;
+    float4 PositionVS : TEXCOORD6;
     float Depth : DEPTH;
 };
 
@@ -37,15 +38,17 @@ struct PS_DeferredOutput
 void VSFillGBuffer(VS_Input input, out VS_DeferredOutput output)
 {
     //float4x4 inverseWorld = inverseMatrix(World);
+   float4x4 modelview= mul(World, View);
     output.Position = mul(input.Position, World);
     float4 worldView = mul(output.Position, View);
     output.Position = mul(worldView, Projection);
     output.Texcoord = input.Texcoord;
     output.Color = input.Color;
-    output.Normal = float4(mul(input.Normal, (float3x3) World), 1.0);
-    output.Binormal = mul(input.Binormal, (float3x3) World);
-    output.Tangent = mul(input.Tangent, (float3x3) World);
+    output.Normal = normalize(mul(input.Normal, (float3x3) modelview));
+    output.Tangent = normalize(mul(input.Tangent, (float3x3) modelview));
+    output.Binormal = normalize(cross(output.Normal, output.Tangent));
     output.WorldPosition = mul(input.Position, World);
+    output.PositionVS = worldView;
     output.Depth = worldView.z;
 }
 
@@ -53,8 +56,9 @@ void PSFillGBuffer(float4 albedo, float depth, float3 normal, float4 glow, float
 {
     output.Albedo = albedo;
     //normal = mul(normalize(normal), (float3x3) View);
-    output.NormalDepth = EncodeDepthNormal(depth, normalize(normal));
+    output.NormalDepth = EncodeDepthNormal(depth, normal);
     output.Glow = glow;
+    output.Glow.z = depth;
     output.Radiance = radiance;
 
 }

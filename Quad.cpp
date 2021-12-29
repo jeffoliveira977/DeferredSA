@@ -192,9 +192,10 @@ void Quad::Initialize()
 	{
 		{0, 0,  D3DDECLTYPE_FLOAT4,   D3DDECLMETHOD_DEFAULT, D3DDECLUSAGE_POSITION,     0},
 		{0, 16, D3DDECLTYPE_FLOAT2,   D3DDECLMETHOD_DEFAULT, D3DDECLUSAGE_TEXCOORD,     0},
+		//{0, 28, D3DDECLTYPE_FLOAT3,   D3DDECLMETHOD_DEFAULT, D3DDECLUSAGE_TEXCOORD,     0},
 		D3DDECL_END()
 	};
-
+	
 	RwD3D9CreateVertexDeclaration(declaration, &mVertexDeclQuad);
 
 	mVertexShader = new VertexShader();
@@ -236,11 +237,12 @@ void Quad::Release()
 	rwD3D9DeleteVertexDeclaration(mVertexDeclQuad);
 }
 
-void Quad::Render()
+void Quad::Render(bool useVS)
 {
-	DrawScreenQuad();
-	return;
+	/*DrawScreenQuad();
+	return;*/
 
+	if(useVS)
 	 _rwD3D9SetVertexShader(mVertexShader->GetObject());
 	// _rwD3D9SetPixelShader(mPixelShader->GetObject());
 

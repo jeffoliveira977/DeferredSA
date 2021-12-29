@@ -549,15 +549,15 @@ void Renderer::ScanBigBuildingList(int sectorX, int sectorY)
 #include "PointLightShadow.h"
 using namespace plugin;
 using namespace injector;
-CEntity *g_Entity=0;
+
 void AddEntity(CEntity* entity)
 {
-   // g_Entity = entity;
-     ///   if (g_Entity )
-      //      PrintMessage("%f %f %f %d", entity->GetPosition() .x, entity->GetPosition().y, entity->GetPosition().z, entity->m_nModelIndex);
+    
+        //if (entity->m_nModelIndex == 1215)
+       //     PrintMessage("%f %f %f %d", entity->GetPosition() .x, entity->GetPosition().y, entity->GetPosition().z, entity->m_nModelIndex);
 
-    //if(entity->m_nType == eEntityType::ENTITY_TYPE_PED || entity->m_nType == eEntityType::ENTITY_TYPE_VEHICLE || entity->m_nType == eEntityType::ENTITY_TYPE_OBJECT)
-    //PointShadow->AddObject(0, entity, 0);
+    if(entity->m_nType == eEntityType::ENTITY_TYPE_PED || entity->m_nType == eEntityType::ENTITY_TYPE_VEHICLE || entity->m_nType == eEntityType::ENTITY_TYPE_OBJECT)
+    PointShadow->AddObject(0, entity, 0);
 
     ShadowCasterEntity->AddObject(entity);
 }
@@ -584,12 +584,11 @@ void __declspec(naked) CRenderer__AddEntityToRenderList___VisibleLod_HOOK()
     }
 }
 
-
 void __declspec(naked) Hook_light()
 {
     _asm
     {
-        mov     g_Entity, ebp
+       // mov     ecx, ebp
         push    ebp; entityAffected
         mov edx, 006FD09Ch
         jmp edx;
@@ -600,7 +599,7 @@ void __declspec(naked) Hook_light2()
 {
     _asm
     {
-        mov     g_Entity, ebp
+       // mov     ecx, ebp
         push    ebp; entityAffected
         mov edx, 006FD12Bh
         jmp edx;
@@ -613,10 +612,9 @@ void Renderer::Hook()
 {     // update ms_aVisibleEntityPtrs
 
    // patch::Nop(0x006FD105, 5);
-    //patch::RedirectJump(0x006FD129, Hook_light);
-  ///  patch::RedirectJump(0x006FD09A, Hook_light2);
-//
- 
+   // patch::RedirectJump(0x006FD129, Hook_light);
+
+   // patch::RedirectJump(0x006FD09A, Hook_light2);
 
     //plugin::patch::RedirectJump(0x00734570, Renderer::InsertEntityIntoSortedList);
     //plugin::patch::RedirectJump(0x005534B0, Renderer::AddEntityToRenderList);
@@ -637,14 +635,14 @@ void Renderer::Hook()
 
 void Renderer::ConstructRenderList()
 {
-   /* if (CGame::currArea == 0 && CGameIdle::m_fShadowDNBalance <= 1.0)
+    if (CGame::currArea == 0 && CGameIdle::m_fShadowDNBalance <= 1.0)
     {
         CascadedShadowManagement->CalculateShadowDistances(Scene.m_pRwCamera->nearPlane, Scene.m_pRwCamera->farPlane);
         const auto sunDirs = reinterpret_cast<RwV3d*>(0xB7CA50);
         const auto curr_sun_dir = *reinterpret_cast<int*>(0xB79FD0);
         const auto curr_sun_dirvec = sunDirs[curr_sun_dir];
         CascadedShadowManagement->DirectionalLightTransform(Scene.m_pRwCamera, curr_sun_dirvec, 0);
-    }*/
+    }
 
     eZoneAttributes zoneAttributes = CCullZones__FindTunnelAttributesForCoors(TheCamera.GetPosition());
     CRenderer::ms_bRenderTunnels = (zoneAttributes & (eZoneAttributes::UNKNOWN_2 | eZoneAttributes::UNKNOWN_1)) != 0;
@@ -677,8 +675,8 @@ void Renderer::ConstructRenderList()
     }
 
     ShadowCasterEntity->ClearCullList();
-    /*for (size_t i = 0; i < 30; i++)
-        PointShadow-> m_renderableList[i].clear();*/
+    for (size_t i = 0; i < 30; i++)
+        PointShadow-> m_renderableList[i].clear();
     CRenderer::ms_lowLodDistScale *= CTimeCycle::m_CurrentColours.m_fLodDistMult;
     COcclusion__ProcessBeforeRendering();
     CRenderer::ms_nNoOfVisibleEntities = 0;
@@ -691,7 +689,7 @@ void Renderer::ConstructRenderList()
     CRenderer::ScanWorld();
 
    // if (CGame::currArea == 0 && CGameIdle::m_fShadowDNBalance <= 1.0)
-      //  ShadowCasterEntity->Update(GetSectorX(CRenderer::ms_vecCameraPosition.x), GetSectorY(CRenderer::ms_vecCameraPosition.y));
+        ShadowCasterEntity->Update(GetSectorX(CRenderer::ms_vecCameraPosition.x), GetSectorY(CRenderer::ms_vecCameraPosition.y));
 
     CRenderer::ProcessLodRenderLists();
     CStreaming::StartRenderEntities();

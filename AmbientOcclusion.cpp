@@ -1,7 +1,7 @@
 #include "AmbientOcclusion.h"
 #include "Quad.h"
 #include "CScene.h"
-#include "imgui.h"
+#include "imgui/imgui.h"
 
 AmbientOcclusion::AmbientOcclusion()
 {
@@ -15,12 +15,21 @@ AmbientOcclusion::~AmbientOcclusion()
 void AmbientOcclusion::Initialize()
 {
 	mSSAORaster = RwD3D9RasterCreate(RsGlobal.maximumWidth, RsGlobal.maximumHeight, D3DFMT_A16B16G16R16F, rwRASTERTYPECAMERATEXTURE);
+	mDownSampled[0] = RwD3D9RasterCreate(RsGlobal.maximumWidth/2, RsGlobal.maximumHeight / 2, D3DFMT_A8R8G8B8, rwRASTERTYPECAMERATEXTURE);
+	mDownSampled[1] = RwD3D9RasterCreate(RsGlobal.maximumWidth / 2, RsGlobal.maximumHeight / 2, D3DFMT_A8R8G8B8, rwRASTERTYPECAMERATEXTURE);
+	mSSAORandom = LoadTextureFromFile("DeferredSA/textures/random.png");
 
-	mSSAOPixelShader = new PixelShader();
+	mSSAOPixelShader = unique_ptr<PixelShader>(new PixelShader());
 	mSSAOPixelShader->CreateFromBinary("SSAO_PS");
 
-	//mSSAOCombinePixelShader = new PixelShader();
-	//mSSAOCombinePixelShader->CreateFromBinary("SSAOCombine_PS");
+	mSSAOCombinePixelShader = unique_ptr<PixelShader> (new PixelShader());
+	mSSAOCombinePixelShader->CreateFromBinary("SSAOCombine_PS");
+	
+	mSSAOVertexShader = unique_ptr<VertexShader>(new VertexShader());
+	mSSAOVertexShader->CreateFromBinary("SSAO_VS");
+
+	mSSAOBlurVertexShader = unique_ptr<VertexShader>(new VertexShader());
+	mSSAOBlurVertexShader->CreateFromBinary("SSAOBlur_VS");
 
 }
 #include "CTimer.h"
@@ -39,13 +48,33 @@ void AmbientOcclusion::Render()
 	//mSSAOPixelShader->SetFloat("Time", ti);
 	_rwD3D9SetPixelShaderConstant(9, &ti, 1);
 	_rwD3D9SetPixelShader(mSSAOPixelShader->GetObject());
+	_rwD3D9SetVertexShader(mSSAOVertexShader->GetObject());
+	RwD3D9SetTexture(mSSAORandom, 0);
 	RwD3D9SetRenderTarget(0, mSSAORaster);
-	//RwD3DDevice->Clear(0, NULL, D3DCLEAR_TARGET, 0, 1.0, 0);
+	RwD3DDevice->Clear(0, NULL, D3DCLEAR_TARGET, 0, 1.0, 0);
+	Quad::Render(false);
 
-	Quad::Render();
+	XMFLOAT2 BlurDirection;
+
+	BlurDirection = { 1.0f / (RsGlobal.maximumWidth / 2), 0.0f };
+	_rwD3D9SetPixelShaderConstant(9, &BlurDirection, 1);
+
+	_rwD3D9SetPixelShader(mSSAOCombinePixelShader->GetObject());
+	_rwD3D9SetVertexShader(mSSAOBlurVertexShader->GetObject());
+	_rwD3D9RWSetRasterStage(mSSAORaster, 0);
+	RwD3D9SetRenderTarget(0, mDownSampled[0]);
+	RwD3DDevice->Clear(0, NULL, D3DCLEAR_TARGET, 0, 1.0, 0);
+	Quad::Render(false);
+	
+	BlurDirection = { 0.0f, 1.0f / (RsGlobal.maximumHeight / 2) };
+	_rwD3D9SetPixelShaderConstant(9, &BlurDirection, 1);
+	_rwD3D9SetPixelShader(mSSAOCombinePixelShader->GetObject());
+	_rwD3D9SetVertexShader(mSSAOBlurVertexShader->GetObject());
+	_rwD3D9RWSetRasterStage(mDownSampled[0], 0);
+	RwD3D9SetRenderTarget(0, mDownSampled[1]);
+	RwD3DDevice->Clear(0, NULL, D3DCLEAR_TARGET, 0, 1.0, 0);
+	Quad::Render(false);
 } 
-
-
 
 void AmbientOcclusion::UpdateImgui()
 {

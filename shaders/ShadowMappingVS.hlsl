@@ -16,5 +16,5 @@ void main(inout float4 position : POSITION0,
     
     oTexcoord = iTexcoord;
     oColor    = iColor;
-    //depth     = position.zw; 
+   // depth     = position.zw; 
 }

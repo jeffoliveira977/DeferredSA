@@ -83,7 +83,9 @@ float tex2DShadow(sampler2D arrays[4], float2 texcoord, int count)
 
 float4 tex2DShadow6x6(sampler2D arrays[6], float2 texcoord, int count)
 {
- 
+    if (count > 5)
+        return 0.0f;
+
     float4 texels = 0.0f;
     switch (count)
     {
@@ -453,22 +455,22 @@ float2 ComputeMoments(float Depth)
     float dy = ddy(Depth);   
     
     // Compute second moment over the pixel extents.  
-    Moments.y = Depth*Depth + 0.25*(dx*dx + dy*dy);   
+    Moments.y = Depth*Depth +(dx*dx + dy*dy);   
     return Moments; 
 }
 
 float ChebyshevUpperBound(float2 Moments, float t)
 {
     // One-tailed inequality valid if t > Moments.x     
-    if (t <= Moments.x)
-    {
-        return  1;
-    }
-    else
-    {
+    //if (t <= Moments.x)
+    //{
+    //    return  1;
+    //}
+    //else
+    //{
         // Compute variance.    
-        //float Variance = Moments.y - (Moments.x * Moments.x);
-        //Variance = max(Variance, 0.0001);
+       // float Variance = Moments.y - (Moments.x * Moments.x);
+      //  Variance = max(Variance, 0.0001);
         
         float Variance = (Moments.y) - (Moments.x * Moments.x);
         Variance = min(1.0f, max(0.0f, Variance + 0.00001f));
@@ -477,7 +479,7 @@ float ChebyshevUpperBound(float2 Moments, float t)
         float d = t - Moments.x;
         float p_max = Variance / (Variance + d * d);
         return pow(p_max, 5.1);
-    }
+    //}
 }
 
 

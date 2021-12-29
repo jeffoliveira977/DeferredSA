@@ -211,7 +211,7 @@ void CGameIdle::RenderScene(){
 
 	RwD3D9RenderStateReset();
 	DefinedState();
-	//RenderForward();
+	
 	//
 
 	{
@@ -235,7 +235,7 @@ void CGameIdle::RenderScene(){
 	CWaterLevel::SetupWaterShader(); 
 	CPlantMgr__Render();
 	DefinedState();
-	
+	RenderForward();
 	DeferredContext->RenderPostProcessing();
 	//SoftParticlesContext->SetupParams();
 }

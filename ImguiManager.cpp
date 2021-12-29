@@ -2,10 +2,10 @@
 
 #include "ImguiManager.h"
 
-#include "imgui_impl_rw.h"
-#include "imgui_impl_dx9.h"
-#include "imgui_impl_win32.h"
-#include "imgui_internal.h"
+#include "imgui/backends/imgui_impl_rw.h"
+#include "imgui/backends/imgui_impl_dx9.h"
+#include "imgui/backends/imgui_impl_win32.h"
+#include "imgui/imgui_internal.h"
 
 #define USE_RWIM3D
 

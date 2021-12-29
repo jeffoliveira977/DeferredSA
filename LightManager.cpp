@@ -4,28 +4,28 @@
 #include "CModelInfo.h"
 #include "CCamera.h"
 
-
 LightManager gLightManager;
+#include "PointLightShadow.h"
+
 void CPointLights__AddLight(unsigned char, XMFLOAT3 point, XMFLOAT3 direction, float radius, float red, float green, float blue, unsigned char, bool, CEntity*e)
 {
 
 	//if (e)
-		//if (e->m_nModelIndex == 1215)
-		//	PrintMessage("%f %f %f %d", point.x, point.y, point.z, e->m_nModelIndex);
+	//	if (e->m_nModelIndex == 1215)
+	//		//PrintMessage("%f %f %f %d", point.x, point.y, point.z, e->m_nModelIndex);
 	//		return;
 	//direction = point;
-	//if (direction.z <= 10.0)
-	//	return;
+	//if (direction.z <= 30.0)
 	//	direction.z += 4.0;
 	
 	CVector camPos = TheCamera.GetPosition();
-	float visibleRadius = 100.0;
+	float visibleRadius = 80.0;
 	CVector dx = CVector(point.x, point.y, point.z) - camPos;
+	float intensity = 20.0;
 
-	if (gLightManager.GetPointLightCount() > 29 || dx.Magnitude() >= visibleRadius)
+	if (dx.Magnitude() >= visibleRadius)
 		return;
 
-	float intensity = 3.0;
 
 	gLightManager.AddPointLight(point, direction, { red, green, blue }, radius, intensity);
 }
@@ -39,7 +39,7 @@ void AddVehicleSpotLight(CVehicle* vehicle)
 	CVector headlightPos = pModelinfo->m_pVehicleStruct->m_avDummyPos[0];
 
 	CVector camPos = TheCamera.GetPosition();
-	float visibleRadius = 250.0;
+	float visibleRadius = 100.0;
 	CVector dx = vehicle->GetPosition() - camPos;
 
 	if (dx.Magnitude() >= visibleRadius)
@@ -70,7 +70,7 @@ void AddVehicleSpotLight(CVehicle* vehicle)
 		light.SetRadius(30.0f);
 		light.SetDirection({ matrix->up.x, matrix->up.y, matrix->up.z });
 		light.SetColor({ 1.0f, 1.0f, 1.0f });
-		light.SetIntensity(3.0);
+		light.SetIntensity(10.0);
 		light.SetAngle(30.0);
 
 		CVector position;
@@ -110,16 +110,22 @@ void __fastcall CVehicle__DoHeadLightBeam(CVehicle*, CMatrix*, unsigned int, uns
 LightManager::LightManager()
 {}
 
+ int LightManager::mPointLightCount =0;
+ /*std::vector<*/PointLight/*>*/ LightManager::mPointLightList[60];
+
 void LightManager::Hook()
 {
 	plugin::Events::gameProcessEvent += []() 
 	{
 		gLightManager.ClearLights();
 
-	
-		//auto coors = FindPlayerCoors(0);
+		auto coors = FindPlayerCoors(0);
 		//PrintMessage("%f %f %f", coors.x, coors.y, coors.z);
-		//gLightManager.AddPointLight({ coors.x,coors.y,coors.z }, {0.32, 0.8, 0.5}, { 1, 1, 1 }, 20.0f, 1);
+		gLightManager.AddPointLight({ coors.x,coors.y+4,coors.z }, {0.32, 0.8, 0.5}, { 1, 1, 1 }, 10.0f, 1);
+
+		gLightManager.AddPointLight({ coors.x+4,coors.y,coors.z  }, { 0.32, 0.8, 0.5 }, { 0, 1, 0 }, 10.0f, 1);
+
+
 
 		auto pool = CPools::ms_pVehiclePool;
 		for (int i = 0; i < pool->m_nSize; ++i)
@@ -148,42 +154,23 @@ float rwV3D_Dist( XMFLOAT3 a,  XMFLOAT3 b)
 
 #include "GTADef.h"
 #include "CScene.h"
-void LightManager::SortByDistance(XMFLOAT3 from)
-{
-	auto campos = RwMatrixGetPos(RwFrameGetMatrix(RwCameraGetFrame(Scene.m_pRwCamera)));
 
-	for (int index = 0; index < mPointLightList.size(); index++)
+void LightManager::SortLights()
+{
+	auto position = RwMatrixGetPos(RwFrameGetMatrix(RwCameraGetFrame(Scene.m_pRwCamera)));
+
+	for (int index = 0; index < mPointLightCount; index++)
 	{
-		float sqrDistanceToCam = XMVectorGetX(XMVectorMax(g_XMOne, XMVector3Length(XMLoadFloat3((XMFLOAT3*)campos))- XMLoadFloat3(&mPointLightList[index].GetPosition()) ));
+		float sqrDistanceToCam = XMVectorGetX(XMVectorMax(g_XMOne, XMVector3Length(XMLoadFloat3((XMFLOAT3*)position)) - XMLoadFloat3(&mPointLightList[index].GetPosition())));
 
 		//compute a value to determine light order 
-		mPointLightList[index].mPriority = 1000.0f * mPointLightList[index].GetRadius() / std::max(1.0f, sqrDistanceToCam);
+		mPointLightList[index].mPriority = 1000.0f * mPointLightList[index]. GetRadius() / std::max(1.0f, sqrDistanceToCam);
 	}
 
-	std::sort(mPointLightList.begin(), mPointLightList.end(), [&](PointLight& a, PointLight& b)
-		{
-			return (int)(b.mPriority - a.mPriority);
-		});
-
-	//std::sort(mPointLightList.begin(), mPointLightList.end(), [&](PointLight& a, PointLight& b)
-	//	{
-	//		float
-	//			dX = from.x - a.GetPosition().x,
-	//			dY = from.y - a.GetPosition().y,
-	//			dZ = from.z - a.GetPosition().z;
-	//		float sq = sqrt(dX * dX + dY * dY + dZ * dZ);
-
-	//		bool is = sq >= 100.0;
-
-
-	//		dX = from.x - b.GetPosition().x,
-	//			dY = from.y - b.GetPosition().y,
-	//			dZ = from.z - b.GetPosition().z;
-	//		sq = sqrt(dX * dX + dY * dY + dZ * dZ);
-	//		bool is2 = sq >= 100.0;
-
-	//		return is && is2;
-	//	});
+	std::sort(&mPointLightList[0], &mPointLightList[30], [&](PointLight a, PointLight b)
+	{
+			return (b.mPriority < a.mPriority);
+	});
 }
 
 void LightManager::AddSpotLight(SpotLight spotlight)
@@ -207,25 +194,33 @@ void LightManager::AddSpotLight(XMFLOAT3 position, XMFLOAT3 direction, XMFLOAT3 
 
 void LightManager::AddPointLight(PointLight pointlight)
 {
-	mPointLightList.push_back(pointlight);
+	mPointLightList[mPointLightCount++] = pointlight;
+	//mPointLightList.push_back(pointlight);
 }
 
 void LightManager::AddPointLight(XMFLOAT3 position, XMFLOAT3 direction, XMFLOAT3 color, float radius, float intensity)
 {
-	PointLight light;
+	if (mPointLightCount > 59)
+		mPointLightCount = 0;
 
-	light.SetPosition(position);
-	light.SetDirection(direction);
-	light.SetColor(color);
-	light.SetRadius(radius);
-	light.SetIntensity(intensity);
-	light.Update();
-	mPointLightList.push_back(light);
+	//PointLight light;
+	mPointLightList[mPointLightCount].SetPosition(position);
+	mPointLightList[mPointLightCount].SetDirection(direction);
+	mPointLightList[mPointLightCount].SetColor(color);
+	mPointLightList[mPointLightCount].SetRadius(radius);
+	mPointLightList[mPointLightCount].SetIntensity(intensity);
+	mPointLightList[mPointLightCount].Update();
+	//mPointLightList[mPointLightCount++] = light;
+
+	mPointLightCount++;
+
+	// mPointLightList.push_back(light);
 }
 
 void LightManager::ClearLights()
 {
-	mPointLightList.clear();
+	mPointLightCount = 0;
+	// mPointLightList.clear();
 	mSpotLightList.clear();
 }
 
@@ -236,7 +231,8 @@ size_t LightManager::GetSpotLightCount()
 
 size_t LightManager::GetPointLightCount()
 {
-	return mPointLightList.size();
+	return mPointLightCount;
+	//return mPointLightList.size();
 }
 
 SpotLight LightManager::GetSpotLightAt(int i)
@@ -244,7 +240,7 @@ SpotLight LightManager::GetSpotLightAt(int i)
 	return mSpotLightList[i];
 }
 
-PointLight LightManager::GetPointLightAt(int i)
+PointLight* LightManager::GetPointLightAt(int i)
 {
-	return mPointLightList[i];
+	return &mPointLightList[i];
 }

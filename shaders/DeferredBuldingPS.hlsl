@@ -51,15 +51,14 @@ PS_DeferredOutput main(VS_DeferredOutput input, float2 vpos :VPOS)
     {
         if ( length(input.Tangent.xyz) > 0)
         { // normal = PeturbNormal(normalMap, input.WorldPosition.xyz, normal, input.Texcoord);
-            float3x3 tbn =
-            float3x3(normalize(input.Binormal.xyz),
-                      normalize(cross(normalize(normal),
-                      normalize(input.Tangent.xyz))),
-                      normalize(normal));
+            //float3x3 tbn =
+            //float3x3(input.Binormal.xyz, cross(normal, input.Tangent.xyz), normal);
 
-            normal = tex2D(NormalMap, input.Texcoord).rgb;
-            normal = normalize(normal * 2.0 - 1.0);
-            normal = normalize(mul(normal, tbn));
+            //normal = tex2D(NormalMap, input.Texcoord).rgb;
+           // normal = normalize(normal * 2.0 - 1.0);
+           // normal = normalize(mul(normal, tbn));
+           normal= NormalMapToSpaceNormal(tex2D(NormalMap, input.Texcoord).rgb, normal, input.Binormal, input.Tangent);
+
         }
     }
     else if (ForceNormalMap)

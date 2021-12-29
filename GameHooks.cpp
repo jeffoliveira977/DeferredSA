@@ -46,7 +46,7 @@ void CRealTimeShadowManager__Update()
 	//if (CGameIdle::m_fShadowDNBalance)
 	//{
 		PointShadow->Update();
-		//SpotShadow->Update();
+		SpotShadow->Update();
 	//}
 
 	/*if (CGame::currArea == 0 && CGameIdle::m_fShadowDNBalance <= 1.0)
@@ -60,23 +60,23 @@ void CRealTimeShadowManager__Update()
 
 	//ShadowCasterEntity->Update(1, 1);
 
-	 //CascadedShadowManagement->Update();
+	// CascadedShadowManagement->Update();
 
 	//CubemapReflection::Update();
-	//CubemapReflection::RenderScene();
+	// CubemapReflection::RenderScene();
 
 	//DualParaboloidReflection::Update();
 	//DualParaboloidReflection::RenderScene();
 
 	//RenderableReflectionObjects::Update();
 
-	//RenderableScene::m_frustumRenderable->SetWorldMatrix(XMMatrixInverse(0, CascadedShadowManagement->Desc[0].mLightViewMatrix));
-	//RenderableScene::m_frustumRenderable->SetProjectionMatrix(CascadedShadowManagement->Desc[0].mLightOrthoMatrix, true);
+	RenderableScene::m_frustumRenderable->SetWorldMatrix(XMMatrixInverse(0, CascadedShadowManagement->Desc[0].mLightViewMatrix));
+	RenderableScene::m_frustumRenderable->SetProjectionMatrix(CascadedShadowManagement->Desc[0].mLightOrthoMatrix, true);
 
 	//RenderableScene::m_frustumRenderable->SetWorldMatrix(XMMatrixInverse(0, CubemapReflection::m_viewMatrix[2]));
 	//RenderableScene::m_frustumRenderable->SetProjectionMatrix(CubemapReflection::m_projectionMatrix, false);
 
-	//RenderableScene::Render();
+	RenderableScene::Render();
 }
 
 void CMirrors__BeforeMainRender()

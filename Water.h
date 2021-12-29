@@ -9,7 +9,7 @@
 #define _RwIm3DRenderIndexedPrimitive(primType, indices, numIndices) ((RwBool(_cdecl*)(RwPrimitiveType, RwImVertexIndex *, RwInt32))0x7EF550 )(primType, indices, numIndices)
 
 #include <DirectXMath.h>
-#include "imgui.h"
+#include "imgui/imgui.h"
 
 struct WaterReflection
 {

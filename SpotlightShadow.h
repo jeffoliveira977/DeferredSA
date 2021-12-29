@@ -12,7 +12,7 @@ public:
 	XMVECTOR m_spotDir;
 	float m_spotAngle;
 	float m_spotRadius;
-	float m_nShadowSize;
+	int m_nShadowSize;
 	RwRaster* mColorRaster[30];
 	RwRaster* mDepthRaster;
 	XMMATRIX m_shadowMatrix[30];

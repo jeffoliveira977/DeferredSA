@@ -14,15 +14,17 @@ public:
 	void AddSpotLight(XMFLOAT3 position, XMFLOAT3 direction, XMFLOAT3 color, float radius, float angle, float intensity);
 	void AddPointLight(XMFLOAT3 position, XMFLOAT3 direction, XMFLOAT3 color, float radius, float intensity);
 	void ClearLights();
-	void SortByDistance(XMFLOAT3 from);
+	void SortLights();
 	size_t GetSpotLightCount();
 	size_t GetPointLightCount();
 	SpotLight GetSpotLightAt(int i);
-	PointLight GetPointLightAt(int i);
+	PointLight* GetPointLightAt(int i);
+	static /*std::vector<*/PointLight/*>*/ mPointLightList[60];
 private:
 
+	static int mPointLightCount;
 	std::vector<SpotLight> mSpotLightList;
-	std::vector<PointLight> mPointLightList;
+
 };
 
 extern LightManager gLightManager;

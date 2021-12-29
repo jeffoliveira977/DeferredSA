@@ -1,5 +1,6 @@
 #include "FillGBuffer.hlsl"
 
+
 float3 SkyTopColor : register(c0);
 float4 HorizonColor : register(c1);
 float4 MaterialColor : register(c2);
@@ -27,9 +28,19 @@ PS_DeferredOutput main(VS_DeferredOutput input)
     
     if (HasNormalMap)
     {
-        float3 normalMap = tex2D(NormalMap, input.Texcoord).rgb;
-        float3x3 tbn = float3x3(normalize(input.Tangent), normalize(input.Binormal), normalize(normal));
-        normal = normalize(mul(normalMap, tbn));
+        if (length(input.Tangent.xyz) > 0)
+        { // normal = PeturbNormal(normalMap, input.WorldPosition.xyz, normal, input.Texcoord);
+            //float3x3 tbn =
+            //float3x3(normalize(input.Binormal.xyz),
+            //          normalize(cross(normalize(normal),
+            //          normalize(input.Tangent.xyz))),
+            //          normalize(normal));
+
+            //normal = tex2D(NormalMap, input.Texcoord).rgb;
+            //normal = normalize(normal * 2.0 - 1.0);
+            //normal = normalize(mul(normal, tbn));
+            normal = NormalMapToSpaceNormal(tex2D(NormalMap, input.Texcoord).rgb, normal, input.Binormal, input.Tangent);
+        }
     }
     else if (1)
     {
