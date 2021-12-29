@@ -292,66 +292,54 @@ float4 main(float3 ViewRay : TEXCOORD2, float2 texCoord : TEXCOORD0, float3 frus
     
   //  sd = 1-sd;
 
-    float shadow = 1;
-    //if(sd.x < 1.0)
-   // {
-      //  shadow = chebyshevUpperBound(sd, dirLen);
-        
-     
-        
-   // if (currentDepth - bias < closestDepth)
-   // {
-     //   shadow = 0.5;
-            //return Attenuation;
-
-    //}
-    float3 directionToFragment = normalize(worldPosition - LightPosition.xyz);
-    float closestDirection = -1;
-    int faceIndex = 0;
-    float4 lightingPosition[6];
-    for (int face = 0; face < 6; ++face)
+    float shadow = 0.0;
+    
+    if (Attenuation < 1.0)
     {
-        float3 forward = FaceDirectons[face];
-        float result = dot(directionToFragment, forward);
-        if (result > closestDirection)
+        float3 directionToFragment = normalize(worldPosition - LightPosition.xyz);
+        float closestDirection = -1;
+        int faceIndex = 0;
+        float4 lightingPosition[6];
+        for (int face = 0; face < 6; ++face)
         {
-            closestDirection = result;
-            faceIndex = face;
-            lightingPosition[face] = mul(float4(worldPosition, 1), matProj[face]);
+            float3 forward = FaceDirectons[face];
+            float result = dot(directionToFragment, forward);
+            if (result > closestDirection)
+            {
+                closestDirection = result;
+                faceIndex = face;
+                lightingPosition[face] = mul(float4(worldPosition, 1), matProj[face]);
+            }
         }
+
+        float4 LightPosition = lightingPosition[faceIndex];
+        float2 shadowTexCoord = NormalToUvFace(directionToFragment, faceIndex);
+        if (shadowTexCoord.x < 0 || shadowTexCoord.x > 1 || shadowTexCoord.y < 0 || shadowTexCoord.y > 1)
+            return 0;
+        
+        //float2 shadowTexCoord = mad(0.5, LightPosition.xy / LightPosition.w, float2(0.5, 0.5));
+        //shadowTexCoord.y = 1.0f - shadowTexCoord.y;
+    
+        float2 offset = float2((float) faceIndex / 6, 0.0f);
+        shadowTexCoord.x *= 1.0f / 6;
+        shadowTexCoord += offset;
+    
+       
+        float sd = 1 - tex2D(SamplerShadow, shadowTexCoord).r;
+        float bias = 0.05;
+        float closestDepth = sd;
+        closestDepth *= LightRadius;
+        if (currentDepth - bias < closestDepth)
+        {
+            shadow = 1.0; // Avoid lights turn off
+
+        }
+        shadow = Compute4Samples(SamplerShadow, shadowTexCoord, float2(512.0f * 6, 512.0f), currentDepth - bias, LightRadius);
+
+        if (CastShadow == 0.0)
+            shadow = 1.0;
     }
-
-    float4 LightPosition = lightingPosition[faceIndex];
-
-    float2 shadowTexCoord = NormalToUvFace(directionToFragment, faceIndex);
-    //float2 shadowTexCoord = mad(0.5, LightPosition.xy / LightPosition.w, float2(0.5, 0.5));
-   // shadowTexCoord.y = 1.0f - shadowTexCoord.y;
     
-    float2 offset = float2((float) faceIndex / 6, 0.0f);
-    shadowTexCoord.x *= 1.0f / 6;
-    shadowTexCoord += offset;
-    
-    float sd = 1-tex2D(SamplerShadow, shadowTexCoord).r;
-    float bias = 0.05;
-    float closestDepth = sd;
-    closestDepth *= LightRadius;
-    if (currentDepth - bias < closestDepth)
-    {
-        shadow = 0.5; // Avoid lights turn off
-
-    }
-    
-       // shadow = ComputeShadowFactor(LightPosition.xyz, InverseViewMatrix[3].xyz, worldPosition, normal);
-    //float Distance = dirLen;
-
-    //if (Distance < sd.x + bias)
-    //        shadow = 0.5; // Inside the light
-    //    else
-    //        shadow = 0.5; // Inside the shadow
-    
-   // }
-    if (CastShadow == 1.0)
-        shadow = 1.0;
     //float3 Diff, Spec;
     //CalculateLighing(albedo, normal, -lightPos, -ViewDir, Roughness, metallicness, Diff, Spec);
     
@@ -361,15 +349,15 @@ float4 main(float3 ViewRay : TEXCOORD2, float2 texCoord : TEXCOORD0, float3 frus
 
     
     //return color;
-    float3 FinalDiffuseTerm = float3(0, 0, 0);
-    float FinalSpecularTerm = 0;
-    float DiffuseTerm, SpecularTerm;
-    CalculateDiffuseTerm_ViewDependent(normal, -lightPos.xyz, -ViewDir, DiffuseTerm, Roughness);
-    CalculateSpecularTerm(normal, -lightPos.xyz, -ViewDir, Roughness, SpecularTerm);
-    FinalDiffuseTerm += DiffuseTerm * Attenuation * (1 ) * LightColor * LightIntensity;
-    FinalSpecularTerm += SpecularTerm * Attenuation *(1) * metallicness;
+        float3 FinalDiffuseTerm = float3(0, 0, 0);
+        float FinalSpecularTerm = 0;
+        float DiffuseTerm, SpecularTerm;
+        CalculateDiffuseTerm_ViewDependent(normal, -lightPos.xyz, -ViewDir, DiffuseTerm, Roughness);
+        CalculateSpecularTerm(normal, -lightPos.xyz, -ViewDir, Roughness, SpecularTerm);
+        FinalDiffuseTerm += DiffuseTerm * Attenuation * (shadow) * LightColor * LightIntensity;
+        FinalSpecularTerm += SpecularTerm * Attenuation * (shadow) * metallicness;
     //FinalDiffuseTerm += SpecularTerm * s * Attn * metallicness;
-    float4 Lighting = float4(FinalDiffuseTerm, FinalSpecularTerm);
-    color.xyzw = Lighting;
-    return color;
-}
+        float4 Lighting = float4(FinalDiffuseTerm, FinalSpecularTerm);
+        color.xyzw = Lighting;
+        return color;
+    }

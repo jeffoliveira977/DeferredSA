@@ -532,6 +532,27 @@ float ComputeShadow4Samples(sampler2D samplerShadow[4], int cascade, float shado
     return shadow;
 }
 
+float Compute4Samples(sampler2D samplerShadow, float2 shadowTexCoord, float2 shadowSize, float ourdepth, float far)
+{
+    float2 ShadowMapPixelSize = 1.0 / shadowSize;
+	// Get the current depth stored in the shadow map
+    float samples[4];
+    
+    samples[0] = ourdepth < (1 - tex2D(samplerShadow, shadowTexCoord).r) * far ? 1 : 0.5;
+    samples[1] = ourdepth < (1 - tex2D(samplerShadow, shadowTexCoord + float2(0, 2) * ShadowMapPixelSize).r) * far ? 1 : 0.5;
+    samples[2] = ourdepth < (1 - tex2D(samplerShadow, shadowTexCoord + float2(2, 0) * ShadowMapPixelSize).r) * far ? 1 : 0.5;
+    samples[3] = ourdepth < (1 - tex2D(samplerShadow, shadowTexCoord + float2(2, 2) * ShadowMapPixelSize).r) * far ? 1 : 0.5;
+    
+	// Determine the lerp amounts           
+    float2 lerps = frac(shadowTexCoord * shadowSize);
+    
+	// lerp between the shadow values to calculate our light amount
+    half shadow = lerp(lerp(samples[0], samples[1], lerps.y), lerp(samples[2], samples[3], lerps.y), lerps.x);
+				
+    return shadow;
+}
+
+
 
 float4 DrawShadow(sampler2D samplerShadow[4],float3 sunDir, float depthTest, float3 worldPosition, ShadowData shadowBuffer)
 { 
