@@ -266,8 +266,8 @@ float4 main(float3 ViewRay : TEXCOORD2, float2 texCoord : TEXCOORD0, float3 frus
     
     float distance_to_light = distance(LightPosition.xyz, worldPosition.xyz);
 
-    //vec3 pl_dir = normalize(LightPosition.xyz - worldPosition.xyz);
-    //float ndotl = max(0, dot(normal.xyz, pl_dir));
+    vec3 pl_dir = normalize(LightPosition.xyz - worldPosition.xyz);
+    float ndotl = max(0, dot(normal.xyz, lightPos));
     //if (ndotl <= 0.0f)
     //    return 0.0;
     
@@ -315,7 +315,7 @@ float4 main(float3 ViewRay : TEXCOORD2, float2 texCoord : TEXCOORD0, float3 frus
         float4 LightPosition = lightingPosition[faceIndex];
         float2 shadowTexCoord = NormalToUvFace(directionToFragment, faceIndex);
         if (shadowTexCoord.x < 0 || shadowTexCoord.x > 1 || shadowTexCoord.y < 0 || shadowTexCoord.y > 1)
-            return 0;
+            return 1;
         
         //float2 shadowTexCoord = mad(0.5, LightPosition.xy / LightPosition.w, float2(0.5, 0.5));
         //shadowTexCoord.y = 1.0f - shadowTexCoord.y;
@@ -338,6 +338,7 @@ float4 main(float3 ViewRay : TEXCOORD2, float2 texCoord : TEXCOORD0, float3 frus
 
         if (CastShadow == 0.0)
             shadow = 1.0;
+      
     }
     
     //float3 Diff, Spec;
