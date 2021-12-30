@@ -297,36 +297,20 @@ float4 main(float3 ViewRay : TEXCOORD2, float2 texCoord : TEXCOORD0, float3 frus
     if (Attenuation < 1.0)
     {
         float3 directionToFragment = normalize(worldPosition - LightPosition.xyz);
-        //float closestDirection = -1;
-        int faceIndex = 0;
-       /* float4 lightingPosition[6];
-        for (int face = 0; face < 6; ++face)
-        {
-            float3 forward = FaceDirectons[face];
-            float result = dot(directionToFragment, forward);
-            if (result > closestDirection)
-            {
-                closestDirection = result;
-                faceIndex = face;
-                lightingPosition[face] = mul(float4(worldPosition, 1), matProj[face]);
-            }
-        }
 
-        float4 LightPosition = lightingPosition[faceIndex];*/
+        int faceIndex = 0;
+
         float2 shadowTexCoord = NormalToUvFace(directionToFragment, faceIndex);
         if (shadowTexCoord.x < 0 || shadowTexCoord.x > 1 || shadowTexCoord.y < 0 || shadowTexCoord.y > 1)
             return 1;
-        
-        //float2 shadowTexCoord = mad(0.5, LightPosition.xy / LightPosition.w, float2(0.5, 0.5));
-        //shadowTexCoord.y = 1.0f - shadowTexCoord.y;
-    
+
         float2 offset = float2(0.0f, (float) faceIndex / 6);
         shadowTexCoord.y *= 1.0f / 6;
         shadowTexCoord += offset;
     
        
         float sd = 1 - tex2D(SamplerShadow, shadowTexCoord).r;
-        float bias = 0.05;
+        float bias = 0.01;
         float closestDepth = sd;
         closestDepth *= LightRadius;
         if (currentDepth - bias < closestDepth)
@@ -334,7 +318,7 @@ float4 main(float3 ViewRay : TEXCOORD2, float2 texCoord : TEXCOORD0, float3 frus
             shadow = 1.0; // Avoid lights turn off
 
         }
-       // shadow = Compute4Samples(SamplerShadow, shadowTexCoord, float2(512.0f, 512.0f*6), currentDepth - bias, LightRadius);
+        shadow = Compute4Samples(SamplerShadow, shadowTexCoord, float2(512.0f, 512.0f*6), currentDepth - bias, LightRadius);
 
         if (CastShadow == 0.0)
             shadow = 1.0;
