@@ -6,13 +6,31 @@
 
 LightManager gLightManager;
 #include "PointLightShadow.h"
+bool CheckModelId(CEntity* entity)
+{
+	if (entity)
+	{
+		auto id = entity->m_nModelIndex;
+		if (/*(id < 596 || id > 599) &&*/
+			id == 438 ||
+			id == 420 ||
+			id == 416 ||
+			id == 407 ||
+			id == 544 ||
+			id == 523)
+			return false;
+	}
 
+	return true;
+}
 void CPointLights__AddLight(unsigned char, XMFLOAT3 point, XMFLOAT3 direction, float radius, float red, float green, float blue, unsigned char, bool, CEntity*e)
 {
 
-	if (e)
-		if (e->m_nModelIndex == 1215)
-			PrintMessage("%d", e->m_nModelIndex);
+	auto castShadow = true;
+	castShadow = castShadow && CheckModelId(e);
+		
+	//	PrintMessage("%d", e->m_nModelIndex);
+
 	//		return;
 	//direction = point;
 	//if (direction.z <= 30.0)
@@ -27,7 +45,7 @@ void CPointLights__AddLight(unsigned char, XMFLOAT3 point, XMFLOAT3 direction, f
 		return;
 
 
-	gLightManager.AddPointLight(point, direction, { red, green, blue }, radius, intensity);
+	gLightManager.AddPointLight(point, direction, { red, green, blue }, radius, intensity, castShadow);
 }
 
 void AddVehicleSpotLight(CVehicle* vehicle)
@@ -113,8 +131,24 @@ LightManager::LightManager()
  int LightManager::mPointLightCount =0;
  /*std::vector<*/PointLight/*>*/ LightManager::mPointLightList[60];
 
+ void CPointLights__AddLight1(unsigned char, XMFLOAT3 point, XMFLOAT3 direction, float radius, float red, float green, float blue, unsigned char, bool, CEntity* e)
+ {
+	
+	 CEntity* ea = 0;
+
+	 _asm mov ea, esi;
+
+	// if (ea)
+		 //	 PrintMessage("%d", ea->m_nModelIndex);
+
+	 CPointLights__AddLight(0, point, direction, radius, red, green, blue, 0, false, ea);
+ }
+
 void LightManager::Hook()
 {
+	plugin::patch::RedirectCall(0x006AB80F, CPointLights__AddLight1);
+	plugin::patch::RedirectCall(0x006ABBA6, CPointLights__AddLight1);
+
 	plugin::Events::gameProcessEvent += []() 
 	{
 		gLightManager.ClearLights();
@@ -179,7 +213,7 @@ void LightManager::Hook()
 		//}
 
 
-		gLightManager.AddPointLight({ coors.x ,coors.y+2, coors.z + 2.0f }, { 1, 1, 1 }, { 1, 1, 1 }, 10.0f, 1.0);
+		//gLightManager.AddPointLight({ coors.x ,coors.y+2, coors.z + 2.0f }, { 1, 1, 1 }, { 1, 1, 1 }, 10.0f, 1.0, true);
 
 		auto pool = CPools::ms_pVehiclePool;
 		for (int i = 0; i < pool->m_nSize; ++i)
@@ -260,7 +294,7 @@ void LightManager::AddPointLight(PointLight pointlight)
 	//mPointLightList.push_back(pointlight);
 }
 
-void LightManager::AddPointLight(XMFLOAT3 position, XMFLOAT3 direction, XMFLOAT3 color, float radius, float intensity)
+void LightManager::AddPointLight(XMFLOAT3 position, XMFLOAT3 direction, XMFLOAT3 color, float radius, float intensity, bool castShadow)
 {
 	if (mPointLightCount > 59)
 		return;
@@ -271,6 +305,7 @@ void LightManager::AddPointLight(XMFLOAT3 position, XMFLOAT3 direction, XMFLOAT3
 	mPointLightList[mPointLightCount].SetColor(color);
 	mPointLightList[mPointLightCount].SetRadius(radius);
 	mPointLightList[mPointLightCount].SetIntensity(intensity);
+	mPointLightList[mPointLightCount].CastShadow(castShadow);
 	mPointLightList[mPointLightCount].Update();
 	//mPointLightList[mPointLightCount++] = light;
 

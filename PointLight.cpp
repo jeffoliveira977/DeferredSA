@@ -59,6 +59,11 @@ void PointLight::SetRadius(float radius)
 	mRadius = max(10.0f, radius);
 }
 
+void PointLight::CastShadow(bool cast)
+{
+	mCastShadow = cast;
+}
+
 Math::Frustum PointLight::GetFrustum(int i)
 {
 	return mFrustum[i];

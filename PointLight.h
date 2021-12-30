@@ -16,7 +16,7 @@ public:
 	void SetDirection(XMFLOAT3 direction);
 	void SetIntensity(float intensity);
 	void SetRadius(float radius);
-
+	void CastShadow(bool cast);
 	Math::Frustum GetFrustum(int i);
 	XMMATRIX GetViewMatrix(int i);
 	XMMATRIX GetProjection();
@@ -26,11 +26,13 @@ public:
 	float GetIntensity();
 	float GetRadius();
 	XMMATRIX GetWorld();
+	
 	void Update();
 	float mPriority;
 	 RwRaster *mShadowRaster;
 	 bool mCastShadow;
 	 XMMATRIX mMatrix[6];
+	 
 private:
 	Math::BoundingSphere mSphere;
 

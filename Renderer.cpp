@@ -551,26 +551,13 @@ using namespace plugin;
 using namespace injector;
 
 
-bool CheckModelId(CEntity* entity)
-{
-    auto id = entity->m_nModelIndex;
-    if (/*(id < 596 || id > 599) &&*/
-        id == 438 ||
-        id == 420 ||
-        id == 416 ||
-        id == 407 ||
-        id == 544||
-        id== 523)
-        return false;
 
-    return true;
-}
 
 void AddEntity(CEntity* entity)
 {
-
-    //if (entity->m_nModelIndex == 1215)
-   //     PrintMessage("%f %f %f %d", entity->GetPosition() .x, entity->GetPosition().y, entity->GetPosition().z, entity->m_nModelIndex);
+    //auto a = ReadMemory<CEntity*>(0x6AAB6F);
+    //if (a )
+    //   PrintMessage("%f %f %f %d", a->GetPosition() .x, a->GetPosition().y, a->GetPosition().z, a->m_nModelIndex);
 
     if (entity->m_nType == eEntityType::ENTITY_TYPE_PED || entity->m_nType == eEntityType::ENTITY_TYPE_VEHICLE || entity->m_nType == eEntityType::ENTITY_TYPE_OBJECT)
     {
@@ -608,7 +595,7 @@ void __declspec(naked) Hook_light()
     _asm
     {
        // mov     ecx, ebp
-        push    ebp; entityAffected
+        push    esi; entityAffected
         mov edx, 006FD09Ch
         jmp edx;
     }
@@ -619,7 +606,7 @@ void __declspec(naked) Hook_light2()
     _asm
     {
        // mov     ecx, ebp
-        push    ebp; entityAffected
+        push    esi; entityAffected
         mov edx, 006FD12Bh
         jmp edx;
     }
@@ -631,9 +618,11 @@ void Renderer::Hook()
 {     // update ms_aVisibleEntityPtrs
 
    // patch::Nop(0x006FD105, 5);
-    patch::RedirectJump(0x006FD129, Hook_light);
+   // patch::RedirectJump(0x6FD09A, Hook_light);
+   // patch::RedirectJump(0x6FD129, Hook_light2);
 
-    patch::RedirectJump(0x006FD09A, Hook_light2);
+
+
 
     //plugin::patch::RedirectJump(0x00734570, Renderer::InsertEntityIntoSortedList);
     //plugin::patch::RedirectJump(0x005534B0, Renderer::AddEntityToRenderList);

@@ -12,7 +12,7 @@ public:
 	void AddSpotLight(SpotLight spotlight);
 	void AddPointLight(PointLight pointlight);
 	void AddSpotLight(XMFLOAT3 position, XMFLOAT3 direction, XMFLOAT3 color, float radius, float angle, float intensity);
-	void AddPointLight(XMFLOAT3 position, XMFLOAT3 direction, XMFLOAT3 color, float radius, float intensity);
+	void AddPointLight(XMFLOAT3 position, XMFLOAT3 direction, XMFLOAT3 color, float radius, float intensity, bool castShadow);
 	void ClearLights();
 	void SortLights();
 	size_t GetSpotLightCount();

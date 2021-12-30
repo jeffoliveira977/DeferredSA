@@ -250,7 +250,7 @@ void DeferredRendering::RenderLights()
 
 		_rwD3D9RWSetRasterStage(light->mShadowRaster, 5);
 		RwD3D9SetTexture(gRandomNoise, 6);
-		// drawShadow = light->mCastShadow ? 1.0 : 0.0;
+		 drawShadow = drawShadow && (light->mCastShadow ? 1.0 : 0.0);
 	//}
 
 		_rwD3D9SetPixelShaderConstant(9, &light->GetPosition(), 1);

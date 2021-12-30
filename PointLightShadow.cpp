@@ -200,7 +200,7 @@ void PointLightShadow::Update()
 		_rwD3D9SetPixelShaderConstant(1, &data->GetPosition(), 1);
 		_rwD3D9SetPixelShaderConstant(2, &radius, 1);
 		gLightManager.mPointLightList[i].mShadowRaster = mColorRaster[i];
-		gLightManager.mPointLightList[i].mCastShadow = true;
+	
 
 
 		for (size_t j = 0; j < 6; j++)
