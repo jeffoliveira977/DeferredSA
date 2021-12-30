@@ -120,7 +120,7 @@ void Render()
 
 	float weight = 512.0f* (float)RsGlobal.maximumHeight / (float)RsGlobal.maximumWidth;
 
-	RwRenderStateSet(rwRENDERSTATETEXTURERASTER, (void*)SpotShadow->mColorRaster[0]);
+	RwRenderStateSet(rwRENDERSTATETEXTURERASTER, (void*)RenderableScene::m_raster);
 	DrawScreenQuad(0, 0, weight, weight);
 
 	/*MakeScreenQuad(0, 0, weight, weight);

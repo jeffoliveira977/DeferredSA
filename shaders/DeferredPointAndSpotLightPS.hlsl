@@ -8,7 +8,7 @@
 
 row_major float4x4 InverseViewMatrix : register(c0);
 row_major float4x4 ProjectionMatrix : register(c4);
-float FarClip: register(c8);
+float2 FarClip: register(c8);
 
 struct LightData{
     float4 position;  // Position xyz, Range w
@@ -160,7 +160,7 @@ float4 main(float2 texCoord : TEXCOORD0) : COLOR
 
     float depth;
     float3 normal;
-    DecodeDepthNormal(texCoord, FarClip, depth, normal);
+    DecodeDepthNormal(texCoord, FarClip.y, depth, normal);
     normal = mul(normal, (float3x3) InverseViewMatrix);
     
     float3 worldPosition;
@@ -175,6 +175,10 @@ float4 main(float2 texCoord : TEXCOORD0) : COLOR
     float s2 = 1.1f;
     float atten = 1.0f - smoothstep(LightRadius * s2, LightRadius, dirLen);
     atten = 1.0f - pow(saturate(dirLen / LightRadius), 2);
+    
+    
+    float Attenuation = 1.0f - pow(saturate(dirLen / LightRadius), 2);
+    Attenuation *= Attenuation;
    // float LightDistance = length(worldPosition.xyz - LightPosition.xyz) / 2.0;
    // atten = 1.0f - pow(saturate(LightDistance / LightRadius), 2);
     float minCos = cos(radians(LightConeAngle));
@@ -184,12 +188,12 @@ float4 main(float2 texCoord : TEXCOORD0) : COLOR
     
     float attenuation = pow(clamp(1 - pow((distance / LightRadius), 4.0), 0.0, 1.0), 2.0) / (1.0 + (distance * distance));
     
-    atten *= smoothstep(minCos, maxCos, cosAngle);
+    Attenuation *= smoothstep(minCos, maxCos, cosAngle);
     
-    float fSpot = SpotLightIntensity(max(dot(lightPos, LightDirection), 0.0f), radians(60), radians(30)); //pow(, 4.0f);
-    //atten *= fSpot;
+    float fSpot = SpotLightIntensity(max(dot(lightPos, LightDirection), 0.0f), radians(60), radians(10)); //pow(, 4.0f);
+   // Attenuation *= fSpot;
     //atten *= 0.5;
-    
+
     float4 LightViewPos = mul(float4(worldPosition, 1.0), ShadowMatrix);
     
     float2 ShadowTexC = 0.5 * LightViewPos.xy / LightViewPos.w + float2(0.5, 0.5);
@@ -220,8 +224,8 @@ float4 main(float2 texCoord : TEXCOORD0) : COLOR
 
    // color.xyz = atten * s * CalculateLighing(albedo, normal, lightPos, -ViewDir, Roughness, SpecIntensity);
 
-    FinalDiffuseTerm += DiffuseTerm * atten * s * LightColor * LightIntensity;
-    FinalSpecularTerm += SpecularTerm * atten * s * SpecIntensity;
+    FinalDiffuseTerm += DiffuseTerm * Attenuation *s* LightColor * LightIntensity;
+    FinalSpecularTerm += SpecularTerm * Attenuation *s* SpecIntensity;
     float4 Lighting = float4(FinalDiffuseTerm, FinalSpecularTerm);
     color.xyzw = Lighting;
     return color;

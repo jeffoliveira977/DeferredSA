@@ -284,6 +284,14 @@
     <FxCompile Include="shaders\DeferredVehicleVS.hlsl">
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='GTASA Release|Win32'">Vertex</ShaderType>
     </FxCompile>
+    <FxCompile Include="shaders\DistancePS.hlsl" />
+    <FxCompile Include="shaders\DistanceSkinnedMeshPS.hlsl" />
+    <FxCompile Include="shaders\DistanceSkinnedMeshVS.hlsl">
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='GTASA Release|Win32'">Vertex</ShaderType>
+    </FxCompile>
+    <FxCompile Include="shaders\DistanceVS.hlsl">
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='GTASA Release|Win32'">Vertex</ShaderType>
+    </FxCompile>
     <FxCompile Include="shaders\DualParaboloidPS.hlsl" />
     <FxCompile Include="shaders\DualParaboloidVS.hlsl">
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='GTASA Release|Win32'">Vertex</ShaderType>

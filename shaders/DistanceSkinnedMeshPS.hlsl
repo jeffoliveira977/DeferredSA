@@ -22,6 +22,7 @@ float2 ComputeMoments(float Depth)
 struct PS_input
 {
     float2 Texcoord : TEXCOORD0;
+    float3 World : TEXCOORD1;
     float2 Depth : DEPTH;
 };
 
@@ -30,7 +31,16 @@ sampler2D Diffuse : register(s0);
 float4 main(PS_input input) : COLOR
 {
 
-   float d = input.Depth.x / input.Depth.y;
+   // float4 color;
+  // float d = input.Depth.x / input.Depth.y;
 
+   // color.y = input.Depth * input.Depth;
+    //color.z = 0.0;
+   // color.w = 1.0;
+  //  return color;
+    
+    float3 p = input.World - lightPos.xyz;
+   // p.y *= -1.0;
+    float d = 1 - (length(p)/FarClip);
     return d;
 }

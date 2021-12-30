@@ -16,10 +16,12 @@
 #include "PixelShader.h"
 #include "SpotlightShadow.h"
 #include "PointLightShadow.h"
+#include "RenderableSphere.h"
+#include "CCamera.h"
+#include "LightManager.h"
 RenderingStage gRenderState;
 DeferredRendering *DeferredContext;
-
-
+RwTexture* gRandomNoise = 0;
 void DeferredRendering::Initialize()
 {
 	mPointLightPS = unique_ptr<PixelShader>(new PixelShader());
@@ -72,12 +74,12 @@ void DeferredRendering::Initialize()
 
 	mAmbientOcclusion = unique_ptr<AmbientOcclusion>(new AmbientOcclusion());
 	mAmbientOcclusion->Initialize();
+
+	gRandomNoise = LoadTextureFromFile("DeferredSA/textures/random.png");
 }
 XMMATRIX view, projection;
 void DeferredRendering::Start()
 {
-	
-
 	gRenderState = stageDeferred;
 
 	RwRaster* rasters[] = {
@@ -93,7 +95,7 @@ void DeferredRendering::Start()
 
 	_rwD3D9SetPixelShaderConstant(18, &(XMMatrixInverse(0, view* projection)), 4);
 }
-
+XMFLOAT4 corners[4];
 void DeferredRendering::Stop()
 {
 	DefinedState();
@@ -124,8 +126,8 @@ void DeferredRendering::Stop()
 		auto vertices = XMVector3TransformCoord(vFrustumCornersWS[i], invM);
 		XMStoreFloat3(&Corners[i], vertices);
 	}
-
-	XMFLOAT4 corners[4];
+	
+	//XMFLOAT4 corners[4];
 	for (int i = 0; i < 4; ++i)
 	{
 		corners[i].x = Corners[i + 4].x -= Corners[i].x;
@@ -164,7 +166,7 @@ void DeferredRendering::Stop()
 
 	//mAmbientOcclusion->Render();
 	//mVolumetricClouds->Render(mScreenRT.get());
-//	mVolumetricLight->Render(mScreenRT.get());
+	mVolumetricLight->Render(mScreenRT.get());
 
 	_rwD3D9SetPixelShader(NULL);
 	_rwD3D9SetVertexShader(NULL);
@@ -179,12 +181,11 @@ void DeferredRendering::RenderPostProcessing()
 	RwRenderStateSet(rwRENDERSTATECULLMODE, (void*)rwCULLMODECULLNONE);
 	RwD3D9SetRenderState(D3DRS_ALPHABLENDENABLE, TRUE);
 
-	//mPostProcessing->RenderFXAA(mScreenRT.get());
-	//mPostProcessing->RenderBloom(mScreenRT);
+	mPostProcessing->RenderFXAA(mScreenRT.get());
+	//mPostProcessing->RenderBloom(mScreenRT.get());
 }
 
-#include "CCamera.h"
-#include "LightManager.h"
+
 void DeferredRendering::RenderLights()
 {
 	ShaderContext->SetTimecyProps(8);
@@ -219,7 +220,7 @@ void DeferredRendering::RenderLights()
 	RwRenderStateSet(rwRENDERSTATEDESTBLEND, (void*)rwBLENDONE);
 	RwRenderStateSet(rwRENDERSTATECULLMODE, (void*)rwCULLMODECULLFRONT);
 	mPointLightPS->Apply();
-	 gLightManager.SortLights();
+	gLightManager.SortLights();
 	CVector camPos = TheCamera.GetPosition();
 
 
@@ -230,26 +231,27 @@ void DeferredRendering::RenderLights()
 		auto light = gLightManager.GetPointLightAt(i);
 		auto radius = light->GetRadius();
 		auto intensity = light->GetIntensity();
-		
+
 		CVector dx = CVector(light->GetPosition().x, light->GetPosition().y, light->GetPosition().z) - camPos;
-	//	PrintMessage("%f", dx.Magnitude());
-		//assert(i < 29);
+		//	PrintMessage("%f", dx.Magnitude());
+			//assert(i < 29);
 		float drawShadow = 0.0;
-		if (dx.Magnitude() <20.0)
-			  drawShadow = 1.0;
-			//	rwD3D9SetSamplerState(5, D3DSAMP_BORDERCOLOR, 0x0);
-		//{
+		if (dx.Magnitude() < 20.0)
+			drawShadow = 1.0;
+		//	rwD3D9SetSamplerState(5, D3DSAMP_BORDERCOLOR, 0x0);
+	//{
 
-			rwD3D9SetSamplerState(5, D3DSAMP_MAGFILTER, D3DTEXF_LINEAR);
-			rwD3D9SetSamplerState(5, D3DSAMP_MINFILTER, D3DTEXF_LINEAR);
-			rwD3D9SetSamplerState(5, D3DSAMP_MIPFILTER, D3DTEXF_NONE);
-			rwD3D9SetSamplerState(5, D3DSAMP_ADDRESSU, D3DTADDRESS_CLAMP);
-			rwD3D9SetSamplerState(5, D3DSAMP_ADDRESSV, D3DTADDRESS_CLAMP);
-			//rwD3D9SetSamplerState(5, D3DSAMP_ADDRESSW, D3DTADDRESS_CLAMP);
+		rwD3D9SetSamplerState(5, D3DSAMP_MAGFILTER, D3DTEXF_LINEAR);
+		rwD3D9SetSamplerState(5, D3DSAMP_MINFILTER, D3DTEXF_LINEAR);
+		rwD3D9SetSamplerState(5, D3DSAMP_MIPFILTER, D3DTEXF_NONE);
+		rwD3D9SetSamplerState(5, D3DSAMP_ADDRESSU, D3DTADDRESS_CLAMP);
+		rwD3D9SetSamplerState(5, D3DSAMP_ADDRESSV, D3DTADDRESS_CLAMP);
+		//rwD3D9SetSamplerState(5, D3DSAMP_ADDRESSW, D3DTADDRESS_CLAMP);
 
-			_rwD3D9RWSetRasterStage(light->mShadowRaster, 5);
-			// drawShadow = light->mCastShadow ? 1.0 : 0.0;
-		//}
+		_rwD3D9RWSetRasterStage(light->mShadowRaster, 5);
+		RwD3D9SetTexture(gRandomNoise, 6);
+		// drawShadow = light->mCastShadow ? 1.0 : 0.0;
+	//}
 
 		_rwD3D9SetPixelShaderConstant(9, &light->GetPosition(), 1);
 		_rwD3D9SetPixelShaderConstant(10, &light->GetDirection(), 1);
@@ -257,41 +259,42 @@ void DeferredRendering::RenderLights()
 		_rwD3D9SetPixelShaderConstant(12, &radius, 1);
 		_rwD3D9SetPixelShaderConstant(13, &intensity, 1);
 		_rwD3D9SetPixelShaderConstant(14, &drawShadow, 1);
-		_rwD3D9SetPixelShaderConstant(15, &light->mMatrix, 4*6);
+		_rwD3D9SetPixelShaderConstant(15, &light->mMatrix, 4 * 6);
 
 		auto trans = XMMatrixTranslation(light->GetPosition().x, light->GetPosition().y, light->GetPosition().z);
-		_rwD3D9SetVertexShaderConstant(8, &(trans*view), 4);
+		_rwD3D9SetVertexShaderConstant(8, &(trans * view), 4);
 		Quad::Render();
 	}
 
-	//mSpotLightPS->Apply();
-	//for (size_t i = 0; i < gLightManager.GetSpotLightCount(); i++)
-	//{
-	//	auto light = gLightManager.GetSpotLightAt(i);
 
-	//	auto radius = light.GetRadius();
-	//	auto intensity = light.GetIntensity();
-	//	auto coneAngle = light.GetAngle();
+	mSpotLightPS->Apply();
+	for (size_t i = 0; i < gLightManager.GetSpotLightCount(); i++)
+	{
+		auto light = gLightManager.GetSpotLightAt(i);
 
-	//	rwD3D9SetSamplerState(5, D3DSAMP_BORDERCOLOR, 0x0);
-	//	rwD3D9SetSamplerState(5, D3DSAMP_MAGFILTER, D3DTEXF_POINT);
-	//	rwD3D9SetSamplerState(5, D3DSAMP_MINFILTER, D3DTEXF_POINT);
-	//	rwD3D9SetSamplerState(5, D3DSAMP_MIPFILTER, D3DTEXF_POINT);
-	//	rwD3D9SetSamplerState(5, D3DSAMP_ADDRESSU, D3DTADDRESS_CLAMP);
-	//	rwD3D9SetSamplerState(5, D3DSAMP_ADDRESSV, D3DTADDRESS_CLAMP);
-	//	rwD3D9SetSamplerState(5, D3DSAMP_ADDRESSW, D3DTADDRESS_CLAMP);
-	//	 _rwD3D9RWSetRasterStage(SpotShadow->mColorRaster[i], 5);
+		auto radius = light.GetRadius();
+		auto intensity = light.GetIntensity();
+		auto coneAngle = light.GetAngle();
 
-	//	_rwD3D9SetPixelShaderConstant(9, &light.GetPosition(), 1);
-	//	_rwD3D9SetPixelShaderConstant(10, &light.GetDirection(), 1);
-	//	_rwD3D9SetPixelShaderConstant(11, &light.GetColor(), 1);
-	//	_rwD3D9SetPixelShaderConstant(12, &radius, 1);
-	//	_rwD3D9SetPixelShaderConstant(13, &intensity, 1);
-	//	_rwD3D9SetPixelShaderConstant(14, &coneAngle, 1);
-	//	_rwD3D9SetPixelShaderConstant(15, &(light.GetViewMatrix() * light.GetProjection()) , 4);
+		rwD3D9SetSamplerState(5, D3DSAMP_BORDERCOLOR, 0x0);
+		rwD3D9SetSamplerState(5, D3DSAMP_MAGFILTER, D3DTEXF_POINT);
+		rwD3D9SetSamplerState(5, D3DSAMP_MINFILTER, D3DTEXF_POINT);
+		rwD3D9SetSamplerState(5, D3DSAMP_MIPFILTER, D3DTEXF_POINT);
+		rwD3D9SetSamplerState(5, D3DSAMP_ADDRESSU, D3DTADDRESS_CLAMP);
+		rwD3D9SetSamplerState(5, D3DSAMP_ADDRESSV, D3DTADDRESS_CLAMP);
+		rwD3D9SetSamplerState(5, D3DSAMP_ADDRESSW, D3DTADDRESS_CLAMP);
+		 _rwD3D9RWSetRasterStage(SpotShadow->mColorRaster[i], 5);
 
-	//	Quad::Render();
-	//}
+		_rwD3D9SetPixelShaderConstant(9, &light.GetPosition(), 1);
+		_rwD3D9SetPixelShaderConstant(10, &light.GetDirection(), 1);
+		_rwD3D9SetPixelShaderConstant(11, &light.GetColor(), 1);
+		_rwD3D9SetPixelShaderConstant(12, &radius, 1);
+		_rwD3D9SetPixelShaderConstant(13, &intensity, 1);
+		_rwD3D9SetPixelShaderConstant(14, &coneAngle, 1);
+		_rwD3D9SetPixelShaderConstant(15, &(light.GetViewMatrix() * light.GetProjection()) , 4);
+
+		Quad::Render();
+	}
 
 
 	static uint maxlight = 0;

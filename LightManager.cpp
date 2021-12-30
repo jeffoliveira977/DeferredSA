@@ -10,9 +10,9 @@ LightManager gLightManager;
 void CPointLights__AddLight(unsigned char, XMFLOAT3 point, XMFLOAT3 direction, float radius, float red, float green, float blue, unsigned char, bool, CEntity*e)
 {
 
-	//if (e)
-	//	if (e->m_nModelIndex == 1215)
-	//		//PrintMessage("%f %f %f %d", point.x, point.y, point.z, e->m_nModelIndex);
+	if (e)
+		if (e->m_nModelIndex == 1215)
+			PrintMessage("%d", e->m_nModelIndex);
 	//		return;
 	//direction = point;
 	//if (direction.z <= 30.0)
@@ -70,7 +70,7 @@ void AddVehicleSpotLight(CVehicle* vehicle)
 		light.SetRadius(30.0f);
 		light.SetDirection({ matrix->up.x, matrix->up.y, matrix->up.z });
 		light.SetColor({ 1.0f, 1.0f, 1.0f });
-		light.SetIntensity(10.0);
+		light.SetIntensity(2.0);
 		light.SetAngle(30.0);
 
 		CVector position;
@@ -120,8 +120,66 @@ void LightManager::Hook()
 		gLightManager.ClearLights();
 
 		auto coors = FindPlayerCoors(0);
-		//PrintMessage("%f %f %f", coors.x, coors.y, coors.z);
-		gLightManager.AddPointLight({ coors.x,coors.y,coors.z+2.0f }, {0.32, 0.8, 0.5}, { 1, 1, 1 }, 10.0f, 1);
+
+		static float angle = 0.0f;
+
+		angle += 2.0;
+		
+		float c = 360.0f / 4;
+
+		float x, y,z,  r;
+
+		r = 2.f;
+
+		static RwRGBAReal randoColor[7];
+
+		RwRGBAReal Peru = { 0.803921640f, 0.521568656f, 0.247058839f, 1.000000000f };
+		RwRGBAReal Pink = { 1.000000000f, 0.752941251f, 0.796078503f, 1.000000000f };
+		RwRGBAReal Plum = { 0.000000000f, 0.000000000f, 1.000000000f, 1.000000000f };
+		RwRGBAReal PowderBlue = { 0.690196097f, 0.878431439f, 0.901960850f, 1.000000000f };
+		RwRGBAReal Purple = { 1.000000000f, 0.843137324f, 0.000000000f, 1.000000000f };
+		 RwRGBAReal Red = { 1.000000000f, 0.000000000f, 0.000000000f, 1.000000000f };
+		 RwRGBAReal RosyBrown = { 0.603921592f, 0.803921640f, 0.196078449f, 1.000000000f };
+		//if (angle > 360.0)
+		//{
+			randoColor[0] = Peru;
+			randoColor[1] = Pink;
+			randoColor[2] = Plum;
+			randoColor[3] = PowderBlue;
+			randoColor[4] = Purple;
+			randoColor[5] = Red;
+			randoColor[6] = RosyBrown;
+		//}
+	
+			static int key[]={0,4,3,2};
+			int v = 0;
+		if (angle > 360.0)
+		{
+			for (size_t i = 0; i < 4; i++)
+				key[i] = plugin::Random(0, 6);
+			 v = plugin::Random(0, 3);
+		}
+
+		if (angle > 360.0)
+			angle = 0.0;
+		//
+		//for (size_t i = 0; i < 4; i++)
+		//{
+		//	float op1 = XMConvertToRadians(angle + c * i);
+
+		//	float red = randoColor[key[i]].red;
+		//	float green = randoColor[key[i]].green;
+		//	float blue = randoColor[key[i]].blue;
+		//	PrintMessage("%f %f %f", red, green, blue);
+		//	x = coors.x + (i % 2 ? cos(op1) : sin(op1)) * r;
+		//	y = coors.y + (i % 2 ? sin(op1) : cos(op1)) * r;
+		//	auto s = (i % 1 ? sin(op1) : cos(op1));
+		//	z = coors.z + s * r;
+		//	gLightManager.AddPointLight({ x,y, z + 1.0f }, { 1, 1, 1 }, { red, green, blue }, 10.0f, 1.0);
+		//}
+
+
+		gLightManager.AddPointLight({ coors.x ,coors.y+2, coors.z + 2.0f }, { 1, 1, 1 }, { 1, 1, 1 }, 10.0f, 1.0);
 
 		auto pool = CPools::ms_pVehiclePool;
 		for (int i = 0; i < pool->m_nSize; ++i)

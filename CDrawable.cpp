@@ -17,6 +17,12 @@ void MeshRenderingMode::createShaders()
 
 	bytes = readFile("DeferredSA/shaders/binary/ShadowMappingPS.cso");
 	RwD3D9CreatePixelShader((RwUInt32*)bytes.data(), &PS_shadow);
+
+	bytes = readFile("DeferredSA/shaders/binary/DistanceVS.cso");
+	RwD3D9CreateVertexShader((RwUInt32*)bytes.data(), &VS_Distance);
+
+	bytes = readFile("DeferredSA/shaders/binary/DistancePS.cso");
+	RwD3D9CreatePixelShader((RwUInt32*)bytes.data(), &PS_Distance);
 }
 
 void MeshRenderingMode::RenderCallBack(RwResEntry* entry, void* object, RwUInt8 type, RwUInt32 flags)
@@ -48,7 +54,8 @@ void MeshRenderingMode::RenderCallBack(RwResEntry* entry, void* object, RwUInt8 
 		case stageRefraction:
 			ReflectionRendering(entry, object, flags);
 			break;
-		case stageCascadeShadow:
+		case stageCascadeShadow:	
+		case stagePointShadow:
 			ShadowRendering(entry, object, flags);
 			break;
 	}
@@ -91,8 +98,18 @@ void MeshRenderingMode::ShadowRendering(RwResEntry* entry, void* object, RwUInt3
 	 RwRenderStateSet(rwRENDERSTATECULLMODE, (void*)0);
 	RwRenderStateSet(rwRENDERSTATEZWRITEENABLE, (void*)TRUE);
 	RwRenderStateSet(rwRENDERSTATEZTESTENABLE, (void*)TRUE);
-	_rwD3D9SetVertexShader(VS_shadow);
-	_rwD3D9SetPixelShader(PS_shadow);
+
+	if (gRenderState == stagePointShadow)
+	{
+		_rwD3D9SetVertexShader(VS_Distance);
+		_rwD3D9SetPixelShader(PS_Distance);
+	}
+	else
+	{
+		_rwD3D9SetVertexShader(VS_shadow);
+		_rwD3D9SetPixelShader(PS_shadow);
+	}
+
 	RwRenderStateSet(rwRENDERSTATEALPHATESTFUNCTIONREF, (void*)20);
 	RwRenderStateSet(rwRENDERSTATESRCBLEND, (void*)rwBLENDSRCALPHA);
 	RwRenderStateSet(rwRENDERSTATEDESTBLEND, (void*)rwBLENDINVSRCALPHA);

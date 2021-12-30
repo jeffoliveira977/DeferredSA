@@ -16,7 +16,8 @@ enum RenderingStage
 	stageReflectionCubemap,
 	stageReflection,
 	stageRefraction,
-	stageCascadeShadow
+	stageCascadeShadow,
+	stagePointShadow
 }extern gRenderState;
 
 class DeferredRendering

@@ -23,6 +23,7 @@ struct VS_output
 {
     float4 Position : POSITION0;
     float2 Texcoord : TEXCOORD0;
+    float3 World : TEXCOORD1;
     float2 Depth : DEPTH;
 };
 
@@ -34,6 +35,7 @@ VS_output main(VS_input input, float4 weight : BLENDWEIGHT,
     VS_output output;
     output.Position = float4(mul(input.Position, bones).xyz, 1.0);
     output.Position = mul(output.Position, World);
+    output.World = output.Position.xyz;
     float4 viewPosition = mul(output.Position, View);
     output.Position = mul(viewPosition, Projection);
     output.Depth = output.Position.zw;

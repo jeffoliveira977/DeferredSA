@@ -60,21 +60,21 @@ void CRealTimeShadowManager__Update()
 
 	//ShadowCasterEntity->Update(1, 1);
 
-	// CascadedShadowManagement->Update();
+	 CascadedShadowManagement->Update();
 
-	//CubemapReflection::Update();
-	// CubemapReflection::RenderScene();
+	CubemapReflection::Update();
+	 CubemapReflection::RenderScene();
 
 	//DualParaboloidReflection::Update();
 	//DualParaboloidReflection::RenderScene();
 
 	//RenderableReflectionObjects::Update();
 
-	RenderableScene::m_frustumRenderable->SetWorldMatrix(XMMatrixInverse(0, CascadedShadowManagement->Desc[0].mLightViewMatrix));
-	RenderableScene::m_frustumRenderable->SetProjectionMatrix(CascadedShadowManagement->Desc[0].mLightOrthoMatrix, true);
+	//RenderableScene::m_frustumRenderable->SetWorldMatrix(XMMatrixInverse(0, CascadedShadowManagement->Desc[0].mLightViewMatrix));
+	//RenderableScene::m_frustumRenderable->SetProjectionMatrix(CascadedShadowManagement->Desc[0].mLightOrthoMatrix, true);
 
-	//RenderableScene::m_frustumRenderable->SetWorldMatrix(XMMatrixInverse(0, CubemapReflection::m_viewMatrix[2]));
-	//RenderableScene::m_frustumRenderable->SetProjectionMatrix(CubemapReflection::m_projectionMatrix, false);
+	RenderableScene::m_frustumRenderable->SetWorldMatrix(XMMatrixInverse(0, CubemapReflection::m_viewMatrix[0]));
+	RenderableScene::m_frustumRenderable->SetProjectionMatrix(CubemapReflection::m_projectionMatrix, false);
 
 	RenderableScene::Render();
 }

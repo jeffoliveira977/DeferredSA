@@ -78,7 +78,7 @@ float3 ComputeSunRaysWithLighting(float2 position, float3 LightDir,
     float3 SunRayContrib = SunBlend * SunColor.rgb * 4.5 * 0.5f;
     const float3 RayleighContrib = SkyLightColor.rgb * 0.25f;
     const float3 MieContrib = HorizonColor.rgb * 0.25f;
-
+    
     for (int index = 0; index < SunRaySampleCount; index++)
     {
         float3 CurrentRay = SampleShadowCascadesUnfiltered(ShadowSampler, StepLength * (index + Jitter), CurrentPos, ShadowBuffer);

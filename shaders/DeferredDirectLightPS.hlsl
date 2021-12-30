@@ -151,7 +151,7 @@ float4 main(float2 texCoord : TEXCOORD0, float2 vpos:VPOS) : COLOR
     
     float3 Radiance = tex2D(RadianceSampler, texCoord);
     
-    float2 Lighting = float2(DiffuseTerm, SpecularTerm * SpecIntensity * ShadowDNBalance) /** (ShadowDNBalance <= 0.0 ? 1.0 : Shadow)*/;
+    float2 Lighting = float2(DiffuseTerm, SpecularTerm * SpecIntensity * ShadowDNBalance) * (ShadowDNBalance <= 0.0 ? 1.0 : Shadow);
     color = float4(Lighting.x * sunColor.rgb + Radiance + 0.4 * (1 - ShadowDNBalance), Lighting.y);
     
    // color.w = 0.0;

@@ -204,7 +204,9 @@ void CGameIdle::UpdateShadowDNBalance()
 #define RenderStoredShadows() ((void (__cdecl *)())0x70A960)()
 #define sub_707F40() ((void (__cdecl *)())0x707F40)()
 #define RenderStaticShadows() ((void (__cdecl *)())0x708300)()
-
+#include "LightManager.h"
+#include "RenderableSphere.h"
+RenderableSphere* mRenderableSphere=0;
 void CGameIdle::RenderScene(){
 	EnvironmentMapping::SetRenderCallback(RenderDeferred);
 	ShaderContext->Update();
@@ -224,7 +226,48 @@ void CGameIdle::RenderScene(){
 	DefinedState();
 	RwD3D9RenderStateReset();
 	RenderDeferred();
+	ShaderContext->SetViewProjectionMatrix(4, true);
 
+	if (mRenderableSphere == 0)
+	{
+		mRenderableSphere = new RenderableSphere();
+		mRenderableSphere->Initialize(10, 10);
+	}
+	gLightManager.SortLights();
+	auto coors = FindPlayerCoors(-1);
+
+	CEntity* entity = FindPlayerEntity(-1);
+	if (entity)
+	{
+		CColModel* col = entity->GetColModel();
+		if (col != nullptr)
+		{
+			XMMATRIX world = RwMatrixToXMMATRIX(reinterpret_cast<RwMatrix*>(entity->GetMatrix()));
+			XMMATRIX translation = XMMatrixTranslation(coors.x, coors.y, coors.z);
+			uint32_t maxLights = min((size_t)29, gLightManager.GetPointLightCount());
+			XMINT4 SolidWhite = { 0, 255, 255, 255 };
+			for (int i = 0; i < maxLights; i++)
+			{
+				auto light = gLightManager.GetPointLightAt(i);
+				auto radius = light->GetRadius();
+				auto intensity = light->GetIntensity();
+				auto color = light->GetColor();
+
+				XMINT4 color2 = { (int)(color.x * 255), (int)(color.y * 255), (int)(color.z * 255), 255 };
+				mRenderableSphere->SetColor(color2);
+
+				Math::BoundingSphere sphere;
+				sphere.Center = light->GetPosition();
+				sphere.Radius = 0.1;
+				//sphere.Center = *reinterpret_cast<XMFLOAT3*>(&col->m_boundSphere.m_vecCenter);
+				//	sphere.Radius = col->m_boundSphere.m_fRadius;
+				mRenderableSphere->SetSphere(sphere);
+				mRenderableSphere->SetWorldMatrix(light->GetWorld());
+				mRenderableSphere->Render();
+				/*PrintMessage("%f %f %f", col->m_boundSphere.m_fRadius, sphere.Radius, sphere.Center.z);*/
+			}
+		}
+	}
 	sub_707F40();
 	RenderStaticShadows();
 	RenderStoredShadows();

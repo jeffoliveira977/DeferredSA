@@ -18,12 +18,16 @@ float4 mapDepthToARGB32(const float value)
 
 void main(float2 Texcoord : TEXCOORD0, 
           float4 Color : TEXCOORD1, 
-          float2 Depth : TEXCOORD2,
+          float3 Depth : TEXCOORD2,
           out float4 color: COLOR)
 {
     float a = tex2D(DiffuseSampler, Texcoord).a;
     clip(a - 0.5);
     
-    float d = Depth.x / Depth.y;
+    
+    float3 p = Depth - lightPos.xyz;
+
+    float d = 1-(length(p)/FarClip);
+    
     color = d;
 }

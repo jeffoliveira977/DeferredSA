@@ -134,10 +134,10 @@ void PointLight::Update()
 	XMStoreFloat3(&mSphere.Center, mDirection);
 	mSphere.Radius = mRadius;
 
-	XMMATRIX scaling = XMMatrixScaling(mRadius, mRadius, mRadius);
-	XMMATRIX translation = XMMatrixTranslationFromVector(mDirection);
+	XMMATRIX scaling = XMMatrixScaling(1/mRadius, 1 / mRadius, 1 / mRadius);
+	XMMATRIX translation = XMMatrixTranslationFromVector(mPosition);
 
-	mWorld = scaling * translation;
+	mWorld = scaling*translation;
 	mProjection = XMMatrixPerspectiveFovLH(XMConvertToRadians(90.0f), 1.0f, 0.01f, mRadius);
 
 	for (size_t i = 0; i < 6; i++)

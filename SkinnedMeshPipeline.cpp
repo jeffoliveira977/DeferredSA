@@ -45,6 +45,9 @@ RxPipeline* SkinnedMeshPipeline::Initialize()
 			PS_deferred = RwCreateCompiledPixelShader("SkinnedMeshPS");
 			VS_shadow = RwCreateCompiledVertexShader("SkinnedMeshShadowVS");
 			PS_shadow = RwCreateCompiledPixelShader("SkinnedMeshShadowPS");
+
+			VS_Distance = RwCreateCompiledVertexShader("DistanceSkinnedMeshVS");
+			PS_Distance = RwCreateCompiledPixelShader("DistanceSkinnedMeshPS");
 			VS_waterReflection = RwCreateCompiledVertexShader("WaterSkinnedMeshReflectionVS");
 			PS_waterReflection = RwCreateCompiledPixelShader("WaterReflectionPS");
 			return pipeline;
@@ -133,8 +136,18 @@ void SkinnedMeshPipeline::ShadowRendering(RwResEntry* entry, void* object, RwUIn
 	RwD3D9SetRenderState(D3DRS_ALPHATESTENABLE, TRUE);
 //	RwRenderStateSet(rwRENDERSTATECULLMODE, (void*)rwCULLMODECULLNONE);
 	RwRenderStateSet(rwRENDERSTATECULLMODE, (void*)0);
-	_rwD3D9SetVertexShader(VS_shadow);
-	_rwD3D9SetPixelShader(PS_shadow);
+
+
+	if (gRenderState == stagePointShadow)
+	{
+		_rwD3D9SetVertexShader(VS_Distance);
+		_rwD3D9SetPixelShader(PS_Distance);
+	}
+	else
+	{
+		_rwD3D9SetVertexShader(VS_shadow);
+		_rwD3D9SetPixelShader(PS_shadow);
+	}
 
 	int numMeshes = header->numMeshes;
 	while(numMeshes--)

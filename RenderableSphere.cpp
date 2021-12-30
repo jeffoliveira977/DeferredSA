@@ -143,6 +143,23 @@ void RenderableSphere::Render()
 	if(mVertexBuffer == nullptr || mVertices.size() == 0)
 		return;
 
+	for (size_t i = 0; i < mVertices.size(); i++)
+	{
+		RwIm3DVertexSetRGBA(&mVertices[i],
+			mColor.x, mColor.y,
+			mColor.z, mColor.w);
+	}
+
+	Vertex* vertexData = nullptr;
+	mVertexBuffer->Map(mVertices.size() * sizeof(Vertex), (void**)&vertexData);
+	std::copy(mVertices.begin(), mVertices.end(), vertexData);
+	mVertexBuffer->Unmap();
+
+	RwUInt16* indexData = nullptr;
+	mIndexBuffer->Map(mIndices.size() * sizeof(RwUInt16), (void**)&indexData);
+	std::copy(mIndices.begin(), mIndices.end(), indexData);
+	mIndexBuffer->Unmap();
+
 	RwD3D9SetStreamSource(0, mVertexBuffer->GetBuffer(), 0, sizeof(Vertex));
 	_rwD3D9SetIndices(mIndexBuffer->GetBuffer());
 
@@ -150,8 +167,8 @@ void RenderableSphere::Render()
 	XMMATRIX scale = XMMatrixScaling(mSphere.Radius, mSphere.Radius, mSphere.Radius);
 
 	PixelShaderConstant::SetFloat(0, 0.0);
-	VertexShaderConstant::SetMatrix(0, mWorld * translation * scale);
-	//ShaderContext->SetViewProjectionMatrix(4, true);
+	VertexShaderConstant::SetMatrix(0,/* mWorld **/scale * translation);
+	 ShaderContext->SetViewProjectionMatrix(4, true);
 
 	_rwD3D9SetVertexDeclaration(VertexDeclIm3DNoTex);
 

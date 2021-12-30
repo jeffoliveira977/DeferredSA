@@ -18,4 +18,7 @@ protected:
 
 	void* VS_shadow;
 	void* PS_shadow;
+
+	void* VS_Distance;
+	void* PS_Distance;
 };
