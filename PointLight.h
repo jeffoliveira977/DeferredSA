@@ -19,7 +19,6 @@ public:
 
 	Math::Frustum GetFrustum(int i);
 	XMMATRIX GetViewMatrix(int i);
-
 	XMMATRIX GetProjection();
 	XMFLOAT3 GetColor();
 	XMFLOAT3 GetDirection();
@@ -30,13 +29,13 @@ public:
 	void Update();
 	float mPriority;
 	 RwRaster *mShadowRaster;
-	 RwRaster* mShadowCube[6];
+	 bool mCastShadow;
 	 XMMATRIX mMatrix[6];
 private:
 	Math::BoundingSphere mSphere;
 
 	XMMATRIX mWorld;
-
+	
 	XMMATRIX mView[6];
 	XMMATRIX mProjection;
 	XMFLOAT3 mColor;

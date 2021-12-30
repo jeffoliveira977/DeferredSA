@@ -21,7 +21,7 @@ void CPointLights__AddLight(unsigned char, XMFLOAT3 point, XMFLOAT3 direction, f
 	CVector camPos = TheCamera.GetPosition();
 	float visibleRadius = 80.0;
 	CVector dx = CVector(point.x, point.y, point.z) - camPos;
-	float intensity = 20.0;
+	float intensity = 3.0;
 
 	if (dx.Magnitude() >= visibleRadius)
 		return;
@@ -121,11 +121,38 @@ void LightManager::Hook()
 
 		auto coors = FindPlayerCoors(0);
 		//PrintMessage("%f %f %f", coors.x, coors.y, coors.z);
-		gLightManager.AddPointLight({ coors.x,coors.y+4,coors.z }, {0.32, 0.8, 0.5}, { 1, 1, 1 }, 10.0f, 1);
 
-		gLightManager.AddPointLight({ coors.x+4,coors.y,coors.z  }, { 0.32, 0.8, 0.5 }, { 0, 1, 0 }, 10.0f, 1);
+		static float angle = 0.0f;
 
+		angle += 1.0;
+		if (angle > 360.0)
+			angle = 0.0;
 
+		float c = 360.0f / 4;
+		float op1 = XMConvertToRadians(angle + c * 1);
+		float op2 = XMConvertToRadians(angle + c * 2);
+		float op3 = XMConvertToRadians(angle + c * 3);
+		float op4 = XMConvertToRadians(angle + c * 4);
+
+		float x, y, r;
+
+		r = 10.f / 4;
+
+		x = coors.x + cos(op1) * r;
+		y = coors.y + sin(op1) * r;
+		gLightManager.AddPointLight({ x,y,coors.z+2.0f }, {0.32, 0.8, 0.5}, { 1, 1, 1 }, 10.0f, 2.0);
+		
+		x = coors.x + cos(op2) * r;
+		y = coors.y + sin(op2) * r;
+		gLightManager.AddPointLight({ x,y,coors.z + 2.0f }, { 0.32, 0.8, 0.5 }, { 0, 1, 0 }, 10.0f, 2.0);
+		
+		x = coors.x + cos(op3) * r;
+		y = coors.y + sin(op3) * r;
+		gLightManager.AddPointLight({ x,y,coors.z + 2.0f }, { 0.32, 0.8, 0.5 }, { 1, 0, 0 }, 10.0f, 2.0);
+		
+		x = coors.x + cos(op4) * r;
+		y = coors.y + sin(op4) * r;
+		gLightManager.AddPointLight({ x,y,coors.z + 2.0f }, { 0.32, 0.8, 0.5 }, { 0, 0, 1 }, 10.0f, 2.0);
 
 		auto pool = CPools::ms_pVehiclePool;
 		for (int i = 0; i < pool->m_nSize; ++i)
@@ -142,7 +169,7 @@ void LightManager::Hook()
 	plugin::patch::RedirectJump(0x6E1720, CVehicle__DoHeadLightReflection);
 }
 
-float rwV3D_Dist( XMFLOAT3 a,  XMFLOAT3 b)
+float rwV3D_Dist(XMFLOAT3 a, XMFLOAT3 b)
 {
 	float
 		dX = b.x - a.x,
@@ -157,20 +184,25 @@ float rwV3D_Dist( XMFLOAT3 a,  XMFLOAT3 b)
 
 void LightManager::SortLights()
 {
-	auto position = RwMatrixGetPos(RwFrameGetMatrix(RwCameraGetFrame(Scene.m_pRwCamera)));
+	auto position = (XMFLOAT3*)RwMatrixGetPos(RwFrameGetMatrix(RwCameraGetFrame(Scene.m_pRwCamera)));
 
-	for (int index = 0; index < mPointLightCount; index++)
-	{
-		float sqrDistanceToCam = XMVectorGetX(XMVectorMax(g_XMOne, XMVector3Length(XMLoadFloat3((XMFLOAT3*)position)) - XMLoadFloat3(&mPointLightList[index].GetPosition())));
+	//for (int index = 0; index < mPointLightCount; index++)
+	//{
+	//	float sqrDistanceToCam = XMVectorGetX(XMVectorMax(g_XMOne, XMVector3Length(XMLoadFloat3((XMFLOAT3*)position)) - XMLoadFloat3(&mPointLightList[index].GetPosition())));
 
-		//compute a value to determine light order 
-		mPointLightList[index].mPriority = 1000.0f * mPointLightList[index]. GetRadius() / std::max(1.0f, sqrDistanceToCam);
-	}
+	//	//compute a value to determine light order 
+	//	mPointLightList[index].mPriority = 1000.0f * mPointLightList[index]. GetRadius() / std::max(1.0f, sqrDistanceToCam);
+	//}
 
-	std::sort(&mPointLightList[0], &mPointLightList[30], [&](PointLight a, PointLight b)
-	{
-			return (b.mPriority < a.mPriority);
-	});
+	//std::sort(&mPointLightList[0], &mPointLightList[59], [&](PointLight a, PointLight b)
+	//{
+	//		return (b.mPriority < a.mPriority);
+	//});
+
+	sort(&mPointLightList[0], &mPointLightList[mPointLightCount-1], [&]( PointLight& a,  PointLight& b)
+		{
+			return (rwV3D_Dist(a.GetPosition(), *position) < rwV3D_Dist(b.GetPosition(), *position));
+		});
 }
 
 void LightManager::AddSpotLight(SpotLight spotlight)
@@ -194,6 +226,9 @@ void LightManager::AddSpotLight(XMFLOAT3 position, XMFLOAT3 direction, XMFLOAT3 
 
 void LightManager::AddPointLight(PointLight pointlight)
 {
+	if (mPointLightCount > 59)
+		return;
+
 	mPointLightList[mPointLightCount++] = pointlight;
 	//mPointLightList.push_back(pointlight);
 }
@@ -201,7 +236,7 @@ void LightManager::AddPointLight(PointLight pointlight)
 void LightManager::AddPointLight(XMFLOAT3 position, XMFLOAT3 direction, XMFLOAT3 color, float radius, float intensity)
 {
 	if (mPointLightCount > 59)
-		mPointLightCount = 0;
+		return;
 
 	//PointLight light;
 	mPointLightList[mPointLightCount].SetPosition(position);
@@ -222,6 +257,11 @@ void LightManager::ClearLights()
 	mPointLightCount = 0;
 	// mPointLightList.clear();
 	mSpotLightList.clear();
+
+	for (size_t i = 0; i < mPointLightCount; i++)
+	{
+		mPointLightList[i].mCastShadow = false;
+	}
 }
 
 size_t LightManager::GetSpotLightCount()

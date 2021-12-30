@@ -16,8 +16,8 @@ public:
 	float m_spotRadius;
 	int m_nShadowSize;
 
-	RwRaster* mColorCube[30][6];
-	RwRaster* mColorRaster[30];
+	 RwRaster* mColorRaster[30];
+	 RwRaster* mColorCube[30];
 	RwRaster* mDepthRaster;
 
 	std::vector<CEntity*> m_renderableList[30];

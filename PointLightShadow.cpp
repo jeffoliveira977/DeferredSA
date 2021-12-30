@@ -35,17 +35,15 @@ void PointLightShadow::Initialize()
 
 	for (size_t i = 0; i < 30; i++)
 	{
-		//mColorRaster[i] = RwD3D9RasterCreate(m_nShadowSize, m_nShadowSize, D3DFMT_G32R32F, rwRASTERTYPECAMERATEXTURE);
-		//rwD3D9CubeRasterCreate(mColorRaster[i], D3DFMT_G32R32F, 1);
+		mColorRaster[i] = RwD3D9RasterCreate(m_nShadowSize, m_nShadowSize, D3DFMT_G32R32F, rwRASTERTYPECAMERATEXTURE);
+		rwD3D9CubeRasterCreate(mColorRaster[i], D3DFMT_G32R32F, 1);
 
-		for (size_t j = 0; j < 6; j++)
-		{
-			mColorCube[i][j] = RwD3D9RasterCreate(m_nShadowSize, m_nShadowSize, D3DFMT_G32R32F, rwRASTERTYPECAMERATEXTURE);
-		}
+
+		mColorCube[i] = RwD3D9RasterCreate(m_nShadowSize, m_nShadowSize*6, D3DFMT_R32F, rwRASTERTYPECAMERATEXTURE);
 	}
 
 	//mColorRaster[i] = RwRasterCreate(m_nShadowSize, m_nShadowSize, 32, rwRASTERTYPECAMERATEXTURE);
-	mDepthRaster = RwRasterCreate(m_nShadowSize, m_nShadowSize, 32, rwRASTERTYPEZBUFFER);
+	mDepthRaster = RwRasterCreate(m_nShadowSize, m_nShadowSize*6, 32, rwRASTERTYPEZBUFFER);
 }
 
 void PointLightShadow::AddObject(int i, CEntity* entity, float )
@@ -178,56 +176,56 @@ void PointLightShadow::Update()
 	//		ScanSectorList(x + i, y + j);
 	//	}
 	//}
-
-	if (gLightManager.GetPointLightCount() > 28)
-		return;
+	
+	uint32_t maxLights = min((size_t)29, gLightManager.GetPointLightCount());
 
 	RwRGBA ambient = { CTimeCycle::m_CurrentColours.m_nSkyTopRed, CTimeCycle::m_CurrentColours.m_nSkyTopGreen, CTimeCycle::m_CurrentColours.m_nSkyTopBlue, 255 };
-	// RwD3D9SetRenderState(D3DRS_COLORWRITEENABLE, D3DCOLORWRITEENABLE_RED);
+	// RwD3D9SetRenderState(D3DRS_COLORWRITEENABLE, D3DCOLORWRITEENABLE_RED| D3DCOLORWRITEENABLE_GREEN);
 	RWSRCGLOBAL(curCamera) = Scene.m_pRwCamera;
-	for (size_t i = 0; i < gLightManager.GetPointLightCount(); i++)
+	for (size_t i = 0; i < maxLights; i++)
 	{
 		PointLight* data = gLightManager.GetPointLightAt(i);
 
 		CVector camPos = TheCamera.GetPosition();
-		float visibleRadius = 30.0;
+		float visibleRadius = 20.0;
 		CVector dx = CVector(data->GetPosition().x, data->GetPosition().y, data->GetPosition().z) - camPos;
 		float intensity = 1.0;
 
-	/*	if (dx.Magnitude() >= visibleRadius)
-			continue;*/
+		if (dx.Magnitude() > visibleRadius)
+			continue;
 
 
 		gRenderState = stageCascadeShadow;
 		auto radius = data->GetRadius();
 		_rwD3D9SetPixelShaderConstant(1, &data->GetPosition(), 1);
 		_rwD3D9SetPixelShaderConstant(2, &radius, 1);
-		
+		gLightManager.mPointLightList[i].mShadowRaster = mColorCube[i];
+		gLightManager.mPointLightList[i].mCastShadow = true;
 
-
+					RwD3D9SetRenderTarget(0, mColorCube[i]);
+			rwD3D9SetDepthStencil(mDepthRaster);
 		for (size_t j = 0; j < 6; j++)
 		{
 			auto m_viewMatrix = data->GetViewMatrix(j);
 			auto m_projectionMatrix = data->GetProjection();
 
-			gLightManager.mPointLightList[i].mShadowCube[j] = mColorCube[i][j];
 			//_rwD3D9CubeRasterSelectFace(mColorRaster[i], j);
-			RwD3D9SetRenderTarget(0, mColorCube[i][j]);
-			rwD3D9SetDepthStencil(mDepthRaster);
+
 
 			D3DVIEWPORT9 viewport;
 			viewport.X = 0;
-			viewport.Y = 0;
+			viewport.Y = m_nShadowSize * j;
 			viewport.Width = m_nShadowSize;
 			viewport.Height = m_nShadowSize;
 			viewport.MinZ = 0;
 			viewport.MaxZ = 1;
 			RwD3DDevice->SetViewport(&viewport);
 
-			rwD3D9Clear(nullptr, rwCAMERACLEARIMAGE | rwCAMERACLEARZ | rwCAMERACLEARSTENCIL);
+			rwD3D9Clear(nullptr, rwCAMERACLEARIMAGE | rwCAMERACLEARZ);
 
 			if (rwD3D9TestState())
 			{
+
 				RwD3D9SetTransform(D3DTS_VIEW, &m_viewMatrix);
 				RwD3D9SetTransform(D3DTS_PROJECTION, &m_projectionMatrix);
 
@@ -235,6 +233,7 @@ void PointLightShadow::Update()
 				_rwD3D9SetVertexShaderConstant(8, &m_projectionMatrix, 4);
 
 				RenderEntities(data, i, j);
+
 			}
 		}
 	}
@@ -282,7 +281,7 @@ void PointLightShadow::RenderEntities(PointLight* light, int i, int j)
 		Math::AABB aabb(min, max);
 		aabb.Transform(world);
 
-		if (1 /*light->GetFrustum(j).Intersects(aabb)*/)
+		if ( light->GetFrustum(j).Intersects(aabb))
 
 		{
 			culled++;

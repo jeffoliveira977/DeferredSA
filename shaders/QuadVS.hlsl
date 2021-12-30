@@ -3,11 +3,9 @@ struct VS
     float4 Position : POSITION;
     float2 TexCoord : TEXCOORD0;
     float3 FrustumRay : TEXCOORD1;
-    float3 ViewRay : TEXCOORD2;
 };
 
 float3 FrustumCorners[4] : register(c0);
-row_major float4x4 CameraWorld : register(c4);
 
 float3 GetFrustumRay(in float4 Position)
 {
@@ -26,15 +24,12 @@ VS main(float4 Position : POSITION, float2 TexCoord : TEXCOORD0)
 {
     VS output;
     
-    output.Position.x = Position.x - (1.0f / 1920.0f);
-    output.Position.y = Position.y + (1.0f / 1080.0f);
+    output.Position.x = Position.x - (1.0f / 1366.0f);
+    output.Position.y = Position.y + (1.0f / 768.0f);
     output.Position.z = Position.z;
     output.Position.w = 1.0f;
-    output.ViewRay = output.Position.xyz;
-   
     output.TexCoord = TexCoord;   
-
-    output.FrustumRay = /*mul(*/GetFrustumRay(TexCoord)/*, (float3x3)CameraWorld)*/;
+    output.FrustumRay = GetFrustumRay(TexCoord);
     
     return output;
 }
