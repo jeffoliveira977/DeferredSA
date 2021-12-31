@@ -225,7 +225,7 @@ void BuldingMeshPipeline::DeferredRendering(RwResEntry* entry, void* object, RwU
 		material = instance->material;
 		matcolor = &material->color;
 		texture = material->texture;
-		auto hasAlpha = instance->vertexAlpha || matcolor->alpha != 255|| (texture && RwD3D9TextureHasAlpha(texture));
+		
 		RwRenderStateSet(rwRENDERSTATEVERTEXALPHAENABLE, (void*)TRUE);
 		RwD3D9SetRenderState(D3DRS_ALPHABLENDENABLE, FALSE);
 		//if((/*instance->vertexAlpha ||*/

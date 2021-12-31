@@ -61,24 +61,23 @@ float getDepthFromARGB32(const float4 value)
 
 float tex2DShadow(sampler2D arrays[4], float2 texcoord, int count)
 {
- 
     float4 texels = 0;
     switch (count)
     {
         case 0:
-            texels = tex2D(arrays[0], texcoord);
+            texels = tex2Dlod(arrays[0], float4(texcoord, 0, 1));
             break;
         case 1:
-            texels = tex2D(arrays[1], texcoord);
+            texels = tex2Dlod(arrays[1], float4(texcoord, 0, 1));
             break;
         case 2:
-            texels = tex2D( arrays[2], texcoord);
+            texels = tex2Dlod(arrays[2], float4(texcoord, 0, 1));
             break;
         case 3:
-            texels = tex2D(arrays[3], texcoord);
+            texels = tex2Dlod(arrays[3], float4(texcoord, 0, 1));
             break;
     }
-    return (texels);
+    return texels.r;
 }
 
 float4 tex2DShadow6x6(sampler2D arrays[6], float2 texcoord, int count)
@@ -510,6 +509,26 @@ float2 RecombinePrecision(float4 Value)
 {
     float FactorInv = 1 / g_DistributeFactor;
     return (Value.zw * FactorInv + Value.xy);
+}
+static const float SHADOW_EPSILON = 0.0001f;
+float ComputeShadowSamples(sampler2D samplerShadow, float shadowSize, float2 shadowTexCoord, float ourdepth)
+{
+    float ShadowMapPixelSize = 1.0f / shadowSize;
+	// Get the current depth stored in the shadow map
+    float samples[4];
+    
+    samples[0] = tex2D(samplerShadow, shadowTexCoord).r + SHADOW_EPSILON < ourdepth ? 0 : 1;
+    samples[1] = tex2D(samplerShadow, shadowTexCoord + float2(0, ShadowMapPixelSize)).r + SHADOW_EPSILON < ourdepth ? 0 : 1;
+    samples[2] = tex2D(samplerShadow, shadowTexCoord + float2(ShadowMapPixelSize, 0)).r + SHADOW_EPSILON < ourdepth ? 0 : 1;
+    samples[3] = tex2D(samplerShadow, shadowTexCoord + float2(ShadowMapPixelSize, ShadowMapPixelSize)).r + SHADOW_EPSILON < ourdepth ? 0 : 1;
+    
+	// Determine the lerp amounts           
+    float2 lerps = frac(shadowTexCoord * shadowSize);
+    
+	// lerp between the shadow values to calculate our light amount
+    half shadow = lerp(lerp(samples[0], samples[1], lerps.y), lerp(samples[2], samples[3], lerps.y), lerps.x);
+				
+    return shadow;
 }
 
 float ComputeShadow4Samples(sampler2D samplerShadow[4], int cascade, float shadowSize, float2 shadowTexCoord, float ourdepth)

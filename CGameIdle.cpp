@@ -156,7 +156,7 @@ void RenderDeferred()
 	BreakManager_c__Render(g_breakMan, 0);
 
 	CRenderer::RenderFadingInUnderwaterEntities();
-	CRenderer::RenderFadingInEntities();
+	 CRenderer::RenderFadingInEntities();
 
 	BreakManager_c__Render(g_breakMan, 1);
 	CVisibilityPlugins__RenderWeaponPedsForPC();

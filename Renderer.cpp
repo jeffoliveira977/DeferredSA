@@ -221,7 +221,7 @@ void Renderer::RenderEverythingBarRoads()
         if(entity->m_nType == ENTITY_TYPE_BUILDING && CModelInfo::ms_modelInfoPtrs[entity->m_nModelIndex]->IsRoad())
             continue;
 
-        bool bInserted = false;
+       /* bool bInserted = false;
         if(entity->m_nType == ENTITY_TYPE_VEHICLE || (entity->m_nType == ENTITY_TYPE_PED && CVisibilityPlugins::GetClumpAlpha(entity->m_pRwClump) != 255))
         {
             if(entity->m_nType == ENTITY_TYPE_VEHICLE)
@@ -248,7 +248,7 @@ void Renderer::RenderEverythingBarRoads()
                     bInserted = InsertEntityIntoUnderwaterEntities(entity, fMagnitude);
             }
         }
-        if(!bInserted)
+        if(!bInserted)*/
             RenderOneNonRoad(entity);
     }
 
@@ -331,11 +331,68 @@ bool Renderer::SetupLightingForEntity(CPhysical* entity) {
     return true;
 }
 
+std::map<RpMaterial*, bool> gAalphas;
+bool hasAlpha;
+RpMaterial* SetMaterialAlphaCB(RpMaterial* pMaterial, void* pData)
+{
+     hasAlpha = pMaterial->color.alpha !=255|| (pMaterial->texture&& RwD3D9TextureHasAlpha(pMaterial->texture));
+    gAalphas[pMaterial] = hasAlpha;
+    return pMaterial;
+}
+
+
+
+static RpAtomic* AtomicCallback(RpAtomic* atomic, void* pData) {
+   /* if (atomic->geometry) {
+        atomic->geometry->flags |= rpGEOMETRYTEXTURED;
+        RpGeometryForAllMaterials(atomic->geometry, SetMaterialAlphaCB, pData);
+    }
+   
+   */
+  
+        for (size_t i = 0; i < atomic->geometry->matList.numMaterials; i++)
+        {
+            hasAlpha = false;
+            auto tex = atomic->geometry->matList.materials[i]->texture;
+            if (tex && RwD3D9TextureHasAlpha(tex))
+                hasAlpha = true;
+        }
+    return atomic;
+}
+
+bool IsGlassModel(CEntity* pEntity)
+{
+    DWORD dwFunc = 0x46A760;
+    //DWORD dwThis = pEntity;
+    bool bResult;
+
+    _asm
+    {
+        push pEntity
+        call dwFunc
+        mov bResult, al
+        add esp, 4
+    }
+    return bResult;
+}
 void Renderer::AddEntityToRenderList(CEntity* pEntity, float fDistance)
 {
     CBaseModelInfo* pBaseModelInfo = CModelInfo::ms_modelInfoPtrs[pEntity->m_nModelIndex];
     pBaseModelInfo->SetHasBeenPreRendered(false);
-    if(!pEntity->m_bDistanceFade)
+    gAalphas.clear();
+    if (pEntity->m_pRwObject)
+    {
+        if (RwObjectGetType(pEntity->m_pRwObject) == rpATOMIC) {
+            AtomicCallback(pEntity->m_pRwAtomic, (void*)pEntity);
+        }
+       /* else if (RwObjectGetType(pEntity->m_pRwObject) == rpCLUMP) {
+            RpClumpForAllAtomics(pEntity->m_pRwClump, ScanAlpha, (void*)pEntity);
+        }*/
+    }
+  
+    if (IsGlassModel(pEntity))
+        return;
+  /*  if(!pEntity->m_bDistanceFade)
     {
         if(pEntity->m_bDrawLast && CVisibilityPlugins::InsertEntityIntoSortedList(pEntity, fDistance))
         {
@@ -346,7 +403,7 @@ void Renderer::AddEntityToRenderList(CEntity* pEntity, float fDistance)
     else if(CVisibilityPlugins::InsertEntityIntoSortedList(pEntity, fDistance))
     {
         return;
-    }
+    }*/
     if(pEntity->m_nNumLodChildren && !pEntity->m_bUnderwater)
     {
         CRenderer::ms_aVisibleLodPtrs[CRenderer::ms_nNoOfVisibleLods] = pEntity;
@@ -546,6 +603,7 @@ void Renderer::ScanBigBuildingList(int sectorX, int sectorY)
 #include "plugin.h"
 #include "..\injector\assembly.hpp"
 
+#include "SpotlightShadow.h"
 #include "PointLightShadow.h"
 using namespace plugin;
 using namespace injector;
@@ -563,8 +621,10 @@ void AddEntity(CEntity* entity)
     {
         auto id = entity->m_nModelIndex;
 
-        PointShadow->AddObject(0, entity, 0);
+        PointShadow->AddObject(entity);
+       // SpotShadow->AddObject(entity);
     }
+    SpotShadow->AddObject(entity);
     ShadowCasterEntity->AddObject(entity);
 }
 
@@ -590,27 +650,6 @@ void __declspec(naked) CRenderer__AddEntityToRenderList___VisibleLod_HOOK()
     }
 }
 
-void __declspec(naked) Hook_light()
-{
-    _asm
-    {
-       // mov     ecx, ebp
-        push    esi; entityAffected
-        mov edx, 006FD09Ch
-        jmp edx;
-    }
-}
-
-void __declspec(naked) Hook_light2()
-{
-    _asm
-    {
-       // mov     ecx, ebp
-        push    esi; entityAffected
-        mov edx, 006FD12Bh
-        jmp edx;
-    }
-}
 
 
 void Renderer::Hook()
@@ -618,17 +657,13 @@ void Renderer::Hook()
 {     // update ms_aVisibleEntityPtrs
 
    // patch::Nop(0x006FD105, 5);
-   // patch::RedirectJump(0x6FD09A, Hook_light);
-   // patch::RedirectJump(0x6FD129, Hook_light2);
-
-
 
 
     //plugin::patch::RedirectJump(0x00734570, Renderer::InsertEntityIntoSortedList);
-    //plugin::patch::RedirectJump(0x005534B0, Renderer::AddEntityToRenderList);
+    // plugin::patch::RedirectJump(0x005534B0, Renderer::AddEntityToRenderList);
     //plugin::patch::RedirectJump(0x00553710, Renderer::AddToLodRenderList);
     //plugin::patch::RedirectJump(0x00553260, Renderer::RenderOneNonRoad);
-    //plugin::patch::RedirectJump(0x00553AA0, Renderer::RenderEverythingBarRoads);
+   // plugin::patch::RedirectJump(0x00553AA0, Renderer::RenderEverythingBarRoads);
     //plugin::patch::RedirectJump(0x553910, Renderer::PreRender);
     //plugin::patch::RedirectJump(0x00553A10, Renderer::RenderRoads);
     //plugin::patch::RedirectJump(0x553E40, Renderer::SetupLightingForEntity);
@@ -682,9 +717,10 @@ void Renderer::ConstructRenderList()
         }
     }
 
+    SpotShadow->m_renderableList.clear();
     ShadowCasterEntity->ClearCullList();
-    for (size_t i = 0; i < 30; i++)
-        PointShadow-> m_renderableList[i].clear();
+        PointShadow-> m_renderableList.clear();
+
     CRenderer::ms_lowLodDistScale *= CTimeCycle::m_CurrentColours.m_fLodDistMult;
     COcclusion__ProcessBeforeRendering();
     CRenderer::ms_nNoOfVisibleEntities = 0;

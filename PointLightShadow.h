@@ -20,10 +20,8 @@ public:
 	 RwRaster* mColorCube[30];
 	RwRaster* mDepthRaster;
 
-	std::vector<CEntity*> m_renderableList[30];
-	void AddObject(int i, CEntity* entity, float distance);
-	void SectorList(CPtrList& ptrList);
-	void ScanSectorList(int sectorX, int sectorY);
+	std::vector<CEntity*> m_renderableList;
+	void AddObject(CEntity* entity);
 
 	void RenderEntities(PointLight* light, int i, int j);
 	void Initialize();

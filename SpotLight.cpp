@@ -89,9 +89,6 @@ float SpotLight::GetRadius()
 
 void SpotLight::Update()
 {
-	float w = static_cast<float>(RsGlobal.maximumWidth);
-	float h = static_cast<float>(RsGlobal.maximumHeight);
-
 	XMVECTOR right, lookAt, up;
 	
 	up = XMVectorSet(0.0f, 1.0f, 0.0f, 1.0f);
@@ -104,8 +101,8 @@ void SpotLight::Update()
 	up = XMVector3Normalize(up);
 
 	lookAt = mPosition + mDirection * mRadius;
-	mView = XMMatrixLookAtRH(mPosition, lookAt, up);
-	mProjection = XMMatrixPerspectiveFovRH(cos(XMConvertToRadians(mAngle)), 1, 0.01f, mRadius);
+	mView = XMMatrixLookAtLH(mPosition, lookAt, up);
+	mProjection = XMMatrixPerspectiveFovLH(cos(XMConvertToRadians(mAngle)), 1.0f, 0.01f, mRadius);
 	mMatrix = mView * mProjection;
 
 	mFrustum.SetMatrix(mMatrix);

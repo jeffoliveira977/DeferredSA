@@ -38,95 +38,28 @@ void SpotlightShadow::Initialize()
 	mDepthRaster = RwRasterCreate(m_nShadowSize, m_nShadowSize, 32, rwRASTERTYPEZBUFFER);
 }
 
-void SpotlightShadow::AddObject(int i, CEntity* entity, float distance)
+void SpotlightShadow::AddObject(CEntity* entity)
 {
-	if (distance > 200)
+	if (entity->m_pRwObject == nullptr)
 		return;
 
-	if (distance < 100)
-		m_renderableList[i].push_back(entity);
-	else if (entity->m_pLod != NULL)
-		m_renderableList[i].push_back(entity->m_pLod);
+	CColModel* col = entity->GetColModel();
+	if (col == nullptr)
+		return;
+
+	CVector position = entity->GetPosition();
+	if (entity->m_pLod)
+		position = entity->m_pLod->GetPosition();
+
+	float distance = (position - CRenderer::ms_vecCameraPosition).Magnitude();
+
+	if (distance < 80.0f)
+		m_renderableList.push_back(entity);
 }
 
-void SpotlightShadow::SectorList(CPtrList& ptrList)
-{
-	for (auto node = ptrList.GetNode(); node; node = node->pNext)
-	{
-		CEntity* entity = reinterpret_cast<CEntity*>(node->pItem);
-		if (entity->m_nScanCode != CWorld::ms_nCurrentScanCode)
-		{
-			entity->m_nScanCode = CWorld::ms_nCurrentScanCode;
-
-			CColModel* col = entity->GetColModel();
-			if (col == nullptr)
-				continue;
-
-			CVector position = entity->GetPosition();
-			if (entity->m_pLod)
-				position = entity->m_pLod->GetPosition();
-
-			float distance = (position - CRenderer::ms_vecCameraPosition).Magnitude();
-			XMMATRIX world = RwMatrixToXMMATRIX(reinterpret_cast<RwMatrix*>(entity->GetMatrix()));
-
-			CBoundingBox modelAABB = col->m_boundBox;
-
-			XMFLOAT3 min, max;
-			min = *reinterpret_cast<XMFLOAT3*>(&modelAABB.m_vecMin);
-			max = *reinterpret_cast<XMFLOAT3*>(&modelAABB.m_vecMax);
-
-			Math::AABB aabb(min, max);
-			aabb.Transform(world);
-
-			for (size_t i = 0; i < gLightManager.GetSpotLightCount(); i++)
-			{
-				auto data = gLightManager.GetSpotLightAt(i);
-
-				if (data.GetFrustum().Intersects(aabb))
-				{
-					AddObject(i, entity, distance);
-				}
-			}
-		}
-	}
-}
-
-void SpotlightShadow::ScanSectorList(int sectorX, int sectorY)
-{
-	if (sectorX >= 0 && sectorY >= 0 && sectorX < MAX_SECTORS_X && sectorY < MAX_SECTORS_Y)
-	{
-		CSector* sector = GetSector(sectorX, sectorY);
-		CRepeatSector* repeatSector = GetRepeatSector(sectorX, sectorY);
-
-		SectorList(sector->m_buildings);
-		//SectorList(sector->m_dummies);
-		 SectorList(repeatSector->m_lists[REPEATSECTOR_VEHICLES]);
-		  SectorList(repeatSector->m_lists[REPEATSECTOR_PEDS]);
-		SectorList(repeatSector->m_lists[REPEATSECTOR_OBJECTS]);
-	}
-}
-#include "CTimeCycle.h"
 void SpotlightShadow::Update()
 {
-	for (size_t i = 0; i < 30; i++)
-		m_renderableList[i].clear();
-
-	// Scan entity list
-	SetNextScanCode();
-
-	int x = GetSectorX(CRenderer::ms_vecCameraPosition.x);
-	int y = GetSectorY(CRenderer::ms_vecCameraPosition.y);
-
-	int sectorCount = 10;
-	for (int j = -sectorCount; j < sectorCount; j++)
-	{
-		for (int i = -sectorCount; i < sectorCount; i++)
-		{
-			ScanSectorList(x + i, y + j);
-		}
-	}
-
-	RwRGBA ambient = { CTimeCycle::m_CurrentColours.m_nSkyTopRed, CTimeCycle::m_CurrentColours.m_nSkyTopGreen, CTimeCycle::m_CurrentColours.m_nSkyTopBlue, 255 };
+	RwD3D9SetRenderState(D3DRS_COLORWRITEENABLE, D3DCOLORWRITEENABLE_RED);
 
 	RWSRCGLOBAL(curCamera) = Scene.m_pRwCamera;
 	for (size_t i = 0; i < gLightManager.GetSpotLightCount(); i++)
@@ -137,8 +70,8 @@ void SpotlightShadow::Update()
 		m_projectionMatrix[i] = data.GetProjection();
 
 		gRenderState = stageCascadeShadow;
-		//gRenderState = stageReflectionCubemap;
-		
+		//gRenderState = stagePointShadow;
+
 		RwD3D9SetRenderTarget(0, mColorRaster[i]);
 		rwD3D9SetDepthStencil(mDepthRaster);
 
@@ -165,19 +98,24 @@ void SpotlightShadow::Update()
 		}
 	}	
 	RWSRCGLOBAL(curCamera) = NULL;
+
+	// Restore all channels colors
+	RwD3D9SetRenderState(D3DRS_COLORWRITEENABLE,
+		D3DCOLORWRITEENABLE_ALPHA | D3DCOLORWRITEENABLE_RED |
+		D3DCOLORWRITEENABLE_GREEN | D3DCOLORWRITEENABLE_BLUE);
 }
 
 void SpotlightShadow::RenderEntities(int i)
 {
-	/*RwRenderStateSet(rwRENDERSTATEVERTEXALPHAENABLE, (void*)TRUE);
-	RwRenderStateSet(rwRENDERSTATECULLMODE, (void*)rwCULLMODECULLNONE);
+	RwRenderStateSet(rwRENDERSTATEVERTEXALPHAENABLE, (void*)TRUE);
+	RwRenderStateSet(rwRENDERSTATECULLMODE, (void*)0);
 	if (!CGame::currArea)
 		RwRenderStateSet(rwRENDERSTATEALPHATESTFUNCTIONREF, (void*)140);
 
 	RwRenderStateSet(rwRENDERSTATEZWRITEENABLE, (void*)TRUE);
-	RwRenderStateSet(rwRENDERSTATEZTESTENABLE, (void*)TRUE);*/
+	RwRenderStateSet(rwRENDERSTATEZTESTENABLE, (void*)TRUE);
 
-	for (auto entity : m_renderableList[i])
+	for (auto entity : m_renderableList)
 	{
 		if (entity == nullptr || entity->m_pRwObject == nullptr)
 			continue;

@@ -32,5 +32,5 @@ float4 main(PS_input input) : COLOR
 
    float d = input.Depth.x / input.Depth.y;
 
-    return d;
+    return float4(d, 1, 1, 1);
 }

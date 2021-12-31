@@ -151,7 +151,7 @@ float3 CalculateLighing(float3 albedo, float3 normal, float3 lightPosition, floa
 
 
 
-float4 main(float2 texCoord : TEXCOORD0) : COLOR
+float4 main(float2 texCoord : TEXCOORD0, float3 frustumRay : TEXCOORD1) : COLOR
 {
     float4 Parameters = TEXTURE2D_MATERIALPROPS(texCoord);
     float SpecIntensity = Parameters.x;
@@ -165,6 +165,12 @@ float4 main(float2 texCoord : TEXCOORD0) : COLOR
     
     float3 worldPosition;
     WorldPositionFromDepth(texCoord, depth, ProjectionMatrix, InverseViewMatrix, worldPosition);
+    
+    
+    float4 depthNormal = TEXTURE2D_DEPTHNORMAL(texCoord);
+    depth = DecodeFloatRG(depthNormal.zw);
+
+    worldPosition = InverseViewMatrix[3].xyz + depth * frustumRay;
     float3 ViewDir = normalize(worldPosition.xyz - InverseViewMatrix[3].xyz);
 
     float4 color = 0;
@@ -193,28 +199,30 @@ float4 main(float2 texCoord : TEXCOORD0) : COLOR
     float fSpot = SpotLightIntensity(max(dot(lightPos, LightDirection), 0.0f), radians(60), radians(10)); //pow(, 4.0f);
    // Attenuation *= fSpot;
     //atten *= 0.5;
-
+    float texelSize = 1.0 / 512.0f;
+   
     float4 LightViewPos = mul(float4(worldPosition, 1.0), ShadowMatrix);
     
-    float2 ShadowTexC = 0.5 * LightViewPos.xy / LightViewPos.w + float2(0.5, 0.5);
-    ShadowTexC.y = 1.0f - ShadowTexC.y;
-
-
-    float texelSize = 1.0 / 512.0f;
-    float z = LightViewPos.z;
-    //float shadow = z < tex2D(SamplerShadow, ShadowTexCoord);
-    float shadow = (tex2D(SamplerShadow, ShadowTexC) + 0.0001f < LightViewPos.z / LightViewPos.w) ? 0.0f : 1.0f;
-    float t, s = 0;
-		
-    for (int i = 0; i < 8; ++i)
-    {
-        float4 sd = tex2D(SamplerShadow, ShadowTexC + pcfOffsets[i] * texelSize).r + 0.0001f;
-
-        t = (LightViewPos.z / LightViewPos.w <= sd ? 1 : 0);
-        s += (sd == 0 ? 1 : t);
-    }
-    s *= 0.125f;
-    s = saturate(s + 0.2f);
+    float4 projTexC = LightViewPos;
+  // Complete projection by doing division by w.
+    projTexC.xyz /= projTexC.w;
+	
+	//// Points outside the light volume are in shadow.
+ //   if (projTexC.x < -1.0f || projTexC.x > 1.0f ||
+	//    projTexC.y < -1.0f || projTexC.y > 1.0f ||
+	//    projTexC.z < 0.0f)
+ //       return 0.0f;
+	    
+	// Transform from NDC space to texture space.
+    projTexC.x = +0.5f * projTexC.x + 0.5f;
+    projTexC.y = -0.5f * projTexC.y + 0.5f;
+	
+  
+    float bias = max((1.0 - dot(normal, -lightPos)), 0.0001);
+    
+    float z = projTexC.z - 0.0001f;
+    float s = ComputeShadowSamples(SamplerShadow, 512.0f, projTexC.xy, z);
+    
     float3 FinalDiffuseTerm = float3(0, 0, 0);
     float FinalSpecularTerm = 0;
     float DiffuseTerm, SpecularTerm;

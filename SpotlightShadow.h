@@ -20,10 +20,8 @@ public:
 	XMMATRIX m_viewMatrix[30];
 	RwCamera* mCamera;
 	 Math::Frustum m_frustum[30];
-	 std::vector<CEntity*> m_renderableList[30];
-	  void AddObject(int i, CEntity* entity, float distance);
-	  void SectorList(CPtrList& ptrList);
-	  void ScanSectorList(int sectorX, int sectorY);
+	 std::vector<CEntity*> m_renderableList;
+	  void AddObject(CEntity* entity);
 	SpotlightShadow();
 	~SpotlightShadow();
 	void SpotlightShadow::RenderEntities(int i);

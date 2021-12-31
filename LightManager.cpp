@@ -28,8 +28,8 @@ void CPointLights__AddLight(unsigned char, XMFLOAT3 point, XMFLOAT3 direction, f
 
 	auto castShadow = true;
 	castShadow = castShadow && CheckModelId(e);
-		
-	//	PrintMessage("%d", e->m_nModelIndex);
+		//if(e)
+		//PrintMessage("%d", e->m_nModelIndex);
 
 	//		return;
 	//direction = point;
@@ -77,7 +77,7 @@ void AddVehicleSpotLight(CVehicle* vehicle)
 	auto matrix = vehicle->GetMatrix();
 	if (headlightPos.x != 0.0f || headlightPos.y != 0.0f || headlightPos.z != 0.0f)
 	{
-		float distance = 0.05f;
+		float distance = 0.1f;
 		if (vehicle->m_nModelIndex == 530)
 			distance = 0.5f;
 
@@ -133,19 +133,17 @@ LightManager::LightManager()
 
  void CPointLights__AddLight1(unsigned char, XMFLOAT3 point, XMFLOAT3 direction, float radius, float red, float green, float blue, unsigned char, bool, CEntity* e)
  {
-	
-	 CEntity* ea = 0;
-
+	 CEntity* ea;
 	 _asm mov ea, esi;
 
-	// if (ea)
-		 //	 PrintMessage("%d", ea->m_nModelIndex);
+	 //if (ea)
+		// PrintMessage("%d", ea->m_nModelIndex);
 
 	 CPointLights__AddLight(0, point, direction, radius, red, green, blue, 0, false, ea);
  }
 
 void LightManager::Hook()
-{
+{   
 	plugin::patch::RedirectCall(0x006AB80F, CPointLights__AddLight1);
 	plugin::patch::RedirectCall(0x006ABBA6, CPointLights__AddLight1);
 
