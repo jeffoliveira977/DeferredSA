@@ -56,7 +56,7 @@ void PointLight::SetIntensity(float intensity)
 
 void PointLight::SetRadius(float radius)
 {
-	mRadius = max(10.0f, radius);
+	mRadius = max(1.0f, radius);
 }
 
 void PointLight::CastShadow(bool cast)

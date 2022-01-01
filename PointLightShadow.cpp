@@ -66,28 +66,40 @@ void PointLightShadow::AddObject(CEntity* entity)
 
 	float distance = (position - CRenderer::ms_vecCameraPosition).Magnitude();
 
-	if (distance < 80.0f)
+	if (distance < 180.0f)
 		m_renderableList.push_back(entity);
 
 }
 
 void PointLightShadow::Update()
 {
-	uint32_t maxLights = min((size_t)29, gLightManager.GetPointLightCount());
+	gLightManager.SortPointLights();
+	uint32_t maxLights = min((size_t)20, gLightManager.GetPointLightCount());
 
 	RwD3D9SetRenderState(D3DRS_COLORWRITEENABLE, D3DCOLORWRITEENABLE_RED);
-
+	auto coors = FindPlayerCoors(-1);
 	RWSRCGLOBAL(curCamera) = Scene.m_pRwCamera;
 	for (size_t i = 0; i < maxLights; i++)
 	{
 		PointLight* light = gLightManager.GetPointLightAt(i);
 		auto position = light->GetPosition();
 		auto radius = light->GetRadius();
-
+		float visibleRadius = radius + 15.0f;
 		CVector dx = CVector(position.x, position.y, position.z) - TheCamera.GetPosition();
-		float intensity = 1.0;
+	/*	if (dx.x >= visibleRadius || dx.x <= -visibleRadius)
+		{
+			PrintMessage("%f %f %f", dx.x, dx.y, dx.z);
+			continue;
+		}
+		if (dx.y >= visibleRadius || dx.y <= -visibleRadius)
+		{
+			PrintMessage("%f %f %f", dx.x, dx.y, dx.z);
+			continue;
+		}*/
+		CVector dx2 = CVector(position.x, position.y, position.z) - coors;
+		//PrintMessage("%f %f", dx.Magnitude(), dx2.Magnitude());
 
-		if (dx.Magnitude() > radius*1.5)
+		if (dx.Magnitude() > 30.0)
 			continue;
 
 		_rwD3D9SetPixelShaderConstant(1, &position, 1);

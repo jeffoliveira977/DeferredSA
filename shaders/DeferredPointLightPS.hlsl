@@ -430,8 +430,8 @@ float4 main(float3 ViewRay : TEXCOORD2, float2 texCoord : TEXCOORD0, float3 frus
     float DiffuseTerm, SpecularTerm;
     CalculateDiffuseTerm_ViewDependent(normal, -lightPos.xyz, -ViewDir, DiffuseTerm, Roughness);
     CalculateSpecularTerm(normal, -lightPos.xyz, -ViewDir, Roughness, SpecularTerm);
-    FinalDiffuseTerm += DiffuseTerm * Attenuation * (shadow) * LightColor * LightIntensity;
-    FinalSpecularTerm += SpecularTerm * Attenuation * (shadow) * metallicness;
+    FinalDiffuseTerm += DiffuseTerm * Attenuation * shadow * LightColor * LightIntensity;
+    FinalSpecularTerm += SpecularTerm * Attenuation * shadow * metallicness;
     //FinalDiffuseTerm += SpecularTerm * s * Attn * metallicness;
     float4 Lighting = float4(FinalDiffuseTerm, FinalSpecularTerm);
     

@@ -70,4 +70,5 @@ bool MeshCulling::Render(vector<CEntity*> list, Math::Frustum frustum)
 			RenderEntity(entity);
 		}
 	}
+	return true;
 }

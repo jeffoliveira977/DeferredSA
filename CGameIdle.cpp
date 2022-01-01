@@ -233,7 +233,7 @@ void CGameIdle::RenderScene(){
 		mRenderableSphere = new RenderableSphere();
 		mRenderableSphere->Initialize(10, 10);
 	}
-	gLightManager.SortLights();
+	gLightManager.SortSpotLights();
 	auto coors = FindPlayerCoors(-1);
 
 	CEntity* entity = FindPlayerEntity(-1);

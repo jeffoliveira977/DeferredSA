@@ -25,8 +25,8 @@ float3 LightColor : register(c11);
 float LightRadius : register(c12);
 float LightIntensity : register(c13);
 float LightConeAngle : register(c14);
-
-row_major float4x4 ShadowMatrix : register(c15);
+float CastShadow : register(c15);
+row_major float4x4 ShadowMatrix : register(c16);
 
 sampler2D SamplerShadow : register(s5);
 float CalculateAttenuation(float Range, float dis, float d)
@@ -222,6 +222,8 @@ float4 main(float2 texCoord : TEXCOORD0, float3 frustumRay : TEXCOORD1) : COLOR
     
     float z = projTexC.z - 0.0001f;
     float s = ComputeShadowSamples(SamplerShadow, 512.0f, projTexC.xy, z);
+    if (CastShadow == 0.0)
+        s = 1.0;
     
     float3 FinalDiffuseTerm = float3(0, 0, 0);
     float FinalSpecularTerm = 0;

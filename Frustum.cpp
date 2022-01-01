@@ -28,136 +28,136 @@ namespace Math
 
 	void Frustum::SetMatrix(XMFLOAT4X4 matrix)
 	{
-		Planes.clear();
-
-		XMFLOAT4 planes[6];
-		planes[0].x = matrix.m[0][3] + matrix.m[0][0];
-		planes[0].y = matrix.m[1][3] + matrix.m[1][0];
-		planes[0].z = matrix.m[2][3] + matrix.m[2][0];
-		planes[0].w = matrix.m[3][3] + matrix.m[3][0];
-
-		planes[1].x = matrix.m[0][3] - matrix.m[0][0];
-		  planes[1].y = matrix.m[1][3] - matrix.m[1][0];
-		  planes[1].z = matrix.m[2][3] - matrix.m[2][0];
-		  planes[1].w = matrix.m[3][3] - matrix.m[3][0];
-
-		  planes[2].x = matrix.m[0][3] + matrix.m[0][1];
-		  planes[2].y = matrix.m[1][3] + matrix.m[1][1];
-		  planes[2].z = matrix.m[2][3] + matrix.m[2][1];
-		  planes[2].w = matrix.m[3][3] + matrix.m[3][1];
-
-		  planes[3].x = matrix.m[0][3] - matrix.m[0][1];
-		  planes[3].y = matrix.m[1][3] - matrix.m[1][1];
-		  planes[3].z = matrix.m[2][3] - matrix.m[2][1];
-		  planes[3].w = matrix.m[3][3] - matrix.m[3][1];
-
-		  planes[4].x = matrix.m[0][3] + matrix.m[0][2];
-		  planes[4].y = matrix.m[1][3] + matrix.m[1][2];
-		  planes[4].z = matrix.m[2][3] + matrix.m[2][2];
-		  planes[4].w = matrix.m[3][3] + matrix.m[3][2];
-
-		  planes[5].x = matrix.m[0][3] - matrix.m[0][2];
-		  planes[5].y = matrix.m[1][3] - matrix.m[1][2];
-		  planes[5].z = matrix.m[2][3] - matrix.m[2][2];
-		  planes[5].w = matrix.m[3][3] - matrix.m[3][2];
-
-		  for (int i = 0; i < 6; i++)
-		  {
-			  XMVECTOR vector = XMVectorSet(planes[i].x, planes[i].y, planes[i].z, planes[i].w);
-			  XMVECTOR length = XMVector3Length(vector);
-
-			  XMStoreFloat4(&planes[i], XMVectorDivide(vector, length));
-		  }
-
-		  for(int i = 0; i < 6; i++)
-			Planes.push_back(planes[i]);
-
-		  //Corners[0] = IntersectionPoint(Planes[0], Planes[2], Planes[4]);
-		  //Corners[1] = IntersectionPoint(Planes[0], Planes[3], Planes[4]);
-		  //Corners[2] = IntersectionPoint(Planes[0], Planes[3], Planes[5]);
-		  //Corners[3] = IntersectionPoint(Planes[0], Planes[2], Planes[5]);
-		  //Corners[4] = IntersectionPoint(Planes[1], Planes[2], Planes[4]);
-		  //Corners[5] = IntersectionPoint(Planes[1], Planes[3], Planes[4]);
-		  //Corners[6] = IntersectionPoint(Planes[1], Planes[3], Planes[5]);
-		  //Corners[7] = IntersectionPoint(Planes[1], Planes[2], Planes[5]);
-
-		  Ray ray = ComputeIntersectionLine(XMLoadFloat4(&Planes[0]), XMLoadFloat4(&Planes[2]));
-		  XMStoreFloat3(&Corners[0], ComputeIntersection(XMLoadFloat4(&Planes[4]), ray));
-		  XMStoreFloat3(&Corners[3], ComputeIntersection(XMLoadFloat4(&Planes[5]), ray));
-
-		  ray = ComputeIntersectionLine(XMLoadFloat4(&Planes[3]), XMLoadFloat4(&Planes[0]));
-		  XMStoreFloat3(&Corners[1], ComputeIntersection(XMLoadFloat4(&Planes[4]), ray));
-		  XMStoreFloat3(&Corners[2], ComputeIntersection(XMLoadFloat4(&Planes[5]), ray));
-
-		  ray = ComputeIntersectionLine(XMLoadFloat4(&Planes[2]), XMLoadFloat4(&Planes[1]));
-		  XMStoreFloat3(&Corners[4], ComputeIntersection(XMLoadFloat4(&Planes[4]), ray));
-		  XMStoreFloat3(&Corners[7], ComputeIntersection(XMLoadFloat4(&Planes[5]), ray));
-
-		  ray = ComputeIntersectionLine(XMLoadFloat4(&Planes[1]), XMLoadFloat4(&Planes[3]));
-		  XMStoreFloat3(&Corners[5], ComputeIntersection(XMLoadFloat4(&Planes[4]), ray));
-		  XMStoreFloat3(&Corners[6], ComputeIntersection(XMLoadFloat4(&Planes[5]), ray));
-
-		  BoundBox.CreateFromPoints(Corners, 8);
-
 		//Planes.clear();
 
-		//// Right-handed
-		///*XMVECTOR vertices[8] =
-		//{
-		//	{-1.0f, +1.0f, +0.0f, +1.0f},
-		//	{+1.0f, +1.0f, +0.0f, +1.0f},
-		//	{+1.0f, -1.0f, +0.0f, +1.0f},
-		//	{-1.0f, -1.0f, +0.0f, +1.0f},
-		//	{-1.0f, +1.0f, +1.0f, +1.0f},
-		//	{+1.0f, +1.0f, +1.0f, +1.0f},
-		//	{+1.0f, -1.0f, +1.0f, +1.0f},
-		//	{-1.0f, -1.0f, +1.0f, +1.0f},
-		//};*/
-
-		//// Left-handed
-		//XMVECTOR vertices[8] =
-		//{                                              //                         7--------6
-		//	XMVectorSet(1.0f, -1.0f, 0.0f, 1.0f),      //                        /|       /|
-		//	XMVectorSet(-1.0f, -1.0f, 0.0f, 1.0f),     //     Y ^               / |      / |
-		//	XMVectorSet(1.0f, 1.0f, 0.0f, 1.0f),       //     | _              3--------2  |
-		//	XMVectorSet(-1.0f, 1.0f, 0.0f, 1.0f),      //     | /' Z           |  |     |  |
-		//	XMVectorSet(1.0f, -1.0f, 1.0f, 1.0f),      //     |/               |  5-----|--4
-		//	XMVectorSet(-1.0f, -1.0f, 1.0f, 1.0f),     //     + ---> X         | /      | /
-		//	XMVectorSet(1.0f, 1.0f, 1.0f, 1.0f),       //                      |/       |/
-		//	XMVectorSet(-1.0f, 1.0f, 1.0f, 1.0f),      //                      1--------0
-		//};
-
-		//XMVECTOR det;
-		//XMMATRIX invM = XMMatrixInverse(&det, XMLoadFloat4x4(&matrix));
-
-		//for(int i = 0; i < 8; i++)
-		//{
-		//	vertices[i] = XMVector3TransformCoord(vertices[i], invM);
-		//	XMStoreFloat3(&Corners[i], vertices[i]);
-		//}
-
-		//BoundBox.CreateFromPoints(Corners, 8);
-
 		//XMFLOAT4 planes[6];
+		//planes[0].x = matrix.m[0][3] + matrix.m[0][0];
+		//planes[0].y = matrix.m[1][3] + matrix.m[1][0];
+		//planes[0].z = matrix.m[2][3] + matrix.m[2][0];
+		//planes[0].w = matrix.m[3][3] + matrix.m[3][0];
 
-		//// Right-handed
-		///*XMStoreFloat4(&planes[0], XMPlaneFromPoints(vertices[0], vertices[1], vertices[2]));
-		//XMStoreFloat4(&planes[1], XMPlaneFromPoints(vertices[4], vertices[7], vertices[5]));
-		//XMStoreFloat4(&planes[2], XMPlaneFromPoints(vertices[4], vertices[5], vertices[1]));
-		//XMStoreFloat4(&planes[3], XMPlaneFromPoints(vertices[7], vertices[3], vertices[6]));
-		//XMStoreFloat4(&planes[4], XMPlaneFromPoints(vertices[4], vertices[0], vertices[7]));
-		//XMStoreFloat4(&planes[5], XMPlaneFromPoints(vertices[5], vertices[6], vertices[1]));*/
+		//planes[1].x = matrix.m[0][3] - matrix.m[0][0];
+		//  planes[1].y = matrix.m[1][3] - matrix.m[1][0];
+		//  planes[1].z = matrix.m[2][3] - matrix.m[2][0];
+		//  planes[1].w = matrix.m[3][3] - matrix.m[3][0];
 
-		//// Left-handed 
-		//XMStoreFloat4(&planes[0], XMPlaneFromPoints(vertices[0], vertices[4], vertices[2]));
-		//XMStoreFloat4(&planes[1], XMPlaneFromPoints(vertices[1], vertices[3], vertices[5]));
-		//XMStoreFloat4(&planes[2], XMPlaneFromPoints(vertices[3], vertices[2], vertices[7]));
-		//XMStoreFloat4(&planes[3], XMPlaneFromPoints(vertices[1], vertices[5], vertices[0]));
-		//XMStoreFloat4(&planes[4], XMPlaneFromPoints(vertices[5], vertices[7], vertices[4]));
-		//XMStoreFloat4(&planes[5], XMPlaneFromPoints(vertices[1], vertices[0], vertices[3]));
+		//  planes[2].x = matrix.m[0][3] + matrix.m[0][1];
+		//  planes[2].y = matrix.m[1][3] + matrix.m[1][1];
+		//  planes[2].z = matrix.m[2][3] + matrix.m[2][1];
+		//  planes[2].w = matrix.m[3][3] + matrix.m[3][1];
 
-		//for(int i = 0; i < 6; i++)
+		//  planes[3].x = matrix.m[0][3] - matrix.m[0][1];
+		//  planes[3].y = matrix.m[1][3] - matrix.m[1][1];
+		//  planes[3].z = matrix.m[2][3] - matrix.m[2][1];
+		//  planes[3].w = matrix.m[3][3] - matrix.m[3][1];
+
+		//  planes[4].x = matrix.m[0][3] + matrix.m[0][2];
+		//  planes[4].y = matrix.m[1][3] + matrix.m[1][2];
+		//  planes[4].z = matrix.m[2][3] + matrix.m[2][2];
+		//  planes[4].w = matrix.m[3][3] + matrix.m[3][2];
+
+		//  planes[5].x = matrix.m[0][3] - matrix.m[0][2];
+		//  planes[5].y = matrix.m[1][3] - matrix.m[1][2];
+		//  planes[5].z = matrix.m[2][3] - matrix.m[2][2];
+		//  planes[5].w = matrix.m[3][3] - matrix.m[3][2];
+
+		//  for (int i = 0; i < 6; i++)
+		//  {
+		//	  XMVECTOR vector = XMVectorSet(planes[i].x, planes[i].y, planes[i].z, planes[i].w);
+		//	  XMVECTOR length = XMVector3Length(vector);
+
+		//	  XMStoreFloat4(&planes[i], XMVectorDivide(vector, length));
+		//  }
+
+		//  for(int i = 0; i < 6; i++)
 		//	Planes.push_back(planes[i]);
+
+		//  //Corners[0] = IntersectionPoint(Planes[0], Planes[2], Planes[4]);
+		//  //Corners[1] = IntersectionPoint(Planes[0], Planes[3], Planes[4]);
+		//  //Corners[2] = IntersectionPoint(Planes[0], Planes[3], Planes[5]);
+		//  //Corners[3] = IntersectionPoint(Planes[0], Planes[2], Planes[5]);
+		//  //Corners[4] = IntersectionPoint(Planes[1], Planes[2], Planes[4]);
+		//  //Corners[5] = IntersectionPoint(Planes[1], Planes[3], Planes[4]);
+		//  //Corners[6] = IntersectionPoint(Planes[1], Planes[3], Planes[5]);
+		//  //Corners[7] = IntersectionPoint(Planes[1], Planes[2], Planes[5]);
+
+		//  Ray ray = ComputeIntersectionLine(XMLoadFloat4(&Planes[0]), XMLoadFloat4(&Planes[2]));
+		//  XMStoreFloat3(&Corners[0], ComputeIntersection(XMLoadFloat4(&Planes[4]), ray));
+		//  XMStoreFloat3(&Corners[3], ComputeIntersection(XMLoadFloat4(&Planes[5]), ray));
+
+		//  ray = ComputeIntersectionLine(XMLoadFloat4(&Planes[3]), XMLoadFloat4(&Planes[0]));
+		//  XMStoreFloat3(&Corners[1], ComputeIntersection(XMLoadFloat4(&Planes[4]), ray));
+		//  XMStoreFloat3(&Corners[2], ComputeIntersection(XMLoadFloat4(&Planes[5]), ray));
+
+		//  ray = ComputeIntersectionLine(XMLoadFloat4(&Planes[2]), XMLoadFloat4(&Planes[1]));
+		//  XMStoreFloat3(&Corners[4], ComputeIntersection(XMLoadFloat4(&Planes[4]), ray));
+		//  XMStoreFloat3(&Corners[7], ComputeIntersection(XMLoadFloat4(&Planes[5]), ray));
+
+		//  ray = ComputeIntersectionLine(XMLoadFloat4(&Planes[1]), XMLoadFloat4(&Planes[3]));
+		//  XMStoreFloat3(&Corners[5], ComputeIntersection(XMLoadFloat4(&Planes[4]), ray));
+		//  XMStoreFloat3(&Corners[6], ComputeIntersection(XMLoadFloat4(&Planes[5]), ray));
+
+		//  BoundBox.CreateFromPoints(Corners, 8);
+
+		Planes.clear();
+
+		// Right-handed
+		/*XMVECTOR vertices[8] =
+		{
+			{-1.0f, +1.0f, +0.0f, +1.0f},
+			{+1.0f, +1.0f, +0.0f, +1.0f},
+			{+1.0f, -1.0f, +0.0f, +1.0f},
+			{-1.0f, -1.0f, +0.0f, +1.0f},
+			{-1.0f, +1.0f, +1.0f, +1.0f},
+			{+1.0f, +1.0f, +1.0f, +1.0f},
+			{+1.0f, -1.0f, +1.0f, +1.0f},
+			{-1.0f, -1.0f, +1.0f, +1.0f},
+		};*/
+
+		// Left-handed
+		XMVECTOR vertices[8] =
+		{                                              //                         7--------6
+			XMVectorSet(1.0f, -1.0f, 0.0f, 1.0f),      //                        /|       /|
+			XMVectorSet(-1.0f, -1.0f, 0.0f, 1.0f),     //     Y ^               / |      / |
+			XMVectorSet(1.0f, 1.0f, 0.0f, 1.0f),       //     | _              3--------2  |
+			XMVectorSet(-1.0f, 1.0f, 0.0f, 1.0f),      //     | /' Z           |  |     |  |
+			XMVectorSet(1.0f, -1.0f, 1.0f, 1.0f),      //     |/               |  5-----|--4
+			XMVectorSet(-1.0f, -1.0f, 1.0f, 1.0f),     //     + ---> X         | /      | /
+			XMVectorSet(1.0f, 1.0f, 1.0f, 1.0f),       //                      |/       |/
+			XMVectorSet(-1.0f, 1.0f, 1.0f, 1.0f),      //                      1--------0
+		};
+
+		XMVECTOR det;
+		XMMATRIX invM = XMMatrixInverse(&det, XMLoadFloat4x4(&matrix));
+
+		for(int i = 0; i < 8; i++)
+		{
+			vertices[i] = XMVector3TransformCoord(vertices[i], invM);
+			XMStoreFloat3(&Corners[i], vertices[i]);
+		}
+
+		BoundBox.CreateFromPoints(Corners, 8);
+
+		XMFLOAT4 planes[6];
+
+		// Right-handed
+		/*XMStoreFloat4(&planes[0], XMPlaneFromPoints(vertices[0], vertices[1], vertices[2]));
+		XMStoreFloat4(&planes[1], XMPlaneFromPoints(vertices[4], vertices[7], vertices[5]));
+		XMStoreFloat4(&planes[2], XMPlaneFromPoints(vertices[4], vertices[5], vertices[1]));
+		XMStoreFloat4(&planes[3], XMPlaneFromPoints(vertices[7], vertices[3], vertices[6]));
+		XMStoreFloat4(&planes[4], XMPlaneFromPoints(vertices[4], vertices[0], vertices[7]));
+		XMStoreFloat4(&planes[5], XMPlaneFromPoints(vertices[5], vertices[6], vertices[1]));*/
+
+		// Left-handed 
+		XMStoreFloat4(&planes[0], XMPlaneFromPoints(vertices[0], vertices[4], vertices[2]));
+		XMStoreFloat4(&planes[1], XMPlaneFromPoints(vertices[1], vertices[3], vertices[5]));
+		XMStoreFloat4(&planes[2], XMPlaneFromPoints(vertices[3], vertices[2], vertices[7]));
+		XMStoreFloat4(&planes[3], XMPlaneFromPoints(vertices[1], vertices[5], vertices[0]));
+		XMStoreFloat4(&planes[4], XMPlaneFromPoints(vertices[5], vertices[7], vertices[4]));
+		XMStoreFloat4(&planes[5], XMPlaneFromPoints(vertices[1], vertices[0], vertices[3]));
+
+		for(int i = 0; i < 6; i++)
+			Planes.push_back(planes[i]);
 	}
 
 	Ray Frustum::ComputeIntersectionLine(FXMVECTOR p1, FXMVECTOR p2)

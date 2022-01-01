@@ -3,13 +3,14 @@
 #include "ShaderManager.h"
 #include "Renderer.h"
 #include "Lights.h"
-
 #include "CScene.h"
 #include "DeferredRenderer.h"
 #include "CRenderer.h"
 #include "CGame.h"
 #include "CVisibilityPlugins.h"
 #include "LightManager.h"
+#include "CCamera.h"
+
 SpotlightShadow* SpotShadow;
 
 SpotlightShadow::SpotlightShadow()
@@ -34,7 +35,6 @@ void SpotlightShadow::Initialize()
 
 	for (size_t i = 0; i < 30; i++)
 		mColorRaster[i] = RwD3D9RasterCreate(m_nShadowSize, m_nShadowSize, D3DFMT_G32R32F, rwRASTERTYPECAMERATEXTURE);
-		//mColorRaster[i] = RwRasterCreate(m_nShadowSize, m_nShadowSize, 32, rwRASTERTYPECAMERATEXTURE);
 	mDepthRaster = RwRasterCreate(m_nShadowSize, m_nShadowSize, 32, rwRASTERTYPEZBUFFER);
 }
 
@@ -59,21 +59,34 @@ void SpotlightShadow::AddObject(CEntity* entity)
 
 void SpotlightShadow::Update()
 {
+	gLightManager.SortSpotLights();
 	RwD3D9SetRenderState(D3DRS_COLORWRITEENABLE, D3DCOLORWRITEENABLE_RED);
 
 	RWSRCGLOBAL(curCamera) = Scene.m_pRwCamera;
-	for (size_t i = 0; i < gLightManager.GetSpotLightCount(); i++)
-	{
-		auto data = gLightManager.GetSpotLightAt(i);
 
-		m_viewMatrix[i] = data.GetViewMatrix();
-		m_projectionMatrix[i] = data.GetProjection();
+	uint32_t maxLights = min((size_t)29, gLightManager.GetSpotLightCount());
+
+	for (size_t i = 0; i < maxLights; i++)
+	{
+		auto light = gLightManager.GetSpotLightAt(i);
+
+		auto position = light->GetPosition();
+		auto radius = light->GetRadius();
+
+		CVector dx = CVector(position.x, position.y, position.z) - TheCamera.GetPosition();
+
+		/*if (dx.Magnitude() > radius*2)
+			continue;*/
+
+		auto viewMatrix = light->GetViewMatrix();
+		auto projectionMatrix = light->GetProjection();
 
 		gRenderState = stageCascadeShadow;
 		//gRenderState = stagePointShadow;
 
 		RwD3D9SetRenderTarget(0, mColorRaster[i]);
 		rwD3D9SetDepthStencil(mDepthRaster);
+		gLightManager.mSpotLightList[i].mColorRaster = mColorRaster[i];
 
 		D3DVIEWPORT9 viewport;
 		viewport.X = 0;
@@ -88,11 +101,11 @@ void SpotlightShadow::Update()
 
 		if (rwD3D9TestState())
 		{
-			RwD3D9SetTransform(D3DTS_VIEW, &m_viewMatrix[i]);
-			RwD3D9SetTransform(D3DTS_PROJECTION, &m_projectionMatrix[i]);
+			RwD3D9SetTransform(D3DTS_VIEW, &viewMatrix);
+			RwD3D9SetTransform(D3DTS_PROJECTION, &projectionMatrix);
 
-			_rwD3D9SetVertexShaderConstant(4, &m_viewMatrix[i], 4);
-			_rwD3D9SetVertexShaderConstant(8, &m_projectionMatrix[i], 4);
+			_rwD3D9SetVertexShaderConstant(4, &viewMatrix, 4);
+			_rwD3D9SetVertexShaderConstant(8, &projectionMatrix, 4);
 
 			RenderEntities(i);
 		}

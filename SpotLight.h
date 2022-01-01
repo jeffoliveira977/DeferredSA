@@ -26,6 +26,7 @@ public:
 	float GetRadius();
 
 	void Update();
+	RwRaster* mColorRaster;
 private:
 	Math::Frustum mFrustum;
 	XMMATRIX mMatrix;
