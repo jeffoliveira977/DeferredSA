@@ -62,39 +62,26 @@ void CPointLights__AddLight(unsigned char defaultType, XMFLOAT3 point, XMFLOAT3 
 
 void AddVehicleSpotLight(CVehicle* vehicle)
 {
-	if (!vehicle->m_nVehicleFlags.bLightsOn)
-		return; 
-
-	if (gLightManager.GetSpotLightCount() > 28)
-			return;
-
 	CVehicleModelInfo* pModelinfo = reinterpret_cast<CVehicleModelInfo*>(CModelInfo::ms_modelInfoPtrs[vehicle->m_nModelIndex]);
 	CVector headlightPos = pModelinfo->m_pVehicleStruct->m_avDummyPos[0];
 	CVector tailLightPos = pModelinfo->m_pVehicleStruct->m_avDummyPos[1];
-	CVector camPos = TheCamera.GetPosition();
-	float visibleRadius = 100.0;
-	CVector dx = vehicle->GetPosition() - camPos;
-
-	if (dx.Magnitude() >= visibleRadius)
-		return;
-
+	
 	auto automobile = reinterpret_cast<CAutomobile*>(vehicle);
 
-	auto bHEAD_R = (automobile && !automobile->m_damageManager.GetLightStatus(eLights::LIGHT_FRONT_RIGHT));
-	auto bHEAD_L = (automobile && !automobile->m_damageManager.GetLightStatus(eLights::LIGHT_FRONT_LEFT));
-	auto bREAR_R = (automobile && !automobile->m_damageManager.GetLightStatus(eLights::LIGHT_REAR_RIGHT));
-	auto bREAR_L = (automobile && !automobile->m_damageManager.GetLightStatus(eLights::LIGHT_REAR_LEFT));
+	auto bHEAD_R = (!automobile->m_damageManager.GetLightStatus(eLights::LIGHT_FRONT_RIGHT));
+	auto bHEAD_L = (!automobile->m_damageManager.GetLightStatus(eLights::LIGHT_FRONT_LEFT));
+	auto bREAR_R = (!automobile->m_damageManager.GetLightStatus(eLights::LIGHT_REAR_RIGHT));
+	auto bREAR_L = (!automobile->m_damageManager.GetLightStatus(eLights::LIGHT_REAR_LEFT));
 
 	auto matrix = vehicle->GetMatrix();
-	if (headlightPos.x != 0.0f || headlightPos.y != 0.0f || headlightPos.z != 0.0f)
-	{
+	//if (headlightPos.x != 0.0f || headlightPos.y != 0.0f || headlightPos.z != 0.0f ||
+	//    tailLightPos.x != 0.0f || tailLightPos.y != 0.0f || tailLightPos.z != 0.0f)
+	//{
 		float distance = 0.1f;
 		if (vehicle->m_nModelIndex == 530)
 			distance = 0.5f;
 
 		SpotLight light;
-
-		// Initialize the spot light
 		light.SetIntensity(1.0);
 
 		CVector position;
@@ -116,7 +103,7 @@ void AddVehicleSpotLight(CVehicle* vehicle)
 
 			if (bHEAD_R)
 			{
-				position = position - (headlightPos.x + headlightPos.x) * matrix->right;
+				position -= headlightPos.x * 2.0f * matrix->right;
 				light.SetPosition({position.x, position.y, position.z});
 				light.Update();
 				gLightManager.AddSpotLight(light);
@@ -155,13 +142,13 @@ void AddVehicleSpotLight(CVehicle* vehicle)
 
 			if (bREAR_R)
 			{
-				position = position - (tailLightPos.x + tailLightPos.x) * matrix->right;
+				position -= tailLightPos.x * 2.0f * matrix->right;
 				light.SetPosition({position.x, position.y, position.z});
 				light.Update();
 				gLightManager.AddSpotLight(light);
 			}
 		}
-	}
+	//}
 }
 
 void __stdcall CVehicle__DoHeadLightReflection(CVehicle*, int, CMatrix*, bool)
@@ -301,7 +288,19 @@ void LightManager::Hook()
 		{
 			auto* vehicle = pool->GetAt(i);
 			if (vehicle)
+			{
+				if (!vehicle->m_nVehicleFlags.bLightsOn)
+					continue; 
+	
+				CVector camPos = TheCamera.GetPosition();
+				float visibleRadius = 100.0;
+				CVector dx = vehicle->GetPosition() - camPos;
+
+				if (dx.Magnitude() >= visibleRadius)
+					continue;
+			
 				AddVehicleSpotLight(vehicle);
+			}
 		}
 	};
 
