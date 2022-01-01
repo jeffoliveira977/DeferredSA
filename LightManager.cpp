@@ -12,7 +12,7 @@ bool CheckModelId(CEntity* entity)
 	if (entity)
 	{
 		auto id = entity->m_nModelIndex;
-		if (/*(id < 596 || id > 599) &&*/
+		if ((id > 595 && id < 600) ||
 			id == 438 ||
 			id == 420 ||
 			id == 416 ||
