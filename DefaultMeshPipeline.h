@@ -1,16 +1,17 @@
 #pragma once
 #include "CDrawable.h"
-
+#include "VertexShader.h"
+#include "PixelShader.h"
 class DefaultMeshPipeline : virtual public MeshRenderingMode
 {
-	void* reflectionParaboloidVS;
-	void* reflectionSphericalVS;
+	VertexShader* reflectionParaboloidVS;
+	VertexShader* reflectionSphericalVS;
 
-	void* PS_deferred;
-	void* VS_deferred;
+	PixelShader* PS_deferred;
+	VertexShader* VS_deferred;
 
-	void* VS_simple;
-	void* PS_simple;
+	VertexShader* VS_simple;
+	PixelShader* PS_simple;
 
 	void ReflectionRendering(RwResEntry* entry, void* object, RwUInt32 flags);
 	void DeferredRendering(RwResEntry* entry, void* object, RwUInt32 flags);

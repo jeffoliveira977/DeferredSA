@@ -64,7 +64,7 @@ void SpotlightShadow::Update()
 
 	RWSRCGLOBAL(curCamera) = Scene.m_pRwCamera;
 
-	uint32_t maxLights = min((size_t)29, gLightManager.GetSpotLightCount());
+	uint32_t maxLights = min((size_t)20, gLightManager.GetSpotLightCount());
 
 	for (size_t i = 0; i < maxLights; i++)
 	{
@@ -75,8 +75,8 @@ void SpotlightShadow::Update()
 
 		CVector dx = CVector(position.x, position.y, position.z) - TheCamera.GetPosition();
 
-		/*if (dx.Magnitude() > radius*2)
-			continue;*/
+		if (dx.Magnitude() > 30.0f)
+			continue;
 
 		auto viewMatrix = light->GetViewMatrix();
 		auto projectionMatrix = light->GetProjection();

@@ -1,24 +1,26 @@
 #pragma once
 #include "CDrawable.h"
+#include "VertexShader.h"
+#include "PixelShader.h"
 
 class BuldingMeshPipeline : virtual public MeshRenderingMode
 {
-	void* VS_dualParaboloidMap;
-	void* PS_dualParaboloidMap;
+	VertexShader* VS_dualParaboloidMap;
+	PixelShader* PS_dualParaboloidMap;
 
-	void* VS_sphereMap; 
+	VertexShader* VS_sphereMap;
 
-	void* PS_deferred;
-	void* VS_deferred;
+	PixelShader* PS_deferred;
+	VertexShader* VS_deferred;
 
-	void* VS_simple;
-	void* PS_simple;
+	VertexShader* VS_simple;
+	PixelShader* PS_simple;
 
-	void* VS_waterReflection;
-	void* PS_waterReflection;
+	VertexShader* VS_waterReflection;
+	PixelShader* PS_waterReflection;
 
-	void* mColorVertexShader;
-	void* mColorPixelShader;
+	VertexShader* mColorVertexShader;
+	PixelShader* mColorPixelShader;
 
 	 void ReflectionRendering(RwResEntry* entry, void* object, RwUInt32 flags);
 	 void DeferredRendering(RwResEntry* entry, void* object, RwUInt32 flags);

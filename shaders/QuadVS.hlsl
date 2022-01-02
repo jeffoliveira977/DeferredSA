@@ -7,7 +7,6 @@ struct VS
 };
 
 float3 FrustumCorners[4] : register(c0);
-row_major float4x4 CameraWorld : register(c4);
 
 float3 GetFrustumRay(in float4 Position)
 {
@@ -34,7 +33,7 @@ VS main(float4 Position : POSITION, float2 TexCoord : TEXCOORD0)
    
     output.TexCoord = TexCoord;   
 
-    output.FrustumRay = /*mul(*/GetFrustumRay(TexCoord)/*, (float3x3)CameraWorld)*/;
+    output.FrustumRay = GetFrustumRay(TexCoord);
     
     return output;
 }

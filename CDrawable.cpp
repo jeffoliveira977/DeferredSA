@@ -8,25 +8,23 @@
 
 void MeshRenderingMode::createShaders()
 {
-	//VS_shadow = CreateVertexShader("DeferredSA/shaders/ShadowMapping.hlsl", "VS_Shadow");
-	//PS_shadow = CreatePixelShader("DeferredSA/shaders/ShadowMappingPS.hlsl", "main");
+	VS_shadow = new VertexShader();
+	VS_shadow->CreateFromBinary("ShadowMappingVS");
 
-	std::vector<BYTE> bytes;
-	bytes = readFile("DeferredSA/shaders/binary/ShadowMappingVS.cso");
-	RwD3D9CreateVertexShader((RwUInt32*)bytes.data(), &VS_shadow);
+	PS_shadow = new PixelShader();
+	PS_shadow->CreateFromBinary("ShadowMappingPS");
 
-	bytes = readFile("DeferredSA/shaders/binary/ShadowMappingPS.cso");
-	RwD3D9CreatePixelShader((RwUInt32*)bytes.data(), &PS_shadow);
+	VS_Distance = new VertexShader();
+	VS_Distance->CreateFromBinary("DistanceVS");
 
-	bytes = readFile("DeferredSA/shaders/binary/DistanceVS.cso");
-	RwD3D9CreateVertexShader((RwUInt32*)bytes.data(), &VS_Distance);
+	PS_Distance = new PixelShader();
+	PS_Distance->CreateFromBinary("DistancePS");
 
-	bytes = readFile("DeferredSA/shaders/binary/DistancePS.cso");
-	RwD3D9CreatePixelShader((RwUInt32*)bytes.data(), &PS_Distance);
 }
 
 void MeshRenderingMode::RenderCallBack(RwResEntry* entry, void* object, RwUInt8 type, RwUInt32 flags)
 {
+	XMMATRIX worldMatrix;
 
 	RxD3D9ResEntryHeader* header;
 	RxD3D9InstanceData* instance;
@@ -38,6 +36,13 @@ void MeshRenderingMode::RenderCallBack(RwResEntry* entry, void* object, RwUInt8 
 	_rwD3D9SetIndices(header->indexBuffer);
 	_rwD3D9SetStreams(header->vertexStream, header->useOffsets);
 	_rwD3D9SetVertexDeclaration(header->vertexDeclaration);
+
+	RwMatrix* LTM = RwFrameGetLTM(RpAtomicGetFrame(object));
+	worldMatrix = RwMatrixToXMMATRIX(LTM);
+	_rwD3D9SetVertexShaderConstant(0, &worldMatrix, 4);
+
+	RwRenderStateSet(rwRENDERSTATEZWRITEENABLE, (void*)TRUE);
+	RwRenderStateSet(rwRENDERSTATEZTESTENABLE, (void*)TRUE);
 
 	switch(gRenderState)
 	{
@@ -63,7 +68,7 @@ void MeshRenderingMode::RenderCallBack(RwResEntry* entry, void* object, RwUInt8 
 
 void MeshRenderingMode::ShadowRendering(RwResEntry* entry, void* object, RwUInt32 flags)
 {
-	XMMATRIX  worldMatrix, viewMatrix, projectionMatrix;
+	XMMATRIX worldMatrix;
 
 	RwMatrix* LTM;
 	RxD3D9ResEntryHeader* header;
@@ -75,51 +80,27 @@ void MeshRenderingMode::ShadowRendering(RwResEntry* entry, void* object, RwUInt3
 	LTM = RwFrameGetLTM(RpAtomicGetFrame(object));
 	worldMatrix = RwMatrixToXMMATRIX(LTM);
 
-
-	RwEngineInstance->dOpenDevice.fpRenderStateSet(rwRENDERSTATETEXTUREADDRESS, (void*)1u);
-	RwEngineInstance->dOpenDevice.fpRenderStateSet(rwRENDERSTATETEXTUREPERSPECTIVE, (void*)1u);
-	RwEngineInstance->dOpenDevice.fpRenderStateSet(rwRENDERSTATEZTESTENABLE, (void*)1u);
-	RwEngineInstance->dOpenDevice.fpRenderStateSet(rwRENDERSTATEZWRITEENABLE, (void*)1u);
-	RwEngineInstance->dOpenDevice.fpRenderStateSet(rwRENDERSTATESHADEMODE, (void*)2u);
-	RwEngineInstance->dOpenDevice.fpRenderStateSet(rwRENDERSTATETEXTUREFILTER, (void*)2u);
-	RwEngineInstance->dOpenDevice.fpRenderStateSet(rwRENDERSTATEVERTEXALPHAENABLE, (void*)1);
-	RwEngineInstance->dOpenDevice.fpRenderStateSet(rwRENDERSTATESRCBLEND, (void*)5u);
-	RwEngineInstance->dOpenDevice.fpRenderStateSet(rwRENDERSTATEDESTBLEND, (void*)6u);
-
-	//RwEngineInstance->dOpenDevice.fpRenderStateSet(rwRENDERSTATECULLMODE, (void*)1u);
-	RwEngineInstance->dOpenDevice.fpRenderStateSet(rwRENDERSTATEALPHATESTFUNCTION, (void*)rwALPHATESTFUNCTIONGREATEREQUAL);
-	RwEngineInstance->dOpenDevice.fpRenderStateSet(rwRENDERSTATEALPHATESTFUNCTIONREF, (void*)2u);
-
 	_rwD3D9SetVertexShaderConstant(0, &worldMatrix, 4);
 	
-	//RwRenderStateSet(rwRENDERSTATEFOGENABLE, FALSE);
-	//RwD3D9SetRenderState(D3DRS_ALPHABLENDENABLE, FALSE);
-	//RwD3D9SetRenderState(D3DRS_ALPHATESTENABLE, TRUE);
-	 //RwRenderStateSet(rwRENDERSTATECULLMODE, (void*)0);
-	RwRenderStateSet(rwRENDERSTATEZWRITEENABLE, (void*)TRUE);
-	RwRenderStateSet(rwRENDERSTATEZTESTENABLE, (void*)TRUE);
+	RwD3D9SetRenderState(D3DRS_ALPHABLENDENABLE, FALSE);
+	RwD3D9SetRenderState(D3DRS_ALPHATESTENABLE, TRUE);
 
 	if (gRenderState == stagePointShadow)
 	{
-		_rwD3D9SetVertexShader(VS_Distance);
-		_rwD3D9SetPixelShader(PS_Distance);
+		RwRenderStateSet(rwRENDERSTATEALPHATESTFUNCTIONREF, (void*)255);
+		VS_Distance->Apply();
+		PS_Distance->Apply();
 	}
 	else
 	{
-		_rwD3D9SetVertexShader(VS_shadow);
-		_rwD3D9SetPixelShader(PS_shadow);
+		RwRenderStateSet(rwRENDERSTATEALPHATESTFUNCTIONREF, (void*)0);
+		VS_shadow->Apply();
+		PS_shadow->Apply();
+
 	}
 
-	RwRenderStateSet(rwRENDERSTATEALPHATESTFUNCTIONREF, (void*)20);
 	RwRenderStateSet(rwRENDERSTATESRCBLEND, (void*)rwBLENDSRCALPHA);
 	RwRenderStateSet(rwRENDERSTATEDESTBLEND, (void*)rwBLENDINVSRCALPHA);
-
-	//rwD3D9SetSamplerState(0, D3DSAMP_MINFILTER, D3DTEXF_LINEAR);
-	//rwD3D9SetSamplerState(0, D3DSAMP_MAGFILTER, D3DTEXF_LINEAR);
-	//rwD3D9SetSamplerState(0, D3DSAMP_MIPFILTER, D3DTEXF_LINEAR);
-	//rwD3D9SetSamplerState(0, D3DSAMP_ADDRESSU, D3DTADDRESS_WRAP);
-	//rwD3D9SetSamplerState(0, D3DSAMP_ADDRESSV, D3DTADDRESS_WRAP);
-	//rwD3D9SetSamplerState(0, D3DSAMP_ADDRESSW, D3DTADDRESS_WRAP);
 
 	int numMeshes = header->numMeshes;
 	while(numMeshes--)
@@ -135,19 +116,12 @@ void MeshRenderingMode::ShadowRendering(RwResEntry* entry, void* object, RwUInt3
 
 		hasAlpha = material->texture && RwD3D9TextureHasAlpha(material->texture);
 
-		//if(hasAlpha)
-		//	RwRenderStateSet(rwRENDERSTATEALPHATESTFUNCTIONREF, (void*)170);
-		//else
-		//	RwRenderStateSet(rwRENDERSTATEALPHATESTFUNCTIONREF, (void*)0);
-
-		//hasAlpha = hasAlpha || instance->vertexAlpha || matcolor->alpha != 255;
 		RwRGBAReal colorValue;
 		RwRGBARealFromRwRGBA(&colorValue, matcolor);
 		_rwD3D9SetPixelShaderConstant(0, &colorValue, 1);
 		
-		hasAlpha = instance->vertexAlpha || matcolor->alpha != 255;
+		hasAlpha = hasAlpha || instance->vertexAlpha || matcolor->alpha != 255;
 		RwRenderStateSet(rwRENDERSTATEVERTEXALPHAENABLE, (void*)hasAlpha);
-		//_rwD3D9SetPixelShaderConstant(1, &Scene.m_pRwCamera->farPlane, 1);
 		D3D9Render(header, instance, texture, flags);
 		instance++;
 	}
@@ -179,8 +153,8 @@ void MeshRenderingMode::ReflectionRendering(RwResEntry* entry, void* object, RwU
 	fog[1] = Scene.m_pRwCamera->farPlane;
 	_rwD3D9SetPixelShaderConstant(4, fog, 1);
 
-	_rwD3D9SetVertexShader(VS_forward);
-	_rwD3D9SetPixelShader(PS_forward);
+	VS_forward->Apply();
+	PS_forward->Apply();
 }
 
 void MeshRenderingMode::DeferredRendering(RwResEntry * entry, void* object, RwUInt32 flags)
@@ -208,9 +182,8 @@ void MeshRenderingMode::ForwardRendering(RwResEntry * entry, void* object, RwUIn
 	fog[0] = CTimeCycle::m_CurrentColours.m_fFogStart;
 	fog[1] = Scene.m_pRwCamera->farPlane;
 	_rwD3D9SetPixelShaderConstant(4, fog, 1);
-
-	_rwD3D9SetVertexShader(VS_forward);
-	_rwD3D9SetPixelShader(PS_forward);
+	VS_forward->Apply();
+	PS_forward->Apply();
 }
 
 void MeshRenderingMode::D3D9Render(RxD3D9ResEntryHeader* header, RxD3D9InstanceData* instance, RwTexture* texture, RwUInt32 flags)

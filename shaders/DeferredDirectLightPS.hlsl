@@ -20,7 +20,6 @@ float3 fogData : register(c12);
 
 ShadowData ShadowBuffer: register(c13);
 sampler2D RadianceSampler : register(s4);
-sampler2D ShadowSampler2[4] : register(s6);
 row_major float4x4 ViewProjectionMatrix : register(c40);
 sampler2D ShadowSampler[4] : register(s5);
 
@@ -131,7 +130,7 @@ float4 main(float2 texCoord : TEXCOORD0, float2 vpos:VPOS) : COLOR
         
     float3 worldPosition;
     WorldPositionFromDepth(texCoord, depth, ProjectionMatrix, ViewInverseMatrix, worldPosition);
-    float4 Shadow = DrawShadow(ShadowSampler2, worldPosition, length(worldPosition.xyz - ViewInverseMatrix[3].xyz), worldPosition, ShadowBuffer) * ShadowDNBalance;
+    float4 Shadow = DrawShadow(ShadowSampler, worldPosition, length(worldPosition.xyz - ViewInverseMatrix[3].xyz), worldPosition, ShadowBuffer) * ShadowDNBalance;
   
     float FarClip2 = 160.0;
     float FogStart2 = 0.0;

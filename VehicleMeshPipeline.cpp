@@ -66,10 +66,18 @@ RxPipeline* VehicleMeshPipeline::Initialize()
 			//RxD3D9AllInOneSetReinstanceCallBack(node, CCustomCarEnvMapPipeline__CustomPipeReInstanceCB);
 			RxD3D9AllInOneSetRenderCallBack(node, CCustomCarEnvMapPipeline__CustomPipeRenderCB);
 
-			deferredVS = RwCreateCompiledVertexShader("DeferredVehicleVS");
-			deferredPS = RwCreateCompiledPixelShader("DeferredVehiclePS");
-			VS_forward = RwCreateCompiledVertexShader("ForwardVehicleVS");
-			PS_forward = RwCreateCompiledPixelShader("ForwardVehiclePS");
+			deferredVS = new VertexShader();
+			deferredVS->CreateFromBinary("DeferredVehicleVS");
+
+			deferredPS = new PixelShader();
+			deferredPS->CreateFromBinary("DeferredVehiclePS");
+
+			VS_forward = new VertexShader();
+			VS_forward->CreateFromBinary("ForwardVehicleVS");
+
+			PS_forward = new PixelShader();
+			PS_forward->CreateFromBinary("ForwardVehiclePS");
+
 			createShaders();
 			return pipeline;
 		}
@@ -111,8 +119,8 @@ void VehicleMeshPipeline::DeferredRendering(RwResEntry* entry, void* object, RwU
 	CVector skyBottom = GetSkyBottomColor();
 	_rwD3D9SetPixelShaderConstant(1, &D3DXVECTOR4(skyBottom.x, skyBottom.y, skyBottom.z, CTimeCycle::m_CurrentColours.m_fFarClip), 1);
 
-	_rwD3D9SetVertexShader(deferredVS);
-	_rwD3D9SetPixelShader(deferredPS);
+	deferredVS->Apply();
+	deferredPS->Apply();
 
 	int numMeshes = header->numMeshes;
 	while(numMeshes--)
@@ -198,7 +206,8 @@ void VehicleMeshPipeline::ForwardRendering(RwResEntry* entry, void* object, RwUI
 	RwMatrix* LTM = RwFrameGetLTM(RpAtomicGetFrame(object));
 	XMMATRIX worldMatrix = RwMatrixToXMMATRIX(LTM);
 	_rwD3D9SetVertexShaderConstant(0, &worldMatrix, 4);
-
+	RwRenderStateSet(rwRENDERSTATEZWRITEENABLE, (void*)TRUE);
+	RwRenderStateSet(rwRENDERSTATEZTESTENABLE, (void*)TRUE);
 	_rwD3D9SetPixelShaderConstant(8, &GetSkyTopColor(), 1);
 	_rwD3D9SetPixelShaderConstant(9, &GetSkyBottomColor(), 1);
 	_rwD3D9SetPixelShaderConstant(10, &GetSunColor(), 1);
@@ -229,10 +238,10 @@ void VehicleMeshPipeline::ForwardRendering(RwResEntry* entry, void* object, RwUI
 
 		hasAlpha = material->texture && RwD3D9TextureHasAlpha(material->texture);
 
-		if(hasAlpha)
+		/*if(hasAlpha)
 			RwRenderStateSet(rwRENDERSTATEALPHATESTFUNCTIONREF, (void*)40);
 		else
-			RwRenderStateSet(rwRENDERSTATEALPHATESTFUNCTIONREF, (void*)0);
+			RwRenderStateSet(rwRENDERSTATEALPHATESTFUNCTIONREF, (void*)0);*/
 
 		if(hasAlpha || instance->vertexAlpha || matcolor->alpha != 255)
 		{

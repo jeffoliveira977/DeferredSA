@@ -2,11 +2,13 @@
 #include "Shadow.hlsl"
 #include "PBR.hlsl"
 
+row_major float4x4 InverseViewMatrix : register(c4);
+
 float3 HorizonColor : register(c8);
 float3 SkyLightColor : register(c9);
 float3 SunColor : register(c10);
 float3 SunPosition : register(c11);
-float3 FogData : register(c12);
+float4 FogData : register(c12);
 float3 CameraPosition : register(c13);
 float4 MaterialColor : register(c14);
 float4 MaterialProps : register(c15);
@@ -16,13 +18,15 @@ float4 MaterialProps : register(c15);
 #define DNBalance MaterialProps.z
 #define FogStart FogData.x
 #define FarClip FogData.y
-#define FogRange FogData.z
+#define FogRange FogData.w
 
 bool4 Info : register(b0);
 
 #define HasTexture Info.x
 #define ForceNormalMap Info.y
 #define HasNormalMap Info.z
+#define HasSpecularMap Info.w
+
 
 struct VS_Output
 {
@@ -37,9 +41,10 @@ struct VS_Output
 };
 
 sampler2D Diffuse : register(s0);
-sampler2D NormalMap : register(s1);
+sampler2D SpecularMap : register(s1);
+sampler2D NormalMap : register(s2);
 ShadowData ShadowBuffer : register(c16);
-sampler2D ShadowSampler[4] : register(s2);
+sampler2D ShadowSampler[4] : register(s4);
 
 
 static const float g_fAtmosphereHeight = 8000.0f;
@@ -123,67 +128,18 @@ float InterleavedGradientNoise(float2 index)
 
 float4 main(VS_Output input, float2 vpos :VPOS) : COLOR
 {
-    //float3 normal = normalize(input.Normal);
-    ////normal.xy = BiasD2(normal);
-    ////normal = TwoChannelNormalX2(normal.xy);
-    
-    //if (HasNormalMap)
-    //{
-    //    float3 normalMap = tex2D(NormalMap, input.Texcoord).rgb;
-    //    normal = PeturbNormal(normalMap, input.WorldPosition, normal, input.Texcoord);
-    //}
-    //else if (ForceNormalMap)
-    //{
-    //    float3x3 c = img3x3(Diffuse, input.Texcoord, 512, 0);
-    //    float3 normalMap = height2normal_sobel(c);
-    //    normalMap = normalize(float3(normalMap.xy, normalMap.z * MaterialProps.w));
-    //    normal = PeturbNormal(normalMap, input.WorldPosition, normal, input.Texcoord);
-    //} 
-    
-    //float specularFactor = MaterialProps.x;
-    //float shininessFactor = MaterialProps.y;
-    
-    //float4 outColor;
-    //outColor.rgb = MaterialColor.rgb * input.Color.rgb;
-    //outColor.rgb += max(input.Color.rgb, 0.2) * lerp(0.5, 1, DNBalance);
-    //outColor.a = MaterialColor.a * input.Color.a;
-    
-    //float3 lightDir = normalize(SunPosition);
-    //float3 viewDir = normalize(CameraPosition);
-
-    //float3 d = lerp(SkyTop, SkyBottom, saturate(normal.z)) * 1.34;
-    //outColor.rgb *= LambertLighting(lightDir, normal, d*SunColor*0.5) + 0.2;
-    //float specular = PhongSpecular(lightDir, viewDir, normal, shininessFactor) * specularFactor;
-
-    //if (HasTexture)
-    //    outColor *= tex2D(Diffuse, input.Texcoord);
-    
-    //outColor.rgb += specular;
-    
-    //float3 skyColor = lerp(SkyTop, SkyBottom, saturate((input.WorldPosition.z - 20) * (1.0f / 500.0f)));
-    //float fHeightMultiplier = saturate((input.WorldPosition.z - 20) * (1.0f / 500.0f));
-    //float fFogCoef = saturate(max(input.Depth - FogStart, 0) / max(FarClip - FogStart, 0.001f)) * (1 - fHeightMultiplier);
-    //outColor.rgb = lerp(outColor.rgb, skyColor, fFogCoef);
-    
-    
-    
     const float3 ViewPos = CameraPosition.xyz;  
+    
     float3 WorldPos = input.WorldPosition.xyz;
-    float3 Normals = input.Normal.xyz * 0.5f + 0.5f;
-    Normals.xy = Normals * 2 - 1;
-    Normals.z = sqrt(max(1 - dot(Normals.xy, Normals.xy), 0.0f));
-    Normals = normalize(Normals);
+    float3 Normals=0;
+    
+    Normals.xy = EncodeNormal(input.Normal);
+    Normals = DecodeNormal(Normals);
+    Normals = mul(Normals, (float3x3) InverseViewMatrix);
     
     float3 ViewDir = normalize(WorldPos.xyz - ViewPos);
     float3 LightDir = normalize(SunPosition.xyz);
-
     
-    float SpecIntensity = MaterialProps.x;
-    float Roughness = 1 - MaterialProps.y;
-    
-    float DiffuseTerm, SpecularTerm;
-    CalculateDiffuseTerm_ViewDependent(Normals.xyz, LightDir, ViewDir, DiffuseTerm, Roughness);
-    CalculateSpecularTerm(Normals.xyz, LightDir, -ViewDir, Roughness, SpecularTerm);
     // clamp to avoid unrealisticly high values
    // SpecularTerm = min(SpecularTerm, 16.0f);
     //DiffuseTerm *= DNBalance;
@@ -191,8 +147,43 @@ float4 main(VS_Output input, float2 vpos :VPOS) : COLOR
     float4 albedoSample = MaterialColor * input.Color;
     if (HasTexture)
         albedoSample *= tex2D(Diffuse, input.Texcoord);    
-    //albedoSample.a = albedoSample.a > 0.95f ? albedoSample.a : InterleavedGradientNoise(vpos) * albedoSample.a;
-   
+    
+    float4 params;
+    float3 normal = Normals;
+    //outColor.a = outColor.a > 0.95f ? outColor.a : InterleavedGradientNoise(vpos) * outColor.a;
+    if (HasSpecularMap)
+    {
+        params.xyz = tex2D(SpecularMap, input.Texcoord).xyz;
+    }
+    else
+    {
+        params.xyz = float3(MaterialProps.x, MaterialProps.y, 0);
+    }
+    params.w = 1;
+    
+    float Metallicness = params.x;
+    float Roughness = 1 - params.y;
+    
+    if (HasNormalMap)
+    {
+        if (length(input.Tangent.xyz) > 0)
+        {
+            normal = NormalMapToSpaceNormal(tex2D(NormalMap, input.Texcoord).rgb, normal, input.Binormal, input.Tangent);
+
+        }
+    }
+    else if (ForceNormalMap)
+    {
+        float3x3 c = img3x3(Diffuse, input.Texcoord, 512, 0);
+        float3 normalMap = height2normal_sobel(c);
+        normalMap = normalize(float3(normalMap.xy, normalMap.z * MaterialProps.w));
+        normal = PeturbNormal(normalMap, input.WorldPosition.xyz, normal, input.Texcoord);
+    }
+    
+    float DiffuseTerm, SpecularTerm;
+    CalculateDiffuseTerm_ViewDependent(normal.xyz, LightDir, ViewDir, DiffuseTerm, Roughness);
+    CalculateSpecularTerm(normal.xyz, LightDir, -ViewDir, Roughness, SpecularTerm);
+    
     float4 outColor;
     float ShadowTerm = DrawShadow(ShadowSampler, WorldPos, length(WorldPos.xyz - ViewPos), WorldPos, ShadowBuffer) * DNBalance;
     float FarClip2 = 160.0;
@@ -207,10 +198,10 @@ float4 main(VS_Output input, float2 vpos :VPOS) : COLOR
     
     float3 Radiance = input.Color * lerp(0.25f, 1.0f, 1 - DNBalance);
    
-    float2 Lighting = float2(DiffuseTerm, SpecularTerm * SpecIntensity) * ShadowTerm;
+    float2 Lighting = float2(DiffuseTerm, SpecularTerm * Metallicness) * ShadowTerm;
     outColor.xyzw = float4(Lighting.x * SunColor.rgb + Radiance.rgb * saturate(1.0f - DNBalance + 0.2f), Lighting.y);
 
-    float3 ReflDir = normalize(reflect(ViewDir, normalize(Normals.xyz)));
+    float3 ReflDir = normalize(reflect(ViewDir, normalize(normal.xyz)));
     ReflDir.x *= -1;
     
     float3 FullScattering;
@@ -222,7 +213,7 @@ float4 main(VS_Output input, float2 vpos :VPOS) : COLOR
     float3 Diffuse = (outColor.xyz + SkyLightColor.rgb * 0.3f);
     SpecularTerm = (outColor.w * outColor.xyz);
 
-    float FresnelCoeff = MicrofacetFresnel(Normals, -ViewDir, MaterialProps.y);
+    float FresnelCoeff = MicrofacetFresnel(normal, -ViewDir, MaterialProps.y);
     outColor.xyz = Diffuse * albedoSample.rgb + SpecularTerm * MaterialProps.x + ReflectionTerm * FresnelCoeff * MaterialProps.x;
     outColor.rgb = CalculateFogColor(outColor.rgb, ViewDir, SunPosition.xyz, input.Depth, WorldPos.z, FullScattering);
     outColor.a = albedoSample.a;

@@ -41,15 +41,41 @@ RxPipeline* SkinnedMeshPipeline::Initialize()
 			lockedpipe->pluginData = 1;
 
 			RxLockedPipeUnlock(lock);
-			VS_deferred = RwCreateCompiledVertexShader("SkinnedMeshVS");
-			PS_deferred = RwCreateCompiledPixelShader("SkinnedMeshPS");
-			VS_shadow = RwCreateCompiledVertexShader("SkinnedMeshShadowVS");
-			PS_shadow = RwCreateCompiledPixelShader("SkinnedMeshShadowPS");
 
-			VS_Distance = RwCreateCompiledVertexShader("DistanceSkinnedMeshVS");
-			PS_Distance = RwCreateCompiledPixelShader("DistanceSkinnedMeshPS");
-			VS_waterReflection = RwCreateCompiledVertexShader("WaterSkinnedMeshReflectionVS");
-			PS_waterReflection = RwCreateCompiledPixelShader("WaterReflectionPS");
+			VS_deferred = new VertexShader();
+			VS_deferred->CreateFromBinary("SkinnedMeshVS");
+
+			PS_deferred = new PixelShader();
+			PS_deferred->CreateFromBinary("SkinnedMeshPS");
+
+			VS_shadow = new VertexShader();
+			VS_shadow->CreateFromBinary("SkinnedMeshShadowVS");
+
+			PS_shadow = new PixelShader();
+			PS_shadow->CreateFromBinary("SkinnedMeshShadowPS");
+
+			VS_Distance = new VertexShader();
+			VS_Distance->CreateFromBinary("DistanceSkinnedMeshVS");
+
+			PS_Distance = new PixelShader();
+			PS_Distance->CreateFromBinary("DistanceSkinnedMeshPS");
+
+			VS_waterReflection = new VertexShader();
+			VS_waterReflection->CreateFromBinary("WaterSkinnedMeshReflectionVS");
+
+			PS_waterReflection = new PixelShader();
+			PS_waterReflection->CreateFromBinary("WaterReflectionPS");
+
+
+			//VS_deferred = RwCreateCompiledVertexShader("SkinnedMeshVS");
+			//PS_deferred = RwCreateCompiledPixelShader("SkinnedMeshPS");
+			//VS_shadow = RwCreateCompiledVertexShader("SkinnedMeshShadowVS");
+			//PS_shadow = RwCreateCompiledPixelShader("SkinnedMeshShadowPS");
+
+			//VS_Distance = RwCreateCompiledVertexShader("DistanceSkinnedMeshVS");
+			//PS_Distance = RwCreateCompiledPixelShader("DistanceSkinnedMeshPS");
+			//VS_waterReflection = RwCreateCompiledVertexShader("WaterSkinnedMeshReflectionVS");
+			//PS_waterReflection = RwCreateCompiledPixelShader("WaterReflectionPS");
 			return pipeline;
 		}
 		_rxPipelineDestroy(pipeline);
@@ -128,9 +154,8 @@ void SkinnedMeshPipeline::ShadowRendering(RwResEntry* entry, void* object, RwUIn
 	XMFLOAT4X3 bones[64];
 	_rpSkinMatrixUpdating(bones, (RpAtomic*)object, skin);
 	_rwD3D9SetVertexShaderConstant(12, bones, sizeof(bones) / sizeof(XMVECTOR));
+	RwRenderStateSet(rwRENDERSTATEALPHATESTFUNCTIONREF, (void*)0);
 
-	RwRenderStateSet(rwRENDERSTATEZWRITEENABLE, (void*)TRUE);
-	RwRenderStateSet(rwRENDERSTATEZTESTENABLE, (void*)TRUE);
 	RwRenderStateSet(rwRENDERSTATEFOGENABLE, FALSE);
 	RwD3D9SetRenderState(D3DRS_ALPHABLENDENABLE, FALSE);
 	RwD3D9SetRenderState(D3DRS_ALPHATESTENABLE, TRUE);
@@ -140,13 +165,13 @@ void SkinnedMeshPipeline::ShadowRendering(RwResEntry* entry, void* object, RwUIn
 
 	if (gRenderState == stagePointShadow)
 	{
-		_rwD3D9SetVertexShader(VS_Distance);
-		_rwD3D9SetPixelShader(PS_Distance);
+		VS_Distance->Apply();
+		PS_Distance->Apply();
 	}
 	else
 	{
-		_rwD3D9SetVertexShader(VS_shadow);
-		_rwD3D9SetPixelShader(PS_shadow);
+		VS_shadow->Apply();
+		PS_shadow->Apply();
 	}
 
 	int numMeshes = header->numMeshes;
@@ -193,8 +218,7 @@ void SkinnedMeshPipeline::ReflectionRendering(RwResEntry* entry, void* object, R
 	worldMatrix = RwMatrixToXMMATRIX(LTM);
 	_rwD3D9SetVertexShaderConstant(0, &worldMatrix, 4);
 
-	RwRenderStateSet(rwRENDERSTATEZWRITEENABLE, (void*)TRUE);
-	RwRenderStateSet(rwRENDERSTATEZTESTENABLE, (void*)TRUE);
+
 
 	RwRenderStateSet(rwRENDERSTATESHADEMODE, (void*)2);
 	if(gRenderState == RenderingStage::stageReflection)
@@ -218,8 +242,9 @@ void SkinnedMeshPipeline::ReflectionRendering(RwResEntry* entry, void* object, R
 	XMFLOAT4X3 bones[64];
 	_rpSkinMatrixUpdating(bones, (RpAtomic*)object, skin);
 	_rwD3D9SetVertexShaderConstant(13, bones, sizeof(bones) / sizeof(XMVECTOR));
-	_rwD3D9SetVertexShader(VS_waterReflection);
-	_rwD3D9SetPixelShader(PS_waterReflection);
+
+	VS_waterReflection->Apply();
+	PS_waterReflection->Apply();
 	int numMeshes = header->numMeshes;
 	while(numMeshes--)
 	{
@@ -258,13 +283,14 @@ void SkinnedMeshPipeline::DeferredRendering(RwResEntry* entry, void* object, RwU
 	header = (RxD3D9ResEntryHeader*)(entry + 1);
 	instance = (RxD3D9InstanceData*)(header + 1);
 
-	_rwD3D9SetVertexShader(VS_deferred);
-	_rwD3D9SetPixelShader(PS_deferred);
+	VS_deferred->Apply();
+	PS_deferred->Apply();
 
 	RwMatrix* LTM = RwFrameGetLTM(RpAtomicGetFrame(object));
 	XMMATRIX worldMatrix = RwMatrixToXMMATRIX(LTM);
 	_rwD3D9SetVertexShaderConstant(0, &worldMatrix, 4);
-
+	RwRenderStateSet(rwRENDERSTATEZWRITEENABLE, (void*)TRUE);
+	RwRenderStateSet(rwRENDERSTATEZTESTENABLE, (void*)TRUE);
 	geometry = RpAtomicGetGeometry((RpAtomic*)object);
 	skin = rpSkinGeometryGetSkin(geometry);
 	numBones = rpSkinGetNumBones(skin);

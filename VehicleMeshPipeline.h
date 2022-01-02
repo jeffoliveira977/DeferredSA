@@ -1,13 +1,15 @@
 #pragma once
 #include "CDrawable.h"
+#include "VertexShader.h"
+#include "PixelShader.h"
 
 class VehicleMeshPipeline : virtual public MeshRenderingMode
 {
-	void* reflectionParaboloidVS;
-	void* reflectionSphericalVS;
+	VertexShader* reflectionParaboloidVS;
+	VertexShader* reflectionSphericalVS;
 
-	void* deferredPS;
-	void* deferredVS;
+	PixelShader* deferredPS;
+	VertexShader* deferredVS;
 
 	void ReflectionRendering(RwResEntry* entry, void* object, RwUInt32 flags);
 	void DeferredRendering(RwResEntry* entry, void* object, RwUInt32 flags);

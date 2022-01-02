@@ -55,3 +55,7 @@ void* VertexShader::GetObject()
 {
     return mVertexShader;
 }
+void VertexShader::Apply()
+{
+	_rwD3D9SetVertexShader(mVertexShader);
+}

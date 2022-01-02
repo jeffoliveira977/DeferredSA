@@ -1,17 +1,19 @@
 #pragma once
 #include "CDrawable.h"
+#include "VertexShader.h"
+#include "PixelShader.h"
 
 class SkinnedMeshPipeline : public MeshRenderingMode
 {
 protected:
-	void* reflectionParaboloidVS;
-	void* reflectionSphericalVS;
+	VertexShader* reflectionParaboloidVS;
+	VertexShader* reflectionSphericalVS;
 
-	void* PS_deferred;
-	void* VS_deferred;
+	PixelShader* PS_deferred;
+	VertexShader* VS_deferred;
 
-	void* VS_waterReflection;
-	void* PS_waterReflection;
+	VertexShader* VS_waterReflection;
+	PixelShader* PS_waterReflection;
 
 	void ShadowRendering(RwResEntry* entry, void* object, RwUInt32 flags);
 	void ReflectionRendering(RwResEntry* entry, void* object, RwUInt32 flags);

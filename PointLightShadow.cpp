@@ -41,11 +41,10 @@ void PointLightShadow::Initialize()
 
 	for (size_t i = 0; i < 30; i++)
 	{
-		mColorRaster[i] = RwD3D9RasterCreate(m_nShadowSize, m_nShadowSize, D3DFMT_G32R32F, rwRASTERTYPECAMERATEXTURE);
-		rwD3D9CubeRasterCreate(mColorRaster[i], D3DFMT_G32R32F, 1);
+		mColorRaster[i] = RwD3D9RasterCreate(m_nShadowSize, m_nShadowSize, D3DFMT_R32F, rwRASTERTYPECAMERATEXTURE);
+		rwD3D9CubeRasterCreate(mColorRaster[i], D3DFMT_R32F, 1);
 
-
-		mColorCube[i] = RwD3D9RasterCreate(m_nShadowSize*6, m_nShadowSize, D3DFMT_G32R32F, rwRASTERTYPECAMERATEXTURE);
+		//mColorCube[i] = RwD3D9RasterCreate(m_nShadowSize*6, m_nShadowSize, D3DFMT_G32R32F, rwRASTERTYPECAMERATEXTURE);
 	}
 
 	mDepthRaster = RwRasterCreate(m_nShadowSize * 6, m_nShadowSize, 32, rwRASTERTYPEZBUFFER);
@@ -76,7 +75,7 @@ void PointLightShadow::Update()
 	gLightManager.SortPointLights();
 	uint32_t maxLights = min((size_t)20, gLightManager.GetPointLightCount());
 
-	RwD3D9SetRenderState(D3DRS_COLORWRITEENABLE, D3DCOLORWRITEENABLE_RED);
+	//RwD3D9SetRenderState(D3DRS_COLORWRITEENABLE, D3DCOLORWRITEENABLE_RED);
 	auto coors = FindPlayerCoors(-1);
 	RWSRCGLOBAL(curCamera) = Scene.m_pRwCamera;
 	for (size_t i = 0; i < maxLights; i++)
@@ -153,7 +152,7 @@ void PointLightShadow::Update()
 void PointLightShadow::RenderEntities(PointLight* light, int i, int j)
 {
 	RwRenderStateSet(rwRENDERSTATEVERTEXALPHAENABLE, (void*)TRUE);
-	RwRenderStateSet(rwRENDERSTATECULLMODE, (void*)rwCULLMODECULLFRONT);
+	RwRenderStateSet(rwRENDERSTATECULLMODE, (void*)0);
 	if (!CGame::currArea)
 		RwRenderStateSet(rwRENDERSTATEALPHATESTFUNCTIONREF, (void*)140);
 

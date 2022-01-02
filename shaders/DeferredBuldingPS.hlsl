@@ -37,7 +37,7 @@ PS_DeferredOutput main(VS_DeferredOutput input, float2 vpos :VPOS)
 
     float4 params;
     float3 normal = input.Normal;
-    outColor.a = outColor.a > 0.95f ? outColor.a : InterleavedGradientNoise(vpos) * outColor.a;
+    //outColor.a = outColor.a > 0.95f ? outColor.a : InterleavedGradientNoise(vpos) * outColor.a;
     if (HasSpecularMap)
     {
         params.xyz = tex2D(SpecularMap, input.Texcoord).xyz;
@@ -46,7 +46,7 @@ PS_DeferredOutput main(VS_DeferredOutput input, float2 vpos :VPOS)
     {
         params.xyz = float3(Metallicness, Glossiness, 0);
     }
-    params.w = outColor.a > 0.95f ? 1 : 3;
+    params.w = 1;
     if (HasNormalMap)
     {
         if ( length(input.Tangent.xyz) > 0)
@@ -68,8 +68,8 @@ PS_DeferredOutput main(VS_DeferredOutput input, float2 vpos :VPOS)
         normalMap = normalize(float3(normalMap.xy, normalMap.z * MaterialProps.w));
         normal = PeturbNormal(normalMap, input.WorldPosition.xyz, normal, input.Texcoord);
     }
-    if (outColor.a < 0.2f)
-        discard;
+    //if (outColor.a < 0.2f)
+    //    discard;
     PS_DeferredOutput output;
     PSFillGBuffer(outColor, input.Depth / FarClip, normal, params, input.Color * lerp(0.25f, 1.0f, 1 - DNBalance), output);
     

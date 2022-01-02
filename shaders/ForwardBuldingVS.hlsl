@@ -34,12 +34,12 @@ VS_Output main(VS_Input input)
     output.Position = mul(worldView, Projection);
     
     output.Texcoord = input.Texcoord;
-    
-    output.Normal = mul(input.Normal, (float3x3) World);
-    output.Tangent = mul(input.Tangent, (float3x3) World);
-    output.Binormal = mul(output.Normal, output.Tangent);
+    float4x4 modelview = mul(World, View);
+    output.Normal = normalize(mul(input.Normal, (float3x3) modelview));
+    output.Tangent = normalize(mul(input.Tangent, (float3x3) modelview));
+    output.Binormal = normalize(cross(output.Normal, output.Tangent));
     output.WorldPosition = mul(input.Position, World).xyz;
-    output.Depth = output.Position.z;
+    output.Depth = worldView.z;
     output.Color = input.Color;
 
     return output;

@@ -7,7 +7,7 @@ class VertexShader
 public:
 	VertexShader();
 	~VertexShader();
-
+	void Apply();
 	void CreateFromBinary(string file);
 	void CreateFromFile(string file, string profile);
 

@@ -69,8 +69,8 @@ void CRealTimeShadowManager__Update()
 
 	 //PrintMessage("%s", shadowTimer.GetTimerResult().c_str());
 
-	CubemapReflection::Update();
-	 CubemapReflection::RenderScene();
+	/*CubemapReflection::Update();
+	 CubemapReflection::RenderScene();*/
 
 	//DualParaboloidReflection::Update();
 	//DualParaboloidReflection::RenderScene();
@@ -80,10 +80,10 @@ void CRealTimeShadowManager__Update()
 	//RenderableScene::m_frustumRenderable->SetWorldMatrix(XMMatrixInverse(0, CascadedShadowManagement->Desc[0].mLightViewMatrix));
 	//RenderableScene::m_frustumRenderable->SetProjectionMatrix(CascadedShadowManagement->Desc[0].mLightOrthoMatrix, true);
 
-	RenderableScene::m_frustumRenderable->SetWorldMatrix(XMMatrixInverse(0, CubemapReflection::m_viewMatrix[0]));
+	/*RenderableScene::m_frustumRenderable->SetWorldMatrix(XMMatrixInverse(0, CubemapReflection::m_viewMatrix[0]));
 	RenderableScene::m_frustumRenderable->SetProjectionMatrix(CubemapReflection::m_projectionMatrix, false);
 
-	RenderableScene::Render();
+	RenderableScene::Render();*/
 }
 
 void CMirrors__BeforeMainRender()

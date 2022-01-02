@@ -160,7 +160,7 @@ void RenderDeferred()
 
 	BreakManager_c__Render(g_breakMan, 1);
 	CVisibilityPlugins__RenderWeaponPedsForPC();
-	//VisibilityPlugins::RenderWeaponPedsNoMuzzleFlash();
+	CVisibilityPlugins::RenderWeaponPedsForPC();
 }
 
 float CGameIdle::m_fShadowDNBalance=1.0;
@@ -208,13 +208,12 @@ void CGameIdle::UpdateShadowDNBalance()
 #include "RenderableSphere.h"
 RenderableSphere* mRenderableSphere=0;
 void CGameIdle::RenderScene(){
-	EnvironmentMapping::SetRenderCallback(RenderDeferred);
+
 	ShaderContext->Update();
 
 	RwD3D9RenderStateReset();
 	DefinedState();
-	
-	//
+	RenderForward();
 
 	{
 		DeferredContext->Start();
@@ -226,48 +225,50 @@ void CGameIdle::RenderScene(){
 	DefinedState();
 	RwD3D9RenderStateReset();
 	RenderDeferred();
-	ShaderContext->SetViewProjectionMatrix(4, true);
 
-	if (mRenderableSphere == 0)
-	{
-		mRenderableSphere = new RenderableSphere();
-		mRenderableSphere->Initialize(10, 10);
-	}
-	gLightManager.SortSpotLights();
-	auto coors = FindPlayerCoors(-1);
+	//ShaderContext->SetViewProjectionMatrix(4, true);
 
-	CEntity* entity = FindPlayerEntity(-1);
-	if (entity)
-	{
-		CColModel* col = entity->GetColModel();
-		if (col != nullptr)
-		{
-			XMMATRIX world = RwMatrixToXMMATRIX(reinterpret_cast<RwMatrix*>(entity->GetMatrix()));
-			XMMATRIX translation = XMMatrixTranslation(coors.x, coors.y, coors.z);
-			uint32_t maxLights = min((size_t)29, gLightManager.GetPointLightCount());
-			XMINT4 SolidWhite = { 0, 255, 255, 255 };
-			for (int i = 0; i < maxLights; i++)
-			{
-				auto light = gLightManager.GetPointLightAt(i);
-				auto radius = light->GetRadius();
-				auto intensity = light->GetIntensity();
-				auto color = light->GetColor();
+	//if (mRenderableSphere == 0)
+	//{
+	//	mRenderableSphere = new RenderableSphere();
+	//	mRenderableSphere->Initialize(10, 10);
+	//}
+	//gLightManager.SortSpotLights();
+	//auto coors = FindPlayerCoors(-1);
 
-				XMINT4 color2 = { (int)(color.x * 255), (int)(color.y * 255), (int)(color.z * 255), 255 };
-				mRenderableSphere->SetColor(color2);
+	//CEntity* entity = FindPlayerEntity(-1);
+	//if (entity)
+	//{
+	//	CColModel* col = entity->GetColModel();
+	//	if (col != nullptr)
+	//	{
+	//		XMMATRIX world = RwMatrixToXMMATRIX(reinterpret_cast<RwMatrix*>(entity->GetMatrix()));
+	//		XMMATRIX translation = XMMatrixTranslation(coors.x, coors.y, coors.z);
+	//		uint32_t maxLights = min((size_t)29, gLightManager.GetPointLightCount());
+	//		XMINT4 SolidWhite = { 0, 255, 255, 255 };
+	//		for (int i = 0; i < maxLights; i++)
+	//		{
+	//			auto light = gLightManager.GetPointLightAt(i);
+	//			auto radius = light->GetRadius();
+	//			auto intensity = light->GetIntensity();
+	//			auto color = light->GetColor();
 
-				Math::BoundingSphere sphere;
-				sphere.Center = light->GetPosition();
-				sphere.Radius = 0.1;
-				//sphere.Center = *reinterpret_cast<XMFLOAT3*>(&col->m_boundSphere.m_vecCenter);
-				//	sphere.Radius = col->m_boundSphere.m_fRadius;
-				mRenderableSphere->SetSphere(sphere);
-				mRenderableSphere->SetWorldMatrix(light->GetWorld());
-				mRenderableSphere->Render();
-				/*PrintMessage("%f %f %f", col->m_boundSphere.m_fRadius, sphere.Radius, sphere.Center.z);*/
-			}
-		}
-	}
+	//			XMINT4 color2 = { (int)(color.x * 255), (int)(color.y * 255), (int)(color.z * 255), 255 };
+	//			mRenderableSphere->SetColor(color2);
+
+	//			Math::BoundingSphere sphere;
+	//			sphere.Center = light->GetPosition();
+	//			sphere.Radius = 0.1;
+	//			//sphere.Center = *reinterpret_cast<XMFLOAT3*>(&col->m_boundSphere.m_vecCenter);
+	//			//	sphere.Radius = col->m_boundSphere.m_fRadius;
+	//			mRenderableSphere->SetSphere(sphere);
+	//			mRenderableSphere->SetWorldMatrix(light->GetWorld());
+	//			mRenderableSphere->Render();
+	//			/*PrintMessage("%f %f %f", col->m_boundSphere.m_fRadius, sphere.Radius, sphere.Center.z);*/
+	//		}
+	//	}
+	//}
+
 	sub_707F40();
 	RenderStaticShadows();
 	RenderStoredShadows();
@@ -276,9 +277,9 @@ void CGameIdle::RenderScene(){
 	DefinedState();
 	
 	CWaterLevel::SetupWaterShader(); 
-	CPlantMgr__Render();
+	//CPlantMgr__Render();
 	DefinedState();
-	RenderForward();
+
 	DeferredContext->RenderPostProcessing();
 	//SoftParticlesContext->SetupParams();
 }
