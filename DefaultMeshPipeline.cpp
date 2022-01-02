@@ -192,7 +192,6 @@ void DefaultMeshPipeline::DeferredRendering(RwResEntry* entry, void* object, RwU
 			materialProps.w = 2.2f;
 			_rwD3D9SetPixelShaderConstant(2, &materialProps, 1);
 
-
 			if(material->surfaceProps.ambient > 1.0f)
 			{
 				colorValue = {(float)matcolor->red / 255.0f * 16.0f,
