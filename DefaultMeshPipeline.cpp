@@ -163,10 +163,10 @@ void DefaultMeshPipeline::DeferredRendering(RwResEntry* entry, void* object, RwU
 	PS_deferred->Apply();
 
 	MeshRenderingMode::DeferredRendering(entry, object, flags);
-
+	RwRenderStateSet(rwRENDERSTATEVERTEXALPHAENABLE, (void*)FALSE);
 
 	int numMeshes = header->numMeshes;
-	while(numMeshes--)
+	while (numMeshes--)
 	{
 		RwRGBA* matcolor;
 		RpMaterial* material;
@@ -176,14 +176,19 @@ void DefaultMeshPipeline::DeferredRendering(RwResEntry* entry, void* object, RwU
 		matcolor = &material->color;
 		texture = material->texture;
 
-		if((instance->vertexAlpha ||
+		bool alphaMesh = false;
+		if (instance->vertexAlpha ||
 			matcolor->alpha != 0xFF ||
-			(texture && RwD3D9TextureHasAlpha(texture))) == false)
+			(texture && RwD3D9TextureHasAlpha(texture)))
 		{
-			RwRGBAReal colorValue = {1.0f, 1.0f, 1.0f, 1.0f};
-			float fSpec = max(CWeather::WetRoads,
-							  CCustomCarEnvMapPipeline__GetFxSpecSpecularity(
-								  material));
+			alphaMesh = true;
+		}
+
+		if (alphaMesh==false)
+		{
+			RwRGBAReal colorValue = { 1.0f, 1.0f, 1.0f, 1.0f };
+			float fSpec = max(CWeather::WetRoads, CCustomCarEnvMapPipeline__GetFxSpecSpecularity(material));
+
 			float fGlossiness = RpMaterialGetFxEnvShininess(material);
 			RwV4d materialProps;
 			materialProps.x = fSpec;
@@ -192,20 +197,20 @@ void DefaultMeshPipeline::DeferredRendering(RwResEntry* entry, void* object, RwU
 			materialProps.w = 2.2f;
 			_rwD3D9SetPixelShaderConstant(2, &materialProps, 1);
 
-			if(material->surfaceProps.ambient > 1.0f)
+			if (material->surfaceProps.ambient > 1.0f)
 			{
-				colorValue = {(float)matcolor->red / 255.0f * 16.0f,
+				colorValue = { (float)matcolor->red / 255.0f * 16.0f,
 							 (float)matcolor->green / 255.0f * 16.0f,
-							 (float)matcolor->blue / 255.0f * 16.0f, (float)matcolor->alpha / 255.0f};
+							 (float)matcolor->blue / 255.0f * 16.0f, (float)matcolor->alpha / 255.0f };
 			}
 			else
 			{
-				colorValue = {(float)matcolor->red / 255.0f,
+				colorValue = { (float)matcolor->red / 255.0f,
 							 (float)matcolor->green / 255.0f,
-							 (float)matcolor->blue / 255.0f, (float)matcolor->alpha / 255.0f};
+							 (float)matcolor->blue / 255.0f, (float)matcolor->alpha / 255.0f };
 			}
 
-			RwRGBAReal colorValue = { 1.0, 1.0, 1.0, 1.0 };
+
 			if ((flags & rpGEOMETRYLIGHT) &&
 				(flags & rpGEOMETRYMODULATEMATERIALCOLOR))
 			{
@@ -232,17 +237,17 @@ void DefaultMeshPipeline::DeferredRendering(RwResEntry* entry, void* object, RwU
 			bool hasNormalMap = false;
 			bool hasSpecularMap = false;
 
-			if(texture && texture->raster)
+			if (texture && texture->raster)
 			{
 				PBSMaterial* mat = PBSMaterialMgr::materials[texture->name];
-				if(mat != nullptr)
+				if (mat != nullptr)
 				{
-					if(mat->m_tSpecRoughness)
+					if (mat->m_tSpecRoughness)
 					{
 						RwD3D9SetTexture(mat->m_tSpecRoughness, 1);
 						hasSpecularMap = true;
 					}
-					if(mat->m_tNormals)
+					if (mat->m_tNormals)
 					{
 						RwD3D9SetTexture(mat->m_tNormals, 2);
 						hasNormalMap = true;
@@ -266,6 +271,7 @@ void DefaultMeshPipeline::DeferredRendering(RwResEntry* entry, void* object, RwU
 #include "ShaderManager.h"
 void DefaultMeshPipeline::ForwardRendering(RwResEntry* entry, void* object, RwUInt32 flags)
 {
+	return;
 
 	RxD3D9ResEntryHeader* header;
 	RxD3D9InstanceData* instance;
@@ -299,7 +305,7 @@ void DefaultMeshPipeline::ForwardRendering(RwResEntry* entry, void* object, RwUI
 	RwRenderStateSet(rwRENDERSTATEVERTEXALPHAENABLE, (void*)TRUE);
 	RwRenderStateSet(rwRENDERSTATESRCBLEND, (void*)5);
 	RwRenderStateSet(rwRENDERSTATEDESTBLEND, (void*)6);
-	
+
 
 	for(size_t i = 0; i < (size_t)CascadedShadowManagement->CascadeCount; i++)
 	{
@@ -329,10 +335,11 @@ void DefaultMeshPipeline::ForwardRendering(RwResEntry* entry, void* object, RwUI
 
 		hasAlpha = material->texture && RwD3D9TextureHasAlpha(material->texture);
 
-		if(hasAlpha)
+		/*if(hasAlpha)
 			RwRenderStateSet(rwRENDERSTATEALPHATESTFUNCTIONREF, (void*)50);
 		else
-			RwRenderStateSet(rwRENDERSTATEALPHATESTFUNCTIONREF, (void*)0);
+			RwRenderStateSet(rwRENDERSTATEALPHATESTFUNCTIONREF, (void*)0);*/
+
 		RwRenderStateSet(rwRENDERSTATEVERTEXALPHAENABLE, (void*)hasAlpha);
 		if(hasAlpha || instance->vertexAlpha || matcolor->alpha != 255)
 		{

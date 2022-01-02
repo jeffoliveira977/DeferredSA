@@ -230,7 +230,7 @@ void BuldingMeshPipeline::DeferredRendering(RwResEntry* entry, void* object, RwU
 	PS_deferred->Apply();
 
 	MeshRenderingMode::DeferredRendering(entry, object, flags);
-
+	RwRenderStateSet(rwRENDERSTATEVERTEXALPHAENABLE, (void*)FALSE);
 	int numMeshes = header->numMeshes;
 	while(numMeshes--)
 	{
@@ -242,13 +242,17 @@ void BuldingMeshPipeline::DeferredRendering(RwResEntry* entry, void* object, RwU
 		matcolor = &material->color;
 		texture = material->texture;
 
-		if((instance->vertexAlpha ||
+		bool alphaMesh = false;
+		if (instance->vertexAlpha ||
 			matcolor->alpha != 0xFF ||
-			(texture && RwD3D9TextureHasAlpha(texture))) == false)
+			(texture && RwD3D9TextureHasAlpha(texture)))
 		{
+			alphaMesh = true;
+		}
 
-			float fSpec = max(CWeather::WetRoads,
-				CCustomCarEnvMapPipeline__GetFxSpecSpecularity(material));
+		if(alphaMesh == false)
+		{
+			float fSpec = max(CWeather::WetRoads, CCustomCarEnvMapPipeline__GetFxSpecSpecularity(material));
 
 			float fGlossiness = RpMaterialGetFxEnvShininess(material);
 			RwV4d materialProps;
@@ -318,7 +322,6 @@ void BuldingMeshPipeline::DeferredRendering(RwResEntry* entry, void* object, RwU
 
 void BuldingMeshPipeline::ForwardRendering(RwResEntry* entry, void* object, RwUInt32 flags)
 {
-
 	RxD3D9ResEntryHeader* header;
 	RxD3D9InstanceData* instance;
 

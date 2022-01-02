@@ -148,6 +148,7 @@ void RenderEffects()
 #include "CascadedShadowRendering.h"
 #include "CClouds.h"
 #include "VisibilityPlugins.h"
+
 void RenderDeferred()
 {
 	Renderer::RenderRoads();
@@ -159,7 +160,7 @@ void RenderDeferred()
 	 CRenderer::RenderFadingInEntities();
 
 	BreakManager_c__Render(g_breakMan, 1);
-	CVisibilityPlugins__RenderWeaponPedsForPC();
+
 	CVisibilityPlugins::RenderWeaponPedsForPC();
 }
 
@@ -222,8 +223,8 @@ void CGameIdle::RenderScene(){
 	}
 
 	gRenderState = stageForward;
-	DefinedState();
-	RwD3D9RenderStateReset();
+	//DefinedState();
+	//RwD3D9RenderStateReset();
 	RenderDeferred();
 
 	//ShaderContext->SetViewProjectionMatrix(4, true);
