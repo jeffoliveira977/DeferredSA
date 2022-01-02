@@ -60,7 +60,6 @@ RwBool DefaultMeshPipeline::Initialize()
 				RXPIPELINEGLOBAL(platformAtomicPipeline) = pipe;
 				RpAtomicSetDefaultPipeline(pipe);
 
-				_rpD3D9VertexShaderCacheOpen();
 
 				return TRUE;			
 			}
@@ -271,43 +270,28 @@ void DefaultMeshPipeline::DeferredRendering(RwResEntry* entry, void* object, RwU
 #include "ShaderManager.h"
 void DefaultMeshPipeline::ForwardRendering(RwResEntry* entry, void* object, RwUInt32 flags)
 {
-	return;
 
 	RxD3D9ResEntryHeader* header;
 	RxD3D9InstanceData* instance;
-	
+
 	header = (RxD3D9ResEntryHeader*)(entry + 1);
 	instance = (RxD3D9InstanceData*)(header + 1);
 
-	RwMatrix* LTM = RwFrameGetLTM(RpAtomicGetFrame(object));
-	XMMATRIX worldMatrix = RwMatrixToXMMATRIX(LTM);
-	_rwD3D9SetVertexShaderConstant(0, &worldMatrix, 4);
-	ShaderContext->SetViewProjectionMatrix(4, true);
-	_rwD3D9SetVertexShaderConstant(12, &EnvironmentMapping::m_paraboloidBasis, 4);
+	ShaderContext->SetTimecyProps(8);
+	ShaderContext->SetInverseViewMatrix(4);
 
-	_rwD3D9SetPixelShaderConstant(8, &GetSkyTopColor(), 1);
-	_rwD3D9SetPixelShaderConstant(9, &GetSkyBottomColor(), 1);
-	_rwD3D9SetPixelShaderConstant(10, &GetSunColor(), 1);
-	_rwD3D9SetPixelShaderConstant(11, &GetSunDirection(), 1);
-
-	float fog[3];
-	fog[0] = CTimeCycle::m_CurrentColours.m_fFogStart;
-	fog[1] = Scene.m_pRwCamera->farPlane;
-	fog[2] = Scene.m_pRwCamera->farPlane - CTimeCycle::m_CurrentColours.m_fFogStart;
-	_rwD3D9SetPixelShaderConstant(12, fog, 1);
 	_rwD3D9SetPixelShaderConstant(13, &TheCamera.GetPosition(), 1);
-	
+
+	RwRenderStateSet(rwRENDERSTATESRCBLEND, (void*)rwBLENDSRCALPHA);
+	RwRenderStateSet(rwRENDERSTATEDESTBLEND, (void*)rwBLENDINVSRCALPHA);
+
+	RwD3D9SetRenderState(D3DRS_ALPHABLENDENABLE, TRUE);
+	RwD3D9SetRenderState(D3DRS_ALPHATESTENABLE, TRUE);
+
 	VS_forward->Apply();
 	PS_forward->Apply();
 
-	RwRenderStateSet(rwRENDERSTATETEXTUREFILTER, (void*)rwFILTERLINEAR);
-	RwRenderStateSet(rwRENDERSTATETEXTUREADDRESS, (void*)rwTEXTUREADDRESSWRAP);
-	RwRenderStateSet(rwRENDERSTATEVERTEXALPHAENABLE, (void*)TRUE);
-	RwRenderStateSet(rwRENDERSTATESRCBLEND, (void*)5);
-	RwRenderStateSet(rwRENDERSTATEDESTBLEND, (void*)6);
-
-
-	for(size_t i = 0; i < (size_t)CascadedShadowManagement->CascadeCount; i++)
+	for (size_t i = 0; i < (size_t)CascadedShadowManagement->CascadeCount; i++)
 	{
 		rwD3D9SetSamplerState(i + 2, D3DSAMP_MINFILTER, D3DTEXF_LINEAR);
 		rwD3D9SetSamplerState(i + 2, D3DSAMP_MAGFILTER, D3DTEXF_LINEAR);
@@ -316,13 +300,14 @@ void DefaultMeshPipeline::ForwardRendering(RwResEntry* entry, void* object, RwUI
 		rwD3D9SetSamplerState(i + 2, D3DSAMP_ADDRESSV, D3DTADDRESS_CLAMP);
 		rwD3D9SetSamplerState(i + 2, D3DSAMP_BORDERCOLOR, 0xFFFFFFFF);
 
-		rwD3D9RWSetRasterStage(CascadedShadowManagement->mColorRaster[i], i + 2);
+		rwD3D9RWSetRasterStage(CascadedShadowManagement->mColorRaster[i], i + 4);
 	}
 
 	_rwD3D9SetPixelShaderConstant(16, &CascadedShadowManagement->mConstantBuffer,
-								  sizeof(CascadedShadowManagement->mConstantBuffer) / sizeof(XMVECTOR));
+		sizeof(CascadedShadowManagement->mConstantBuffer) / sizeof(XMVECTOR));
+
 	int numMeshes = header->numMeshes;
-	while(numMeshes--)
+	while (numMeshes--)
 	{
 		RwRGBA* matcolor;
 		RpMaterial* material;
@@ -340,47 +325,72 @@ void DefaultMeshPipeline::ForwardRendering(RwResEntry* entry, void* object, RwUI
 		else
 			RwRenderStateSet(rwRENDERSTATEALPHATESTFUNCTIONREF, (void*)0);*/
 
-		RwRenderStateSet(rwRENDERSTATEVERTEXALPHAENABLE, (void*)hasAlpha);
-		if(hasAlpha || instance->vertexAlpha || matcolor->alpha != 255)
+			//RwRenderStateSet(rwRENDERSTATEVERTEXALPHAENABLE, (void*)hasAlpha);
+		if (hasAlpha || instance->vertexAlpha || matcolor->alpha != 255)
 		{
-			RwRGBAReal colorValue = {1.0f, 1.0f, 1.0f, 1.0f};
-
 			float fSpec = max(CWeather::WetRoads,
-							  CCustomCarEnvMapPipeline__GetFxSpecSpecularity(
-								  material));
+				CCustomCarEnvMapPipeline__GetFxSpecSpecularity(material));
+
 			float fGlossiness = RpMaterialGetFxEnvShininess(material);
 
 			RwV4d materialProps;
 			materialProps.x = fSpec;
 			materialProps.y = fGlossiness;
 			materialProps.z = 1.0f - (CGame::currArea == 0 ? CGameIdle::m_fShadowDNBalance : 1.0f);
-			materialProps.w = 2.2f;
+			materialProps.w = 2.2;
+			_rwD3D9SetPixelShaderConstant(15, &materialProps, 1);
 
-			if(flags & rpGEOMETRYLIGHT)
+			RwRGBAReal colorValue = { 1.0, 1.0, 1.0, 1.0 };
+			if ((flags & rpGEOMETRYLIGHT) &&
+				(flags & rpGEOMETRYMODULATEMATERIALCOLOR))
 			{
-				if(flags & rpGEOMETRYMODULATEMATERIALCOLOR)
+				if (material->surfaceProps.ambient > 1.0)
 				{
-					RwRGBARealFromRwRGBA(&colorValue, matcolor);
-					_rwD3D9SetPixelShaderConstant(14, &colorValue, 1);
+					colorValue = { (float)matcolor->red / 255.0f * 16.0f,
+								 (float)matcolor->green / 255.0f * 16.0f,
+								 (float)matcolor->blue / 255.0f * 16.0f, (float)matcolor->alpha / 255.0f };
 				}
 				else
 				{
-					_rwD3D9SetPixelShaderConstant(14, &colorValue, 1);
+					colorValue = { (float)matcolor->red / 255.0f,
+								 (float)matcolor->green / 255.0f,
+								 (float)matcolor->blue / 255.0f, (float)matcolor->alpha / 255.0f };
 				}
+				_rwD3D9SetPixelShaderConstant(14, &colorValue, 1);
 			}
 			else
 			{
 				_rwD3D9SetPixelShaderConstant(14, &colorValue, 1);
 			}
-			_rwD3D9SetPixelShaderConstant(15, &materialProps, 1);
 
-			bool ForceBumpMap = true;
+			bool ForceBumpMap = false;
 			bool hasNormalMap = false;
+			bool hasSpecularMap = false;
+
+			if (texture && texture->raster)
+			{
+				PBSMaterial* mat = PBSMaterialMgr::materials[texture->name];
+				if (mat != nullptr)
+				{
+					if (mat->m_tSpecRoughness)
+					{
+						RwD3D9SetTexture(mat->m_tSpecRoughness, 1);
+						hasSpecularMap = true;
+					}
+					if (mat->m_tNormals)
+					{
+						RwD3D9SetTexture(mat->m_tNormals, 2);
+						hasNormalMap = true;
+					}
+				}
+			}
 
 			BOOL info[4];
 			info[0] = texture ? TRUE : FALSE;
 			info[1] = ForceBumpMap;
 			info[2] = hasNormalMap;
+			info[3] = hasSpecularMap;
+
 			RwD3DDevice->SetPixelShaderConstantB(0, info, 4);
 
 			D3D9Render(header, instance, texture, flags);

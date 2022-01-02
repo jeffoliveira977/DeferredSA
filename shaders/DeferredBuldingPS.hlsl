@@ -31,10 +31,10 @@ PS_DeferredOutput main(VS_DeferredOutput input, float2 vpos :VPOS)
     //outColor.rgb += max(input.Color.rgb, 0.2) * lerp(0.5, 1, DNBalance);
     //outColor.a = 1;
    // outColor = input.Color * lerp(0.25f, 1.0f, 1 - DNBalance);
-    outColor = MaterialColor * input.Color;
+    outColor = MaterialColor /** input.Color*/;
     if (HasTexture)
         outColor *= tex2D(Diffuse, input.Texcoord);
-
+    
     float4 params;
     float3 normal = input.Normal;
     //outColor.a = outColor.a > 0.95f ? outColor.a : InterleavedGradientNoise(vpos) * outColor.a;

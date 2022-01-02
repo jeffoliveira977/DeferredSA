@@ -161,7 +161,8 @@ void RenderDeferred()
 
 	BreakManager_c__Render(g_breakMan, 1);
 
-	CVisibilityPlugins::RenderWeaponPedsForPC();
+	//CVisibilityPlugins::RenderWeaponPedsForPC();
+	VisibilityPlugins::RenderWeaponPedsNoMuzzleFlash();
 }
 
 float CGameIdle::m_fShadowDNBalance=1.0;
@@ -214,7 +215,7 @@ void CGameIdle::RenderScene(){
 
 	RwD3D9RenderStateReset();
 	DefinedState();
-	RenderForward();
+	//RenderForward();
 
 	{
 		DeferredContext->Start();
@@ -272,17 +273,14 @@ void CGameIdle::RenderScene(){
 
 	sub_707F40();
 	RenderStaticShadows();
-	RenderStoredShadows();
-	
+	RenderStoredShadows();	
 
 	DefinedState();
-	
 	CWaterLevel::SetupWaterShader(); 
-	//CPlantMgr__Render();
-	DefinedState();
-
+	CPlantMgr__Render();
+	RenderForward();
 	DeferredContext->RenderPostProcessing();
-	//SoftParticlesContext->SetupParams();
+
 }
 
 void Idle_hook()

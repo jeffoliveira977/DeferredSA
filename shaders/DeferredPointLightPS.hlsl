@@ -412,7 +412,7 @@ float4 main(float3 ViewRay : TEXCOORD2, float2 texCoord : TEXCOORD0, float3 frus
         
         
     //if (CastShadow == 0.0)
-    //    shadow = 1.0;
+        shadow = 1.0;
       
     
 

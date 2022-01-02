@@ -177,13 +177,12 @@ SpotLight LightManager::mSpotLightList[60];
 
  void CPointLights__AddLight1(unsigned char defaultType, XMFLOAT3 point, XMFLOAT3 direction, float radius, float red, float green, float blue, unsigned char, bool, CEntity* e)
  {
-	 CEntity* ea;
-	 _asm mov ea, esi;
+	 _asm mov CurrEntity, esi;
 
 	 //if (ea)
-		// PrintMessage("%d", ea->m_nModelIndex);
+		 PrintMessage("%f %f %f", red,green, blue);
 
-	 CPointLights__AddLight(defaultType, point, direction, radius, red, green, blue, 0, false, ea);
+	 //CPointLights__AddLight(defaultType, point, direction, 100.0F, red, green, blue, 0, false, CurrEntity);
  }
 
 
@@ -244,12 +243,13 @@ void __declspec(naked) CPointLights__AddLight_HOOK1()
 
 void LightManager::Hook()
 {   
-	plugin::patch::RedirectJump(0x6AB80F, CPointLights__AddLight_HOOK);
-	plugin::patch::RedirectJump(0x6ABBA6, CPointLights__AddLight_HOOK1);
+	//plugin::patch::RedirectJump(0x6AB80F, CPointLights__AddLight_HOOK);
+	//plugin::patch::RedirectJump(0x6ABBA6, CPointLights__AddLight_HOOK1);
 
-
-	//plugin::patch::RedirectCall(0x006AB80F, CPointLights__AddLight1);
-	//plugin::patch::RedirectCall(0x006ABBA6, CPointLights__AddLight1);
+	//plugin::patch::Nop(0x006AB80F, 5);
+	//plugin::patch::Nop(0x006ABBA6, 5);
+	plugin::patch::RedirectCall(0x006AB80F, CPointLights__AddLight1);
+	plugin::patch::RedirectCall(0x006ABBA6, CPointLights__AddLight1);
 
 	plugin::Events::gameProcessEvent += []() 
 	{

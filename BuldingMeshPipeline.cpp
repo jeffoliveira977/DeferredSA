@@ -230,7 +230,7 @@ void BuldingMeshPipeline::DeferredRendering(RwResEntry* entry, void* object, RwU
 	PS_deferred->Apply();
 
 	MeshRenderingMode::DeferredRendering(entry, object, flags);
-	RwRenderStateSet(rwRENDERSTATEVERTEXALPHAENABLE, (void*)FALSE);
+
 	int numMeshes = header->numMeshes;
 	while(numMeshes--)
 	{
