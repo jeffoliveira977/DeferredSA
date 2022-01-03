@@ -278,6 +278,7 @@ float4 main(float3 ViewRay : TEXCOORD2, float2 texCoord : TEXCOORD0, float3 frus
         return 0;
     }
     
+    
    // if (CastShadow)
         shadow = ComputeShadowFactor(LightPosition.xyz, InverseViewMatrix[3].xyz, worldPosition, normal);
        
