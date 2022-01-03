@@ -61,11 +61,24 @@ void RenderEntity(CEntity* entity)
 	entity->m_bImBeingRendered = false;
 }
 
+#include"CModelInfo.h"
+#include "LightManager.h"
 bool MeshCulling::Render(vector<CEntity*> list, Math::Frustum frustum)
 {
 	for (auto entity : list)
 	{
-		if (InFrustum(entity, frustum))
+		bool castEntity = false;
+		auto pModelInfo = CModelInfo::GetModelInfo(entity->m_nModelIndex);
+		if (pModelInfo->m_nNum2dEffects)
+			castEntity = true;
+
+		/*if (castEntity)
+		{
+			RenderEntity(entity);
+			continue; 
+		}*/
+
+		 if (InFrustum(entity, frustum))
 		{
 			RenderEntity(entity);
 		}

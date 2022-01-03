@@ -15,6 +15,7 @@ public:
 	void ClearCullList();
 	void Update(int x, int y);
 	void Render(int i);
+	std::unordered_map<CEntity*, bool> mCulled[4];
 };
 
 extern ShadowCaster *ShadowCasterEntity;

@@ -73,7 +73,7 @@ void PointLightShadow::AddObject(CEntity* entity)
 void PointLightShadow::Update()
 {
 	gLightManager.SortPointLights();
-	uint32_t maxLights = min((size_t)20, gLightManager.GetPointLightCount());
+	uint32_t maxLights = min((size_t)16, gLightManager.GetPointLightCount());
 
 	//RwD3D9SetRenderState(D3DRS_COLORWRITEENABLE, D3DCOLORWRITEENABLE_RED);
 	auto coors = FindPlayerCoors(-1);
@@ -98,8 +98,11 @@ void PointLightShadow::Update()
 		CVector dx2 = CVector(position.x, position.y, position.z) - coors;
 		//PrintMessage("%f %f", dx.Magnitude(), dx2.Magnitude());
 
-		if (dx.Magnitude() > 30.0)
+		if (dx.Magnitude() > 30.0 /*|| gLightManager.mPointLightList[i].mCastShadow*/)
+		{
+			gLightManager.mPointLightList[i].mDrawShadow = false;
 			continue;
+		}
 
 		_rwD3D9SetPixelShaderConstant(1, &position, 1);
 		_rwD3D9SetPixelShaderConstant(2, &radius, 1);

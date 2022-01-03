@@ -9,6 +9,8 @@
 #include "AABB.h"
 #include "CRenderer.h"
 #include "RenderableAABB.h"
+#include "ShadowCaster.h"
+#include "CascadedShadowRendering.h"
 RwFrame* RenderableScene::m_frame;
 RwRaster* RenderableScene::m_raster;
 RwRaster* RenderableScene::m_depthRaster;
@@ -48,7 +50,7 @@ void RenderableScene::InitGraphicsBuffer()
 	RpWorldAddCamera(Scene.m_pRpWorld, m_camera);
 	mRenderStage = 0;
 }
-
+#include "LightManager.h"
 void RenderableScene::Render()
 {
 	RwCamera* camera = Scene.m_pRwCamera;
@@ -84,6 +86,7 @@ void RenderableScene::Render()
 	XMINT4 SolidBlue = {64,  64, 200, 95};
 	XMINT4 SolidYellow = {200, 200,  64, 255};
 
+
 	for(int i = 0; i < CRenderer::ms_nNoOfVisibleEntities; ++i)
 	{
 		CEntity* entity = CRenderer::ms_aVisibleEntityPtrs[i];
@@ -111,13 +114,13 @@ void RenderableScene::Render()
 		mRenderableSphere->SetSphere(sphere);
 		mRenderableSphere->SetWorldMatrix(world);
 		
-		if(mRenderStage == 0)
-		{
-			if(CubemapReflection::mObjectsCulled[2][entity])
+		/*if(mRenderStage == 0)
+		{*/
+			if(ShadowCasterEntity->mCulled[0][entity])
 			{
 				XMINT4 saturate = {0, 60,  0, 255};
 				mRenderableAABB->SetColor(SolidGreen, saturate, saturate);
-				mRenderableSphere->SetColor(SolidGreen);
+				//mRenderableSphere->SetColor(SolidGreen);
 				if(entity->m_pRwObject)
 				{
 					entity->m_bImBeingRendered = true;
@@ -133,12 +136,12 @@ void RenderableScene::Render()
 			else
 			{
 				mRenderableAABB->SetColor(SolidRed, SolidBlack, SolidBlack);
-				mRenderableSphere->SetColor(SolidRed);
+				//mRenderableSphere->SetColor(SolidRed);
 			}
-		}
+		//}
 
-		//mRenderableAABB->Render();
-		mRenderableSphere->Render();
+		mRenderableAABB->Render();
+		//mRenderableSphere->Render();
 	}
 
 	m_frustumRenderable->SetColor(SolidBlue);

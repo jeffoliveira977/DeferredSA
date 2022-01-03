@@ -96,10 +96,14 @@ void ShadowCaster::AddObject(CEntity* entity)
 
         if(intersects)
         {
+            mCulled[i][entity] = true;
             if(useLod && entity->m_pLod)
                 m_castEntity[i].push_back(entity->m_pLod);
             else
                 m_castEntity[i].push_back(entity);
+        }
+        else {
+            mCulled[i][entity] = false;
         }
     }
 }

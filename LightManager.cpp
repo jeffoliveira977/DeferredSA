@@ -31,41 +31,21 @@ CEntity* CurrEntity = nullptr;
 
 void CPointLights__AddLight(unsigned char defaultType, XMFLOAT3 point, XMFLOAT3 direction, float radius, float red, float green, float blue, unsigned char, bool, CEntity* e)
 {
-	/*if (CurrEntity)
-		PrintMessage("%d", CurrEntity->m_nModelIndex);*/
+	/*if (e)
+		PrintMessage("%d", e->m_nModelIndex);*/
 
 	auto castShadow = true;
 	castShadow = CheckModelId(CurrEntity);
 
 	CVector camPos = TheCamera.GetPosition();
-	float visibleRadius = 100.0;
+	float visibleRadius = 100.0f;
 	CVector dx = CVector(point.x, point.y, point.z) - camPos;
-	float intensity = 3.0;
 
 	if (dx.Magnitude() >= visibleRadius)
 		return;
 
-	/*if (defaultType == PLTYPE_SPOTLIGHT)
-	{
-		SpotLight light;
-
-		point.x = point.x - direction.x;
-		point.y = point.y - direction.y;
-		point.z = point.z - direction.z;
-
-		light.SetPosition(point);
-		light.SetRadius(30.0f);
-		light.SetDirection(direction);
-		light.SetColor({ 1, 0, 0 });
-		light.SetIntensity(1.0);
-		light.SetAngle(30.0);
-		light.Update();
-		gLightManager.AddSpotLight(light);
-	}
-	else
-	{*/
-		gLightManager.AddPointLight(point, direction, { red, green, blue }, radius, intensity, castShadow);
-	//}
+	float intensity = 1.0;
+	gLightManager.AddPointLight(point, direction, { red, green, blue }, radius, intensity, castShadow);
 }
 
 void AddVehicleSpotLight(CVehicle* vehicle)
@@ -172,52 +152,32 @@ LightManager::LightManager()
 
 int LightManager::mSpotLightCount = 0;
 int LightManager::mPointLightCount = 0;
-PointLight LightManager::mPointLightList[60];
-SpotLight LightManager::mSpotLightList[60];
-
- void CPointLights__AddLight1(unsigned char defaultType, XMFLOAT3 point, XMFLOAT3 direction, float radius, float red, float green, float blue, unsigned char, bool, CEntity* e)
+PointLight LightManager::mPointLightList[160];
+SpotLight LightManager::mSpotLightList[160];
+unordered_map<CEntity*, bool>  LightManager::mDontCull;
+ void CPointLights__AddLight1(unsigned char defaultType, XMFLOAT3 point, XMFLOAT3 direction, float radius, float red, float green, float blue, unsigned char, bool, CEntity*)
  {
 	 _asm mov CurrEntity, esi;
 
-	 //if (ea)
-		 PrintMessage("%f %f %f", red,green, blue);
+	 if (CurrEntity == nullptr)
+		 return;
 
-	 //CPointLights__AddLight(defaultType, point, direction, 100.0F, red, green, blue, 0, false, CurrEntity);
+	 // increase siren radius
+	 radius = 50.0f;
+	
+	 if (CurrEntity->m_nModelIndex == MODEL_CABBIE ||
+		 CurrEntity->m_nModelIndex == MODEL_TAXI)
+		 radius = 5.0f;
+
+	 if (!CheckModelId(CurrEntity))
+	 {
+		 radius = 10.0f;
+		 gLightManager.mDontCull[CurrEntity] = true;
+	 }
+
+	 CPointLights__AddLight(defaultType, point, direction, radius, red, green, blue, 0, false, CurrEntity);
  }
 
-
- void CPointLights__AddLightSpot(unsigned char defaultType, XMFLOAT3 point, XMFLOAT3 direction, float radius, float red, float green, float blue, unsigned char, bool, CEntity* e)
- {
-	// CEntity* ea;
-	// _asm mov ea, esi;
-
-	 //if (ea)
-		// PrintMessage("%d", ea->m_nModelIndex);
-	 //if (defaultType == PLTYPE_SPOTLIGHT)
-	 //{
-
-		// point.x = point.x + max(min(direction.x, 1.0f), -1.0f) * 1.0f;
-		// point.y = point.y + max(min(direction.y, 1.0f), -1.0f) * 1.0f;
-		// point.z = point.z + max(min(direction.z, 1.0f), -1.0f) * 1.0f;
-		// direction.x = max(min(direction.x, 1.0f), -1.0f) * 1.2f;
-		// direction.y = max(min(direction.y, 1.0f), -1.0f) * 1.2f;
-		// direction.z = max(min(direction.z, 1.0f), -1.0f) * 1.2f;
-
-		// SpotLight light;
-
-		// // Initialize the spot light
-		// light.SetPosition(point);
-		// light.SetRadius(30.0f);
-		// light.SetDirection(direction);
-		// light.SetColor({ 1.0f, 1.0f, 1.0f });
-		// light.SetIntensity(2.0);
-		// light.SetAngle(30.0);
-		// light.Update();
-		// gLightManager.AddSpotLight(light);
-	 //}
-
-	// CPointLights__AddLight(defaultType, point, direction, radius, red, green, blue, 0, false, ea);
- }
 
 void __declspec(naked) CPointLights__AddLight_HOOK()
 {
@@ -240,16 +200,23 @@ void __declspec(naked) CPointLights__AddLight_HOOK1()
 		jmp edx
 	}
 }
+#include "CRenderer.h"
 
+#include "CPtrListDoubleLink.h"
+#include "CWorld.h"
+#include "CPools.h"
 void LightManager::Hook()
 {   
-	//plugin::patch::RedirectJump(0x6AB80F, CPointLights__AddLight_HOOK);
+	//plugin::patch::RedirectJump(0x6AB80F, CPointLights__AddLight_HOOK1);
 	//plugin::patch::RedirectJump(0x6ABBA6, CPointLights__AddLight_HOOK1);
 
-	//plugin::patch::Nop(0x006AB80F, 5);
-	//plugin::patch::Nop(0x006ABBA6, 5);
-	plugin::patch::RedirectCall(0x006AB80F, CPointLights__AddLight1);
-	plugin::patch::RedirectCall(0x006ABBA6, CPointLights__AddLight1);
+	plugin::patch::RedirectCall(0x6AB80F, CPointLights__AddLight1);
+	plugin::patch::RedirectCall(0x6ABBA6, CPointLights__AddLight1);
+	plugin::patch::RedirectCall(0x6BD641, CPointLights__AddLight1);
+
+	plugin::patch::RedirectCall(0x6FD105, CPointLights__AddLight1);
+	plugin::patch::RedirectCall(0x6FD347, CPointLights__AddLight1);
+
 
 	plugin::Events::gameProcessEvent += []() 
 	{
@@ -338,6 +305,7 @@ void LightManager::Hook()
 		} 
 	};
 
+
 	plugin::patch::Nop(0x6E28E7, 5);
 	plugin::patch::Nop(0x6E27E6, 5);
 	plugin::patch::RedirectJump(0x7000E0, CPointLights__AddLight);
@@ -365,29 +333,44 @@ void LightManager::SortSpotLights()
 		});
 }
 
+float rwV3D_Dist2( XMFLOAT3& a,  XMFLOAT3& b)
+{
+	float
+		dX = b.x - a.x,
+		dY = b.y - a.y,
+		dZ = b.z - a.z;
+
+	return sqrt(dX * dX + dY * dY + dZ * dZ);
+}
 void LightManager::SortPointLights()
 {
-	auto cameraPos = XMLoadFloat3((XMFLOAT3*)&RwFrameGetMatrix(RwCameraGetFrame(Scene.m_pRwCamera))->pos);
+	auto pos = (XMFLOAT3*)&RwFrameGetMatrix(RwCameraGetFrame(Scene.m_pRwCamera))->pos;
+	 auto cameraPos = XMLoadFloat3((XMFLOAT3*)&RwFrameGetMatrix(RwCameraGetFrame(Scene.m_pRwCamera))->pos);
 	auto coors = FindPlayerCoors(-1);
 	//auto cameraPos = XMLoadFloat3((XMFLOAT3*)&coors);
 
-	for (int index = 0; index < mPointLightCount; index++)
+	/*for (int index = 0; index < mPointLightCount; index++)
 	{
 		float sqrDistanceToCam = XMVectorGetX(XMVectorMax(g_XMOne, XMVector3Length(cameraPos - XMLoadFloat3(&mPointLightList[index].GetPosition()))));
 
 		mPointLightList[index].mPriority = index;
 	}
-	
-	sort(&mPointLightList[0], &mPointLightList[mPointLightCount-1], [&](PointLight& a, PointLight& b)
+	*/
+	//sort(&mPointLightList[0], &mPointLightList[mPointLightCount-1], [&](PointLight& a, PointLight& b)
+	//	{
+	//		auto lenA = XMVector3Length(cameraPos - XMLoadFloat3(&a.GetPosition()));
+	//		auto lenB = XMVector3Length(cameraPos - XMLoadFloat3(&b.GetPosition()));
+
+	//		return XMVector3Less(lenA, lenB);
+
+	//	});
+
+	std::sort(&mPointLightList[0], &mPointLightList[159], [&]( PointLight& a,  PointLight& b)
 		{
-			auto lenA = XMVector3Length(cameraPos - XMLoadFloat3(&a.GetPosition()));
-			auto lenB = XMVector3Length(cameraPos - XMLoadFloat3(&b.GetPosition()));
-
-			return XMVector3Less(lenA, lenB);
-
+			return (rwV3D_Dist2(a.GetPosition(), *pos) < rwV3D_Dist2(b.GetPosition(), *pos));
 		});
 
-	std::ofstream myfile;
+	/*std::ofstream myfile;
 	myfile.open("example2.txt");
 
 	for (size_t i = 0; i < mPointLightCount; i++)
@@ -396,7 +379,7 @@ void LightManager::SortPointLights()
 		myfile << "\n";
 	}
 
-	myfile.close();
+	myfile.close();*/
 }
 
 void LightManager::AddSpotLight(SpotLight spotlight)
@@ -424,15 +407,15 @@ void LightManager::AddSpotLight(XMFLOAT3 position, XMFLOAT3 direction, XMFLOAT3 
 
 void LightManager::AddPointLight(PointLight pointlight)
 {
-	if (mPointLightCount > 59)
+	if (mPointLightCount >= 159)
 		return;
 
-	mPointLightList[mPointLightCount++] = pointlight;
+	mPointLightList[mPointLightCount++] = pointlight; gLightManager.SortPointLights();
 }
 
 void LightManager::AddPointLight(XMFLOAT3 position, XMFLOAT3 direction, XMFLOAT3 color, float radius, float intensity, bool castShadow)
 {
-	if (mPointLightCount > 59)
+	if (mPointLightCount >= 159)
 		return;
 
 	mPointLightList[mPointLightCount].SetPosition(position);
@@ -444,6 +427,7 @@ void LightManager::AddPointLight(XMFLOAT3 position, XMFLOAT3 direction, XMFLOAT3
 	mPointLightList[mPointLightCount].Update();
 
 	mPointLightCount++;
+	gLightManager.SortPointLights();
 }
 
 void LightManager::ClearLights()
@@ -451,10 +435,13 @@ void LightManager::ClearLights()
 	mPointLightCount = 0;
 	mSpotLightCount = 0;
 
+	ZeroMemory(mPointLightList, sizeof(mPointLightList));
 	for (size_t i = 0; i < mPointLightCount; i++)
 	{
+		mPointLightList[i].mDrawShadow = true;
 		mPointLightList[i].mCastShadow = false;
 	}
+	mDontCull.clear();
 }
 
 size_t LightManager::GetSpotLightCount()

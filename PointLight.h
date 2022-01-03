@@ -31,10 +31,11 @@ public:
 	float mPriority;
 	 RwRaster *mShadowRaster;
 	 bool mCastShadow;
+	 bool mDrawShadow;
 	 XMMATRIX mMatrix[6];
-	 
+	 Math::BoundingSphere mSphere;
 private:
-	Math::BoundingSphere mSphere;
+
 
 	XMMATRIX mWorld;
 	

@@ -136,7 +136,7 @@ XMMATRIX PointLight::GetWorld()
 
 void PointLight::Update()
 {
-	XMStoreFloat3(&mSphere.Center, mDirection);
+	XMStoreFloat3(&mSphere.Center, mPosition);
 	mSphere.Radius = mRadius;
 
 	XMMATRIX scaling = XMMatrixScaling(1/mRadius, 1 / mRadius, 1 / mRadius);

@@ -235,12 +235,14 @@ void CGameIdle::RenderScene(){
 	//	mRenderableSphere = new RenderableSphere();
 	//	mRenderableSphere->Initialize(10, 10);
 	//}
-	//gLightManager.SortSpotLights();
+	//
 	//auto coors = FindPlayerCoors(-1);
 
 	//CEntity* entity = FindPlayerEntity(-1);
 	//if (entity)
 	//{
+	//	RwRenderStateSet(rwRENDERSTATECULLMODE, (void*)1);
+	//	RwRenderStateSet(rwRENDERSTATESHADEMODE, (void*)2);
 	//	CColModel* col = entity->GetColModel();
 	//	if (col != nullptr)
 	//	{
@@ -260,12 +262,14 @@ void CGameIdle::RenderScene(){
 
 	//			Math::BoundingSphere sphere;
 	//			sphere.Center = light->GetPosition();
-	//			sphere.Radius = 0.1;
+	//			sphere.Radius = radius;
 	//			//sphere.Center = *reinterpret_cast<XMFLOAT3*>(&col->m_boundSphere.m_vecCenter);
 	//			//	sphere.Radius = col->m_boundSphere.m_fRadius;
 	//			mRenderableSphere->SetSphere(sphere);
 	//			mRenderableSphere->SetWorldMatrix(light->GetWorld());
+	//			RwD3D9SetRenderState(D3DRS_FILLMODE, D3DFILL_WIREFRAME);
 	//			mRenderableSphere->Render();
+	//			RwD3D9SetRenderState(D3DRS_FILLMODE, D3DFILL_SOLID);
 	//			/*PrintMessage("%f %f %f", col->m_boundSphere.m_fRadius, sphere.Radius, sphere.Center.z);*/
 	//		}
 	//	}

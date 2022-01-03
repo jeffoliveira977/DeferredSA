@@ -39,7 +39,7 @@ void RsMouseSetPos_hook(RwV2d* screen)
 #include "CCamera.h"
 
 
-
+#include "DeferredRenderer.h"
 
 void CRealTimeShadowManager__Update()
 {
@@ -76,10 +76,10 @@ void CRealTimeShadowManager__Update()
 	//DualParaboloidReflection::RenderScene();
 
 	//RenderableReflectionObjects::Update();
-
-	//RenderableScene::m_frustumRenderable->SetWorldMatrix(XMMatrixInverse(0, CascadedShadowManagement->Desc[0].mLightViewMatrix));
-	//RenderableScene::m_frustumRenderable->SetProjectionMatrix(CascadedShadowManagement->Desc[0].mLightOrthoMatrix, true);
-
+	 gRenderState = stageReflectionCubemap;
+	RenderableScene::m_frustumRenderable->SetWorldMatrix(XMMatrixInverse(0, CascadedShadowManagement->Desc[0].mLightViewMatrix));
+	RenderableScene::m_frustumRenderable->SetProjectionMatrix(CascadedShadowManagement->Desc[0].mLightOrthoMatrix, true);
+	RenderableScene::Render();
 	/*RenderableScene::m_frustumRenderable->SetWorldMatrix(XMMatrixInverse(0, CubemapReflection::m_viewMatrix[0]));
 	RenderableScene::m_frustumRenderable->SetProjectionMatrix(CubemapReflection::m_projectionMatrix, false);
 

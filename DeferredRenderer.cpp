@@ -218,21 +218,46 @@ void DeferredRendering::RenderLights()
 
 	mPointLightPS->Apply();
 	 gLightManager.SortPointLights();
-	CVector camPos = TheCamera.GetPosition();
+	  CVector camPos = TheCamera.GetPosition();
 
-	uint32_t maxLights = min((size_t)30, gLightManager.GetPointLightCount());
+
+
+	Math::Frustum frustum;
+
+	frustum.SetMatrix(view*projection);
+
+	int count = 0;
+	uint32_t maxLights = min((size_t)16, gLightManager.GetPointLightCount());
 	for (int i = 0; i < maxLights; i++)
 	{
 		auto light = gLightManager.GetPointLightAt(i);
 		auto radius = light->GetRadius();
 		auto intensity = light->GetIntensity();
 
+	/*	Math::BoundingSphere sphere;
+		sphere.Radius = radius;
+		sphere.Center = light->GetPosition();
+		bool found = false;*/
+	
+		/*if (frustum.Intersects(sphere))
+			found = true;
+		*/
+		
+	/*	if (found==false)
+		{
+			count++;
+			continue;
+		}*/
+
 		CVector dx = CVector(light->GetPosition().x, light->GetPosition().y, light->GetPosition().z) - camPos;
 
-		float drawShadow = 0.0;
-		if (dx.Magnitude() < 30.0f && !light->mCastShadow)
+		float drawShadow = 0.0; 
+		float visibleRadius = radius + 15.0f;
+		if (dx.Magnitude() < 30.0f /*&& !light->mDrawShadow*/)
 			drawShadow = 1.0;
 
+		if(light->mShadowRaster==nullptr)
+			drawShadow = 1.0;
 		rwD3D9SetSamplerState(5, D3DSAMP_MAGFILTER, D3DTEXF_LINEAR);
 		rwD3D9SetSamplerState(5, D3DSAMP_MINFILTER, D3DTEXF_LINEAR);
 		rwD3D9SetSamplerState(5, D3DSAMP_MIPFILTER, D3DTEXF_LINEAR);
@@ -241,7 +266,6 @@ void DeferredRendering::RenderLights()
 
 		_rwD3D9RWSetRasterStage(light->mShadowRaster, 5);
 		RwD3D9SetTexture(gRandomNoise, 6);
-		
 
 		_rwD3D9SetPixelShaderConstant(9, &light->GetPosition(), 1);
 		_rwD3D9SetPixelShaderConstant(10, &light->GetDirection(), 1);
@@ -249,12 +273,12 @@ void DeferredRendering::RenderLights()
 		_rwD3D9SetPixelShaderConstant(12, &radius, 1);
 		_rwD3D9SetPixelShaderConstant(13, &intensity, 1);
 		_rwD3D9SetPixelShaderConstant(14, &drawShadow, 1);
-		_rwD3D9SetPixelShaderConstant(15, &light->mMatrix, 4 * 6);
-
-		auto trans = XMMatrixTranslation(light->GetPosition().x, light->GetPosition().y, light->GetPosition().z);
 
 		Quad::Render();
+
 	}
+
+	PrintMessage("%d %d", maxLights, count);
 	gLightManager.SortSpotLights();
 	mSpotLightPS->Apply();
 	maxLights = min((size_t)20, gLightManager.GetSpotLightCount());
@@ -294,7 +318,7 @@ void DeferredRendering::RenderLights()
 
 	static uint maxlight = 0;
 	maxlight = max(maxlight, gLightManager.GetPointLightCount());
-	// PrintMessage("%d %d", maxlight, gLightManager.GetPointLightCount());
+	
 
 
 	// Render to default surface

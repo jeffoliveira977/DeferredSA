@@ -651,13 +651,14 @@ void __declspec(naked) CRenderer__AddEntityToRenderList___VisibleLod_HOOK()
 }
 
 
+void ProcessLightsForEntity(CEntity*)
+{
+
+}
 
 void Renderer::Hook()
 
 {     // update ms_aVisibleEntityPtrs
-
-   // patch::Nop(0x006FD105, 5);
-
 
     //plugin::patch::RedirectJump(0x00734570, Renderer::InsertEntityIntoSortedList);
     // plugin::patch::RedirectJump(0x005534B0, Renderer::AddEntityToRenderList);

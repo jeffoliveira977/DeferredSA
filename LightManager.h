@@ -20,8 +20,9 @@ public:
 	size_t GetPointLightCount();
 	SpotLight* GetSpotLightAt(int i);
 	PointLight* GetPointLightAt(int i);
-	static PointLight mPointLightList[60];
-	static SpotLight mSpotLightList[60];
+	static PointLight mPointLightList[160];
+	static SpotLight mSpotLightList[160];
+	static unordered_map<CEntity*, bool> mDontCull;
 private:
 	static int mSpotLightCount;
 	static int mPointLightCount;

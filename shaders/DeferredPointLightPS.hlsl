@@ -130,36 +130,6 @@ void CalculateLighing(float3 albedo, float3 normal, float3 lightPosition, float3
     //return (diffuseBRDF + specularBRDF) * cosLi;
 }
 
-float chebyshevUpperBound(float2 sd, float d)
-{
-  //  // Surface is fully lit. as the current fragment is before the light occluder
-  //  if (distance <= moments.x)
-  //      return 1.0;
-	
-		//// The fragment is either in shadow or penumbra. We now use chebyshev's upperBound to check
-		//// How likely this pixel is to be lit (p_max)
-  //  float variance = moments.y - (moments.x * moments.x);
-  //  variance = max(variance, 0.00002);
-	
-  //  float d = distance - moments.x;
-  //  float p_max = variance / (variance + d * d);
-  //  if (p_max > 0.0)
-  //      p_max = 0.0;
-  //  p_max = ((moments.x < 0.001f) ? 1.0f : p_max);
-  //  return p_max;
-    
-    float mean = sd.x;
-    float variance = max(sd.y - sd.x * sd.x, 0.0002f);
-
-    float md = mean - d;
-    float pmax = variance / (variance + md * md);
-
-    float t = max(d <= mean, pmax);
-    float s = ((sd.x < 0.001f) ? 1.0f : t);
-
-    s = saturate(s);
-    return s;
-}
 
 static vec3 sampleOffsetDirections[20] =
 {
@@ -170,10 +140,6 @@ static vec3 sampleOffsetDirections[20] =
    vec3( 0,  1,  1), vec3( 0, -1,  1), vec3( 0, -1, -1), vec3( 0,  1, -1)
 };   
 
-float ComputeAttenuation(float3 lDir)
-{
-    return 1 - saturate(dot(lDir, lDir) * 1.0f / (LightRadius * LightRadius));
-}
 
 float ComputeShadowFactor(float3 lightPos, float3 viewDir, float3 position, float3 normal)
 {
@@ -288,46 +254,22 @@ float4 main(float3 ViewRay : TEXCOORD2, float2 texCoord : TEXCOORD0, float3 frus
     float3 worldPosition;
     WorldPositionFromDepth(texCoord, depth, ProjectionMatrix, InverseViewMatrix, worldPosition);
 
-    //clip(depth + 0.9999f);
-    
     float4 depthNormal = TEXTURE2D_DEPTHNORMAL(texCoord);
     depth = DecodeFloatRG(depthNormal.zw);
 
     worldPosition = InverseViewMatrix[3].xyz + depth * frustumRay;
     float3 ViewDir = normalize(worldPosition - InverseViewMatrix[3].xyz);
-
     float4 color = 0;
    
     float3 lightPos = normalize(worldPosition.xyz - LightPosition.xyz);
-    
-    
-    float distance_to_light = distance(LightPosition.xyz, worldPosition.xyz);
-
-    vec3 pl_dir = normalize(LightPosition.xyz - worldPosition.xyz);
-    float ndotl = max(0, dot(normal.xyz, lightPos));
-    //if (ndotl <= 0.0f)
-    //    return 0.0;
+  
     
     float dirLen = length(worldPosition - LightPosition);
-    
-    //float s2 = 0.2f;
-    //float atten = 1.0f - smoothstep(LightRadius * s2, LightRadius, dirLen);
-    //atten = 1.0f - pow(saturate(dirLen / LightRadius), 2);
-       
-   
+
     float Attenuation = 1.0f - pow(saturate(dirLen / LightRadius), 2);
     Attenuation *= Attenuation;
     
-
-    float currentDepth = dirLen;
-    
-    float3 ldir = worldPosition.xyz - LightPosition.xyz;
-
-
-    // shadow term
-   
-
-    float shadow = 0.0;
+    float shadow = 1.0;
     
     [branch]
     if (dirLen > LightRadius)
@@ -336,95 +278,17 @@ float4 main(float3 ViewRay : TEXCOORD2, float2 texCoord : TEXCOORD0, float3 frus
         return 0;
     }
     
-   
-    float3 directionToFragment = normalize(worldPosition - LightPosition.xyz);
-    float closestDirection = -1;
-    int faceIndex = 0;
-    float4 lightingPosition[6];
-    for (int face = 0; face < 6; ++face)
-    {
-        float3 forward = FaceDirectons[face];
-        float result = dot(directionToFragment, forward);
-        if (result > closestDirection)
-        {
-            closestDirection = result;
-            faceIndex = face;
-            lightingPosition[face] = mul(float4(worldPosition, 1), matProj[face]);
-        }
-    }
-      
-       // float4 LightPosition = lightingPosition[faceIndex];
-    float2 shadowTexCoord = NormalToUvFace(directionToFragment, faceIndex);
-    if (shadowTexCoord.x < 0 || shadowTexCoord.x > 1 || shadowTexCoord.y < 0 || shadowTexCoord.y > 1)
-        return 1;
-        
-    float2 offset = float2((float) faceIndex / 6.0f, 0.0f);
-    shadowTexCoord.x *= 1.0f / 6.0f;
-    shadowTexCoord += offset;
-        //float2 shadowTexCoord = mad(0.5, LightPosition.xy / LightPosition.w, float2(0.5, 0.5));
-        //shadowTexCoord.y = 1.0f - shadowTexCoord.y;
+    if (CastShadow)
+        shadow = ComputeShadowFactor(LightPosition.xyz, InverseViewMatrix[3].xyz, worldPosition, normal);
+       
+    float3 Diff, Spec;
+    CalculateLighing(albedo, normal, -lightPos, -ViewDir, Roughness, metallicness, Diff, Spec);
     
-      
-    shadow = ComputeShadowFactor(LightPosition.xyz, InverseViewMatrix[3].xyz, worldPosition, normal);
-       // float sd = 1-texCUBE(SamplerShadow, normalize(ldir)).r;
+    color.xyz = Attenuation * Diff *  shadow;
+    color.w = Attenuation * Spec *  shadow;
     
-     
-       //// float sd = 1 - tex2D(SamplerShadow, shadowTexCoord).r;
-       // float bias = 0.05;
-       // float closestDepth = sd;
-       // closestDepth *= LightRadius;
-       // if (currentDepth - bias < closestDepth)
-       // {
-       //     shadow = 1.0; // Avoid lights turn off
-
-       // }
-       //// shadow = Compute4Samples(SamplerShadow, shadowTexCoord, float2(512.0f * 6, 512.0f), currentDepth - bias, LightRadius);
-
-       // float s = 0, t;
-
-       // float2 stex = vpos.xy / 16.0f;
-       // float2 noise;
-       // float2 rotated;
-
-       // noise = tex2D(SamplerNoise, stex);
-       // noise = normalize(rand2dTo2d(vpos)*2-1);
-
-       // float2x2 rotmat = { noise.x, -noise.y, noise.y, noise.x };
-       // shadow = 0;
-       // float2 texels = (1.0f / 6.0f/ (512.0*6), 1.0/ 512.0f);
-       // float v = 0.6;
-       // for (int i = 0; i < 8; ++i)
-       // {
-       //     rotated = irreg_kernel[i];
-       //     rotated = mul(rotated, rotmat) * 0.8f;
+    return color;
     
-       //     //shadowTexCoord += offset;
-       //     sd = 1 - tex2D(SamplerShadow, shadowTexCoord + rotated * texels).r;
-       //      closestDepth = sd;
-       //     closestDepth *= LightRadius;
-       //     t = (currentDepth - bias < closestDepth);
-       //     shadow += t;
-
-       // }
-
-       // shadow = saturate(shadow * 0.125f); // simulate ambient light here
-
-        
-        
-    //if (CastShadow == 0.0)
-        shadow = 1.0;
-      
-    
-
-    //float3 Diff, Spec;
-    //CalculateLighing(albedo, normal, -lightPos, -ViewDir, Roughness, metallicness, Diff, Spec);
-    
-    //color.xyz = Attenuation * Diff * (1 - shadow);
-    //color.w = Attenuation * Spec * (1 - shadow);
-    
-
-    
-    //return color;
     float3 FinalDiffuseTerm = float3(0, 0, 0);
     float FinalSpecularTerm = 0;
     float DiffuseTerm, SpecularTerm;
