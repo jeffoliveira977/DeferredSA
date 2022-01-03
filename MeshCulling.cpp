@@ -78,10 +78,10 @@ bool MeshCulling::Render(vector<CEntity*> list, Math::Frustum frustum)
 			continue; 
 		}*/
 
-		 if (InFrustum(entity, frustum))
-		{
+		// if (InFrustum(entity, frustum))
+		//{
 			RenderEntity(entity);
-		}
+		//}
 	}
 	return true;
 }
