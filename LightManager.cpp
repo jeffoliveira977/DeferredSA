@@ -39,7 +39,7 @@ void CPointLights__AddLight(unsigned char defaultType, XMFLOAT3 point, XMFLOAT3 
 		castShadow = false;
 
 	CVector camPos = TheCamera.GetPosition();
-	float visibleRadius = 100.0f;
+	float visibleRadius = 200.0f;
 	CVector dx = CVector(point.x, point.y, point.z) - camPos;
 
 	if (dx.Magnitude() >= visibleRadius)
