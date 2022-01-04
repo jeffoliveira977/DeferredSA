@@ -279,14 +279,14 @@ float4 main(float3 ViewRay : TEXCOORD2, float2 texCoord : TEXCOORD0, float3 frus
     }
     
     
-   // if (CastShadow)
+    if (CastShadow)
         shadow = ComputeShadowFactor(LightPosition.xyz, InverseViewMatrix[3].xyz, worldPosition, normal);
        
     float3 Diff, Spec;
     CalculateLighing(albedo, normal, -lightPos, -ViewDir, Roughness, metallicness, Diff, Spec);
     
-    color.xyz = Attenuation * Diff *  shadow;
-    color.w = Attenuation * Spec *  shadow;
+    color.xyz = Attenuation * Diff * shadow;
+    color.w = Attenuation * Spec * shadow;
     
     return color;
     

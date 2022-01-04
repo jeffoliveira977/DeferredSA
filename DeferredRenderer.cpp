@@ -227,7 +227,7 @@ void DeferredRendering::RenderLights()
 	frustum.SetMatrix(view*projection);
 
 	int count = 0;
-	uint32_t maxLights = min((size_t)16, gLightManager.GetPointLightCount());
+	uint32_t maxLights = min((size_t)20, gLightManager.GetPointLightCount());
 	for (int i = 0; i < maxLights; i++)
 	{
 		auto light = gLightManager.GetPointLightAt(i);
@@ -278,7 +278,7 @@ void DeferredRendering::RenderLights()
 
 	}
 
-	PrintMessage("%d %d", maxLights, count);
+	// PrintMessage("%d %d", maxLights, count);
 	gLightManager.SortSpotLights();
 	mSpotLightPS->Apply();
 	maxLights = min((size_t)20, gLightManager.GetSpotLightCount());

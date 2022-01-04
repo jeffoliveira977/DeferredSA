@@ -21,7 +21,7 @@ public:
 	RwRaster* mDepthRaster;
 
 	std::vector<CEntity*> m_renderableList;
-	void AddObject(CEntity* entity);
+	void AddObject(CEntity* entit);
 
 	void RenderEntities(PointLight* light, int i, int j);
 	void Initialize();

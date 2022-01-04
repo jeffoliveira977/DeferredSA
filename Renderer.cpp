@@ -608,24 +608,18 @@ void Renderer::ScanBigBuildingList(int sectorX, int sectorY)
 using namespace plugin;
 using namespace injector;
 
+#include "LightManager.h"
 
-
-
+#include "MeshCulling.h"
 void AddEntity(CEntity* entity)
 {
-    //auto a = ReadMemory<CEntity*>(0x6AAB6F);
-    //if (a )
-    //   PrintMessage("%f %f %f %d", a->GetPosition() .x, a->GetPosition().y, a->GetPosition().z, a->m_nModelIndex);
 
-    if (entity->m_nType == eEntityType::ENTITY_TYPE_PED || entity->m_nType == eEntityType::ENTITY_TYPE_VEHICLE || entity->m_nType == eEntityType::ENTITY_TYPE_OBJECT)
-    {
-        auto id = entity->m_nModelIndex;
-
-        PointShadow->AddObject(entity);
-       // SpotShadow->AddObject(entity);
-    }
     SpotShadow->AddObject(entity);
     ShadowCasterEntity->AddObject(entity);
+    if (entity->m_nType == eEntityType::ENTITY_TYPE_PED || entity->m_nType == eEntityType::ENTITY_TYPE_VEHICLE || entity->m_nType == eEntityType::ENTITY_TYPE_OBJECT)
+
+        PointShadow->AddObject(entity);
+
 }
 
 void __declspec(naked) CRenderer__AddEntityToRenderList___VisibleEntity_HOOK()
@@ -659,6 +653,9 @@ void ProcessLightsForEntity(CEntity*)
 void Renderer::Hook()
 
 {     // update ms_aVisibleEntityPtrs
+
+   // plugin::patch::Nop(0x535FCD, 5);
+    patch::SetUChar(0x00535FC3, 1);
 
     //plugin::patch::RedirectJump(0x00734570, Renderer::InsertEntityIntoSortedList);
     // plugin::patch::RedirectJump(0x005534B0, Renderer::AddEntityToRenderList);

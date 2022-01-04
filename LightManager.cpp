@@ -349,13 +349,13 @@ void LightManager::SortPointLights()
 	auto coors = FindPlayerCoors(-1);
 	//auto cameraPos = XMLoadFloat3((XMFLOAT3*)&coors);
 
-	/*for (int index = 0; index < mPointLightCount; index++)
-	{
-		float sqrDistanceToCam = XMVectorGetX(XMVectorMax(g_XMOne, XMVector3Length(cameraPos - XMLoadFloat3(&mPointLightList[index].GetPosition()))));
+	//for (int index = 0; index < mPointLightCount; index++)
+	//{
+	//	float sqrDistanceToCam = XMVectorGetX(XMVectorMax(g_XMOne, XMVector3Length(cameraPos - XMLoadFloat3(&mPointLightList[index].GetPosition()))));
 
-		mPointLightList[index].mPriority = index;
-	}
-	*/
+	//	mPointLightList[index].mPriority = index;
+	//}
+	//
 	//sort(&mPointLightList[0], &mPointLightList[mPointLightCount-1], [&](PointLight& a, PointLight& b)
 	//	{
 	//		auto lenA = XMVector3Length(cameraPos - XMLoadFloat3(&a.GetPosition()));
@@ -370,16 +370,16 @@ void LightManager::SortPointLights()
 			return (rwV3D_Dist2(a.GetPosition(), *pos) < rwV3D_Dist2(b.GetPosition(), *pos));
 		});
 
-	/*std::ofstream myfile;
-	myfile.open("example2.txt");
+	//std::ofstream myfile;
+	//myfile.open("example2.txt");
 
-	for (size_t i = 0; i < mPointLightCount; i++)
-	{
-		myfile << mPointLightList[i].mPriority;
-		myfile << "\n";
-	}
+	//for (size_t i = 0; i < mPointLightCount; i++)
+	//{
+	//	myfile << mPointLightList[i].mPriority;
+	//	myfile << "\n";
+	//}
 
-	myfile.close();*/
+	//myfile.close();
 }
 
 void LightManager::AddSpotLight(SpotLight spotlight)

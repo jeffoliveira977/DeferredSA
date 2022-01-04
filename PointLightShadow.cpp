@@ -63,17 +63,31 @@ void PointLightShadow::AddObject(CEntity* entity)
 	if (entity->m_pLod)
 		position = entity->m_pLod->GetPosition();
 
-	float distance = (position - CRenderer::ms_vecCameraPosition).Magnitude();
+	float distance = (position - TheCamera.GetPosition()).Magnitude();
 
-	if (distance < 180.0f)
+	if (distance < 100.0f)
 		m_renderableList.push_back(entity);
 
 }
+float rwV3D_Dist2(CVector& a, CVector& b)
+{
+	float
+		dX = b.x - a.x,
+		dY = b.y - a.y,
+		dZ = b.z - a.z;
 
+	return sqrt(dX * dX + dY * dY + dZ * dZ);
+}
 void PointLightShadow::Update()
 {
-	gLightManager.SortPointLights();
-	uint32_t maxLights = min((size_t)16, gLightManager.GetPointLightCount());
+	//gLightManager.SortPointLights();
+
+	//std::sort(m_renderableList.begin(), m_renderableList.end(), [&](CEntity* a, CEntity* b)
+	//	{
+	//		return (rwV3D_Dist2(a->GetPosition(), TheCamera.GetPosition()) < rwV3D_Dist2(b->GetPosition(), TheCamera.GetPosition()));
+	//	});
+
+	uint32_t maxLights = min((size_t)29, gLightManager.GetPointLightCount());
 
 	//RwD3D9SetRenderState(D3DRS_COLORWRITEENABLE, D3DCOLORWRITEENABLE_RED);
 	auto coors = FindPlayerCoors(-1);
@@ -95,8 +109,6 @@ void PointLightShadow::Update()
 			PrintMessage("%f %f %f", dx.x, dx.y, dx.z);
 			continue;
 		}*/
-		CVector dx2 = CVector(position.x, position.y, position.z) - coors;
-		//PrintMessage("%f %f", dx.Magnitude(), dx2.Magnitude());
 
 		if (dx.Magnitude() > 30.0 /*|| gLightManager.mPointLightList[i].mCastShadow*/)
 		{

@@ -63,25 +63,52 @@ void RenderEntity(CEntity* entity)
 
 #include"CModelInfo.h"
 #include "LightManager.h"
+
+bool CheckLamps(CEntity* entity)
+{
+	auto id = entity->m_nModelIndex;
+	if (id == 1284 ||
+		id == 1352 ||
+		id == 1351 ||
+		id == 1223 ||
+		id == 1283 ||
+		id == 1231 ||
+		id == 1232)
+		return true;
+	return false;
+}
+
 bool MeshCulling::Render(vector<CEntity*> list, Math::Frustum frustum)
 {
 	for (auto entity : list)
 	{
+		CColModel* col = entity->GetColModel();
+		if (col == nullptr)
+			continue;
+
 		bool castEntity = false;
 		auto pModelInfo = CModelInfo::GetModelInfo(entity->m_nModelIndex);
 		if (pModelInfo->m_nNum2dEffects)
 			castEntity = true;
 
-		/*if (castEntity)
-		{
-			RenderEntity(entity);
-			continue; 
-		}*/
+		auto id = entity->m_nModelIndex;
+		if (id == 1232)
+		PrintMessage("%d %d", castEntity, pModelInfo->m_nNum2dEffects);
 
-		// if (InFrustum(entity, frustum))
+		//if(castEntity && CheckLamps(entity))
+		//	RenderEntity(entity);
+		//else
+		//maxli = max(pModelInfo->m_nNum2dEffects, maxli);
+		//C2dEffect* pEffect = nullptr;
+		//PrintMessage("%d %d", castEntity,  pModelInfo->m_nNum2dEffects);
+		//for (int32_t iFxInd = 0; iFxInd < pModelInfo->m_nNum2dEffects; ++iFxInd) {
+		//	 pEffect = pModelInfo->Get2dEffect(iFxInd);
+		//}
+		//if (InFrustum(entity, frustum))
 		//{
 			RenderEntity(entity);
 		//}
 	}
+
 	return true;
 }
