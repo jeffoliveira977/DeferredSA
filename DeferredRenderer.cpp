@@ -217,7 +217,7 @@ void DeferredRendering::RenderLights()
 	RwRenderStateSet(rwRENDERSTATEDESTBLEND, (void*)rwBLENDONE);
 
 	mPointLightPS->Apply();
-	 gLightManager.SortPointLights();
+	// gLightManager.SortPointLights();
 	  CVector camPos = TheCamera.GetPosition();
 
 
@@ -227,7 +227,7 @@ void DeferredRendering::RenderLights()
 	frustum.SetMatrix(view*projection);
 
 	int count = 0;
-	uint32_t maxLights = min((size_t)20, gLightManager.GetPointLightCount());
+	uint32_t maxLights = min((size_t)29, gLightManager.GetPointLightCount());
 	for (int i = 0; i < maxLights; i++)
 	{
 		auto light = gLightManager.GetPointLightAt(i);
@@ -253,11 +253,11 @@ void DeferredRendering::RenderLights()
 
 		float drawShadow = 0.0; 
 		float visibleRadius = radius + 15.0f;
-		if (dx.Magnitude() < 30.0f /*&& !light->mDrawShadow*/)
+		if (/*dx.Magnitude() < 30.0f && */!light->mDrawShadow)
 			drawShadow = 1.0;
 
-		if(light->mShadowRaster==nullptr)
-			drawShadow = 1.0;
+		/*if(light->mShadowRaster==nullptr)
+			drawShadow = 1.0;*/
 		rwD3D9SetSamplerState(5, D3DSAMP_MAGFILTER, D3DTEXF_LINEAR);
 		rwD3D9SetSamplerState(5, D3DSAMP_MINFILTER, D3DTEXF_LINEAR);
 		rwD3D9SetSamplerState(5, D3DSAMP_MIPFILTER, D3DTEXF_LINEAR);

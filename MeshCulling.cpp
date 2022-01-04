@@ -98,16 +98,10 @@ bool MeshCulling::Render(vector<CEntity*> list, Math::Frustum frustum)
 		//if(castEntity && CheckLamps(entity))
 		//	RenderEntity(entity);
 		//else
-		//maxli = max(pModelInfo->m_nNum2dEffects, maxli);
-		//C2dEffect* pEffect = nullptr;
-		//PrintMessage("%d %d", castEntity,  pModelInfo->m_nNum2dEffects);
-		//for (int32_t iFxInd = 0; iFxInd < pModelInfo->m_nNum2dEffects; ++iFxInd) {
-		//	 pEffect = pModelInfo->Get2dEffect(iFxInd);
-		//}
-		//if (InFrustum(entity, frustum))
-		//{
+		if (InFrustum(entity, frustum))
+		{
 			RenderEntity(entity);
-		//}
+		}
 	}
 
 	return true;

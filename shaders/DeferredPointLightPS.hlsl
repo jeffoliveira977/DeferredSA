@@ -282,13 +282,15 @@ float4 main(float3 ViewRay : TEXCOORD2, float2 texCoord : TEXCOORD0, float3 frus
     if (CastShadow)
         shadow = ComputeShadowFactor(LightPosition.xyz, InverseViewMatrix[3].xyz, worldPosition, normal);
        
-    float3 Diff, Spec;
-    CalculateLighing(albedo, normal, -lightPos, -ViewDir, Roughness, metallicness, Diff, Spec);
+    //shadow = lerp(1.0, shadow, 0.7);
     
-    color.xyz = Attenuation * Diff * shadow;
-    color.w = Attenuation * Spec * shadow;
+    //float3 Diff, Spec;
+    //CalculateLighing(albedo, normal, -lightPos, -ViewDir, Roughness, metallicness, Diff, Spec);
     
-    return color;
+    //color.xyz = Attenuation * Diff * shadow;
+    //color.w = Attenuation * Spec * shadow;
+    
+    //return color;
     
     float3 FinalDiffuseTerm = float3(0, 0, 0);
     float FinalSpecularTerm = 0;

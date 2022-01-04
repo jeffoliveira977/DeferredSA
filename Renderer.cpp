@@ -611,13 +611,28 @@ using namespace injector;
 #include "LightManager.h"
 
 #include "MeshCulling.h"
+
+bool CheckLamps3(CEntity* entity)
+{
+    // Some lamps are not culled correctly
+    auto id = entity->m_nModelIndex;
+    if (id == 1284 ||
+        id == 1352 ||
+        id == 1351 ||
+        id == 1223 ||
+        id == 1283 ||
+        id == 1231 ||
+        id == 1232)
+        return true;
+    return false;
+}
 void AddEntity(CEntity* entity)
 {
 
     SpotShadow->AddObject(entity);
     ShadowCasterEntity->AddObject(entity);
     if (entity->m_nType == eEntityType::ENTITY_TYPE_PED || entity->m_nType == eEntityType::ENTITY_TYPE_VEHICLE || entity->m_nType == eEntityType::ENTITY_TYPE_OBJECT)
-
+        if(!CheckLamps3(entity))
         PointShadow->AddObject(entity);
 
 }

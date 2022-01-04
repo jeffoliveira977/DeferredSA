@@ -35,7 +35,8 @@ void CPointLights__AddLight(unsigned char defaultType, XMFLOAT3 point, XMFLOAT3 
 		PrintMessage("%d", e->m_nModelIndex);*/
 
 	auto castShadow = true;
-	castShadow = CheckModelId(CurrEntity);
+	if (CheckModelId(CurrEntity))
+		castShadow = false;
 
 	CVector camPos = TheCamera.GetPosition();
 	float visibleRadius = 100.0f;
