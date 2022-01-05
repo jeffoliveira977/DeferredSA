@@ -178,7 +178,7 @@ void ShaderManager::Update()
 		sunDirs = { 0.0f, -0.98893635f, 0.14834045f };
 		float value = m_sunColor.x * CGameIdle::m_fShadowDNBalance * 0.5f;
 
-		m_sunColor = { value, value, value };
+		m_sunColor = { 0, 0, 0 };
 	}
 	CTimeCycle::m_CurrentColours.m_fFarClip = Scene.m_pRwCamera->farPlane;
 	m_planeData[0] = CTimeCycle::m_CurrentColours.m_fFogStart;

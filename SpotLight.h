@@ -27,6 +27,7 @@ public:
 
 	void Update();
 	RwRaster* mColorRaster;
+	bool mDrawShadow;
 private:
 	Math::Frustum mFrustum;
 	XMMATRIX mMatrix;

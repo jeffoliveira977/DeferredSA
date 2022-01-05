@@ -5,6 +5,7 @@
 #include <DirectXCollision.h>
 #include <DirectXMath.h>
 #include "Frustum.h"
+#include "SpotLight.h"
 class SpotlightShadow
 {
 public:
@@ -16,7 +17,7 @@ public:
 	void AddObject(CEntity* entity);
 	SpotlightShadow();
 	~SpotlightShadow();
-	void RenderEntities(int i);
+	void RenderEntities(SpotLight*light, int i);
 	void Initialize();
 	void Update();
 };

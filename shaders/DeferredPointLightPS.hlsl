@@ -269,8 +269,9 @@ float4 main(float3 ViewRay : TEXCOORD2, float2 texCoord : TEXCOORD0, float3 frus
     float Attenuation = 1.0f - pow(saturate(dirLen / LightRadius), 2);
     Attenuation *= Attenuation;
     
+
     float shadow = 1.0;
-    
+  //  float3 dd = tex2D(SamplerNoise,texCoord).rgb;
     [branch]
     if (dirLen > LightRadius)
     {

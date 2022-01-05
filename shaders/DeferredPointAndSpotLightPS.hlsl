@@ -29,6 +29,8 @@ float CastShadow : register(c15);
 row_major float4x4 ShadowMatrix : register(c16);
 
 sampler2D SamplerShadow : register(s5);
+sampler2D SamplerNoise : register(s6);
+
 float CalculateAttenuation(float Range, float dis, float d)
 {
     return 1.0f - smoothstep(Range * dis, Range, d);
@@ -151,7 +153,7 @@ float3 CalculateLighing(float3 albedo, float3 normal, float3 lightPosition, floa
 
 
 
-float4 main(float2 texCoord : TEXCOORD0, float3 frustumRay : TEXCOORD1) : COLOR
+float4 main(float4 position: TEXCOORD3, float2 texCoord : TEXCOORD0, float3 frustumRay : TEXCOORD1, float2 vpos:VPOS) : COLOR
 {
     float4 Parameters = TEXTURE2D_MATERIALPROPS(texCoord);
     float SpecIntensity = Parameters.x;
@@ -188,16 +190,21 @@ float4 main(float2 texCoord : TEXCOORD0, float3 frustumRay : TEXCOORD1) : COLOR
    // float LightDistance = length(worldPosition.xyz - LightPosition.xyz) / 2.0;
    // atten = 1.0f - pow(saturate(LightDistance / LightRadius), 2);
     float minCos = cos(radians(LightConeAngle));
-    float maxCos = lerp(minCos, 1, 0.9f);
+    float maxCos = lerp(minCos, 1, 0.7f);
     float cosAngle = dot(LightDirection, lightPos);
     float distance = length(worldPosition - LightPosition);
     
-    float attenuation = pow(clamp(1 - pow((distance / LightRadius), 4.0), 0.0, 1.0), 2.0) / (1.0 + (distance * distance));
+
+   // Attenuation *= smoothstep(minCos, maxCos, cosAngle);
     
-    Attenuation *= smoothstep(minCos, maxCos, cosAngle);
+    vec2 fragCoord = vpos.xy / 512.0f;
+    //Attenuation *= length(vec3(tex2D(SamplerNoise, texCoord).xyz));
+    //fragCoord = CalculateScreenPosition(float4(frustumRay, 1.0));
     
-    float fSpot = SpotLightIntensity(max(dot(lightPos, LightDirection), 0.0f), radians(60), radians(10)); //pow(, 4.0f);
-   // Attenuation *= fSpot;
+ 
+    
+    float fSpot = SpotLightIntensity(max(dot(lightPos, LightDirection), 0.0f), radians(LightConeAngle), radians(10)); //pow(, 4.0f);
+    Attenuation *= fSpot;
     //atten *= 0.5;
     float texelSize = 1.0 / 512.0f;
    
@@ -216,11 +223,11 @@ float4 main(float2 texCoord : TEXCOORD0, float3 frustumRay : TEXCOORD1) : COLOR
 	// Transform from NDC space to texture space.
     projTexC.x = +0.5f * projTexC.x + 0.5f;
     projTexC.y = -0.5f * projTexC.y + 0.5f;
-	
-  
+    float4 flashlight = tex2D(SamplerNoise, projTexC.xy);
+    //Attenuation *= length(flashlight);
     float bias = max((1.0 - dot(normal, -lightPos)), 0.0001);
     
-    float z = projTexC.z - 0.0001f;
+    float z = projTexC.z /*- 0.0001f*/;
     float s = ComputeShadowSamples(SamplerShadow, 512.0f, projTexC.xy, z);
     if (CastShadow == 0.0)
         s = 1.0;
@@ -234,7 +241,7 @@ float4 main(float2 texCoord : TEXCOORD0, float3 frustumRay : TEXCOORD1) : COLOR
 
    // color.xyz = atten * s * CalculateLighing(albedo, normal, lightPos, -ViewDir, Roughness, SpecIntensity);
 
-    FinalDiffuseTerm += DiffuseTerm * Attenuation *s* LightColor * LightIntensity;
+    FinalDiffuseTerm += DiffuseTerm /** flashlight.xyz*/* Attenuation * s * LightColor * LightIntensity;
     FinalSpecularTerm += SpecularTerm * Attenuation *s* SpecIntensity;
     float4 Lighting = float4(FinalDiffuseTerm, FinalSpecularTerm);
     color.xyzw = Lighting;

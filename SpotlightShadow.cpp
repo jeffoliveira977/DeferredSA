@@ -64,7 +64,7 @@ void SpotlightShadow::Update()
 
 	RWSRCGLOBAL(curCamera) = Scene.m_pRwCamera;
 
-	uint32_t maxLights = min((size_t)20, gLightManager.GetSpotLightCount());
+	uint32_t maxLights = min((size_t)10, gLightManager.GetSpotLightCount());
 
 	for (size_t i = 0; i < maxLights; i++)
 	{
@@ -76,7 +76,10 @@ void SpotlightShadow::Update()
 		CVector dx = CVector(position.x, position.y, position.z) - TheCamera.GetPosition();
 
 		if (dx.Magnitude() > 30.0f)
+		{
+			gLightManager.mSpotLightList[i].mDrawShadow = false;
 			continue;
+		}
 
 		auto viewMatrix = light->GetViewMatrix();
 		auto projectionMatrix = light->GetProjection();
@@ -107,7 +110,7 @@ void SpotlightShadow::Update()
 			_rwD3D9SetVertexShaderConstant(4, &viewMatrix, 4);
 			_rwD3D9SetVertexShaderConstant(8, &projectionMatrix, 4);
 
-			RenderEntities(i);
+			RenderEntities(light, i);
 		}
 	}	
 	RWSRCGLOBAL(curCamera) = NULL;
@@ -118,7 +121,8 @@ void SpotlightShadow::Update()
 		D3DCOLORWRITEENABLE_GREEN | D3DCOLORWRITEENABLE_BLUE);
 }
 
-void SpotlightShadow::RenderEntities(int i)
+#include "MeshCulling.h"
+void SpotlightShadow::RenderEntities(SpotLight*light, int i)
 {
 	RwRenderStateSet(rwRENDERSTATEVERTEXALPHAENABLE, (void*)TRUE);
 	RwRenderStateSet(rwRENDERSTATECULLMODE, (void*)0);
@@ -130,44 +134,47 @@ void SpotlightShadow::RenderEntities(int i)
 
 	for (auto entity : m_renderableList)
 	{
-		if (entity == nullptr || entity->m_pRwObject == nullptr)
-			continue;
+		/*if (MeshCulling::InFrustum(entity, light->GetFrustum()))
+		{*/
+			if (entity == nullptr || entity->m_pRwObject == nullptr)
+				continue;
 
-		if (entity->m_nType == ENTITY_TYPE_PED)
-		{
-			CPed* ped = static_cast<CPed*>(entity);
-			CTaskSimpleJetPack* jetPack = ped->m_pIntelligence->GetTaskJetPack();
-			if (jetPack && jetPack->m_pJetPackClump)
-				RpClumpRender(jetPack->m_pJetPackClump);
-		}
+			if (entity->m_nType == ENTITY_TYPE_PED)
+			{
+				CPed* ped = static_cast<CPed*>(entity);
+				CTaskSimpleJetPack* jetPack = ped->m_pIntelligence->GetTaskJetPack();
+				if (jetPack && jetPack->m_pJetPackClump)
+					RpClumpRender(jetPack->m_pJetPackClump);
+			}
 
-		entity->m_bImBeingRendered = true;
+			entity->m_bImBeingRendered = true;
 
-		CVehicle* vehicle = static_cast<CVehicle*>(entity);
-		if (entity->m_nType == ENTITY_TYPE_VEHICLE)
-		{
-			CVisibilityPlugins::SetupVehicleVariables(entity->m_pRwClump);
-			CVisibilityPlugins::InitAlphaAtomicList();
-			vehicle->SetupRender();
-		}
-		else if (!entity->m_bBackfaceCulled)
-		{
-			RwRenderStateSet(rwRENDERSTATECULLMODE, (void*)rwCULLMODECULLNONE);
-		}
-		entity->Render();
+			CVehicle* vehicle = static_cast<CVehicle*>(entity);
+			if (entity->m_nType == ENTITY_TYPE_VEHICLE)
+			{
+				CVisibilityPlugins::SetupVehicleVariables(entity->m_pRwClump);
+				CVisibilityPlugins::InitAlphaAtomicList();
+				vehicle->SetupRender();
+			}
+			else if (!entity->m_bBackfaceCulled)
+			{
+				RwRenderStateSet(rwRENDERSTATECULLMODE, (void*)rwCULLMODECULLNONE);
+			}
+			entity->Render();
 
 
-		if (entity->m_nType == ENTITY_TYPE_VEHICLE)
-		{
-			CVisibilityPlugins::RenderAlphaAtomics();
-			vehicle->ResetAfterRender();
-		}
-		else if (!entity->m_bBackfaceCulled)
-		{
-			RwRenderStateSet(rwRENDERSTATECULLMODE, (void*)rwCULLMODECULLBACK);
-		}
+			if (entity->m_nType == ENTITY_TYPE_VEHICLE)
+			{
+				CVisibilityPlugins::RenderAlphaAtomics();
+				vehicle->ResetAfterRender();
+			}
+			else if (!entity->m_bBackfaceCulled)
+			{
+				RwRenderStateSet(rwRENDERSTATECULLMODE, (void*)rwCULLMODECULLBACK);
+			}
 
-		entity->m_bImBeingRendered = false;
+			entity->m_bImBeingRendered = false;
+		//}
 	}
 	CVisibilityPlugins::RenderWeaponPedsForPC();
 }

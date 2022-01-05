@@ -50,95 +50,100 @@ void CPointLights__AddLight(unsigned char defaultType, XMFLOAT3 point, XMFLOAT3 
 }
 
 void AddVehicleSpotLight(CVehicle* vehicle)
-{	
-
-	CVehicleModelInfo* pModelinfo = reinterpret_cast<CVehicleModelInfo*>(CModelInfo::ms_modelInfoPtrs[vehicle->m_nModelIndex]);
-	CVector headlightPos = pModelinfo->m_pVehicleStruct->m_avDummyPos[0];
-	CVector tailLightPos = pModelinfo->m_pVehicleStruct->m_avDummyPos[1];
+{
+	auto modelInfo = reinterpret_cast<CVehicleModelInfo*>(CModelInfo::GetModelInfo(vehicle->m_nModelIndex));
+	auto headlightPos = modelInfo->m_pVehicleStruct->m_avDummyPos[0];
+	auto tailLightPos = modelInfo->m_pVehicleStruct->m_avDummyPos[1];
 
 	auto automobile = reinterpret_cast<CAutomobile*>(vehicle);
-
-	auto bHEAD_R = !automobile->m_damageManager.GetLightStatus(eLights::LIGHT_FRONT_RIGHT);
-	auto bHEAD_L = !automobile->m_damageManager.GetLightStatus(eLights::LIGHT_FRONT_LEFT);
-	auto bREAR_R = !automobile->m_damageManager.GetLightStatus(eLights::LIGHT_REAR_RIGHT);
-	auto bREAR_L = !automobile->m_damageManager.GetLightStatus(eLights::LIGHT_REAR_LEFT);
+	auto frontRight = !automobile->m_damageManager.GetLightStatus(eLights::LIGHT_FRONT_RIGHT);
+	auto frontLeft = !automobile->m_damageManager.GetLightStatus(eLights::LIGHT_FRONT_LEFT);
+	auto rearRight = !automobile->m_damageManager.GetLightStatus(eLights::LIGHT_REAR_RIGHT);
+	auto rearLeft = !automobile->m_damageManager.GetLightStatus(eLights::LIGHT_REAR_LEFT);
 
 	auto matrix = vehicle->GetMatrix();
-	//if (headlightPos.x != 0.0f || headlightPos.y != 0.0f || headlightPos.z != 0.0f)
-	//{
-		float distance = 0.1f;
-		if (vehicle->m_nModelIndex == 530)
-			distance = 0.5f;
 
-		SpotLight light;
+	float distance = 0.1f;
+	if (vehicle->m_nModelIndex == 530)
+		distance = 0.5f;
 
-		// Initialize the spot light
-		light.SetIntensity(1.0);
+	SpotLight light;
+	light.SetIntensity(1.0);
 
-		CVector position;
-		if (bHEAD_L || bHEAD_R)
+	auto currPlayerVehicle = FindPlayerVehicle(-1, true);
+	CVector position;
+	if (frontLeft || frontRight)
+	{
+		if (currPlayerVehicle == vehicle)
 		{
-			light.SetRadius(30.0f);
-			light.SetDirection({ matrix->up.x, matrix->up.y, matrix->up.z });
-			light.SetColor({ 1.0f, 1.0f, 1.0f });
-			light.SetAngle(30.0);
-
-			MultiplyMatrixWithVector(&position, matrix, &headlightPos);
-
-			if (bHEAD_L)
-			{
-				light.SetPosition({position.x, position.y, position.z });
-				light.Update();
-				gLightManager.AddSpotLight(light);
-			};
-
-			if (bHEAD_R)
-			{
-				position = position - (headlightPos.x + headlightPos.x) * matrix->right;
-				light.SetPosition({position.x, position.y, position.z});
-				light.Update();
-				gLightManager.AddSpotLight(light);
-			}
+			light.SetAngle(50.0);
+			light.SetRadius(80.0f);
 		}
-		
-		if (bREAR_R || bREAR_L)
+		else
 		{
-			light.SetDirection({ -vehicle->m_matrix->up.x, -vehicle->m_matrix->up.y,-vehicle->m_matrix->up.z });
+			light.SetAngle(30.0);
+			light.SetRadius(30.0f);
+		}
 
-			if (vehicle->m_fBreakPedal > 0.0f)
-				light.SetColor({ 1.0f, 0.0f, 0.0f });
-			else
-				light.SetColor({ 0.8f, 0.0f, 0.0f });
-			
-			if (vehicle->m_nVehicleSubClass == eVehicleType::VEHICLE_BIKE || vehicle->m_nVehicleClass == eVehicleType::VEHICLE_BIKE)
-			{
-				light.SetAngle(30.0);
-				light.SetRadius(vehicle->m_fBreakPedal > 0.0f ? 7.0 : 3.0f);
-				light.SetIntensity(3.0);
-			}
-			else
-			{
-				light.SetAngle(100.0);
-				light.SetRadius(vehicle->m_fBreakPedal > 0.0f ? 7.0 : 3.0f);
-			}
+		light.SetDirection({ matrix->up.x, matrix->up.y, matrix->up.z });
+		light.SetColor({ 1.0f, 1.0f, 1.0f });
 
-			MultiplyMatrixWithVector(&position, matrix, &tailLightPos);
+		MultiplyMatrixWithVector(&position, matrix, &headlightPos);
 
-			if (bREAR_L)
-			{
-				light.SetPosition({position.x, position.y, position.z});
-				light.Update();
-				gLightManager.AddSpotLight(light);
-			};
+		if (frontLeft)
+		{
+			light.SetPosition({ position.x, position.y, position.z });
+			light.Update();
+			gLightManager.AddSpotLight(light);
+		};
 
-			if (bREAR_R)
-			{
-				position = position - (tailLightPos.x + tailLightPos.x) * matrix->right;
-				light.SetPosition({position.x, position.y, position.z});
-				light.Update();
-				gLightManager.AddSpotLight(light);
-			}
-		//}
+		if (frontRight)
+		{
+			position -= headlightPos.x * 2.0f * matrix->right;
+			light.SetPosition({ position.x, position.y, position.z });
+			light.Update();
+			gLightManager.AddSpotLight(light);
+		}
+	}
+
+	if (rearRight || rearLeft)
+	{
+		light.SetDirection({ -vehicle->m_matrix->up.x, -vehicle->m_matrix->up.y,-vehicle->m_matrix->up.z });
+
+		if (vehicle->m_fBreakPedal > 0.0f)
+			light.SetColor({ 1.0f, 0.0f, 0.0f });
+		else
+			light.SetColor({ 0.8f, 0.0f, 0.0f });
+
+		if (vehicle->m_nVehicleSubClass == eVehicleType::VEHICLE_BIKE || vehicle->m_nVehicleClass == eVehicleType::VEHICLE_BIKE)
+		{
+			light.SetAngle(30.0);
+			light.SetRadius(vehicle->m_fBreakPedal > 0.0f ? 7.0 : 3.0f);
+			light.SetIntensity(3.0);
+		}
+		else
+		{
+			light.SetAngle(100.0);
+			light.SetRadius(vehicle->m_fBreakPedal > 0.0f ? 7.0 : 3.0f);
+		}
+
+		MultiplyMatrixWithVector(&position, matrix, &tailLightPos);
+
+		if (rearLeft)
+		{
+			light.SetPosition({ position.x, position.y, position.z });
+			light.Update();
+			gLightManager.AddSpotLight(light);
+		};
+
+		if (rearRight)
+		{
+			position -= tailLightPos.x * 2.0f * matrix->right;
+			light.SetPosition({ position.x, position.y, position.z });
+			light.Update();
+			gLightManager.AddSpotLight(light);
+		}
+
 	}
 }
 
@@ -156,6 +161,7 @@ int LightManager::mPointLightCount = 0;
 PointLight LightManager::mPointLightList[160];
 SpotLight LightManager::mSpotLightList[160];
 unordered_map<CEntity*, bool>  LightManager::mDontCull;
+
  void CPointLights__AddLight1(unsigned char defaultType, XMFLOAT3 point, XMFLOAT3 direction, float radius, float red, float green, float blue, unsigned char, bool, CEntity*)
  {
 	 _asm mov CurrEntity, esi;
@@ -201,6 +207,16 @@ void __declspec(naked) CPointLights__AddLight_HOOK1()
 		jmp edx
 	}
 }
+#include "CExplosion.h"
+void CPointLights__AddLight2(unsigned char defaultType, XMFLOAT3 point, XMFLOAT3 direction, float radius, float red, float green, float blue, unsigned char, bool, CEntity*)
+{
+	PrintMessage("%f %f %f", point.x, point.y, point.z);
+
+	float intensity = 1.0f;
+
+	gLightManager.AddPointLight(point, direction, { red, green, blue }, radius, intensity, true);
+}
+
 #include "CRenderer.h"
 
 #include "CPtrListDoubleLink.h"
@@ -211,6 +227,8 @@ void LightManager::Hook()
 	//plugin::patch::RedirectJump(0x6AB80F, CPointLights__AddLight_HOOK1);
 	//plugin::patch::RedirectJump(0x6ABBA6, CPointLights__AddLight_HOOK1);
 
+	plugin::patch::Nop(0x73785D, 2);
+
 	plugin::patch::RedirectCall(0x6AB80F, CPointLights__AddLight1);
 	plugin::patch::RedirectCall(0x6ABBA6, CPointLights__AddLight1);
 	plugin::patch::RedirectCall(0x6BD641, CPointLights__AddLight1);
@@ -218,8 +236,10 @@ void LightManager::Hook()
 	plugin::patch::RedirectCall(0x6FD105, CPointLights__AddLight1);
 	plugin::patch::RedirectCall(0x6FD347, CPointLights__AddLight1);
 
+	plugin::patch::RedirectCall(0x737849, CPointLights__AddLight2);
+	plugin::patch::RedirectCall(0x7378C1, CPointLights__AddLight2);
 
-	plugin::Events::gameProcessEvent += []() 
+	plugin::Events::gameProcessEvent.before += []() 
 	{
 		gLightManager.ClearLights();
 
@@ -441,6 +461,10 @@ void LightManager::ClearLights()
 	{
 		mPointLightList[i].mDrawShadow = true;
 		mPointLightList[i].mCastShadow = false;
+	}
+	for (size_t i = 0; i < mSpotLightCount; i++)
+	{
+		mSpotLightList[i].mDrawShadow = true;
 	}
 	mDontCull.clear();
 }
