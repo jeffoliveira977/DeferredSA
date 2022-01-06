@@ -159,8 +159,8 @@ void SkinnedMeshPipeline::ShadowRendering(RwResEntry* entry, void* object, RwUIn
 	RwRenderStateSet(rwRENDERSTATEFOGENABLE, FALSE);
 	RwD3D9SetRenderState(D3DRS_ALPHABLENDENABLE, FALSE);
 	RwD3D9SetRenderState(D3DRS_ALPHATESTENABLE, TRUE);
-//	RwRenderStateSet(rwRENDERSTATECULLMODE, (void*)rwCULLMODECULLNONE);
-	RwRenderStateSet(rwRENDERSTATECULLMODE, (void*)0);
+	RwRenderStateSet(rwRENDERSTATECULLMODE, (void*)2);
+	RwRenderStateSet(rwRENDERSTATECULLMODE, (void*)3);
 
 
 	if (gRenderState == stagePointShadow)

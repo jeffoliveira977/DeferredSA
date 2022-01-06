@@ -510,7 +510,8 @@ float2 RecombinePrecision(float4 Value)
     float FactorInv = 1 / g_DistributeFactor;
     return (Value.zw * FactorInv + Value.xy);
 }
-static const float SHADOW_EPSILON = 0.0001f;
+
+static const float SHADOW_EPSILON = 0.0000f;
 float ComputeShadowSamples(sampler2D samplerShadow, float shadowSize, float2 shadowTexCoord, float ourdepth)
 {
     float ShadowMapPixelSize = 1.0f / shadowSize;

@@ -76,15 +76,14 @@ void AddVehicleSpotLight(CVehicle* vehicle)
 	{
 		if (currPlayerVehicle == vehicle)
 		{
-			light.SetAngle(50.0);
-			light.SetRadius(80.0f);
+			light.SetAngle(50.0f);
+			light.SetRadius(30.0f);
 		}
 		else
 		{
-			light.SetAngle(30.0);
+			light.SetAngle(45.0);
 			light.SetRadius(30.0f);
 		}
-
 		light.SetDirection({ matrix->up.x, matrix->up.y, matrix->up.z });
 		light.SetColor({ 1.0f, 1.0f, 1.0f });
 

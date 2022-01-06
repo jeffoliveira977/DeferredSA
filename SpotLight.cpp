@@ -100,9 +100,9 @@ void SpotLight::Update()
 	up = XMVector3Cross(mDirection, right);
 	up = XMVector3Normalize(up);*/
 
-	lookAt = mPosition + mDirection * mRadius;
+	lookAt = mPosition + mDirection* mRadius;
 	mView = XMMatrixLookAtLH(mPosition, lookAt, up);
-	mProjection = XMMatrixPerspectiveFovLH(cos(XMConvertToRadians(mAngle)), 1.0f, 1.f, mRadius);
+	mProjection = XMMatrixPerspectiveFovLH((XMConvertToRadians(mAngle*2)), 1.0f, 0.1f, mRadius);
 	mMatrix = mView * mProjection;
 
 	mFrustum.SetMatrix(mMatrix);

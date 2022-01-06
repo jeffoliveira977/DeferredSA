@@ -1,6 +1,7 @@
 #pragma once
 #include "CommonD.h"
 #include "Frustum.h"
+
 class SpotLight
 {
 public:
@@ -28,6 +29,7 @@ public:
 	void Update();
 	RwRaster* mColorRaster;
 	bool mDrawShadow;
+	float mExponent;
 private:
 	Math::Frustum mFrustum;
 	XMMATRIX mMatrix;
@@ -39,6 +41,7 @@ private:
 
 	float mIntensity;
 	float mAngle;
+	
 	float mRadius;
 };
 

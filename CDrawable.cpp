@@ -101,7 +101,7 @@ void MeshRenderingMode::ShadowRendering(RwResEntry* entry, void* object, RwUInt3
 
 	RwRenderStateSet(rwRENDERSTATESRCBLEND, (void*)rwBLENDSRCALPHA);
 	RwRenderStateSet(rwRENDERSTATEDESTBLEND, (void*)rwBLENDINVSRCALPHA);
-
+	RwRenderStateSet(rwRENDERSTATECULLMODE, (void*)3);
 	int numMeshes = header->numMeshes;
 	while(numMeshes--)
 	{

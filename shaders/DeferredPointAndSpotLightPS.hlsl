@@ -25,8 +25,9 @@ float3 LightColor : register(c11);
 float LightRadius : register(c12);
 float LightIntensity : register(c13);
 float LightConeAngle : register(c14);
-float CastShadow : register(c15);
-row_major float4x4 ShadowMatrix : register(c16);
+float LightExponent : register(c15);
+float CastShadow : register(c16);
+row_major float4x4 ShadowMatrix : register(c17);
 
 sampler2D SamplerShadow : register(s5);
 sampler2D SamplerNoise : register(s6);
@@ -189,48 +190,52 @@ float4 main(float4 position: TEXCOORD3, float2 texCoord : TEXCOORD0, float3 frus
     Attenuation *= Attenuation;
    // float LightDistance = length(worldPosition.xyz - LightPosition.xyz) / 2.0;
    // atten = 1.0f - pow(saturate(LightDistance / LightRadius), 2);
-    float minCos = cos(radians(LightConeAngle));
-    float maxCos = lerp(minCos, 1, 0.7f);
-    float cosAngle = dot(LightDirection, lightPos);
+  
     float distance = length(worldPosition - LightPosition);
     
 
-   // Attenuation *= smoothstep(minCos, maxCos, cosAngle);
+
     
-    vec2 fragCoord = vpos.xy / 512.0f;
-    //Attenuation *= length(vec3(tex2D(SamplerNoise, texCoord).xyz));
-    //fragCoord = CalculateScreenPosition(float4(frustumRay, 1.0));
+   // float fSpot = SpotLightIntensity(max(dot(lightPos, LightDirection), 0.0f), radians(LightConeAngle), radians(10)); //pow(, 4.0f);
+    //Attenuation *= fSpot;
     
- 
-    
-    float fSpot = SpotLightIntensity(max(dot(lightPos, LightDirection), 0.0f), radians(LightConeAngle), radians(10)); //pow(, 4.0f);
-    Attenuation *= fSpot;
+    half spotAtten = min(1, max(0, dot(lightPos, LightDirection) - LightConeAngle) * LightExponent);
+    Attenuation *= spotAtten;
     //atten *= 0.5;
     float texelSize = 1.0 / 512.0f;
    
     float4 LightViewPos = mul(float4(worldPosition, 1.0), ShadowMatrix);
     
-    float4 projTexC = LightViewPos;
-  // Complete projection by doing division by w.
-    projTexC.xyz /= projTexC.w;
-	
-	//// Points outside the light volume are in shadow.
- //   if (projTexC.x < -1.0f || projTexC.x > 1.0f ||
-	//    projTexC.y < -1.0f || projTexC.y > 1.0f ||
-	//    projTexC.z < 0.0f)
- //       return 0.0f;
-	    
-	// Transform from NDC space to texture space.
-    projTexC.x = +0.5f * projTexC.x + 0.5f;
-    projTexC.y = -0.5f * projTexC.y + 0.5f;
-    float4 flashlight = tex2D(SamplerNoise, projTexC.xy);
-    //Attenuation *= length(flashlight);
-    float bias = max((1.0 - dot(normal, -lightPos)), 0.0001);
+
     
-    float z = projTexC.z /*- 0.0001f*/;
-    float s = ComputeShadowSamples(SamplerShadow, 512.0f, projTexC.xy, z);
+    	// Find the position in the shadow map for this pixel
+    float2 shadowTexCoord = 0.5 * LightViewPos.xy /
+							LightViewPos.w + float2(0.5, 0.5);
+    shadowTexCoord.y = 1.0f - shadowTexCoord.y;
+	//offset by the texel size
+    shadowTexCoord += texelSize;
+	
+	// Calculate the current pixel depth
+	// The bias is used to prevent floating point errors 
+    float ourdepth = (LightViewPos.z / LightViewPos.w);
+	
+    
+    float4 flashlight = tex2D(SamplerNoise, shadowTexCoord.xy);
+    //Attenuation *= length(flashlight);
+
+    float bias = max(0.05 * (1.0 - dot(normal, LightDirection)), 0.005);
+    float z = ourdepth -0.005;
+    float s = ComputeShadowSamples(SamplerShadow, 512.0f, shadowTexCoord.xy, z);
     if (CastShadow == 0.0)
-        s = 1.0;
+    s = 0.0;
+    
+    //if (ourdepth > 1.0)
+    //    s = 0.0;
+    
+
+    s = 1 - s;
+   // s *= 20.0;
+
     
     float3 FinalDiffuseTerm = float3(0, 0, 0);
     float FinalSpecularTerm = 0;
@@ -241,7 +246,7 @@ float4 main(float4 position: TEXCOORD3, float2 texCoord : TEXCOORD0, float3 frus
 
    // color.xyz = atten * s * CalculateLighing(albedo, normal, lightPos, -ViewDir, Roughness, SpecIntensity);
 
-    FinalDiffuseTerm += DiffuseTerm /** flashlight.xyz*/* Attenuation * s * LightColor * LightIntensity;
+    FinalDiffuseTerm += DiffuseTerm * flashlight.xyz* Attenuation * s * LightColor * LightIntensity;
     FinalSpecularTerm += SpecularTerm * Attenuation *s* SpecIntensity;
     float4 Lighting = float4(FinalDiffuseTerm, FinalSpecularTerm);
     color.xyzw = Lighting;

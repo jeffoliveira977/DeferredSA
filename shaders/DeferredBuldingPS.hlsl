@@ -24,7 +24,7 @@ float InterleavedGradientNoise(float2 index)
     return frac(frac(dot(index.xy, float2(0.06711056, 0.00583715))) * 52.9829189);
 }
 
-PS_DeferredOutput main(VS_DeferredOutput input, float2 vpos :VPOS)
+PS_DeferredOutput main(VS_DeferredOutput input, float2 vpos :VPOS, float face:VFACE)
 {
     float4 outColor;
    // outColor.rgb = MaterialColor.rgb * input.Color.rgb;
@@ -34,6 +34,8 @@ PS_DeferredOutput main(VS_DeferredOutput input, float2 vpos :VPOS)
     outColor = MaterialColor /** input.Color*/;
     if (HasTexture)
         outColor *= tex2D(Diffuse, input.Texcoord);
+    
+  
     
     float4 params;
     float3 normal = input.Normal;
@@ -70,6 +72,9 @@ PS_DeferredOutput main(VS_DeferredOutput input, float2 vpos :VPOS)
     }
     //if (outColor.a < 0.2f)
     //    discard;
+    
+
+    
     PS_DeferredOutput output;
     PSFillGBuffer(outColor, input.Depth / FarClip, normal, params, input.Color * lerp(0.25f, 1.0f, 1 - DNBalance), output);
     

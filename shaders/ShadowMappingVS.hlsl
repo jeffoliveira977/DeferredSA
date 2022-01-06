@@ -11,9 +11,11 @@ void main(inout float4 position : POSITION0,
 {
     position = mul(position, World);
     position = mul(position, View);
+
     position = mul(position, Projection);
     
     oTexcoord = iTexcoord;
+    depth = -position.zw;
     oColor    = iColor;
-    depth     = position.zw; 
+
 }

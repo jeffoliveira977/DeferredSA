@@ -629,11 +629,15 @@ bool CheckLamps3(CEntity* entity)
 void AddEntity(CEntity* entity)
 {
 
-    SpotShadow->AddObject(entity);
+    // SpotShadow->AddObject(entity);
     ShadowCasterEntity->AddObject(entity);
     if (entity->m_nType == eEntityType::ENTITY_TYPE_PED || entity->m_nType == eEntityType::ENTITY_TYPE_VEHICLE || entity->m_nType == eEntityType::ENTITY_TYPE_OBJECT)
-        if(!CheckLamps3(entity))
-        PointShadow->AddObject(entity);
+    {
+        if (!CheckLamps3(entity))
+            PointShadow->AddObject(entity); 
+        
+        SpotShadow->AddObject(entity);
+    }
 
 }
 

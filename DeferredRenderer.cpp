@@ -75,8 +75,8 @@ void DeferredRendering::Initialize()
 	mAmbientOcclusion = unique_ptr<AmbientOcclusion>(new AmbientOcclusion());
 	mAmbientOcclusion->Initialize();
 
-	//gRandomNoise = LoadTextureFromFile("DeferredSA/textures/flashlight.png");
-	gRandomNoise = RwD3D9DDSTextureRead("DeferredSA/textures/vehiclelight_misc_roundlight", nullptr);
+	gRandomNoise = LoadTextureFromFile("DeferredSA/textures/flashlight1.png");
+	//gRandomNoise = RwD3D9DDSTextureRead("DeferredSA/textures/vehiclelight_misc_roundlight", nullptr);
 }
 XMMATRIX view, projection;
 void DeferredRendering::Start()
@@ -309,19 +309,23 @@ void DeferredRendering::RenderLights()
 		rwD3D9SetSamplerState(5, D3DSAMP_MAGFILTER, D3DTEXF_POINT);
 		rwD3D9SetSamplerState(5, D3DSAMP_MINFILTER, D3DTEXF_POINT);
 		rwD3D9SetSamplerState(5, D3DSAMP_MIPFILTER, D3DTEXF_POINT);
-		rwD3D9SetSamplerState(5, D3DSAMP_ADDRESSU, D3DTADDRESS_CLAMP);
-		rwD3D9SetSamplerState(5, D3DSAMP_ADDRESSV, D3DTADDRESS_CLAMP);
+		rwD3D9SetSamplerState(5, D3DSAMP_ADDRESSU, D3DTADDRESS_BORDER);
+		rwD3D9SetSamplerState(5, D3DSAMP_ADDRESSV, D3DTADDRESS_BORDER);
 		 _rwD3D9RWSetRasterStage(light->mColorRaster, 5);
 		 RwD3D9SetTexture(gRandomNoise, 6);
 
+		 light->mExponent = 10.0f;
+		 float cosSpotAngle = cos(XMConvertToRadians(coneAngle));
+		 float spotexponent = light->mExponent / (1 - cosSpotAngle);
 		_rwD3D9SetPixelShaderConstant(9, &light->GetPosition(), 1);
 		_rwD3D9SetPixelShaderConstant(10, &light->GetDirection(), 1);
 		_rwD3D9SetPixelShaderConstant(11, &light->GetColor(), 1);
 		_rwD3D9SetPixelShaderConstant(12, &radius, 1);
 		_rwD3D9SetPixelShaderConstant(13, &intensity, 1);
-		_rwD3D9SetPixelShaderConstant(14, &coneAngle, 1);
-		_rwD3D9SetPixelShaderConstant(15, &drawShadow, 1);
-		_rwD3D9SetPixelShaderConstant(16, &(light->GetViewMatrix() * light->GetProjection()) , 4);
+		_rwD3D9SetPixelShaderConstant(14, &cosSpotAngle, 1);
+		_rwD3D9SetPixelShaderConstant(15, &spotexponent, 1);
+		_rwD3D9SetPixelShaderConstant(16, &drawShadow, 1);
+		_rwD3D9SetPixelShaderConstant(17, &(light->GetViewMatrix() * light->GetProjection()) , 4);
 		Quad::Render();
 	}
 
