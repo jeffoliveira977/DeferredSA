@@ -60,11 +60,11 @@ void SpotlightShadow::AddObject(CEntity* entity)
 void SpotlightShadow::Update()
 {
 	gLightManager.SortSpotLights();
-	RwD3D9SetRenderState(D3DRS_COLORWRITEENABLE, D3DCOLORWRITEENABLE_RED);
+	//RwD3D9SetRenderState(D3DRS_COLORWRITEENABLE, D3DCOLORWRITEENABLE_RED);
 
 	RWSRCGLOBAL(curCamera) = Scene.m_pRwCamera;
 
-	uint32_t maxLights = min((size_t)10, gLightManager.GetSpotLightCount());
+	uint32_t maxLights = min((size_t)29, gLightManager.GetSpotLightCount());
 
 	for (size_t i = 0; i < maxLights; i++)
 	{
@@ -86,6 +86,9 @@ void SpotlightShadow::Update()
 
 		gRenderState = stageCascadeShadow;
 		//gRenderState = stagePointShadow;
+
+		_rwD3D9SetPixelShaderConstant(1, &position, 1);
+		_rwD3D9SetPixelShaderConstant(2, &radius, 1);
 
 		RwD3D9SetRenderTarget(0, mColorRaster[i]);
 		rwD3D9SetDepthStencil(mDepthRaster);
@@ -134,8 +137,8 @@ void SpotlightShadow::RenderEntities(SpotLight*light, int i)
 
 	for (auto entity : m_renderableList)
 	{
-		/*if (MeshCulling::InFrustum(entity, light->GetFrustum()))
-		{*/
+		//if (MeshCulling::InFrustum(entity, light->GetFrustum()))
+		//{
 			if (entity == nullptr || entity->m_pRwObject == nullptr)
 				continue;
 

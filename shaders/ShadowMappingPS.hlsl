@@ -14,6 +14,6 @@ void main(float2 Texcoord : TEXCOORD0,
     float a = tex2D(DiffuseSampler, Texcoord).a;
     clip(a - 0.5);
     
-    float d = Depth.x /*/ Depth.y*/;
-    color = float4(d, d, d, 1);
+    float d = Depth.x / Depth.y;
+    color = d;
 }

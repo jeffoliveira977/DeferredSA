@@ -152,6 +152,42 @@ float3 CalculateLighing(float3 albedo, float3 normal, float3 lightPosition, floa
     return (diffuseBRDF + specularBRDF) * cosLi;
 }
 
+float ShadowCalculation(vec4 fragPosLightSpace, float3 lightDir, float3 normal)
+{
+    // perform perspective divide
+    vec3 projCoords = fragPosLightSpace.xyz / fragPosLightSpace.w;
+    
+    // transform to [0,1] range
+    projCoords = projCoords * 0.5 + 0.5;
+    projCoords.y = 1.0f - projCoords.y;
+    
+    // get closest depth value from light's perspective (using [0,1] range fragPosLight as coords)
+    float closestDepth = tex2D(SamplerShadow, projCoords.xy).r;
+    // get depth of current fragment from light's perspective
+    float currentDepth = projCoords.z;
+    // calculate bias (based on depth map resolution and slope)
+    float bias = max(0.05 * (1.0 - dot(normal, lightDir)), 0.005);
+    // check whether current frag pos is in shadow
+    // float shadow = currentDepth - bias > closestDepth  ? 1.0 : 0.0;
+    // PCF
+    float shadow = 0.0;
+    vec2 texelSize = 1.0 / 512.0f;
+    for (int x = -1; x <= 1; ++x)
+    {
+        for (int y = -1; y <= 1; ++y)
+        {
+            float pcfDepth = tex2D(SamplerShadow, projCoords.xy + vec2(x, y) * texelSize).r;
+            shadow += currentDepth - bias > pcfDepth ? 1.0 : 0.0;
+        }
+    }
+    shadow /= 9.0;
+    
+    // keep the shadow at 0.0 when outside the far_plane region of the light's frustum.
+    if (projCoords.z > 1.0)
+        shadow = 0.0;
+        
+    return shadow;
+}
 
 
 float4 main(float4 position: TEXCOORD3, float2 texCoord : TEXCOORD0, float3 frustumRay : TEXCOORD1, float2 vpos:VPOS) : COLOR
@@ -160,7 +196,6 @@ float4 main(float4 position: TEXCOORD3, float2 texCoord : TEXCOORD0, float3 frus
     float SpecIntensity = Parameters.x;
     float Roughness = 1 - Parameters.y;
     
-
     float depth;
     float3 normal;
     DecodeDepthNormal(texCoord, FarClip.y, depth, normal);
@@ -168,8 +203,7 @@ float4 main(float4 position: TEXCOORD3, float2 texCoord : TEXCOORD0, float3 frus
     
     float3 worldPosition;
     WorldPositionFromDepth(texCoord, depth, ProjectionMatrix, InverseViewMatrix, worldPosition);
-    
-    
+     
     float4 depthNormal = TEXTURE2D_DEPTHNORMAL(texCoord);
     depth = DecodeFloatRG(depthNormal.zw);
 
@@ -180,63 +214,17 @@ float4 main(float4 position: TEXCOORD3, float2 texCoord : TEXCOORD0, float3 frus
    
     float3 lightPos = normalize(worldPosition.xyz - LightPosition.xyz);
     float dirLen = length(worldPosition - LightPosition);
-    
-    float s2 = 1.1f;
-    float atten = 1.0f - smoothstep(LightRadius * s2, LightRadius, dirLen);
-    atten = 1.0f - pow(saturate(dirLen / LightRadius), 2);
-    
-    
+
     float Attenuation = 1.0f - pow(saturate(dirLen / LightRadius), 2);
     Attenuation *= Attenuation;
-   // float LightDistance = length(worldPosition.xyz - LightPosition.xyz) / 2.0;
-   // atten = 1.0f - pow(saturate(LightDistance / LightRadius), 2);
-  
-    float distance = length(worldPosition - LightPosition);
-    
-
-
-    
-   // float fSpot = SpotLightIntensity(max(dot(lightPos, LightDirection), 0.0f), radians(LightConeAngle), radians(10)); //pow(, 4.0f);
-    //Attenuation *= fSpot;
-    
     half spotAtten = min(1, max(0, dot(lightPos, LightDirection) - LightConeAngle) * LightExponent);
     Attenuation *= spotAtten;
-    //atten *= 0.5;
-    float texelSize = 1.0 / 512.0f;
-   
+
     float4 LightViewPos = mul(float4(worldPosition, 1.0), ShadowMatrix);
     
+    // Find the position in the shadow map for this pixel
+    float  s = ShadowCalculation(LightViewPos, lightPos, normal);
 
-    
-    	// Find the position in the shadow map for this pixel
-    float2 shadowTexCoord = 0.5 * LightViewPos.xy /
-							LightViewPos.w + float2(0.5, 0.5);
-    shadowTexCoord.y = 1.0f - shadowTexCoord.y;
-	//offset by the texel size
-    shadowTexCoord += texelSize;
-	
-	// Calculate the current pixel depth
-	// The bias is used to prevent floating point errors 
-    float ourdepth = (LightViewPos.z / LightViewPos.w);
-	
-    
-    float4 flashlight = tex2D(SamplerNoise, shadowTexCoord.xy);
-    //Attenuation *= length(flashlight);
-
-    float bias = max(0.05 * (1.0 - dot(normal, LightDirection)), 0.005);
-    float z = ourdepth -0.005;
-    float s = ComputeShadowSamples(SamplerShadow, 512.0f, shadowTexCoord.xy, z);
-    if (CastShadow == 0.0)
-    s = 0.0;
-    
-    //if (ourdepth > 1.0)
-    //    s = 0.0;
-    
-
-    s = 1 - s;
-   // s *= 20.0;
-
-    
     float3 FinalDiffuseTerm = float3(0, 0, 0);
     float FinalSpecularTerm = 0;
     float DiffuseTerm, SpecularTerm;
@@ -246,8 +234,8 @@ float4 main(float4 position: TEXCOORD3, float2 texCoord : TEXCOORD0, float3 frus
 
    // color.xyz = atten * s * CalculateLighing(albedo, normal, lightPos, -ViewDir, Roughness, SpecIntensity);
 
-    FinalDiffuseTerm += DiffuseTerm * flashlight.xyz* Attenuation * s * LightColor * LightIntensity;
-    FinalSpecularTerm += SpecularTerm * Attenuation *s* SpecIntensity;
+    FinalDiffuseTerm += DiffuseTerm /** flashlight.xyz*/ * Attenuation * s * LightColor * LightIntensity;
+    FinalSpecularTerm += SpecularTerm * Attenuation * s * SpecIntensity;
     float4 Lighting = float4(FinalDiffuseTerm, FinalSpecularTerm);
     color.xyzw = Lighting;
     return color;

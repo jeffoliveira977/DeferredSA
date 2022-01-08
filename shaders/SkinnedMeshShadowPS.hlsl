@@ -15,7 +15,7 @@ sampler2D Diffuse : register(s0);
 float4 main(PS_input input) : COLOR
 {
 
-   float d = input.Depth.x /*/ input.Depth.y*/;
+   float d = input.Depth.x / input.Depth.y;
 
-    return float4(d, d, d, 1);
+    return d;
 }

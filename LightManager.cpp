@@ -48,7 +48,10 @@ void CPointLights__AddLight(unsigned char defaultType, XMFLOAT3 point, XMFLOAT3 
 	float intensity = 1.0;
 	gLightManager.AddPointLight(point, direction, { red, green, blue }, radius, intensity, castShadow);
 }
-
+template<typename T>
+T saturate(T val) {
+	return std::min(std::max(val, 0.0f), 1.0f);
+}
 void AddVehicleSpotLight(CVehicle* vehicle)
 {
 	auto modelInfo = reinterpret_cast<CVehicleModelInfo*>(CModelInfo::GetModelInfo(vehicle->m_nModelIndex));
@@ -63,35 +66,46 @@ void AddVehicleSpotLight(CVehicle* vehicle)
 
 	auto matrix = vehicle->GetMatrix();
 
-	float distance = 0.1f;
+	float distance = 0.6f;
 	if (vehicle->m_nModelIndex == 530)
 		distance = 0.5f;
 
 	SpotLight light;
-	light.SetIntensity(1.0);
 
+	CVector camPos = TheCamera.GetPosition();
+	CVector dx = vehicle->GetPosition() - camPos;
+	float visibleRadius = 100.0;
+
+	float attenuation = 1 - powf(saturate((dx.Magnitude() / visibleRadius)), 2.0f);
+	attenuation *= attenuation;
+
+	PrintMessage("%f", attenuation);
+	light.SetIntensity(attenuation);
 	auto currPlayerVehicle = FindPlayerVehicle(-1, true);
 	CVector position;
 	if (frontLeft || frontRight)
 	{
 		if (currPlayerVehicle == vehicle)
 		{
-			light.SetAngle(50.0f);
+			light.SetAngle(45.0);
 			light.SetRadius(30.0f);
 		}
 		else
 		{
-			light.SetAngle(45.0);
-			light.SetRadius(30.0f);
+			light.SetAngle(40.0);
+			light.SetRadius(20.0f);
 		}
 		light.SetDirection({ matrix->up.x, matrix->up.y, matrix->up.z });
-		light.SetColor({ 1.0f, 1.0f, 1.0f });
+		light.SetColor({ 1.0f , 1.0f  , 1.0f });
 
 		MultiplyMatrixWithVector(&position, matrix, &headlightPos);
 
+		//position.x += distance;
+		//position.y -= distance;
+		//position.z += distance;
 		if (frontLeft)
 		{
-			light.SetPosition({ position.x, position.y, position.z });
+			light.SetPosition({ position.x + matrix->up.x * distance, position.y + matrix->up.y * distance, position.z + matrix->up.z * distance });
 			light.Update();
 			gLightManager.AddSpotLight(light);
 		};
@@ -99,7 +113,7 @@ void AddVehicleSpotLight(CVehicle* vehicle)
 		if (frontRight)
 		{
 			position -= headlightPos.x * 2.0f * matrix->right;
-			light.SetPosition({ position.x, position.y, position.z });
+			light.SetPosition({ position.x + matrix->up.x * distance, position.y + matrix->up.y * distance, position.z + matrix->up.z * distance });
 			light.Update();
 			gLightManager.AddSpotLight(light);
 		}
@@ -314,7 +328,7 @@ void LightManager::Hook()
 					continue;
 
 				CVector camPos = TheCamera.GetPosition();
-				float visibleRadius = 100.0;
+				float visibleRadius = 200.0;
 				CVector dx = vehicle->GetPosition() - camPos;
 
 				if (dx.Magnitude() >= visibleRadius)
@@ -343,7 +357,7 @@ void LightManager::SortSpotLights()
 	auto coors = FindPlayerCoors(-1);
 	//auto cameraPos = XMLoadFloat3((XMFLOAT3*)&coors);
 
-	sort(&mSpotLightList[0], &mSpotLightList[mSpotLightCount - 1], [&](SpotLight& a, SpotLight& b)
+	sort(&mSpotLightList[0], &mSpotLightList[159], [&](SpotLight& a, SpotLight& b)
 		{
 			auto lenA = XMVector3Length(cameraPos - XMLoadFloat3(&a.GetPosition()));
 			auto lenB = XMVector3Length(cameraPos - XMLoadFloat3(&b.GetPosition()));

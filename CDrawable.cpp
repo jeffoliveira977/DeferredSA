@@ -93,15 +93,18 @@ void MeshRenderingMode::ShadowRendering(RwResEntry* entry, void* object, RwUInt3
 	}
 	else
 	{
-		RwRenderStateSet(rwRENDERSTATEALPHATESTFUNCTIONREF, (void*)0);
+		RwRenderStateSet(rwRENDERSTATEALPHATESTFUNCTIONREF, (void*)255);
 		VS_shadow->Apply();
 		PS_shadow->Apply();
 
+		//VS_Distance->Apply();
+		//PS_Distance->Apply();
 	}
 
 	RwRenderStateSet(rwRENDERSTATESRCBLEND, (void*)rwBLENDSRCALPHA);
 	RwRenderStateSet(rwRENDERSTATEDESTBLEND, (void*)rwBLENDINVSRCALPHA);
 	RwRenderStateSet(rwRENDERSTATECULLMODE, (void*)3);
+
 	int numMeshes = header->numMeshes;
 	while(numMeshes--)
 	{

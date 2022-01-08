@@ -287,9 +287,9 @@ void DeferredRendering::RenderLights()
 	}
 
 	// PrintMessage("%d %d", maxLights, count);
-	//gLightManager.SortSpotLights();
+	// gLightManager.SortSpotLights();
 	mSpotLightPS->Apply();
-	maxLights = min((size_t)20, gLightManager.GetSpotLightCount());
+	maxLights = min((size_t)30, gLightManager.GetSpotLightCount());
 
 
 	for (size_t i = 0; i < maxLights; i++)
@@ -306,15 +306,16 @@ void DeferredRendering::RenderLights()
 		if (!light->mDrawShadow)
 			drawShadow = 1.0;
 
-		rwD3D9SetSamplerState(5, D3DSAMP_MAGFILTER, D3DTEXF_POINT);
+		/*rwD3D9SetSamplerState(5, D3DSAMP_MAGFILTER, D3DTEXF_POINT);
 		rwD3D9SetSamplerState(5, D3DSAMP_MINFILTER, D3DTEXF_POINT);
 		rwD3D9SetSamplerState(5, D3DSAMP_MIPFILTER, D3DTEXF_POINT);
 		rwD3D9SetSamplerState(5, D3DSAMP_ADDRESSU, D3DTADDRESS_BORDER);
 		rwD3D9SetSamplerState(5, D3DSAMP_ADDRESSV, D3DTADDRESS_BORDER);
+		rwD3D9SetSamplerState(5, D3DSAMP_BORDERCOLOR, D3DCOLOR_RGBA(255, 255, 255, 255));*/
 		 _rwD3D9RWSetRasterStage(light->mColorRaster, 5);
 		 RwD3D9SetTexture(gRandomNoise, 6);
 
-		 light->mExponent = 10.0f;
+		 light->mExponent = 2.0f;
 		 float cosSpotAngle = cos(XMConvertToRadians(coneAngle));
 		 float spotexponent = light->mExponent / (1 - cosSpotAngle);
 		_rwD3D9SetPixelShaderConstant(9, &light->GetPosition(), 1);
@@ -330,9 +331,9 @@ void DeferredRendering::RenderLights()
 	}
 
 
-	static uint maxlight = 0;
-	maxlight = max(maxlight, gLightManager.GetPointLightCount());
-	
+	//static uint maxlight = 0;
+	//maxlight = max(maxlight, gLightManager.GetPointLightCount());
+	//
 
 
 	// Render to default surface
