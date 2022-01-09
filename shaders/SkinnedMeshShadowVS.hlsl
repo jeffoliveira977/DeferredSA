@@ -34,6 +34,7 @@ VS_output main(VS_input input, float4 weight : BLENDWEIGHT,
     VS_output output;
     output.Position = float4(mul(input.Position, bones).xyz, 1.0);
     output.Position = mul(output.Position, World);
+
     float4 viewPosition = mul(output.Position, View);
 
     output.Position = mul(viewPosition, Projection);

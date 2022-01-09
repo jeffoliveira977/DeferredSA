@@ -224,9 +224,7 @@ float4 main(float4 position: TEXCOORD3, float2 texCoord : TEXCOORD0, float3 frus
     
     // Find the position in the shadow map for this pixel
     float  s = ShadowCalculation(LightViewPos, lightPos, normal);
-    if(!CastShadow)
-        s = 1.0;
-    
+
     float3 FinalDiffuseTerm = float3(0, 0, 0);
     float FinalSpecularTerm = 0;
     float DiffuseTerm, SpecularTerm;

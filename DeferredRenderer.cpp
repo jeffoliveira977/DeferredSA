@@ -306,12 +306,12 @@ void DeferredRendering::RenderLights()
 		if (!light->mDrawShadow)
 			drawShadow = 1.0;
 
-		/*rwD3D9SetSamplerState(5, D3DSAMP_MAGFILTER, D3DTEXF_POINT);
+		rwD3D9SetSamplerState(5, D3DSAMP_MAGFILTER, D3DTEXF_POINT);
 		rwD3D9SetSamplerState(5, D3DSAMP_MINFILTER, D3DTEXF_POINT);
 		rwD3D9SetSamplerState(5, D3DSAMP_MIPFILTER, D3DTEXF_POINT);
 		rwD3D9SetSamplerState(5, D3DSAMP_ADDRESSU, D3DTADDRESS_BORDER);
 		rwD3D9SetSamplerState(5, D3DSAMP_ADDRESSV, D3DTADDRESS_BORDER);
-		rwD3D9SetSamplerState(5, D3DSAMP_BORDERCOLOR, D3DCOLOR_RGBA(255, 255, 255, 255));*/
+		rwD3D9SetSamplerState(5, D3DSAMP_BORDERCOLOR, D3DCOLOR_RGBA(255, 255, 255, 255));
 		 _rwD3D9RWSetRasterStage(light->mColorRaster, 5);
 		 RwD3D9SetTexture(gRandomNoise, 6);
 
