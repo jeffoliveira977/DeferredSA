@@ -72,13 +72,14 @@ void AddVehicleSpotLight(CVehicle* vehicle)
 
 	SpotLight light;
 
+	auto coors = FindPlayerCoors(0);
+
 	CVector camPos = TheCamera.GetPosition();
 	CVector dx = vehicle->GetPosition() - camPos;
 	float visibleRadius = 100.0;
 
 	float attenuation = 1 - powf(saturate((dx.Magnitude() / visibleRadius)), 2.0f);
 	attenuation *= attenuation;
-
 	PrintMessage("%f", attenuation);
 	light.SetIntensity(attenuation);
 	auto currPlayerVehicle = FindPlayerVehicle(-1, true);
@@ -418,7 +419,7 @@ void LightManager::SortPointLights()
 
 void LightManager::AddSpotLight(SpotLight spotlight)
 {
-	if (mSpotLightCount > 59)
+	if (mSpotLightCount > 159)
 		return;
 
 	mSpotLightList[mSpotLightCount++] = spotlight;
@@ -426,6 +427,9 @@ void LightManager::AddSpotLight(SpotLight spotlight)
 
 void LightManager::AddSpotLight(XMFLOAT3 position, XMFLOAT3 direction, XMFLOAT3 color, float radius, float angle, float intensity)
 {
+	if (mSpotLightCount > 159)
+		return;
+
 	SpotLight light;
 
 	mSpotLightList[mSpotLightCount].SetPosition(position);

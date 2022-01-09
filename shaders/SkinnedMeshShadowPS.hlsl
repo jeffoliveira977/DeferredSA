@@ -7,7 +7,7 @@ float FarClip : register(c2);
 struct PS_input
 {
     float2 Texcoord : TEXCOORD0;
-    float2 Depth : DEPTH;
+    float2 Depth : TEXCOORD1;
 };
 
 sampler2D Diffuse : register(s0);

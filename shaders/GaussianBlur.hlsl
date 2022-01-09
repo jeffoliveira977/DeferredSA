@@ -1,19 +1,24 @@
-struct VSOUTPUT_BLUR
+
+struct VertexShaderOutputMeshBased
 {
-    float4 vPosition : POSITION;
-    float2 vTexCoord : TEXCOORD0;
+    float4 Position : POSITION0;
+    float4 TexCoordScreenSpace : TEXCOORD4;
 };
 
-// Gaussian filter vertex shader
-VSOUTPUT_BLUR main(float4 inPosition : POSITION, float2 inTexCoord : TEXCOORD0)
+struct VertexShaderInput
 {
-	// Output struct
-    VSOUTPUT_BLUR OUT = (VSOUTPUT_BLUR) 0;
+    float4 Position : POSITION0;
+    float2 TexCoord : TEXCOORD0;
+};
 
-	// Output the position
-    OUT.vPosition = float4(inPosition.xyz, 1.0);
+float4x4 WorldViewProj : register(c17);
 
-	// Output the texture coordinates
-    OUT.vTexCoord = inTexCoord;
-    return OUT;
+VertexShaderOutputMeshBased main(VertexShaderInput input)
+{
+    VertexShaderOutputMeshBased output = (VertexShaderOutputMeshBased) 0;
+    output.Position = mul(input.Position, WorldViewProj);
+
+	//we will compute our texture coords based on pixel position further
+    output.TexCoordScreenSpace = output.Position;
+    return output;
 }

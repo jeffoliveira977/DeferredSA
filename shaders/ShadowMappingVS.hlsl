@@ -15,7 +15,7 @@ void main(inout float4 position : POSITION0,
     position = mul(position, Projection);
     
     oTexcoord = iTexcoord;
-    depth = position.zw;
+    depth = max(0, position.zw);
     oColor    = iColor;
 
 }

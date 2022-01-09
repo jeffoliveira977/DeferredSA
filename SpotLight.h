@@ -30,9 +30,10 @@ public:
 	RwRaster* mColorRaster;
 	bool mDrawShadow;
 	float mExponent;
+	XMMATRIX mMatrix;
 private:
 	Math::Frustum mFrustum;
-	XMMATRIX mMatrix;
+
 	XMMATRIX mView;
 	XMMATRIX mProjection;
 	XMFLOAT3 mColor;

@@ -326,7 +326,7 @@ void DeferredRendering::RenderLights()
 		_rwD3D9SetPixelShaderConstant(14, &cosSpotAngle, 1);
 		_rwD3D9SetPixelShaderConstant(15, &spotexponent, 1);
 		_rwD3D9SetPixelShaderConstant(16, &drawShadow, 1);
-		_rwD3D9SetPixelShaderConstant(17, &(light->GetViewMatrix() * light->GetProjection()) , 4);
+		_rwD3D9SetPixelShaderConstant(17, &(light->mMatrix) , 4);
 		Quad::Render();
 	}
 

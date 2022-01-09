@@ -158,7 +158,7 @@ float ShadowCalculation(vec4 fragPosLightSpace, float3 lightDir, float3 normal)
     vec3 projCoords = fragPosLightSpace.xyz / fragPosLightSpace.w;
     
     // transform to [0,1] range
-    projCoords = projCoords * 0.5 + 0.5;
+    projCoords.xy = projCoords.xy * 0.5 + 0.5;
     projCoords.y = 1.0f - projCoords.y;
     
     // get closest depth value from light's perspective (using [0,1] range fragPosLight as coords)
@@ -166,7 +166,7 @@ float ShadowCalculation(vec4 fragPosLightSpace, float3 lightDir, float3 normal)
     // get depth of current fragment from light's perspective
     float currentDepth = projCoords.z;
     // calculate bias (based on depth map resolution and slope)
-    float bias = max(0.05 * (1.0 - dot(normal, lightDir)), 0.005);
+    float bias = max(0.001 * (1.0 - dot(normal, lightDir)), 0.005);
     // check whether current frag pos is in shadow
     // float shadow = currentDepth - bias > closestDepth  ? 1.0 : 0.0;
     // PCF
@@ -177,14 +177,14 @@ float ShadowCalculation(vec4 fragPosLightSpace, float3 lightDir, float3 normal)
         for (int y = -1; y <= 1; ++y)
         {
             float pcfDepth = tex2D(SamplerShadow, projCoords.xy + vec2(x, y) * texelSize).r;
-            shadow += currentDepth - bias > pcfDepth ? 1.0 : 0.0;
+            shadow += currentDepth - bias > pcfDepth ? 0.0 : 1.0;
         }
     }
     shadow /= 9.0;
     
-    // keep the shadow at 0.0 when outside the far_plane region of the light's frustum.
-    if (projCoords.z > 1.0)
-        shadow = 0.0;
+    //// keep the shadow at 0.0 when outside the far_plane region of the light's frustum.
+    //if (projCoords.z > 1.0)
+    //    shadow = 0.0;
         
     return shadow;
 }
@@ -207,7 +207,7 @@ float4 main(float4 position: TEXCOORD3, float2 texCoord : TEXCOORD0, float3 frus
     float4 depthNormal = TEXTURE2D_DEPTHNORMAL(texCoord);
     depth = DecodeFloatRG(depthNormal.zw);
 
-    worldPosition = InverseViewMatrix[3].xyz + depth * frustumRay;
+    //worldPosition = InverseViewMatrix[3].xyz + depth * frustumRay;
     float3 ViewDir = normalize(worldPosition.xyz - InverseViewMatrix[3].xyz);
 
     float4 color = 0;
@@ -224,7 +224,9 @@ float4 main(float4 position: TEXCOORD3, float2 texCoord : TEXCOORD0, float3 frus
     
     // Find the position in the shadow map for this pixel
     float  s = ShadowCalculation(LightViewPos, lightPos, normal);
-
+    if(!CastShadow)
+        s = 1.0;
+    
     float3 FinalDiffuseTerm = float3(0, 0, 0);
     float FinalSpecularTerm = 0;
     float DiffuseTerm, SpecularTerm;

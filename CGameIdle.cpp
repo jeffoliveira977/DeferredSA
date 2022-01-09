@@ -208,7 +208,7 @@ void CGameIdle::UpdateShadowDNBalance()
 #define RenderStaticShadows() ((void (__cdecl *)())0x708300)()
 #include "LightManager.h"
 #include "RenderableSphere.h"
-RenderableSphere* mRenderableSphere=0;
+// RenderableSphere* mRenderableSphere = 0;
 void CGameIdle::RenderScene(){
 
 	ShaderContext->Update();

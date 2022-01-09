@@ -59,7 +59,7 @@ void SpotlightShadow::AddObject(CEntity* entity)
 
 void SpotlightShadow::Update()
 {
-	gLightManager.SortSpotLights();
+	//gLightManager.SortSpotLights();
 	//RwD3D9SetRenderState(D3DRS_COLORWRITEENABLE, D3DCOLORWRITEENABLE_RED);
 
 	RWSRCGLOBAL(curCamera) = Scene.m_pRwCamera;
@@ -75,11 +75,11 @@ void SpotlightShadow::Update()
 
 		CVector dx = CVector(position.x, position.y, position.z) - TheCamera.GetPosition();
 
-		if (dx.Magnitude() > 30.0f)
+	/*	if (dx.Magnitude() > 30.0f)
 		{
 			gLightManager.mSpotLightList[i].mDrawShadow = false;
 			continue;
-		}
+		}*/
 
 		auto viewMatrix = light->GetViewMatrix();
 		auto projectionMatrix = light->GetProjection();
@@ -127,10 +127,10 @@ void SpotlightShadow::Update()
 #include "MeshCulling.h"
 void SpotlightShadow::RenderEntities(SpotLight*light, int i)
 {
-	RwRenderStateSet(rwRENDERSTATEVERTEXALPHAENABLE, (void*)TRUE);
-	RwRenderStateSet(rwRENDERSTATECULLMODE, (void*)0);
-	if (!CGame::currArea)
-		RwRenderStateSet(rwRENDERSTATEALPHATESTFUNCTIONREF, (void*)140);
+	//RwRenderStateSet(rwRENDERSTATEVERTEXALPHAENABLE, (void*)TRUE);
+	//RwRenderStateSet(rwRENDERSTATECULLMODE, (void*)0);
+	//if (!CGame::currArea)
+	//	RwRenderStateSet(rwRENDERSTATEALPHATESTFUNCTIONREF, (void*)140);
 
 	RwRenderStateSet(rwRENDERSTATEZWRITEENABLE, (void*)TRUE);
 	RwRenderStateSet(rwRENDERSTATEZTESTENABLE, (void*)TRUE);

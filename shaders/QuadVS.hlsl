@@ -7,7 +7,6 @@ struct VS
 };
 
 float3 FrustumCorners[4] : register(c0);
-
 float3 GetFrustumRay(in float4 Position)
 {
    float3 vCamVecLerpT = (Position.x > 0) ? FrustumCorners[1].xyz : FrustumCorners[0].xyz;
