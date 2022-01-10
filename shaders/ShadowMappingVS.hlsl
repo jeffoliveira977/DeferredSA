@@ -10,13 +10,11 @@ void main(inout float4 position : POSITION0,
           out float2 depth : TEXCOORD2)
 {
     position = mul(position, World);
-
-    position = mul(position, View);
-    
+    position = mul(position, View);  
     position = mul(position, Projection);
-    depth = max(0, position.zw);
+
     oTexcoord = iTexcoord;
-  
+    depth = position.zw;
     oColor    = iColor;
 
 }

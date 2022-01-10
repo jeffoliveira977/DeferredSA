@@ -172,6 +172,9 @@ void SkinnedMeshPipeline::ShadowRendering(RwResEntry* entry, void* object, RwUIn
 	{
 		VS_shadow->Apply();
 		PS_shadow->Apply();
+		
+		VS_Distance->Apply();
+		PS_Distance->Apply();
 	}
 	RwEngineInstance->dOpenDevice.fpRenderStateSet(rwRENDERSTATETEXTUREADDRESS, (void*)1u);
 	RwEngineInstance->dOpenDevice.fpRenderStateSet(rwRENDERSTATETEXTUREPERSPECTIVE, (void*)1u);
@@ -186,6 +189,7 @@ void SkinnedMeshPipeline::ShadowRendering(RwResEntry* entry, void* object, RwUIn
 	RwEngineInstance->dOpenDevice.fpRenderStateSet(rwRENDERSTATECULLMODE, (void*)2u);
 	RwEngineInstance->dOpenDevice.fpRenderStateSet(rwRENDERSTATEALPHATESTFUNCTION, (void*)rwALPHATESTFUNCTIONGREATEREQUAL);
 	RwEngineInstance->dOpenDevice.fpRenderStateSet(rwRENDERSTATEALPHATESTFUNCTIONREF, (void*)2u);
+//	RwD3D9SetRenderState(D3DRS_ZFUNC, D3DCMP_LESSEQUAL);
 
 
 	//RwRenderStateSet(rwRENDERSTATEFOGENABLE, FALSE);
@@ -195,7 +199,7 @@ void SkinnedMeshPipeline::ShadowRendering(RwResEntry* entry, void* object, RwUIn
 	RwRenderStateSet(rwRENDERSTATEZWRITEENABLE, (void*)TRUE);
 	RwRenderStateSet(rwRENDERSTATEZTESTENABLE, (void*)TRUE);
 
-	RwRenderStateSet(rwRENDERSTATEALPHATESTFUNCTIONREF, (void*)20);
+	RwRenderStateSet(rwRENDERSTATEALPHATESTFUNCTIONREF, (void*)0);
 	RwRenderStateSet(rwRENDERSTATESRCBLEND, (void*)rwBLENDSRCALPHA);
 	RwRenderStateSet(rwRENDERSTATEDESTBLEND, (void*)rwBLENDINVSRCALPHA);
 
@@ -216,7 +220,7 @@ void SkinnedMeshPipeline::ShadowRendering(RwResEntry* entry, void* object, RwUIn
 		_rwD3D9SetPixelShaderConstant(0, &colorValue, 1);
 
 		hasAlpha = instance->vertexAlpha || matcolor->alpha != 255;
-		//RwRenderStateSet(rwRENDERSTATEVERTEXALPHAENABLE, (void*)hasAlpha);
+		RwRenderStateSet(rwRENDERSTATEVERTEXALPHAENABLE, (void*)hasAlpha);
 		//_rwD3D9SetPixelShaderConstant(1, &Scene.m_pRwCamera->farPlane, 1);
 
 		D3D9Render(header, instance, texture, flags);

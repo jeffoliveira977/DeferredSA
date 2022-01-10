@@ -224,7 +224,22 @@ float4 main(float4 position: TEXCOORD3, float2 texCoord : TEXCOORD0, float3 frus
     
     // Find the position in the shadow map for this pixel
     float  s = ShadowCalculation(LightViewPos, lightPos, normal);
+   
+    // perform perspective divide
+    vec3 projCoords = LightViewPos.xyz / LightViewPos.w;
+    
+    // transform to [0,1] range
+    projCoords.xy = projCoords.xy * 0.5 + 0.5;
+    projCoords.y = 1.0f - projCoords.y;
 
+    s = (1 - tex2D(SamplerShadow, projCoords.xy).r) * LightRadius > dirLen - 0.05 ? 1.0f : 0.0f;
+    
+    //if (projCoords.z > 1.0f)
+    //    s = 1.0;
+    
+    if(CastShadow == 0.0f)
+        s = 1.0;
+    
     float3 FinalDiffuseTerm = float3(0, 0, 0);
     float FinalSpecularTerm = 0;
     float DiffuseTerm, SpecularTerm;

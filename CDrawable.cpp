@@ -96,7 +96,8 @@ void MeshRenderingMode::ShadowRendering(RwResEntry* entry, void* object, RwUInt3
 		RwRenderStateSet(rwRENDERSTATEALPHATESTFUNCTIONREF, (void*)255);
 		VS_shadow->Apply();
 		PS_shadow->Apply();
-
+		VS_Distance->Apply();
+		PS_Distance->Apply();
 	}
 
 	RwRenderStateSet(rwRENDERSTATESRCBLEND, (void*)rwBLENDSRCALPHA);
@@ -114,9 +115,9 @@ void MeshRenderingMode::ShadowRendering(RwResEntry* entry, void* object, RwUInt3
 	RwEngineInstance->dOpenDevice.fpRenderStateSet(rwRENDERSTATEDESTBLEND, (void*)6u);
 
 	RwEngineInstance->dOpenDevice.fpRenderStateSet(rwRENDERSTATECULLMODE, (void*)3u);
-	RwEngineInstance->dOpenDevice.fpRenderStateSet(rwRENDERSTATEALPHATESTFUNCTION, (void*)rwALPHATESTFUNCTIONGREATEREQUAL);
+//	RwEngineInstance->dOpenDevice.fpRenderStateSet(rwRENDERSTATEALPHATESTFUNCTION, (void*)rwALPHATESTFUNCTIONGREATEREQUAL);
 	RwEngineInstance->dOpenDevice.fpRenderStateSet(rwRENDERSTATEALPHATESTFUNCTIONREF, (void*)2u);
-	RwD3D9SetRenderState(D3DRS_ZFUNC, D3DCMP_LESSEQUAL);
+//	RwD3D9SetRenderState(D3DRS_ZFUNC, D3DCMP_LESSEQUAL);
 
 	//RwRenderStateSet(rwRENDERSTATEFOGENABLE, FALSE);
 	//RwD3D9SetRenderState(D3DRS_ALPHABLENDENABLE, FALSE);
@@ -125,7 +126,7 @@ void MeshRenderingMode::ShadowRendering(RwResEntry* entry, void* object, RwUInt3
 	RwRenderStateSet(rwRENDERSTATEZWRITEENABLE, (void*)TRUE);
 	RwRenderStateSet(rwRENDERSTATEZTESTENABLE, (void*)TRUE);
 
-	RwRenderStateSet(rwRENDERSTATEALPHATESTFUNCTIONREF, (void*)20);
+	RwRenderStateSet(rwRENDERSTATEALPHATESTFUNCTIONREF, (void*)0);
 	RwRenderStateSet(rwRENDERSTATESRCBLEND, (void*)rwBLENDSRCALPHA);
 	RwRenderStateSet(rwRENDERSTATEDESTBLEND, (void*)rwBLENDINVSRCALPHA);
 

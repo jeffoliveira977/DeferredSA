@@ -52,9 +52,11 @@ template<typename T>
 T saturate(T val) {
 	return std::min(std::max(val, 0.0f), 1.0f);
 }
+
 void AddVehicleSpotLight(CVehicle* vehicle)
 {
 	auto modelInfo = reinterpret_cast<CVehicleModelInfo*>(CModelInfo::GetModelInfo(vehicle->m_nModelIndex));
+
 	auto headlightPos = modelInfo->m_pVehicleStruct->m_avDummyPos[0];
 	auto tailLightPos = modelInfo->m_pVehicleStruct->m_avDummyPos[1];
 
@@ -101,9 +103,6 @@ void AddVehicleSpotLight(CVehicle* vehicle)
 
 		MultiplyMatrixWithVector(&position, matrix, &headlightPos);
 
-		//position.x += distance;
-		//position.y -= distance;
-		//position.z += distance;
 		if (frontLeft)
 		{
 			light.SetPosition({ position.x + matrix->up.x * distance, position.y + matrix->up.y * distance, position.z + matrix->up.z * distance });
@@ -161,11 +160,31 @@ void AddVehicleSpotLight(CVehicle* vehicle)
 	}
 }
 
-void __stdcall CVehicle__DoHeadLightReflection(CVehicle*, int, CMatrix*, bool)
-{}
+std::unordered_map<CVehicle*, bool> gVehicleInScreen;
+class veh
+{
+public:
+	static void  __thiscall CVehicle__DoHeadLightReflection(CVehicle* vehicle, CMatrix* matrix, unsigned int, unsigned char, unsigned char)
+	{
+		// gVehicleInScreen[vehicle] = vehicle->GetIsOnScreen();
+		/*if (!vehicle->GetIsOnScreen())
+			return;*/
 
-void __fastcall CVehicle__DoHeadLightBeam(CVehicle*, CMatrix*, unsigned int, unsigned char, unsigned char)
-{}
+		if (!vehicle->m_nVehicleFlags.bLightsOn)
+			return;
+
+		CVector camPos = TheCamera.GetPosition();
+		float visibleRadius = 200.0;
+		CVector dx = vehicle->GetPosition() - camPos;
+
+		if (dx.Magnitude() >= visibleRadius)
+			return;
+
+		AddVehicleSpotLight(vehicle);
+	}
+	static void  __thiscall CVehicle__DoHeadLightBeam(CVehicle* vehicle, int, CMatrix*, unsigned char isRight)
+	{}
+};
 
 LightManager::LightManager()
 {}
@@ -256,7 +275,7 @@ void LightManager::Hook()
 	plugin::Events::gameProcessEvent.before += []() 
 	{
 		gLightManager.ClearLights();
-
+		gVehicleInScreen.clear();
 		auto coors = FindPlayerCoors(0);
 
 		static float angle = 0.0f;
@@ -319,12 +338,13 @@ void LightManager::Hook()
 
 		//gLightManager.AddPointLight({ coors.x ,coors.y+2, coors.z + 2.0f }, { 1, 1, 1 }, { 1, 1, 1 }, 10.0f, 1.0, true);
 
-		auto pool = CPools::ms_pVehiclePool;
+	/*	auto pool = CPools::ms_pVehiclePool;
 		for (int i = 0; i < pool->m_nSize; ++i)
 		{
 			auto* vehicle = pool->GetAt(i);
-			if (vehicle)
+			if (vehicle && gVehicleInScreen[vehicle])
 			{
+
 				if (!vehicle->m_nVehicleFlags.bLightsOn)
 					continue;
 
@@ -337,15 +357,16 @@ void LightManager::Hook()
 
 				AddVehicleSpotLight(vehicle);
 			}
-		} 
+		} */
+
 	};
 
 
 	plugin::patch::Nop(0x6E28E7, 5);
 	plugin::patch::Nop(0x6E27E6, 5);
 	plugin::patch::RedirectJump(0x7000E0, CPointLights__AddLight);
-	plugin::patch::RedirectJump(0x6E0E20, CVehicle__DoHeadLightBeam);
-	plugin::patch::RedirectJump(0x6E1720, CVehicle__DoHeadLightReflection);
+	plugin::patch::RedirectJump(0x6E0E20, veh::CVehicle__DoHeadLightBeam);
+	plugin::patch::RedirectJump(0x6E1720, veh::CVehicle__DoHeadLightReflection);
 }
 
 
@@ -419,7 +440,7 @@ void LightManager::SortPointLights()
 
 void LightManager::AddSpotLight(SpotLight spotlight)
 {
-	if (mSpotLightCount > 159)
+	if (mSpotLightCount >= 159)
 		return;
 
 	mSpotLightList[mSpotLightCount++] = spotlight;

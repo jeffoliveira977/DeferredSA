@@ -38,7 +38,7 @@ VS_output main(VS_input input, float4 weight : BLENDWEIGHT,
     float4 viewPosition = mul(output.Position, View);
 
     output.Position = mul(viewPosition, Projection);
-    output.Depth = max(0, output.Position.zw);
+    output.Depth = output.Position.zw;
     output.Texcoord = input.Texcoord;
     return output;
 }
