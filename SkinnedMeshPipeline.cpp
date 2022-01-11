@@ -170,8 +170,8 @@ void SkinnedMeshPipeline::ShadowRendering(RwResEntry* entry, void* object, RwUIn
 	}
 	else
 	{
-		VS_shadow->Apply();
-		PS_shadow->Apply();
+		/*VS_shadow->Apply();
+		PS_shadow->Apply();*/
 		
 		VS_Distance->Apply();
 		PS_Distance->Apply();

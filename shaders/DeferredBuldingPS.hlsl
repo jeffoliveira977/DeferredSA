@@ -72,9 +72,7 @@ PS_DeferredOutput main(VS_DeferredOutput input, float2 vpos :VPOS, float face:VF
     }
     //if (outColor.a < 0.2f)
     //    discard;
-    
 
-    
     PS_DeferredOutput output;
     PSFillGBuffer(outColor, input.Depth / FarClip, normal, params, input.Color * lerp(0.25f, 1.0f, 1 - DNBalance), output);
     

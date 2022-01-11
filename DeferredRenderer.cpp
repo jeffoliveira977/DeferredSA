@@ -289,7 +289,7 @@ void DeferredRendering::RenderLights()
 	// PrintMessage("%d %d", maxLights, count);
 	// gLightManager.SortSpotLights();
 	mSpotLightPS->Apply();
-	maxLights = min((size_t)30, gLightManager.GetSpotLightCount());
+	maxLights = min((size_t)29, gLightManager.GetSpotLightCount());
 
 
 	for (size_t i = 0; i < maxLights; i++)
@@ -313,6 +313,12 @@ void DeferredRendering::RenderLights()
 		rwD3D9SetSamplerState(5, D3DSAMP_ADDRESSV, D3DTADDRESS_BORDER);
 		rwD3D9SetSamplerState(5, D3DSAMP_BORDERCOLOR, D3DCOLOR_RGBA(255, 255, 255, 255));
 		 _rwD3D9RWSetRasterStage(light->mColorRaster, 5);
+		 rwD3D9SetSamplerState(6, D3DSAMP_MAGFILTER, D3DTEXF_LINEAR);
+		 rwD3D9SetSamplerState(6, D3DSAMP_MINFILTER, D3DTEXF_LINEAR);
+		 rwD3D9SetSamplerState(6, D3DSAMP_MIPFILTER, D3DTEXF_LINEAR);
+		 rwD3D9SetSamplerState(6, D3DSAMP_ADDRESSU, D3DTADDRESS_CLAMP);
+		 rwD3D9SetSamplerState(6, D3DSAMP_ADDRESSV, D3DTADDRESS_CLAMP);
+		 rwD3D9SetSamplerState(6, D3DSAMP_ADDRESSW, D3DTADDRESS_CLAMP);
 		 RwD3D9SetTexture(gRandomNoise, 6);
 
 		 light->mExponent = 2.0f;

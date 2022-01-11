@@ -189,6 +189,17 @@ float ShadowCalculation(vec4 fragPosLightSpace, float3 lightDir, float3 normal)
     return shadow;
 }
 
+static const float2 irreg_kernel[8] =
+{
+    { -0.072, -0.516 },
+    { -0.105, 0.989 },
+    { 0.949, 0.258 },
+    { -0.966, 0.216 },
+    { 0.784, -0.601 },
+    { 0.139, 0.230 },
+    { -0.816, -0.516 },
+    { 0.529, 0.779 }
+};
 
 float4 main(float4 position: TEXCOORD3, float2 texCoord : TEXCOORD0, float3 frustumRay : TEXCOORD1, float2 vpos:VPOS) : COLOR
 {
@@ -232,7 +243,30 @@ float4 main(float4 position: TEXCOORD3, float2 texCoord : TEXCOORD0, float3 frus
     projCoords.xy = projCoords.xy * 0.5 + 0.5;
     projCoords.y = 1.0f - projCoords.y;
 
-    s = (1 - tex2D(SamplerShadow, projCoords.xy).r) * LightRadius > dirLen - 0.05 ? 1.0f : 0.0f;
+   // s = (1 - tex2D(SamplerShadow, projCoords.xy).r) * LightRadius > dirLen - 0.05 ? 1.0f : 0.0f;
+    
+    
+    float2 stex = vpos.xy / 16.0f;
+    float2 noise;
+    float2 rotated;
+    noise = tex2D(SamplerNoise, stex);
+    noise = normalize(noise * 2.0f - 1.0f);
+    float texelsize = 1.0f / 512.0f;
+    float2x2 rotmat = { noise.x, -noise.y, noise.y, noise.x };
+
+    for (int i = 0; i < 8; ++i)
+    {
+        rotated = irreg_kernel[i];
+        rotated = mul(rotated, rotmat) * 2.0f;
+
+        float sd = (1 - tex2D(SamplerShadow, projCoords.xy + rotated * texelsize).r) * LightRadius;
+
+        float t = (dirLen - 0.05 <= sd);
+        s += ((sd < 0.01f) ? 1 : t);
+    }
+
+    s = saturate(s * 0.125f); // simulate ambient light here
+
     
     //if (projCoords.z > 1.0f)
     //    s = 1.0;

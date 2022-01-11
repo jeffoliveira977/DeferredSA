@@ -55,10 +55,10 @@ T saturate(T val) {
 
 void AddVehicleSpotLight(CVehicle* vehicle)
 {
-	auto modelInfo = reinterpret_cast<CVehicleModelInfo*>(CModelInfo::GetModelInfo(vehicle->m_nModelIndex));
+	if (!vehicle->m_nVehicleFlags.bLightsOn)
+		return;
 
-	auto headlightPos = modelInfo->m_pVehicleStruct->m_avDummyPos[0];
-	auto tailLightPos = modelInfo->m_pVehicleStruct->m_avDummyPos[1];
+	auto modelInfo = reinterpret_cast<CVehicleModelInfo*>(CModelInfo::GetModelInfo(vehicle->m_nModelIndex));
 
 	auto automobile = reinterpret_cast<CAutomobile*>(vehicle);
 	auto frontRight = !automobile->m_damageManager.GetLightStatus(eLights::LIGHT_FRONT_RIGHT);
@@ -66,29 +66,26 @@ void AddVehicleSpotLight(CVehicle* vehicle)
 	auto rearRight = !automobile->m_damageManager.GetLightStatus(eLights::LIGHT_REAR_RIGHT);
 	auto rearLeft = !automobile->m_damageManager.GetLightStatus(eLights::LIGHT_REAR_LEFT);
 
-	auto matrix = vehicle->GetMatrix();
+	auto vehicleMatrix = RwMatrixToXMMATRIX(reinterpret_cast<RwMatrix*>(vehicle->GetMatrix()));
 
 	float distance = 0.6f;
 	if (vehicle->m_nModelIndex == 530)
 		distance = 0.5f;
 
+	XMFLOAT3 direction;
+	XMFLOAT3 position;
+
 	SpotLight light;
-
-	auto coors = FindPlayerCoors(0);
-
-	CVector camPos = TheCamera.GetPosition();
-	CVector dx = vehicle->GetPosition() - camPos;
+	CVector dx = vehicle->GetPosition() - TheCamera.GetPosition();
 	float visibleRadius = 100.0;
-
 	float attenuation = 1 - powf(saturate((dx.Magnitude() / visibleRadius)), 2.0f);
 	attenuation *= attenuation;
-	PrintMessage("%f", attenuation);
 	light.SetIntensity(attenuation);
-	auto currPlayerVehicle = FindPlayerVehicle(-1, true);
-	CVector position;
+
+	auto vehicleStruct = modelInfo->m_pVehicleStruct;
 	if (frontLeft || frontRight)
 	{
-		if (currPlayerVehicle == vehicle)
+		if (FindPlayerVehicle(-1, true) == vehicle)
 		{
 			light.SetAngle(45.0);
 			light.SetRadius(30.0f);
@@ -98,30 +95,38 @@ void AddVehicleSpotLight(CVehicle* vehicle)
 			light.SetAngle(40.0);
 			light.SetRadius(20.0f);
 		}
-		light.SetDirection({ matrix->up.x, matrix->up.y, matrix->up.z });
-		light.SetColor({ 1.0f , 1.0f  , 1.0f });
 
-		MultiplyMatrixWithVector(&position, matrix, &headlightPos);
+		XMStoreFloat3(&direction, vehicleMatrix.r[1]);
+		light.SetDirection(direction);
 
-		if (frontLeft)
+		light.SetColor({ 1.0f, 1.0f , 1.0f });
+
+		auto headlightPos = XMLoadFloat3((XMFLOAT3*)&vehicleStruct->m_avDummyPos[0]);
+		auto headlightTranform = XMVector3Transform(headlightPos, vehicleMatrix) + vehicleMatrix.r[1] * distance;
+
+		XMStoreFloat3(&position, headlightTranform);
+
+		if (frontRight)
 		{
-			light.SetPosition({ position.x + matrix->up.x * distance, position.y + matrix->up.y * distance, position.z + matrix->up.z * distance });
+			light.SetPosition({ position.x, position.y, position.z });
 			light.Update();
 			gLightManager.AddSpotLight(light);
 		};
 
-		if (frontRight)
+		if (frontLeft)
 		{
-			position -= headlightPos.x * 2.0f * matrix->right;
-			light.SetPosition({ position.x + matrix->up.x * distance, position.y + matrix->up.y * distance, position.z + matrix->up.z * distance });
+			headlightTranform -= XMVectorSplatX(headlightPos) * 2.0f * vehicleMatrix.r[0];
+			XMStoreFloat3(&position, headlightTranform);
+			light.SetPosition({position.x, position.y, position.z});
 			light.Update();
 			gLightManager.AddSpotLight(light);
 		}
 	}
 
 	if (rearRight || rearLeft)
-	{
-		light.SetDirection({ -vehicle->m_matrix->up.x, -vehicle->m_matrix->up.y,-vehicle->m_matrix->up.z });
+	{		
+		XMStoreFloat3(&direction, -vehicleMatrix.r[1]);
+		light.SetDirection(direction);
 
 		if (vehicle->m_fBreakPedal > 0.0f)
 			light.SetColor({ 1.0f, 0.0f, 0.0f });
@@ -140,23 +145,26 @@ void AddVehicleSpotLight(CVehicle* vehicle)
 			light.SetRadius(vehicle->m_fBreakPedal > 0.0f ? 7.0 : 3.0f);
 		}
 
-		MultiplyMatrixWithVector(&position, matrix, &tailLightPos);
+		auto tailLightPos = XMLoadFloat3((XMFLOAT3*)&vehicleStruct->m_avDummyPos[1]);
+		auto tailLighTranform = XMVector3Transform(tailLightPos, vehicleMatrix);
 
-		if (rearLeft)
+		XMStoreFloat3(&position, tailLighTranform);
+
+		if (rearRight)
 		{
 			light.SetPosition({ position.x, position.y, position.z });
 			light.Update();
 			gLightManager.AddSpotLight(light);
 		};
 
-		if (rearRight)
+		if (rearLeft)
 		{
-			position -= tailLightPos.x * 2.0f * matrix->right;
+			tailLighTranform -= XMVectorSplatX(tailLightPos) * 2.0f * vehicleMatrix.r[0];
+			XMStoreFloat3(&position, tailLighTranform);
 			light.SetPosition({ position.x, position.y, position.z });
 			light.Update();
 			gLightManager.AddSpotLight(light);
 		}
-
 	}
 }
 
@@ -166,25 +174,27 @@ class veh
 public:
 	static void  __thiscall CVehicle__DoHeadLightReflection(CVehicle* vehicle, CMatrix* matrix, unsigned int, unsigned char, unsigned char)
 	{
-		// gVehicleInScreen[vehicle] = vehicle->GetIsOnScreen();
-		/*if (!vehicle->GetIsOnScreen())
-			return;*/
-
-		if (!vehicle->m_nVehicleFlags.bLightsOn)
-			return;
-
-		CVector camPos = TheCamera.GetPosition();
-		float visibleRadius = 200.0;
-		CVector dx = vehicle->GetPosition() - camPos;
-
-		if (dx.Magnitude() >= visibleRadius)
-			return;
-
-		AddVehicleSpotLight(vehicle);
 	}
 	static void  __thiscall CVehicle__DoHeadLightBeam(CVehicle* vehicle, int, CMatrix*, unsigned char isRight)
 	{}
+
 };
+
+DWORD RETURN_CVehicle_DoVehicleLights = 0x6e1a68;
+CVehicle* pLightsVehicleInterface;
+
+void _declspec(naked) HOOK_CVehicle_DoVehicleLights()
+{
+	_asm
+	{
+		push ecx
+		call AddVehicleSpotLight;
+		pop ecx			
+		mov al, byte ptr ds : [00C1CC18h]
+		sub esp, 3Ch
+		jmp RETURN_CVehicle_DoVehicleLights
+	}
+}
 
 LightManager::LightManager()
 {}
@@ -367,6 +377,18 @@ void LightManager::Hook()
 	plugin::patch::RedirectJump(0x7000E0, CPointLights__AddLight);
 	plugin::patch::RedirectJump(0x6E0E20, veh::CVehicle__DoHeadLightBeam);
 	plugin::patch::RedirectJump(0x6E1720, veh::CVehicle__DoHeadLightReflection);
+	//plugin::patch::RedirectJump(0x6E1780, veh::DoTailLightEffect);
+	//plugin::patch::RedirectJump(0x6E1A60, veh::DoVehicleLights);
+
+
+
+	//plugin::patch::RedirectCall(0x6ABCB9, veh::DoVehicleLights);
+	//plugin::patch::RedirectCall(0x6E1A60, veh::DoVehicleLights);
+	//plugin::patch::RedirectCall(0x6F5570, veh::DoVehicleLights);
+	//plugin::patch::RedirectCall(0x6F55A1, veh::DoVehicleLights);
+	//plugin::patch::RedirectCall(0x6F55B4, veh::DoVehicleLights);
+
+	plugin::patch::RedirectJump(0x6e1a60, HOOK_CVehicle_DoVehicleLights);
 }
 
 
