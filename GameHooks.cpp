@@ -69,8 +69,8 @@ void CRealTimeShadowManager__Update()
 
 	 //PrintMessage("%s", shadowTimer.GetTimerResult().c_str());
 
-	/*CubemapReflection::Update();
-	 CubemapReflection::RenderScene();*/
+	CubemapReflection::Update();
+	 CubemapReflection::RenderScene();
 
 	//DualParaboloidReflection::Update();
 	//DualParaboloidReflection::RenderScene();

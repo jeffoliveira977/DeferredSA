@@ -257,15 +257,15 @@ float4 main(float4 position: TEXCOORD3, float2 texCoord : TEXCOORD0, float3 frus
     for (int i = 0; i < 8; ++i)
     {
         rotated = irreg_kernel[i];
-        rotated = mul(rotated, rotmat) * 2.0f;
+        rotated = mul(rotated, rotmat) * 3.0f;
 
         float sd = (1 - tex2D(SamplerShadow, projCoords.xy + rotated * texelsize).r) * LightRadius;
 
-        float t = (dirLen - 0.05 <= sd);
+        float t = (dirLen - 0.1 <= sd);
         s += ((sd < 0.01f) ? 1 : t);
     }
 
-    s = saturate(s * 0.125f); // simulate ambient light here
+    s = saturate(s * 0.125f); 
 
     
     //if (projCoords.z > 1.0f)

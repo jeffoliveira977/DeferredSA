@@ -122,7 +122,7 @@ void MeshRenderingMode::ShadowRendering(RwResEntry* entry, void* object, RwUInt3
 	//RwRenderStateSet(rwRENDERSTATEFOGENABLE, FALSE);
 	//RwD3D9SetRenderState(D3DRS_ALPHABLENDENABLE, FALSE);
 	//RwD3D9SetRenderState(D3DRS_ALPHATESTENABLE, TRUE);
-	 RwRenderStateSet(rwRENDERSTATECULLMODE, (void*)2);
+	 RwRenderStateSet(rwRENDERSTATECULLMODE, (void*)3);
 	RwRenderStateSet(rwRENDERSTATEZWRITEENABLE, (void*)TRUE);
 	RwRenderStateSet(rwRENDERSTATEZTESTENABLE, (void*)TRUE);
 

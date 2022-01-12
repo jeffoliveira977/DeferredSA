@@ -110,53 +110,39 @@ void CubemapReflection::ScanSectorList(int sectorX, int sectorY)
 		SectorList(repeatSector->m_lists[REPEATSECTOR_OBJECTS]);
 	}
 }
+const XMVECTOR DXCubeForward[6] =
+{
+	{1, 0, 0, 0},
+	{-1, 0, 0, 0 },
+	{0, 1, 0, 0},
+	{0, -1, 0, 0},
+	{0, 0, 1, 0},
+	{0, 0, -1, 0},
+};
+
+const XMVECTOR DXCubeUp[6] =
+{
+	{0, 1, 0, 0 },
+	{0, 1, 0, 0},
+	{0, 0, -1, 0 },
+	{0, 0, 1, 0 },
+	{0, 1, 0, 0 },
+	{0, 1, 0, 0 },
+};
 
 void CubemapReflection::Update()
 {
 	float w = static_cast<float>(RsGlobal.maximumWidth); 
 	float h = static_cast<float>(RsGlobal.maximumHeight);
-	m_projectionMatrix = XMMatrixPerspectiveFovRH(XMConvertToRadians(90.0f), w/h, 0.01f, 3000.0f);
+	m_projectionMatrix = XMMatrixPerspectiveFovLH(XMConvertToRadians(90.0f), 1, 0.01f, 3000.0f);
 	
 	CVector pos = FindPlayerCoors(0);
 
 	for (size_t i = 0; i < 6; i++)
 	{
 		m_renderableList[i].clear();
-
-		XMVECTOR lookAt;
-		XMVECTOR up;
-
-		switch (static_cast<D3DCUBEMAP_FACES>(i))
-		{
-		case D3DCUBEMAP_FACE_POSITIVE_X:
-			lookAt = g_XMIdentityR0;
-			up = g_XMIdentityR1;
-			break;
-		case D3DCUBEMAP_FACE_NEGATIVE_X:
-			lookAt = -g_XMIdentityR0;
-			up = g_XMIdentityR1;
-			break;
-		case D3DCUBEMAP_FACE_POSITIVE_Y:
-			lookAt = g_XMIdentityR1;
-			up = -g_XMIdentityR2;
-			break;
-		case D3DCUBEMAP_FACE_NEGATIVE_Y:
-			lookAt = -g_XMIdentityR1;
-			up = g_XMIdentityR2;
-			break;
-		case D3DCUBEMAP_FACE_POSITIVE_Z:
-			lookAt = g_XMIdentityR2;
-			up = g_XMIdentityR1;
-			break;
-		case D3DCUBEMAP_FACE_NEGATIVE_Z:
-			lookAt = -g_XMIdentityR2;
-			up = g_XMIdentityR1;
-			break;
-		}
-
-		XMMATRIX translation = XMMatrixTranslation(pos.x, pos.y, pos.z);
-		m_viewMatrix[i] = XMMatrixLookAtRH(g_XMZero, lookAt, up);
-		m_viewMatrix[i] = XMMatrixInverse(nullptr, m_viewMatrix[i] * translation);
+		XMVECTOR trans = XMVectorSet(pos.x, pos.y, pos.z, 1);
+		m_viewMatrix[i] = XMMatrixLookAtLH(trans, trans + DXCubeForward[i], DXCubeUp[i]);
 		m_frustum[i].SetMatrix(m_viewMatrix[i] * m_projectionMatrix);
 	}
 

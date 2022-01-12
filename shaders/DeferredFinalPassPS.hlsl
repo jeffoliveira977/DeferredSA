@@ -104,7 +104,29 @@ inline float clampMap(float x, float a, float b, float c, float d)
 {
     return saturate((x - b) / (a - b)) * (c - d) + d;
 }
-float4 main(float2 texCoord : TEXCOORD0, float2 vpos:VPOS) : COLOR
+float rand2dTo1d(float2 value, float2 dotDir = float2(12.9898, 78.233))
+{
+    float2 smallValue = sin(value);
+    float random = dot(smallValue, dotDir);
+    random = frac(sin(random) * 143758.5453);
+    return random;
+}
+float3 rand2dTo3d(float2 value)
+{
+    return float3(
+		rand2dTo1d(value, float2(12.989, 78.233)),
+		rand2dTo1d(value, float2(39.346, 11.135)),
+		rand2dTo1d(value, float2(73.156, 52.235))
+	);
+}
+float2 rand2dTo2d(float2 value)
+{
+    return float2(
+		rand2dTo1d(value, float2(12.989, 78.233)),
+		rand2dTo1d(value, float2(39.346, 11.135))
+	);
+}
+float4 main(float4 position : TEXCOORD2, float2 texCoord : TEXCOORD0, float2 vpos : VPOS) : COLOR
 {
     
     float3 outColor;
@@ -154,9 +176,9 @@ float4 main(float2 texCoord : TEXCOORD0, float2 vpos:VPOS) : COLOR
             if (reflectionType == 1)
             {
                 float3 r = reflect(viewDir, normal);
-                r.x *= -1.0;
                 R = texCUBE(CubeMapSampler, r);
-                R *= Roughness * 9.0f;
+                R *= Parameters.x * 9.0f;
+                R.rgb *= R.a;
 
             }
             else if (reflectionType == 2)
@@ -168,15 +190,23 @@ float4 main(float2 texCoord : TEXCOORD0, float2 vpos:VPOS) : COLOR
                 R = ParaboloidEnvMap(normal, viewDir);
             }
 
-            R *= 1.5f;
-
+            //R *= 1.5f;
+            
+            float3 noise = normalize(rand2dTo3d(worldPosition.xy / 16.0f) * 2.0f - 1.0f);
+            float3 jitter = noise * Parameters.x;
+             // fresnel
+            float f;
+            f = clamp(1.0 - dot(normal, -viewDir), 0.0, 1.0);
+            f = pow(f, 8.0);
+            R.rgb = lerp(albedo.rgb, R.rgb, f);
+            R.rgb+= jitter*f;
 
         }
         else if (materialType == 3) // Skins
         {
         }
 
-        outColor = DiffuseTerm * albedo.rgb + specular * Parameters.x + R.rgb * FresnelCoeff * Parameters.x;
+        outColor = DiffuseTerm * albedo.rgb + specular * Parameters.x + R.rgb  * Parameters.x;
             
         return float4(outColor, 1);
        

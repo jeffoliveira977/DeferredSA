@@ -361,13 +361,13 @@ void DeferredRendering::RenderLights()
 
 	for (size_t i = 0; i < 5; i++)
 	{
-		rwD3D9SetSamplerState(i + 4, D3DSAMP_BORDERCOLOR, 0x0);
+		rwD3D9SetSamplerState(i + 4, D3DSAMP_BORDERCOLOR, D3DCOLOR_RGBA(255, 255, 255, 255));
 		rwD3D9SetSamplerState(i + 4, D3DSAMP_MAGFILTER, D3DTEXF_LINEAR);
 		rwD3D9SetSamplerState(i + 4, D3DSAMP_MINFILTER, D3DTEXF_LINEAR);
 		rwD3D9SetSamplerState(i + 4, D3DSAMP_MIPFILTER, D3DTEXF_LINEAR);
-		rwD3D9SetSamplerState(i + 4, D3DSAMP_ADDRESSU, D3DTADDRESS_BORDER);
-		rwD3D9SetSamplerState(i + 4, D3DSAMP_ADDRESSV, D3DTADDRESS_BORDER);
-		rwD3D9SetSamplerState(i + 4, D3DSAMP_ADDRESSW, D3DTADDRESS_BORDER);
+		rwD3D9SetSamplerState(i + 4, D3DSAMP_ADDRESSU, D3DTADDRESS_CLAMP);
+		rwD3D9SetSamplerState(i + 4, D3DSAMP_ADDRESSV, D3DTADDRESS_CLAMP);
+		rwD3D9SetSamplerState(i + 4, D3DSAMP_ADDRESSW, D3DTADDRESS_CLAMP);
 		rwD3D9RWSetRasterStage(rasters[i], i + 4);
 	}
 

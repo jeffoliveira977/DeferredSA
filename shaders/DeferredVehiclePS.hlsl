@@ -18,7 +18,6 @@ bool4 Info : register(b0);
 
 sampler2D Diffuse : register(s0);
 sampler2D NormalMap : register(s1);
-
 PS_DeferredOutput main(VS_DeferredOutput input)
 {
     float3 normal = input.Normal;
@@ -27,23 +26,11 @@ PS_DeferredOutput main(VS_DeferredOutput input)
     if (HasTexture)
         outColor *= tex2D(Diffuse, input.Texcoord);
 
-    //if (HasNormalMap)
-    //{
-    //    float3 normalMap = tex2D(NormalMap, input.Texcoord).rgb;
-    //    normal = PeturbNormal(normalMap, input.WorldPosition.xyz, normal, input.Texcoord);
-    //}
-    //else if (ForceNormalMap)
-    //{
-    //    float3x3 c = img3x3(Diffuse, input.Texcoord, 512, 0);
-    //    float3 normalMap = height2normal_sobel(c);
-    //    normalMap = normalize(float3(normalMap.xy, normalMap.z * MaterialProps.w));
-    //    normal = PeturbNormal(normalMap, input.WorldPosition.xyz, normal, input.Texcoord);
-    //}
-    
+    // Transform the surface normal into world space (in order to compute reflection
     float4 radiance = dot(MaterialColor, MaterialColor) > 4.0 ? MaterialColor.rgba : float4(lerp(SkyTopColor.rgb, HorizonColor.rgb, normal.z) * 0.5f, 1);
     
     PS_DeferredOutput output;
-    PSFillGBuffer(outColor, input.Depth / FarClip, normal, float4(Metallicness, Glossiness, 0, 2), radiance, output);
+    PSFillGBuffer(outColor, input.Depth / FarClip, normal, float4(Metallicness, Glossiness, 0, 2), 0, output);
     
     return output;
 }
