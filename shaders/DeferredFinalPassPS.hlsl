@@ -142,13 +142,11 @@ float4 main(float4 position : TEXCOORD2, float2 texCoord : TEXCOORD0, float2 vpo
     float3 normal;
     float3 worldPosition;
     DecodeDepthNormal(texCoord, FogData.y, depth, normal);
-    //normal = normalize(normal);
     normal = mul(normal, (float3x3) ViewInverseMatrix);
     WorldPositionFromDepth(texCoord, depth, ProjectionMatrix, ViewInverseMatrix, worldPosition);
 
     float3 viewDir = normalize(worldPosition - ViewInverseMatrix[3].xyz);
     float H = max(dot(viewDir, SunDir), 0.0);
-
 
     float3 AmbientOcclusion = tex2D(SSAOSampler, texCoord).rgb;
 
@@ -189,24 +187,33 @@ float4 main(float4 position : TEXCOORD2, float2 texCoord : TEXCOORD0, float2 vpo
             {
                 R = ParaboloidEnvMap(normal, viewDir);
             }
-
+            float FarClip2 = 60.0;
+            float FogStart2 = 0.0;
+            float fogdist;
+            fogdist = worldPosition.z;
+            float fadefact = (FarClip2 - depth) / FarClip2;
+            fadefact = saturate(1.0 - fadefact);
+    
+            float fade = lerp(1.0, 0.0, fadefact);
             //R *= 1.5f;
             
             float3 noise = normalize(rand2dTo3d(worldPosition.xy / 16.0f) * 2.0f - 1.0f);
             float3 jitter = noise * Parameters.x;
-             // fresnel
+          
+            // fresnel
             float f;
             f = clamp(1.0 - dot(normal, -viewDir), 0.0, 1.0);
             f = pow(f, 8.0);
-            R.rgb = lerp(albedo.rgb, R.rgb, f);
+            R.rgb *= f;
             R.rgb+= jitter*f;
+            R.rgb *= fade;
 
         }
         else if (materialType == 3) // Skins
         {
         }
 
-        outColor = DiffuseTerm * albedo.rgb + specular * Parameters.x + R.rgb  * Parameters.x;
+        outColor = DiffuseTerm * albedo.rgb + specular * Parameters.x + R.rgb * Parameters.x;
             
         return float4(outColor, 1);
        

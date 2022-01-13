@@ -132,16 +132,14 @@ const XMVECTOR DXCubeUp[6] =
 
 void CubemapReflection::Update()
 {
-	float w = static_cast<float>(RsGlobal.maximumWidth); 
-	float h = static_cast<float>(RsGlobal.maximumHeight);
-	m_projectionMatrix = XMMatrixPerspectiveFovLH(XMConvertToRadians(90.0f), 1, 0.01f, 3000.0f);
+	m_projectionMatrix = XMMatrixPerspectiveFovLH(XMConvertToRadians(90.0f), 1, 0.1f, 3000.0f);
 	
 	CVector pos = FindPlayerCoors(0);
-
+	XMVECTOR trans = XMVectorSet(pos.x, pos.y, pos.z, 1);
 	for (size_t i = 0; i < 6; i++)
 	{
 		m_renderableList[i].clear();
-		XMVECTOR trans = XMVectorSet(pos.x, pos.y, pos.z, 1);
+
 		m_viewMatrix[i] = XMMatrixLookAtLH(trans, trans + DXCubeForward[i], DXCubeUp[i]);
 		m_frustum[i].SetMatrix(m_viewMatrix[i] * m_projectionMatrix);
 	}
@@ -161,6 +159,7 @@ void CubemapReflection::Update()
 		}
 	}
 }
+
 #include "CScene.h"
 void CubemapReflection::RenderScene()
 {

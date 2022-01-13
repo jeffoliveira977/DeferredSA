@@ -111,7 +111,7 @@ void rwD3D9Clear(RwRGBA* col, RwInt32 clearFlags)
 			((col->green) << 8) | (col->blue));
 	}
 
-	IDirect3DDevice9_Clear(RwD3DDevice, 0, NULL, d3d9ClearFlags, packedColor, 1.0, 0.0);
+	IDirect3DDevice9_Clear(RwD3DDevice, 0, NULL, d3d9ClearFlags, col? packedColor:0, 1.0, 0.0);
 }
 
 #include <fstream>

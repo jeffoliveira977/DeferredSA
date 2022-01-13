@@ -28,12 +28,12 @@ bool CheckModelId(CEntity* entity)
 	return false;
 }
 CEntity* CurrEntity = nullptr;
-
+template<typename T>
+T saturate(T val) {
+	return std::min(std::max(val, 0.0f), 1.0f);
+}
 void CPointLights__AddLight(unsigned char defaultType, XMFLOAT3 point, XMFLOAT3 direction, float radius, float red, float green, float blue, unsigned char, bool, CEntity* e)
 {
-	/*if (e)
-		PrintMessage("%d", e->m_nModelIndex);*/
-
 	auto castShadow = true;
 	if (CheckModelId(CurrEntity))
 		castShadow = false;
@@ -45,12 +45,10 @@ void CPointLights__AddLight(unsigned char defaultType, XMFLOAT3 point, XMFLOAT3 
 	if (dx.Magnitude() >= visibleRadius)
 		return;
 
-	float intensity = 1.0;
-	gLightManager.AddPointLight(point, direction, { red, green, blue }, radius, intensity, castShadow);
-}
-template<typename T>
-T saturate(T val) {
-	return std::min(std::max(val, 0.0f), 1.0f);
+	visibleRadius = 100.0;
+	float attenuation = 1 - powf(saturate((dx.Magnitude() / visibleRadius)), 2.0f);
+	attenuation *= attenuation;
+	gLightManager.AddPointLight(point, direction, { red, green, blue }, radius, attenuation, castShadow);
 }
 
 void AddVehicleSpotLight(CVehicle* vehicle)
@@ -81,6 +79,7 @@ void AddVehicleSpotLight(CVehicle* vehicle)
 	float attenuation = 1 - powf(saturate((dx.Magnitude() / visibleRadius)), 2.0f);
 	attenuation *= attenuation;
 	light.SetIntensity(attenuation);
+	light.mCastShadow = true;
 
 	auto vehicleStruct = modelInfo->m_pVehicleStruct;
 	if (frontLeft || frontRight)
@@ -94,6 +93,7 @@ void AddVehicleSpotLight(CVehicle* vehicle)
 		{
 			light.SetAngle(40.0);
 			light.SetRadius(20.0f);
+			light.mCastShadow = false;
 		}
 
 		XMStoreFloat3(&direction, vehicleMatrix.r[1]);
@@ -124,7 +124,9 @@ void AddVehicleSpotLight(CVehicle* vehicle)
 	}
 
 	if (rearRight || rearLeft)
-	{		
+	{
+		light.mCastShadow = false;
+
 		XMStoreFloat3(&direction, -vehicleMatrix.r[1]);
 		light.SetDirection(direction);
 

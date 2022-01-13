@@ -225,7 +225,13 @@ float4 main(float4 position: TEXCOORD3, float2 texCoord : TEXCOORD0, float3 frus
    
     float3 lightPos = normalize(worldPosition.xyz - LightPosition.xyz);
     float dirLen = length(worldPosition - LightPosition);
-
+  
+   [branch]
+    if (dirLen > LightRadius)
+    {
+        clip(-1);
+        return 0;
+    }
     float Attenuation = 1.0f - pow(saturate(dirLen / LightRadius), 2);
     Attenuation *= Attenuation;
     half spotAtten = min(1, max(0, dot(lightPos, LightDirection) - LightConeAngle) * LightExponent);
@@ -243,9 +249,6 @@ float4 main(float4 position: TEXCOORD3, float2 texCoord : TEXCOORD0, float3 frus
     projCoords.xy = projCoords.xy * 0.5 + 0.5;
     projCoords.y = 1.0f - projCoords.y;
 
-   // s = (1 - tex2D(SamplerShadow, projCoords.xy).r) * LightRadius > dirLen - 0.05 ? 1.0f : 0.0f;
-    
-    
     float2 stex = vpos.xy / 16.0f;
     float2 noise;
     float2 rotated;
@@ -257,7 +260,7 @@ float4 main(float4 position: TEXCOORD3, float2 texCoord : TEXCOORD0, float3 frus
     for (int i = 0; i < 8; ++i)
     {
         rotated = irreg_kernel[i];
-        rotated = mul(rotated, rotmat) * 3.0f;
+        rotated = mul(rotated, rotmat) * 4.0f;
 
         float sd = (1 - tex2D(SamplerShadow, projCoords.xy + rotated * texelsize).r) * LightRadius;
 
@@ -267,7 +270,6 @@ float4 main(float4 position: TEXCOORD3, float2 texCoord : TEXCOORD0, float3 frus
 
     s = saturate(s * 0.125f); 
 
-    
     //if (projCoords.z > 1.0f)
     //    s = 1.0;
     

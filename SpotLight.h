@@ -29,6 +29,7 @@ public:
 	void Update();
 	RwRaster* mColorRaster;
 	bool mDrawShadow;
+	bool mCastShadow;
 	float mExponent;
 	XMMATRIX mMatrix;
 private:
