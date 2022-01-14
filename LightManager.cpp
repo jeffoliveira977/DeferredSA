@@ -132,6 +132,9 @@ void AddVehicleSpotLight(CVehicle* vehicle)
 
 	if (dx.Magnitude() >= visibleRadius)
 		return;
+	float attenuation = 1 - powf(saturate((dx.Magnitude() / visibleRadius)), 2.0f);
+	attenuation *= attenuation;
+	light.SetIntensity(attenuation);
 
 	if (rearRight || rearLeft)
 	{
@@ -149,7 +152,7 @@ void AddVehicleSpotLight(CVehicle* vehicle)
 		{
 			light.SetAngle(30.0);
 			light.SetRadius(vehicle->m_fBreakPedal > 0.0f ? 7.0 : 3.0f);
-			light.SetIntensity(3.0);
+			light.SetIntensity(attenuation*3.0);
 		}
 		else
 		{
