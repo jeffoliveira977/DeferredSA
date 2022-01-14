@@ -27,10 +27,12 @@ float LightIntensity : register(c13);
 float LightConeAngle : register(c14);
 float LightExponent : register(c15);
 float CastShadow : register(c16);
-row_major float4x4 ShadowMatrix : register(c17);
+float UsePattern : register(c17);
+row_major float4x4 ShadowMatrix : register(c18);
 
 sampler2D SamplerShadow : register(s5);
 sampler2D SamplerNoise : register(s6);
+sampler2D SamplerFlashLight : register(s7);
 
 float CalculateAttenuation(float Range, float dis, float d)
 {
@@ -260,7 +262,7 @@ float4 main(float4 position: TEXCOORD3, float2 texCoord : TEXCOORD0, float3 frus
     for (int i = 0; i < 8; ++i)
     {
         rotated = irreg_kernel[i];
-        rotated = mul(rotated, rotmat) * 4.0f;
+        rotated = mul(rotated, rotmat) * 2.0f;
 
         float sd = (1 - tex2D(SamplerShadow, projCoords.xy + rotated * texelsize).r) * LightRadius;
 
@@ -276,6 +278,10 @@ float4 main(float4 position: TEXCOORD3, float2 texCoord : TEXCOORD0, float3 frus
     if(CastShadow == 0.0f)
         s = 1.0;
     
+    float4 flashlight = 1.0f;
+    if (UsePattern)
+        flashlight = tex2D(SamplerFlashLight, float2(projCoords.x, projCoords.y));
+    
     float3 FinalDiffuseTerm = float3(0, 0, 0);
     float FinalSpecularTerm = 0;
     float DiffuseTerm, SpecularTerm;
@@ -285,7 +291,7 @@ float4 main(float4 position: TEXCOORD3, float2 texCoord : TEXCOORD0, float3 frus
 
    // color.xyz = atten * s * CalculateLighing(albedo, normal, lightPos, -ViewDir, Roughness, SpecIntensity);
 
-    FinalDiffuseTerm += DiffuseTerm /** flashlight.xyz*/ * Attenuation * s * LightColor * LightIntensity;
+    FinalDiffuseTerm += DiffuseTerm * flashlight.xyz * Attenuation * s * LightColor * LightIntensity;
     FinalSpecularTerm += SpecularTerm * Attenuation * s * SpecIntensity;
     float4 Lighting = float4(FinalDiffuseTerm, FinalSpecularTerm);
     color.xyzw = Lighting;

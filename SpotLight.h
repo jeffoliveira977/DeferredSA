@@ -32,6 +32,7 @@ public:
 	bool mCastShadow;
 	float mExponent;
 	XMMATRIX mMatrix;
+	bool mUsePattern;
 private:
 	Math::Frustum mFrustum;
 
@@ -45,5 +46,6 @@ private:
 	float mAngle;
 	
 	float mRadius;
+
 };
 

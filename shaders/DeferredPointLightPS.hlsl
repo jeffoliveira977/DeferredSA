@@ -28,7 +28,7 @@ float CastShadow : register(c14);
 row_major float4x4 matProj[6] : register(c15);
 samplerCUBE SamplerShadow : register(s5);
 sampler2D SamplerNoise : register(s6);
-
+sampler2D SamplerFlashLight : register(s7);
 float CalculateAttenuation(float Range, float dis, float d)
 {
     return 1.0f - smoothstep(Range * dis, Range, d);
@@ -283,7 +283,7 @@ float4 main(float3 ViewRay : TEXCOORD2, float2 texCoord : TEXCOORD0, float3 frus
     if (CastShadow)
         shadow = ComputeShadowFactor(LightPosition.xyz, InverseViewMatrix[3].xyz, worldPosition, normal);
        
-    
+    float4 flashlight = tex2D(SamplerFlashLight, float2(texCoord));
     float at =  pow(saturate(length(LightPosition-InverseViewMatrix[3].xyz) / 30.0f), 2);
     at *= at;
     shadow = lerp(shadow, 1, at);

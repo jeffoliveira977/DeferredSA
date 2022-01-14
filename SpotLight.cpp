@@ -92,13 +92,13 @@ void SpotLight::Update()
 	XMVECTOR right, lookAt, up;
 	
 	up = XMVectorSet(0.0f, 0.0f, 1.0f, 1.0f);
-	if (XMVectorGetY(mDirection) > 0.9f || XMVectorGetY(mDirection) < -0.9f)
+	/*if (XMVectorGetY(mDirection) > 0.9f || XMVectorGetY(mDirection) < -0.9f)
 		up = XMVectorSet(0.0f, 0.0f, XMVectorGetY(mDirection), 1.0f);
 
 	right = XMVector3Cross(up, mDirection);
 	right = XMVector3Normalize(right);
 	up = XMVector3Cross(mDirection, right);
-	up = XMVector3Normalize(up);
+	up = XMVector3Normalize(up);*/
 
 	lookAt = mPosition + mDirection* mRadius;
 	mView = XMMatrixLookAtLH(mPosition, lookAt, up);

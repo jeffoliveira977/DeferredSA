@@ -22,6 +22,7 @@
 RenderingStage gRenderState;
 DeferredRendering *DeferredContext;
 RwTexture* gRandomNoise = 0;
+RwTexture* gFlashLight = 0;
 void DeferredRendering::Initialize()
 {
 	mPointLightPS = unique_ptr<PixelShader>(new PixelShader());
@@ -75,8 +76,10 @@ void DeferredRendering::Initialize()
 	mAmbientOcclusion = unique_ptr<AmbientOcclusion>(new AmbientOcclusion());
 	mAmbientOcclusion->Initialize();
 
-	gRandomNoise = LoadTextureFromFile("DeferredSA/textures/flashlight1.png");
-	//gRandomNoise = RwD3D9DDSTextureRead("DeferredSA/textures/vehiclelight_misc_roundlight", nullptr);
+
+	gFlashLight = LoadTextureFromFile("DeferredSA/textures/flashlight2.png");
+
+	gRandomNoise = LoadBMPTextureFromFile("DeferredSA/textures/pcfnoise.bmp");
 }
 XMMATRIX view, projection;
 void DeferredRendering::Start()
@@ -179,10 +182,9 @@ void DeferredRendering::RenderPostProcessing()
 	RwRenderStateSet(rwRENDERSTATECULLMODE, (void*)rwCULLMODECULLNONE);
 	RwD3D9SetRenderState(D3DRS_ALPHABLENDENABLE, TRUE);
 
-	//mPostProcessing->RenderFXAA(mScreenRT.get());
-	//mPostProcessing->RenderBloom(mScreenRT.get());
+	/*mPostProcessing->RenderFXAA(mScreenRT.get());
+	mPostProcessing->RenderBloom(mScreenRT.get());*/
 }
-
 
 void DeferredRendering::RenderLights()
 {
@@ -228,7 +230,7 @@ void DeferredRendering::RenderLights()
 	frustum.SetMatrix(view*projection);
 
 	int count = 0;
-	uint32_t maxLights = min((size_t)29, gLightManager.GetPointLightCount());
+	uint32_t maxLights = min((size_t)20, gLightManager.GetPointLightCount());
 	for (int i = 0; i < maxLights; i++)
 	{
 		auto light = gLightManager.GetPointLightAt(i);
@@ -275,6 +277,7 @@ void DeferredRendering::RenderLights()
 		rwD3D9SetSamplerState(6, D3DSAMP_ADDRESSW, D3DTADDRESS_CLAMP);
 		RwD3D9SetTexture(gRandomNoise, 6);
 
+
 		_rwD3D9SetPixelShaderConstant(9, &light->GetPosition(), 1);
 		_rwD3D9SetPixelShaderConstant(10, &light->GetDirection(), 1);
 		_rwD3D9SetPixelShaderConstant(11, &light->GetColor(), 1);
@@ -287,9 +290,9 @@ void DeferredRendering::RenderLights()
 	}
 
 	// PrintMessage("%d %d", maxLights, count);
-	// gLightManager.SortSpotLights();
+	 //gLightManager.SortSpotLights();
 	mSpotLightPS->Apply();
-	maxLights = min((size_t)29, gLightManager.GetSpotLightCount());
+	maxLights = min((size_t)30, gLightManager.GetSpotLightCount());
 
 
 	for (size_t i = 0; i < maxLights; i++)
@@ -313,6 +316,7 @@ void DeferredRendering::RenderLights()
 		rwD3D9SetSamplerState(5, D3DSAMP_ADDRESSV, D3DTADDRESS_BORDER);
 		rwD3D9SetSamplerState(5, D3DSAMP_BORDERCOLOR, D3DCOLOR_RGBA(255, 255, 255, 255));
 		 _rwD3D9RWSetRasterStage(light->mColorRaster, 5);
+
 		 rwD3D9SetSamplerState(6, D3DSAMP_MAGFILTER, D3DTEXF_LINEAR);
 		 rwD3D9SetSamplerState(6, D3DSAMP_MINFILTER, D3DTEXF_LINEAR);
 		 rwD3D9SetSamplerState(6, D3DSAMP_MIPFILTER, D3DTEXF_LINEAR);
@@ -321,6 +325,17 @@ void DeferredRendering::RenderLights()
 		 rwD3D9SetSamplerState(6, D3DSAMP_ADDRESSW, D3DTADDRESS_CLAMP);
 		 RwD3D9SetTexture(gRandomNoise, 6);
 
+		 if (light->mUsePattern)
+		 {
+			 rwD3D9SetSamplerState(6, D3DSAMP_MAGFILTER, D3DTEXF_LINEAR);
+			 rwD3D9SetSamplerState(6, D3DSAMP_MINFILTER, D3DTEXF_LINEAR);
+			 rwD3D9SetSamplerState(6, D3DSAMP_MIPFILTER, D3DTEXF_LINEAR);
+			 rwD3D9SetSamplerState(6, D3DSAMP_ADDRESSU, D3DTADDRESS_WRAP);
+			 rwD3D9SetSamplerState(6, D3DSAMP_ADDRESSV, D3DTADDRESS_WRAP);
+			 rwD3D9SetSamplerState(6, D3DSAMP_ADDRESSW, D3DTADDRESS_WRAP);
+			 RwD3D9SetTexture(gFlashLight, 7);
+		 }
+		 float usePattern = light->mUsePattern ? 1.0 : 0.0;
 		 light->mExponent = 2.0f;
 		 float cosSpotAngle = cos(XMConvertToRadians(coneAngle));
 		 float spotexponent = light->mExponent / (1 - cosSpotAngle);
@@ -332,7 +347,8 @@ void DeferredRendering::RenderLights()
 		_rwD3D9SetPixelShaderConstant(14, &cosSpotAngle, 1);
 		_rwD3D9SetPixelShaderConstant(15, &spotexponent, 1);
 		_rwD3D9SetPixelShaderConstant(16, &drawShadow, 1);
-		_rwD3D9SetPixelShaderConstant(17, &(light->mMatrix) , 4);
+		_rwD3D9SetPixelShaderConstant(17, &usePattern, 1);
+		_rwD3D9SetPixelShaderConstant(18, &(light->mMatrix) , 4);
 		Quad::Render();
 	}
 

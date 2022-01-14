@@ -39,7 +39,7 @@ void CPointLights__AddLight(unsigned char defaultType, XMFLOAT3 point, XMFLOAT3 
 		castShadow = false;
 
 	CVector camPos = TheCamera.GetPosition();
-	float visibleRadius = 200.0f;
+	float visibleRadius = 100.0f;
 	CVector dx = CVector(point.x, point.y, point.z) - camPos;
 
 	if (dx.Magnitude() >= visibleRadius)
@@ -54,6 +54,12 @@ void CPointLights__AddLight(unsigned char defaultType, XMFLOAT3 point, XMFLOAT3 
 void AddVehicleSpotLight(CVehicle* vehicle)
 {
 	if (!vehicle->m_nVehicleFlags.bLightsOn)
+		return;
+
+	float visibleRadius = 100.0;
+	CVector dx = vehicle->GetPosition() - TheCamera.GetPosition();
+
+	if (dx.Magnitude() >= visibleRadius)
 		return;
 
 	auto modelInfo = reinterpret_cast<CVehicleModelInfo*>(CModelInfo::GetModelInfo(vehicle->m_nModelIndex));
@@ -74,12 +80,11 @@ void AddVehicleSpotLight(CVehicle* vehicle)
 	XMFLOAT3 position;
 
 	SpotLight light;
-	CVector dx = vehicle->GetPosition() - TheCamera.GetPosition();
-	float visibleRadius = 100.0;
 	float attenuation = 1 - powf(saturate((dx.Magnitude() / visibleRadius)), 2.0f);
 	attenuation *= attenuation;
 	light.SetIntensity(attenuation);
 	light.mCastShadow = true;
+	light.mUsePattern = true;
 
 	auto vehicleStruct = modelInfo->m_pVehicleStruct;
 	if (frontLeft || frontRight)
@@ -87,13 +92,13 @@ void AddVehicleSpotLight(CVehicle* vehicle)
 		if (FindPlayerVehicle(-1, true) == vehicle)
 		{
 			light.SetAngle(45.0);
-			light.SetRadius(30.0f);
+			light.SetRadius(60.0f);
 		}
 		else
 		{
 			light.SetAngle(40.0);
 			light.SetRadius(20.0f);
-			light.mCastShadow = false;
+			//light.mCastShadow = false;
 		}
 
 		XMStoreFloat3(&direction, vehicleMatrix.r[1]);
@@ -123,10 +128,15 @@ void AddVehicleSpotLight(CVehicle* vehicle)
 		}
 	}
 
+	visibleRadius = 50.0;
+
+	if (dx.Magnitude() >= visibleRadius)
+		return;
+
 	if (rearRight || rearLeft)
 	{
 		light.mCastShadow = false;
-
+		light.mUsePattern = false;
 		XMStoreFloat3(&direction, -vehicleMatrix.r[1]);
 		light.SetDirection(direction);
 
@@ -396,24 +406,7 @@ void LightManager::Hook()
 
 #include "GTADef.h"
 #include "CScene.h"
-
-void LightManager::SortSpotLights()
-{
-	auto cameraPos = XMLoadFloat3((XMFLOAT3*)&RwFrameGetMatrix(RwCameraGetFrame(Scene.m_pRwCamera))->pos);
-	auto coors = FindPlayerCoors(-1);
-	//auto cameraPos = XMLoadFloat3((XMFLOAT3*)&coors);
-
-	sort(&mSpotLightList[0], &mSpotLightList[159], [&](SpotLight& a, SpotLight& b)
-		{
-			auto lenA = XMVector3Length(cameraPos - XMLoadFloat3(&a.GetPosition()));
-			auto lenB = XMVector3Length(cameraPos - XMLoadFloat3(&b.GetPosition()));
-
-			return XMVector3Less(lenA, lenB);
-
-		});
-}
-
-float rwV3D_Dist2( XMFLOAT3& a,  XMFLOAT3& b)
+float rwV3D_Dist2(XMFLOAT3& a, XMFLOAT3& b)
 {
 	float
 		dX = b.x - a.x,
@@ -422,6 +415,28 @@ float rwV3D_Dist2( XMFLOAT3& a,  XMFLOAT3& b)
 
 	return sqrt(dX * dX + dY * dY + dZ * dZ);
 }
+void LightManager::SortSpotLights()
+{
+	auto cameraPos = XMLoadFloat3((XMFLOAT3*)&RwFrameGetMatrix(RwCameraGetFrame(Scene.m_pRwCamera))->pos);
+	auto coors = FindPlayerCoors(-1);
+	//auto cameraPos = XMLoadFloat3((XMFLOAT3*)&coors);
+
+	//sort(&mSpotLightList[0], &mSpotLightList[159], [&](SpotLight& a, SpotLight& b)
+	//	{
+	//		auto lenA = XMVector3Length(cameraPos - XMLoadFloat3(&a.GetPosition()));
+	//		auto lenB = XMVector3Length(cameraPos - XMLoadFloat3(&b.GetPosition()));
+
+	//		return XMVector3Less(lenA, lenB);
+
+	//	});
+	auto pos = (XMFLOAT3*)&RwFrameGetMatrix(RwCameraGetFrame(Scene.m_pRwCamera))->pos;
+	std::sort(&mSpotLightList[0], &mSpotLightList[159], [&](SpotLight& a, SpotLight& b)
+		{
+			return (rwV3D_Dist2(a.GetPosition(), *pos) < rwV3D_Dist2(b.GetPosition(), *pos));
+		});
+}
+
+
 void LightManager::SortPointLights()
 {
 	auto pos = (XMFLOAT3*)&RwFrameGetMatrix(RwCameraGetFrame(Scene.m_pRwCamera))->pos;
