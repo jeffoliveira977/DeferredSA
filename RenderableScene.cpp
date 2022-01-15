@@ -116,7 +116,7 @@ void RenderableScene::Render()
 		
 		/*if(mRenderStage == 0)
 		{*/
-			if(ShadowCasterEntity->mCulled[0][entity])
+			if(ShadowCasterEntity->mCulled[1][entity])
 			{
 				XMINT4 saturate = {0, 60,  0, 255};
 				mRenderableAABB->SetColor(SolidGreen, saturate, saturate);

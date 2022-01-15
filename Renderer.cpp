@@ -736,7 +736,7 @@ void Renderer::ConstructRenderList()
 
     SpotShadow->m_renderableList.clear();
     ShadowCasterEntity->ClearCullList();
-        PointShadow-> m_renderableList.clear();
+    PointShadow-> m_renderableList.clear();
 
     CRenderer::ms_lowLodDistScale *= CTimeCycle::m_CurrentColours.m_fLodDistMult;
     COcclusion__ProcessBeforeRendering();

@@ -205,39 +205,39 @@ static const float3 FaceDirectons[6] =
     float3(0, 0, -1),
 };
 
-static const float2 irreg_kernel[8] =
-{
-    { -0.072, -0.516 },
-    { -0.105, 0.989 },
-    { 0.949, 0.258 },
-    { -0.966, 0.216 },
-    { 0.784, -0.601 },
-    { 0.139, 0.230 },
-    { -0.816, -0.516 },
-    { 0.529, 0.779 }
-};
-float rand2dTo1d(float2 value, float2 dotDir = float2(12.9898, 78.233))
-{
-    float2 smallValue = sin(value);
-    float random = dot(smallValue, dotDir);
-    random = frac(sin(random) * 143758.5453);
-    return random;
-}
-float3 rand2dTo3d(float2 value)
-{
-    return float3(
-		rand2dTo1d(value, float2(12.989, 78.233)),
-		rand2dTo1d(value, float2(39.346, 11.135)),
-		rand2dTo1d(value, float2(73.156, 52.235))
-	);
-}
-float2 rand2dTo2d(float2 value)
-{
-    return float2(
-		rand2dTo1d(value, float2(12.989, 78.233)),
-		rand2dTo1d(value, float2(39.346, 11.135))
-	);
-}
+//static const float2 irreg_kernel[8] =
+//{
+//    { -0.072, -0.516 },
+//    { -0.105, 0.989 },
+//    { 0.949, 0.258 },
+//    { -0.966, 0.216 },
+//    { 0.784, -0.601 },
+//    { 0.139, 0.230 },
+//    { -0.816, -0.516 },
+//    { 0.529, 0.779 }
+//};
+//float rand2dTo1d(float2 value, float2 dotDir = float2(12.9898, 78.233))
+//{
+//    float2 smallValue = sin(value);
+//    float random = dot(smallValue, dotDir);
+//    random = frac(sin(random) * 143758.5453);
+//    return random;
+//}
+//float3 rand2dTo3d(float2 value)
+//{
+//    return float3(
+//		rand2dTo1d(value, float2(12.989, 78.233)),
+//		rand2dTo1d(value, float2(39.346, 11.135)),
+//		rand2dTo1d(value, float2(73.156, 52.235))
+//	);
+//}
+//float2 rand2dTo2d(float2 value)
+//{
+//    return float2(
+//		rand2dTo1d(value, float2(12.989, 78.233)),
+//		rand2dTo1d(value, float2(39.346, 11.135))
+//	);
+//}
 
 float4 main(float3 ViewRay : TEXCOORD2, float2 texCoord : TEXCOORD0, float3 frustumRay : TEXCOORD1, float2 vpos : VPOS) : COLOR
 {

@@ -191,17 +191,17 @@ float ShadowCalculation(vec4 fragPosLightSpace, float3 lightDir, float3 normal)
     return shadow;
 }
 
-static const float2 irreg_kernel[8] =
-{
-    { -0.072, -0.516 },
-    { -0.105, 0.989 },
-    { 0.949, 0.258 },
-    { -0.966, 0.216 },
-    { 0.784, -0.601 },
-    { 0.139, 0.230 },
-    { -0.816, -0.516 },
-    { 0.529, 0.779 }
-};
+//static const float2 irreg_kernel[8] =
+//{
+//    { -0.072, -0.516 },
+//    { -0.105, 0.989 },
+//    { 0.949, 0.258 },
+//    { -0.966, 0.216 },
+//    { 0.784, -0.601 },
+//    { 0.139, 0.230 },
+//    { -0.816, -0.516 },
+//    { 0.529, 0.779 }
+//};
 
 float4 main(float4 position: TEXCOORD3, float2 texCoord : TEXCOORD0, float3 frustumRay : TEXCOORD1, float2 vpos:VPOS) : COLOR
 {

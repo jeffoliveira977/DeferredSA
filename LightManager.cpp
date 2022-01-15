@@ -7,46 +7,16 @@
 LightManager gLightManager;
 #include "PointLightShadow.h"
 
-bool CheckModelId(CEntity* entity)
-{
-
-	if (entity)
-	{
-		if (entity->m_nType == ENTITY_TYPE_VEHICLE)
-		{
-			CVehicle* vehicle = static_cast<CVehicle*>(entity);
-			if (vehicle->GetVehicleAppearance() == 5)
-				return true;
-
-		}
-
-		auto id = entity->m_nModelIndex;
-		if (id == 596 ||
-			id == 597 ||
-			id == 598 ||
-			id == 599 ||
-			id == 438 ||
-			id == 420 ||
-			id == 416 ||
-			id == 407 ||
-			id == 544 ||
-			id == 523||
-			id== 593)
-			return true;
-	}
-
-	return false;
-}
 CEntity* CurrEntity = nullptr;
-template<typename T>
+
+template<typename T> 
 T saturate(T val) {
 	return std::min(std::max(val, 0.0f), 1.0f);
 }
+
 void CPointLights__AddLight(unsigned char defaultType, XMFLOAT3 point, XMFLOAT3 direction, float radius, float red, float green, float blue, unsigned char, bool, CEntity* e)
 {
 	auto castShadow = true;
-	/*if (CheckModelId(CurrEntity))
-		castShadow = false;*/
 
 	if (CurrEntity)
 	{
@@ -62,18 +32,22 @@ void CPointLights__AddLight(unsigned char defaultType, XMFLOAT3 point, XMFLOAT3 
 		{
 		case MODEL_CABBIE:
 		case MODEL_TAXI:
-			radius = 5.0f;	castShadow = false; break;
-		case 427:
-		case 407:
-		case 416:
-		case 490:
-		case 596:
-		case 597:
-		case 598:
-		case 599:
-		case 544:
-		case 523:
-			radius = 50.0f;	castShadow = false; break;
+			radius = 5.0f;	
+			castShadow = false; 
+			break;
+		case MODEL_ENFORCER:
+		case MODEL_FIRETRUK:
+		case MODEL_AMBULAN:
+		case MODEL_FBIRANCH:
+		case MODEL_COPCARLA:
+		case MODEL_COPCARSF:
+		case MODEL_COPCARVG:
+		case MODEL_COPCARRU:
+		case MODEL_FIRELA:
+		case MODEL_COPBIKE:
+			radius = 50.0f;	
+			castShadow = false; 
+			break;
 		default:
 			break;
 		}
@@ -120,7 +94,6 @@ void AddVehicleSpotLight(CVehicle* vehicle)
 	if (vehicle->m_nModelIndex == 530)
 		distance = 0.5f;
 	
-
 	XMFLOAT3 direction;
 	XMFLOAT3 position;
 
@@ -174,7 +147,6 @@ void AddVehicleSpotLight(CVehicle* vehicle)
 	}
 
 	visibleRadius = 50.0;
-
 	if (dx.Magnitude() >= visibleRadius)
 		return;
 
@@ -207,7 +179,7 @@ void AddVehicleSpotLight(CVehicle* vehicle)
 		}
 
 		auto tailLightPos = XMLoadFloat3((XMFLOAT3*)&vehicleStruct->m_avDummyPos[1]);
-		auto tailLighTranform = XMVector3Transform(tailLightPos, vehicleMatrix);
+		auto tailLighTranform = XMVector3Transform(tailLightPos, vehicleMatrix) + vehicleMatrix.r[1] * distance;
 		XMStoreFloat3(&position, tailLighTranform);
 
 		if (rearRight)
@@ -228,12 +200,12 @@ void AddVehicleSpotLight(CVehicle* vehicle)
 	}
 }
 
-void __fastcall CVehicle__DoHeadLightReflection(CVehicle* vehicle, void* edx, CMatrix* matrix, unsigned int, unsigned char, unsigned char)
+void __fastcall CVehicle__DoHeadLightReflection(CVehicle*, void* edx, CMatrix*, unsigned int, unsigned char, unsigned char)
 {
 	// nothing...
 }
 
-void __fastcall CVehicle__DoHeadLightBeam(CVehicle* vehicle, void*edx, int, CMatrix*, unsigned char isRight)
+void __fastcall CVehicle__DoHeadLightBeam(CVehicle*, void* edx, int, CMatrix*, unsigned char)
 {
 	// nothing...
 }
@@ -245,7 +217,7 @@ void _declspec(naked) HOOK_CVehicle_DoVehicleLights()
 		push ecx
 		call AddVehicleSpotLight;
 		pop ecx			
-		mov al, byte ptr ds : [00C1CC18h]
+		mov al, byte ptr ds:[00C1CC18h]
 		sub esp, 3Ch
 		mov edx, 0x6E1A68
 		jmp edx
@@ -268,7 +240,7 @@ void _declspec(naked) HOOK_CAutomobile_PreRender()
 	_asm
 	{	mov CurrEntity, ecx
 		push 0FFFFFFFFh
-		mov eax,  fs:0
+		mov eax, fs:0
 		mov edx, 0x6AAB58
 		jmp edx
 	}
@@ -304,46 +276,7 @@ PointLight LightManager::mPointLightList[160];
 SpotLight LightManager::mSpotLightList[160];
 unordered_map<CEntity*, bool>  LightManager::mDontCull;
 
-void CPointLights__AddLight1(unsigned char defaultType, XMFLOAT3 point, XMFLOAT3 direction, float radius, float red, float green, float blue, unsigned char, bool, CEntity*)
-{
-	_asm mov CurrEntity, esi;
 
-	if (CurrEntity == nullptr)
-		return;
-
-	// increase siren radius
-	radius = 50.0f;
-
-	if (CurrEntity->m_nModelIndex == MODEL_CABBIE ||
-		CurrEntity->m_nModelIndex == MODEL_TAXI)
-		radius = 5.0f;
-
-	if (!CheckModelId(CurrEntity))
-	{
-		radius = 10.0f;
-		gLightManager.mDontCull[CurrEntity] = true;
-	}
-
-	CPointLights__AddLight(defaultType, point, direction, radius, red, green, blue, 0, false, CurrEntity);
-}
-
- void CPointLights__AddLight3(unsigned char defaultType, XMFLOAT3 point, XMFLOAT3 direction, float radius, float red, float green, float blue, unsigned char, bool, CEntity*)
- {
-
-	 if (radius <= 5.0f)
-		 radius = 5.0f;
-
-	 CPointLights__AddLight(defaultType, point, direction, radius, red, green, blue, 0, false, CurrEntity);
- }
-
-
-
-
-#include "CRenderer.h"
-
-#include "CPtrListDoubleLink.h"
-#include "CWorld.h"
-#include "CPools.h"
 void LightManager::Hook()
 {   
 	plugin::patch::Nop(0x73785D, 2);
@@ -353,8 +286,8 @@ void LightManager::Hook()
 	plugin::patch::Nop(0x6E28E7, 5);
 	plugin::patch::Nop(0x6E27E6, 5);
 	plugin::patch::RedirectJump(0x7000E0, CPointLights__AddLight);
-	plugin::patch::RedirectJump(0x6E0E20, ::CVehicle__DoHeadLightBeam);
-	plugin::patch::RedirectJump(0x6E1720, ::CVehicle__DoHeadLightReflection);
+	plugin::patch::RedirectJump(0x6E0E20, CVehicle__DoHeadLightBeam);
+	plugin::patch::RedirectJump(0x6E1720, CVehicle__DoHeadLightReflection);
 
 	plugin::patch::RedirectJump(0x6FC7A0, HOOK_CEntity_ProcessLightsForEntity);
 	plugin::patch::RedirectJump(0x6e1a60, HOOK_CVehicle_DoVehicleLights);
@@ -425,32 +358,7 @@ void LightManager::Hook()
 
 
 		//gLightManager.AddPointLight({ coors.x ,coors.y+2, coors.z + 2.0f }, { 1, 1, 1 }, { 1, 1, 1 }, 10.0f, 1.0, true);
-
-	/*	auto pool = CPools::ms_pVehiclePool;
-		for (int i = 0; i < pool->m_nSize; ++i)
-		{
-			auto* vehicle = pool->GetAt(i);
-			if (vehicle && gVehicleInScreen[vehicle])
-			{
-
-				if (!vehicle->m_nVehicleFlags.bLightsOn)
-					continue;
-
-				CVector camPos = TheCamera.GetPosition();
-				float visibleRadius = 200.0;
-				CVector dx = vehicle->GetPosition() - camPos;
-
-				if (dx.Magnitude() >= visibleRadius)
-					continue;
-
-				AddVehicleSpotLight(vehicle);
-			}
-		} */
-
 	};
-
-
-
 }
 
 

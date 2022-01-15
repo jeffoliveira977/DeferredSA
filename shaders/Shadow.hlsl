@@ -572,9 +572,42 @@ float Compute4Samples(sampler2D samplerShadow, float2 shadowTexCoord, float2 sha
     return shadow;
 }
 
+float rand2dTo1d(float2 value, float2 dotDir = float2(12.9898, 78.233))
+{
+    float2 smallValue = sin(value);
+    float random = dot(smallValue, dotDir);
+    random = frac(sin(random) * 143758.5453);
+    return random;
+}
+float3 rand2dTo3d(float2 value)
+{
+    return float3(
+		rand2dTo1d(value, float2(12.989, 78.233)),
+		rand2dTo1d(value, float2(39.346, 11.135)),
+		rand2dTo1d(value, float2(73.156, 52.235))
+	);
+}
+float2 rand2dTo2d(float2 value)
+{
+    return float2(
+		rand2dTo1d(value, float2(12.989, 78.233)),
+		rand2dTo1d(value, float2(39.346, 11.135))
+	);
+}
 
 
-float4 DrawShadow(sampler2D samplerShadow[4],float3 sunDir, float depthTest, float3 worldPosition, ShadowData shadowBuffer)
+static const float2 irreg_kernel[8] =
+{
+    { -0.072, -0.516 },
+    { -0.105, 0.989 },
+    { 0.949, 0.258 },
+    { -0.966, 0.216 },
+    { 0.784, -0.601 },
+    { 0.139, 0.230 },
+    { -0.816, -0.516 },
+    { 0.529, 0.779 }
+};
+float4 DrawShadow(sampler2D samplerShadow[4],float2 vpos, float depthTest, float3 worldPosition, ShadowData shadowBuffer)
 { 
     // early fail
     if (shadowBuffer.params.w <= 0)
@@ -679,32 +712,44 @@ float4 DrawShadow(sampler2D samplerShadow[4],float3 sunDir, float depthTest, flo
    // // Variance shadow mapping code below from the variance shadow
    //  // mapping demo code @ http://www.punkuser.net/vsm/
 
-
+     // early fail
+    if (lightDepthUV.x < 0 || lightDepthUV.x > 1 || lightDepthUV.y < 0 || lightDepthUV.y > 1)
+        return 1.0f;
+    
+    
+    
     float z = LightViewPos.z - shadowBuffer.bias[nCascadeIndex];
     float fShadow = 0.0;
-    for (int i = 0; i < NUM_TAPS; i++)
+    //for (int i = 0; i < NUM_TAPS; i++)
+    //{
+    //    fShadow += (z < tex2DShadow(samplerShadow, lightDepthUV + fTaps_Poisson[i] * 1.2 * lightDepthMapTexSize, nCascadeIndex));
+    //}
+    //fShadow *= 1.0 / NUM_TAPS;
+    //return fShadow;
+    
+    float2 stex = vpos.xy / 16.0f;
+    float2 noise;
+    float2 rotated;
+    noise = rand2dTo2d(stex);
+    noise = normalize(noise * 2.0f - 1.0f);
+    float texelsize = 1.0f / shadowBuffer.params.x;
+    float2x2 rotmat = { noise.x, -noise.y, noise.y, noise.x };
+
+    for (int i = 0; i < 8; ++i)
     {
-        fShadow += (z < tex2DShadow(samplerShadow, lightDepthUV + fTaps_Poisson[i] * 1.2 * lightDepthMapTexSize, nCascadeIndex));
+        rotated = irreg_kernel[i];
+        rotated = mul(rotated, rotmat) * 2.0f;
+
+        float sd = (z < tex2DShadow(samplerShadow, lightDepthUV + rotated * texelsize, nCascadeIndex));
+
+        fShadow += sd;
     }
-    fShadow *= 1.0 / NUM_TAPS;
+
+    fShadow = saturate(fShadow * 0.125f);
+    
+    if (LightViewPos.z > 1.0)
+        fShadow = 0.0;
     return fShadow;
-    
-    float s;
-    float d = length(sunDir.xyz-WorldPos.xyz);
-
-    float2 sd = tex2DShadow(samplerShadow, lightDepthUV, nCascadeIndex);
-
-    float mean = sd.x;
-    float variance = max(sd.y - sd.x * sd.x, 0.0002f);
-
-    float md = mean - d;
-    float pmax = variance / (variance + md * md);
-
-    s = max(d <= mean, pmax);
-  //  s = saturate(s );
-
-    return s;
-    
    // return GetShadow(samplerShadow, nCascadeIndex, LightViewPos, LightViewPos.z - shadowBuffer.bias[nCascadeIndex], shadowBuffer.params.x) * Jitter;
     
     //bool visualizeCascades = false;

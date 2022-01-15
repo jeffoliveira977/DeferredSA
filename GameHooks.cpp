@@ -45,9 +45,7 @@ void CRealTimeShadowManager__Update()
 {
 	//if (CGameIdle::m_fShadowDNBalance)
 	//{
-	static CPerfTimer shadowTimer("Shadow Time");
-
-	shadowTimer.Start();
+	
 	PointShadow->Update();
 	SpotShadow->Update();
 
@@ -63,11 +61,12 @@ void CRealTimeShadowManager__Update()
 	}*/
 
 	//ShadowCasterEntity->Update(1, 1);
-
+	static CPerfTimer shadowTimer("Shadow Time");
+	shadowTimer.Start();
 	 CascadedShadowManagement->Update();
 	 shadowTimer.Stop();
 
-	 //PrintMessage("%s", shadowTimer.GetTimerResult().c_str());
+	 PrintMessage("%s", shadowTimer.GetTimerResult().c_str());
 
 	CubemapReflection::Update();
 	 CubemapReflection::RenderScene();

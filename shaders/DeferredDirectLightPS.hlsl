@@ -124,13 +124,18 @@ float4 main(float2 texCoord : TEXCOORD0, float2 vpos:VPOS) : COLOR
     float3 normal;
     DecodeDepthNormal(texCoord, fogData.y, depth, normal);
    
-
+    float3 lightDir = normalize(sunDir);
    // normal = normalize(normal);
     normal = mul(normal, (float3x3) ViewInverseMatrix);
-        
+    ShadowData data;
+    data = ShadowBuffer;
+    if (Parameters.w==3)
+    data.bias = 0.05;
+
+    
     float3 worldPosition;
     WorldPositionFromDepth(texCoord, depth, ProjectionMatrix, ViewInverseMatrix, worldPosition);
-    float4 Shadow = DrawShadow(ShadowSampler, worldPosition, length(worldPosition.xyz - ViewInverseMatrix[3].xyz), worldPosition, ShadowBuffer) * ShadowDNBalance;
+    float4 Shadow = DrawShadow(ShadowSampler, vpos, length(worldPosition.xyz - ViewInverseMatrix[3].xyz), worldPosition, ShadowBuffer) * ShadowDNBalance;
   
     float FarClip2 = 160.0;
     float FogStart2 = 0.0;
@@ -139,9 +144,9 @@ float4 main(float2 texCoord : TEXCOORD0, float2 vpos:VPOS) : COLOR
     float fadefact = (FarClip2 - depth) / (FarClip2 - FogStart2);
     fadefact = saturate(1.0 - fadefact);
     
-  //  Shadow = lerp(Shadow, 1.0, fadefact); 
- //   Shadow = lerp(1.0, Shadow, 0.7); 
-    float3 lightDir = normalize(sunDir);
+    Shadow = lerp(Shadow, 1.0, fadefact);
+    Shadow = lerp(1.0, Shadow, 0.7);
+
     float3 ViewDir = normalize(worldPosition.xyz - ViewInverseMatrix[3].xyz); // View direction vector
 
     float DiffuseTerm, SpecularTerm;

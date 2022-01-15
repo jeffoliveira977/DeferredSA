@@ -197,8 +197,16 @@ void DeferredRendering::RenderLights()
 		CascadedShadowManagement->UpdateBuffer();
 
 		for (size_t i = 0; i < CascadedShadowManagement->CascadeCount; i++)
+		{
+			rwD3D9SetSamplerState(i + 5, D3DSAMP_MAGFILTER, D3DTEXF_LINEAR);
+			rwD3D9SetSamplerState(i + 5, D3DSAMP_MINFILTER, D3DTEXF_LINEAR);
+			rwD3D9SetSamplerState(i + 5, D3DSAMP_MIPFILTER, D3DTEXF_LINEAR);
+			rwD3D9SetSamplerState(i + 5, D3DSAMP_ADDRESSU, D3DTADDRESS_BORDER);
+			rwD3D9SetSamplerState(i + 5, D3DSAMP_ADDRESSV, D3DTADDRESS_BORDER);
+			rwD3D9SetSamplerState(i + 5, D3DSAMP_ADDRESSW, D3DTADDRESS_BORDER);
+			rwD3D9SetSamplerState(i + 5, D3DSAMP_BORDERCOLOR, D3DCOLOR_RGBA(255, 255, 255, 255));
 			rwD3D9RWSetRasterStage(CascadedShadowManagement->mColorRaster[i], i + 5);
-
+		}
 		_rwD3D9SetPixelShaderConstant(13, &CascadedShadowManagement->mConstantBuffer,
 			sizeof(CascadedShadowManagement->mConstantBuffer) / sizeof(float[4]));
 

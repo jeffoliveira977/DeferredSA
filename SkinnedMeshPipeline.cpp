@@ -168,14 +168,17 @@ void SkinnedMeshPipeline::ShadowRendering(RwResEntry* entry, void* object, RwUIn
 		VS_Distance->Apply();
 		PS_Distance->Apply();
 	}
-	else
+	else if (gRenderState == stageCascadeShadow)
 	{
-		/*VS_shadow->Apply();
-		PS_shadow->Apply();*/
-		
+		VS_shadow->Apply();
+		PS_shadow->Apply();
+	}
+	else
+	{		
 		VS_Distance->Apply();
 		PS_Distance->Apply();
 	}
+
 	RwEngineInstance->dOpenDevice.fpRenderStateSet(rwRENDERSTATETEXTUREADDRESS, (void*)1u);
 	RwEngineInstance->dOpenDevice.fpRenderStateSet(rwRENDERSTATETEXTUREPERSPECTIVE, (void*)1u);
 	RwEngineInstance->dOpenDevice.fpRenderStateSet(rwRENDERSTATEZTESTENABLE, (void*)1u);

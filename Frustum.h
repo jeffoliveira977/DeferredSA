@@ -22,8 +22,8 @@ namespace Math
 		XMFLOAT4* GetPlanes();
 		AABB GetBoundingBox();
 
-		void SetMatrix(XMMATRIX matrix);
-		void SetMatrix(XMFLOAT4X4 matrix);
+		void SetMatrix(XMMATRIX matrix, bool rh = false);
+		void SetMatrix(XMFLOAT4X4 matrix, bool rh=false);
 
 		Ray ComputeIntersectionLine(FXMVECTOR p1, FXMVECTOR p2);
 		XMVECTOR ComputeIntersection(FXMVECTOR& plane, Ray& ray);

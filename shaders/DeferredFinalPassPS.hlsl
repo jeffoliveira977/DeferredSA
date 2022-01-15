@@ -104,28 +104,28 @@ inline float clampMap(float x, float a, float b, float c, float d)
 {
     return saturate((x - b) / (a - b)) * (c - d) + d;
 }
-float rand2dTo1d(float2 value, float2 dotDir = float2(12.9898, 78.233))
-{
-    float2 smallValue = sin(value);
-    float random = dot(smallValue, dotDir);
-    random = frac(sin(random) * 143758.5453);
-    return random;
-}
-float3 rand2dTo3d(float2 value)
-{
-    return float3(
-		rand2dTo1d(value, float2(12.989, 78.233)),
-		rand2dTo1d(value, float2(39.346, 11.135)),
-		rand2dTo1d(value, float2(73.156, 52.235))
-	);
-}
-float2 rand2dTo2d(float2 value)
-{
-    return float2(
-		rand2dTo1d(value, float2(12.989, 78.233)),
-		rand2dTo1d(value, float2(39.346, 11.135))
-	);
-}
+//float rand2dTo1d(float2 value, float2 dotDir = float2(12.9898, 78.233))
+//{
+//    float2 smallValue = sin(value);
+//    float random = dot(smallValue, dotDir);
+//    random = frac(sin(random) * 143758.5453);
+//    return random;
+//}
+//float3 rand2dTo3d(float2 value)
+//{
+//    return float3(
+//		rand2dTo1d(value, float2(12.989, 78.233)),
+//		rand2dTo1d(value, float2(39.346, 11.135)),
+//		rand2dTo1d(value, float2(73.156, 52.235))
+//	);
+//}
+//float2 rand2dTo2d(float2 value)
+//{
+//    return float2(
+//		rand2dTo1d(value, float2(12.989, 78.233)),
+//		rand2dTo1d(value, float2(39.346, 11.135))
+//	);
+//}
 float4 main(float4 position : TEXCOORD2, float2 texCoord : TEXCOORD0, float2 vpos : VPOS) : COLOR
 {
     

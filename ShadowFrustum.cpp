@@ -62,7 +62,7 @@ void ShadowFrustum::DirectionalLightTransform(RwCamera* mainCam, CVector lightDi
 
         XMVECTOR minExtents;
         XMVECTOR maxExtents;
-
+        mStabilizeCascades = true;
         if(mStabilizeCascades)
         {
             XMVECTOR radius = XMVectorSet(0.0f, 0.0f, 0.0f, 0.0f);

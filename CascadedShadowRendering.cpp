@@ -17,7 +17,7 @@ CascadedShadowRendering* CascadedShadowManagement;
 
 CascadedShadowRendering::CascadedShadowRendering()
 {
-    ShadowSize = 1024 * 4;
+    ShadowSize = 1024 * 2;
     CascadeCount = 4;
     FilterSize = 40.0f;
     MinDistance = 2.0;
@@ -148,7 +148,7 @@ void CascadedShadowRendering::Update()
     gRenderState = stageCascadeShadow;
 
     // Render in red channel
-    // RwD3D9SetRenderState(D3DRS_COLORWRITEENABLE, D3DCOLORWRITEENABLE_RED);
+     RwD3D9SetRenderState(D3DRS_COLORWRITEENABLE, D3DCOLORWRITEENABLE_RED);
 
     RWSRCGLOBAL(curCamera) = Scene.m_pRwCamera;
    

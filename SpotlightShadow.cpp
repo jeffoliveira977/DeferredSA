@@ -84,7 +84,7 @@ void SpotlightShadow::Update()
 		auto viewMatrix = light->GetViewMatrix();
 		auto projectionMatrix = light->GetProjection();
 
-		gRenderState = stageCascadeShadow;
+		gRenderState = stageSpotShadow;
 		//gRenderState = stagePointShadow;
 
 		_rwD3D9SetPixelShaderConstant(1, &position, 1);
