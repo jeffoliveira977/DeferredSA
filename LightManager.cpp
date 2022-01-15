@@ -116,9 +116,10 @@ void AddVehicleSpotLight(CVehicle* vehicle)
 
 	auto vehicleMatrix = RwMatrixToXMMATRIX(reinterpret_cast<RwMatrix*>(vehicle->GetMatrix()));
 
-	float distance = 0.6f;
+	float distance = 0.05f;
 	if (vehicle->m_nModelIndex == 530)
 		distance = 0.5f;
+	
 
 	XMFLOAT3 direction;
 	XMFLOAT3 position;
@@ -196,18 +197,17 @@ void AddVehicleSpotLight(CVehicle* vehicle)
 		if (vehicle->m_nVehicleSubClass == eVehicleType::VEHICLE_BIKE || vehicle->m_nVehicleClass == eVehicleType::VEHICLE_BIKE)
 		{
 			light.SetAngle(30.0);
-			light.SetRadius(vehicle->m_fBreakPedal > 0.0f ? 7.0 : 3.0f);
-			light.SetIntensity(attenuation*3.0);
+			light.SetRadius(vehicle->m_fBreakPedal > 0.0f ? 7.0f : 3.0f);
+			light.SetIntensity(attenuation * 3.0);
 		}
 		else
 		{
 			light.SetAngle(100.0);
-			light.SetRadius(vehicle->m_fBreakPedal > 0.0f ? 7.0 : 3.0f);
+			light.SetRadius(vehicle->m_fBreakPedal > 0.0f ? 7.0f : 3.0f);
 		}
 
 		auto tailLightPos = XMLoadFloat3((XMFLOAT3*)&vehicleStruct->m_avDummyPos[1]);
 		auto tailLighTranform = XMVector3Transform(tailLightPos, vehicleMatrix);
-
 		XMStoreFloat3(&position, tailLighTranform);
 
 		if (rearRight)
@@ -215,7 +215,7 @@ void AddVehicleSpotLight(CVehicle* vehicle)
 			light.SetPosition({ position.x, position.y, position.z });
 			light.Update();
 			gLightManager.AddSpotLight(light);
-		};
+		}
 
 		if (rearLeft)
 		{
@@ -228,20 +228,15 @@ void AddVehicleSpotLight(CVehicle* vehicle)
 	}
 }
 
-std::unordered_map<CVehicle*, bool> gVehicleInScreen;
-class veh
+void __fastcall CVehicle__DoHeadLightReflection(CVehicle* vehicle, void* edx, CMatrix* matrix, unsigned int, unsigned char, unsigned char)
 {
-public:
-	static void  __thiscall CVehicle__DoHeadLightReflection(CVehicle* vehicle, CMatrix* matrix, unsigned int, unsigned char, unsigned char)
-	{
-	}
-	static void  __thiscall CVehicle__DoHeadLightBeam(CVehicle* vehicle, int, CMatrix*, unsigned char isRight)
-	{}
+	// nothing...
+}
 
-};
-
-DWORD RETURN_CVehicle_DoVehicleLights = 0x6e1a68;
-CVehicle* pLightsVehicleInterface;
+void __fastcall CVehicle__DoHeadLightBeam(CVehicle* vehicle, void*edx, int, CMatrix*, unsigned char isRight)
+{
+	// nothing...
+}
 
 void _declspec(naked) HOOK_CVehicle_DoVehicleLights()
 {
@@ -252,53 +247,52 @@ void _declspec(naked) HOOK_CVehicle_DoVehicleLights()
 		pop ecx			
 		mov al, byte ptr ds : [00C1CC18h]
 		sub esp, 3Ch
-		jmp RETURN_CVehicle_DoVehicleLights
+		mov edx, 0x6E1A68
+		jmp edx
 	}
 }
 
-DWORD RETURN_CEntity_ProcessLightsForEntity = 0x6FC7A6;
 void _declspec(naked) HOOK_CEntity_ProcessLightsForEntity()
 {
 	_asm
 	{
 		mov CurrEntity, ecx
-		sub  esp, 94h
-		jmp RETURN_CEntity_ProcessLightsForEntity
+		sub esp, 94h
+		mov edx, 0x6FC7A6
+		jmp edx
 	}
 }
-#include "CExplosion.h"
-void CPointLights__AddLight2(/*unsigned char defaultType, XMFLOAT3 point, XMFLOAT3 direction, float radius, float red, float green, float blue, unsigned char, bool, CEntity**/)
-{
-	PrintMessage("%f", 2.0);
 
-	//float intensity = 1.0f;
-
-	//gLightManager.AddPointLight(point, direction, { red, green, blue }, radius, intensity, true);
-}
-
-DWORD RETURN_CAutomobile_PreRender = 0x6AAB71;
-DWORD ef = 0x8480D6;
 void _declspec(naked) HOOK_CAutomobile_PreRender()
 {
 	_asm
-	{
-		push ecx
-		call CPointLights__AddLight2;
-		pop ecx
-		push    0FFFFFFFFh
-		mov     eax,  fs:0
-		push    offset ef
-		push    eax
-		mov     fs:0, esp
-		sub     esp, 178h
-		push    ebx
-		push    ebp
-		push    esi
-		push    edi; a1
-	    mov     esi, ecx
-		mov CurrEntity, esi
-		jmp RETURN_CAutomobile_PreRender
+	{	mov CurrEntity, ecx
+		push 0FFFFFFFFh
+		mov eax,  fs:0
+		mov edx, 0x6AAB58
+		jmp edx
 	}
+}
+
+void _declspec(naked) HOOK_Bike_PreRender()
+{
+	static int64_t _eh_handler_6bd090 = 0x848321;
+
+	_asm
+	{	mov CurrEntity, ecx
+		push 0FFFFFFFFh
+		push offset _eh_handler_6bd090
+		mov edx, 0x6BD097
+		jmp edx
+	}
+}
+
+#include "CExplosion.h"
+void CPointLights__AddLight2(unsigned char defaultType, XMFLOAT3 point, XMFLOAT3 direction, float radius, float red, float green, float blue, unsigned char, bool, CEntity*)
+{
+	float intensity = 1.0f;
+
+	gLightManager.AddPointLight(point, direction, { red, green, blue }, radius, intensity, true);
 }
 
 LightManager::LightManager()
@@ -352,35 +346,24 @@ void CPointLights__AddLight1(unsigned char defaultType, XMFLOAT3 point, XMFLOAT3
 #include "CPools.h"
 void LightManager::Hook()
 {   
-	//plugin::patch::RedirectJump(0x6AB80F, CPointLights__AddLight_HOOK1);
-	//plugin::patch::RedirectJump(0x6ABBA6, CPointLights__AddLight_HOOK1);
-
 	plugin::patch::Nop(0x73785D, 2);
-
-	/*plugin::patch::RedirectCall(0x6AB80F, CPointLights__AddLight1);
-	plugin::patch::RedirectCall(0x6ABBA6, CPointLights__AddLight1);
-	plugin::patch::RedirectCall(0x6BD641, CPointLights__AddLight1);*/
-
-	//plugin::patch::RedirectCall(0x6FD105, CPointLights__AddLight3);
-	//plugin::patch::RedirectCall(0x6FD347, CPointLights__AddLight3);
-
 	plugin::patch::RedirectCall(0x737849, CPointLights__AddLight2);
 	plugin::patch::RedirectCall(0x7378C1, CPointLights__AddLight2);
 
 	plugin::patch::Nop(0x6E28E7, 5);
 	plugin::patch::Nop(0x6E27E6, 5);
 	plugin::patch::RedirectJump(0x7000E0, CPointLights__AddLight);
-	plugin::patch::RedirectJump(0x6E0E20, veh::CVehicle__DoHeadLightBeam);
-	plugin::patch::RedirectJump(0x6E1720, veh::CVehicle__DoHeadLightReflection);
+	plugin::patch::RedirectJump(0x6E0E20, ::CVehicle__DoHeadLightBeam);
+	plugin::patch::RedirectJump(0x6E1720, ::CVehicle__DoHeadLightReflection);
 
 	plugin::patch::RedirectJump(0x6FC7A0, HOOK_CEntity_ProcessLightsForEntity);
 	plugin::patch::RedirectJump(0x6e1a60, HOOK_CVehicle_DoVehicleLights);
 	plugin::patch::RedirectJump(0x6AAB50, HOOK_CAutomobile_PreRender);
+	plugin::patch::RedirectJump(0x6BD090, HOOK_Bike_PreRender);
 
 	plugin::Events::gameProcessEvent.before += []() 
 	{
 		gLightManager.ClearLights();
-		gVehicleInScreen.clear();
 		auto coors = FindPlayerCoors(0);
 
 		static float angle = 0.0f;
