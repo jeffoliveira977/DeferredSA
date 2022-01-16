@@ -132,16 +132,13 @@ float4 main(float2 texCoord : TEXCOORD0, float2 vpos:VPOS) : COLOR
     normal = mul(normal, (float3x3) ViewInverseMatrix);
     ShadowData data;
     data = ShadowBuffer;
-    if (materialType == 3)
-    data.bias = 0.05;
+
 
   
     float3 worldPosition;
     WorldPositionFromDepth(texCoord, depth, ProjectionMatrix, ViewInverseMatrix, worldPosition);
     float FarClip2 = 160.0;
-    if (materialType == 3 || materialType == 2)
-     FarClip2 = 10.0;
-    
+
     float FogStart2 = 0.0;
     float fogdist;
     fogdist = worldPosition.z;
