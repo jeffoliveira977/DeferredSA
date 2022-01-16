@@ -85,27 +85,22 @@ void ShadowCaster::AddObject(CEntity* entity)
     if(renderDistance > 70.0 && isVehicle)
         useLod = true;
 
-    for(size_t i = 0; i < CascadedShadowManagement->CascadeCount; i++)
+ /*   for(size_t i = 0; i < CascadedShadowManagement->CascadeCount; i++)
     {
         bool intersects = CascadedShadowManagement->Desc[i].mFrustumCulling.Intersects(aabb);
 
-   /*     if(intersects)
-            ObjectInFrustum[i][entity] = true;
-        else
-            ObjectInFrustum[i][entity] = false;*/
-
         if(intersects)
-        {
-            mCulled[i][entity] = true;
+        {*/
+            mCulled[0][entity] = true;
             if(useLod && entity->m_pLod)
-                m_castEntity[i].push_back(entity->m_pLod);
+                m_castEntity[0].push_back(entity->m_pLod);
             else
-                m_castEntity[i].push_back(entity);
-        }
-        else {
-            mCulled[i][entity] = false;
-        }
-    }
+                m_castEntity[0].push_back(entity);
+    //    }
+    //    else {
+    //        mCulled[0][entity] = false;
+    //    }
+    //}
 }
 
 void ShadowCaster::ClearCullList()
@@ -129,29 +124,29 @@ void ShadowCaster::CastShadowSectorList(CPtrList& ptrList)
 
 void ShadowCaster::ScanSectorList(int sectorX, int sectorY)
 {
-    //if(sectorX >= 0 && sectorY >= 0 && sectorX < MAX_SECTORS_X && sectorY < MAX_SECTORS_Y)
-    //{
-      //  CSector* sector = GetSector(sectorX, sectorY);
-    //    CRepeatSector* repeatSector = GetRepeatSector(sectorX, sectorY);
-
-    //    float sectorPosX = (sectorX - 60) * 50.0f;
-    //    float sectorPosY = (sectorY - 60) * 50.0f;
-    //    float camDistX = sectorPosX - CRenderer::ms_vecCameraPosition.x;
-    //    float camDistY = sectorPosY - CRenderer::ms_vecCameraPosition.y;
-    //    float d = sqrt(camDistY * camDistY + camDistX * camDistX);
-
-    //    //if(d >= CRenderer::ms_fFarClipPlane / 2)
-    //    //    return;
-    //    //PrintMessage("%f %f", CRenderer::ms_vecCameraPosition.z, distanceToSector);
-
-    //    CastShadowSectorList(sector->m_buildings);
-    //    /* CastShadowSectorList(sector->m_dummies);
-    //     CastShadowSectorList(repeatSector->m_lists[REPEATSECTOR_VEHICLES]);
-    //     CastShadowSectorList(repeatSector->m_lists[REPEATSECTOR_PEDS]);*/
-    //    CastShadowSectorList(repeatSector->m_lists[REPEATSECTOR_OBJECTS]);
-    //}
-
     if(sectorX >= 0 && sectorY >= 0 && sectorX < MAX_SECTORS_X && sectorY < MAX_SECTORS_Y)
+    {
+        CSector* sector = GetSector(sectorX, sectorY);
+        CRepeatSector* repeatSector = GetRepeatSector(sectorX, sectorY);
+
+        float sectorPosX = (sectorX - 60) * 50.0f;
+        float sectorPosY = (sectorY - 60) * 50.0f;
+        float camDistX = sectorPosX - CRenderer::ms_vecCameraPosition.x;
+        float camDistY = sectorPosY - CRenderer::ms_vecCameraPosition.y;
+        float d = sqrt(camDistY * camDistY + camDistX * camDistX);
+
+        //if(d >= CRenderer::ms_fFarClipPlane / 2)
+        //    return;
+        //PrintMessage("%f %f", CRenderer::ms_vecCameraPosition.z, distanceToSector);
+
+        CastShadowSectorList(sector->m_buildings);
+        CastShadowSectorList(sector->m_dummies);
+        CastShadowSectorList(repeatSector->m_lists[REPEATSECTOR_VEHICLES]);
+        CastShadowSectorList(repeatSector->m_lists[REPEATSECTOR_PEDS]);
+        CastShadowSectorList(repeatSector->m_lists[REPEATSECTOR_OBJECTS]);
+    }
+
+    /*if(sectorX >= 0 && sectorY >= 0 && sectorX < MAX_SECTORS_X && sectorY < MAX_SECTORS_Y)
     {
         CRenderer::SetupScanLists(sectorX, sectorY);
         CPtrListDoubleLink** pScanLists = reinterpret_cast<CPtrListDoubleLink**>(&PC_Scratch);
@@ -173,36 +168,29 @@ void ShadowCaster::ScanSectorList(int sectorX, int sectorY)
                 }
             }
         }
-    }
+    }*/
 }
 
-
+#include "MeshCulling.h"
 void ShadowCaster::Update(int x, int y)
 {
     //for(size_t i = 0; i < 4; i++)
     //    m_castEntity[i].clear();
 
-    SetNextScanCode();
+    //SetNextScanCode();
 
 
     x = GetSectorX(CRenderer::ms_vecCameraPosition.x);
     y = GetSectorY(CRenderer::ms_vecCameraPosition.y);
 
-    CVector centre = CRenderer::ms_vecCameraPosition;
-    CRect rect(centre.x - 20.0f,
-               centre.y - 20.0f,
-               centre.x + 20.0f,
-               centre.y + 20.0f);
-    int xstart = GetSectorX(rect.left);
-    int ystart = GetSectorY(rect.top);
-    int xend = GetSectorX(rect.right);
-    int yend = GetSectorY(rect.bottom);
-   // PrintMessage("%i %i", xstart, xend);
     int sectorCount = 10;
     for(int j = -sectorCount; j < sectorCount; j++)
     for(int i = -sectorCount; i < sectorCount; i++)
             ScanSectorList( x+i,y+  j);
-        
+
+
+
+      //MeshCulling::GetMeshRenderList(1 | 2 |3 | 4, m_castEntity[0]);
 }
 
 void ShadowCaster::Render(int i)
@@ -215,46 +203,49 @@ void ShadowCaster::Render(int i)
     RwRenderStateSet(rwRENDERSTATEZWRITEENABLE, (void*)TRUE);
     RwRenderStateSet(rwRENDERSTATEZTESTENABLE, (void*)TRUE);
   
-    for(auto entity : m_castEntity[i])
+    for (auto entity : m_castEntity[0])
     {
-        if(entity == nullptr ||  entity->m_pRwObject == nullptr)
-            continue;
-
-        if(entity->m_nType == ENTITY_TYPE_PED)
+        if (MeshCulling::InFrustum(entity, CascadedShadowManagement->Desc[i].mFrustumCulling))
         {
-            CPed* ped = static_cast<CPed*>(entity);
-            CTaskSimpleJetPack* jetPack = ped->m_pIntelligence->GetTaskJetPack();
-            if(jetPack && jetPack->m_pJetPackClump)
-                RpClumpRender(jetPack->m_pJetPackClump);
-        }
+            if (entity == nullptr || entity->m_pRwObject == nullptr)
+                continue;
 
-        entity->m_bImBeingRendered = true;
+            if (entity->m_nType == ENTITY_TYPE_PED)
+            {
+                CPed* ped = static_cast<CPed*>(entity);
+                CTaskSimpleJetPack* jetPack = ped->m_pIntelligence->GetTaskJetPack();
+                if (jetPack && jetPack->m_pJetPackClump)
+                    RpClumpRender(jetPack->m_pJetPackClump);
+            }
 
-        CVehicle* vehicle = static_cast<CVehicle*>(entity);
-        if(entity->m_nType == ENTITY_TYPE_VEHICLE)
-        {
-            CVisibilityPlugins::SetupVehicleVariables(entity->m_pRwClump);
-            CVisibilityPlugins::InitAlphaAtomicList();  
-            vehicle->SetupRender();
-        }
-        else if(!entity->m_bBackfaceCulled)
-        {
-            RwRenderStateSet(rwRENDERSTATECULLMODE, (void*)rwCULLMODECULLNONE);
-        }
-        entity->Render();
+            entity->m_bImBeingRendered = true;
+
+            CVehicle* vehicle = static_cast<CVehicle*>(entity);
+            if (entity->m_nType == ENTITY_TYPE_VEHICLE)
+            {
+                CVisibilityPlugins::SetupVehicleVariables(entity->m_pRwClump);
+                CVisibilityPlugins::InitAlphaAtomicList();
+                vehicle->SetupRender();
+            }
+            else if (!entity->m_bBackfaceCulled)
+            {
+                RwRenderStateSet(rwRENDERSTATECULLMODE, (void*)rwCULLMODECULLNONE);
+            }
+            entity->Render();
 
 
-        if(entity->m_nType == ENTITY_TYPE_VEHICLE)
-        {   
-            CVisibilityPlugins::RenderAlphaAtomics();      
-            vehicle->ResetAfterRender();
-        }
-        else if(!entity->m_bBackfaceCulled)
-        {
-            RwRenderStateSet(rwRENDERSTATECULLMODE, (void*)rwCULLMODECULLBACK);
-        }
+            if (entity->m_nType == ENTITY_TYPE_VEHICLE)
+            {
+                CVisibilityPlugins::RenderAlphaAtomics();
+                vehicle->ResetAfterRender();
+            }
+            else if (!entity->m_bBackfaceCulled)
+            {
+                RwRenderStateSet(rwRENDERSTATECULLMODE, (void*)rwCULLMODECULLBACK);
+            }
 
-        entity->m_bImBeingRendered = false;
+            entity->m_bImBeingRendered = false;
+        }
     }
     //VisibilityPlugins::RenderWeaponPedsNoMuzzleFlash();
      CVisibilityPlugins::RenderWeaponPedsForPC();

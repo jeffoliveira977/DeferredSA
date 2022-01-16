@@ -105,7 +105,10 @@ float3 CalculateLighing(float3 albedo, float3 normal, float3 lightPosition, floa
    
     return (diffuseBRDF + specularBRDF) * cosLi;
 }
-
+inline int ConvertToMatType(float p)
+{
+    return (255 * p);
+}
 float4 main(float2 texCoord : TEXCOORD0, float2 vpos:VPOS) : COLOR
 {
     float4 AlbedoColor = TEXTURE2D_ALBEDO(texCoord);
@@ -117,7 +120,7 @@ float4 main(float2 texCoord : TEXCOORD0, float2 vpos:VPOS) : COLOR
     float4 Parameters = TEXTURE2D_MATERIALPROPS(texCoord);
     float SpecIntensity = Parameters.x;
     float Roughness = 1 - Parameters.y;
-    
+    int materialType = ConvertToMatType(Parameters.w);
     float4 color;
     
     float depth;
@@ -129,23 +132,29 @@ float4 main(float2 texCoord : TEXCOORD0, float2 vpos:VPOS) : COLOR
     normal = mul(normal, (float3x3) ViewInverseMatrix);
     ShadowData data;
     data = ShadowBuffer;
-    if (Parameters.w==3)
+    if (materialType == 3)
     data.bias = 0.05;
 
-    
+  
     float3 worldPosition;
     WorldPositionFromDepth(texCoord, depth, ProjectionMatrix, ViewInverseMatrix, worldPosition);
-    float4 Shadow = DrawShadow(ShadowSampler, vpos, length(worldPosition.xyz - ViewInverseMatrix[3].xyz), worldPosition, ShadowBuffer) * ShadowDNBalance;
-  
     float FarClip2 = 160.0;
+    if (materialType == 3 || materialType == 2)
+     FarClip2 = 10.0;
+    
     float FogStart2 = 0.0;
     float fogdist;
     fogdist = worldPosition.z;
     float fadefact = (FarClip2 - depth) / (FarClip2 - FogStart2);
     fadefact = saturate(1.0 - fadefact);
     
+    float4 Shadow = 1.0f;
+    if(fadefact <= 1.0f)
+    Shadow = DrawShadow(ShadowSampler, vpos, length(worldPosition.xyz - ViewInverseMatrix[3].xyz), worldPosition, ShadowBuffer) * ShadowDNBalance;
+  
+
     Shadow = lerp(Shadow, 1.0, fadefact);
-    Shadow = lerp(1.0, Shadow, 0.7);
+   // Shadow = lerp(1.0, Shadow, 0.7);
 
     float3 ViewDir = normalize(worldPosition.xyz - ViewInverseMatrix[3].xyz); // View direction vector
 

@@ -126,6 +126,13 @@ inline float clampMap(float x, float a, float b, float c, float d)
 //		rand2dTo1d(value, float2(39.346, 11.135))
 //	);
 //}
+/*!
+    Decodes material type from float. Simply restores it to 0..255 range.
+*/
+inline int ConvertToMatType(float p)
+{
+    return (255 * p);
+}
 float4 main(float4 position : TEXCOORD2, float2 texCoord : TEXCOORD0, float2 vpos : VPOS) : COLOR
 {
     
@@ -136,7 +143,7 @@ float4 main(float4 position : TEXCOORD2, float2 texCoord : TEXCOORD0, float2 vpo
     float4 Parameters = TEXTURE2D_MATERIALPROPS(texCoord);
     float specularFactor = Parameters.x;
     float Roughness = 1 - Parameters.y;
-    float materialType = Parameters.w;
+    int materialType = ConvertToMatType(Parameters.w);
 
     float depth;
     float3 normal;

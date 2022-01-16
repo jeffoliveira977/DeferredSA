@@ -51,6 +51,13 @@ void VSFillGBuffer(VS_Input input, out VS_DeferredOutput output)
     output.PositionVS = worldView;
     output.Depth = worldView.z;
 }
+/*!
+    Encodes material type to float in 0..1 range.
+*/
+inline float ConvertFromMatType(float p)
+{
+    return p / 255.0f;
+}
 
 void PSFillGBuffer(float4 albedo, float depth, float3 normal, float4 glow, float4 radiance, out PS_DeferredOutput output)
 {
@@ -60,5 +67,6 @@ void PSFillGBuffer(float4 albedo, float depth, float3 normal, float4 glow, float
     output.Glow = glow;
     output.Glow.z = depth;
     output.Radiance = radiance;
+    output.Radiance.w = ConvertFromMatType(radiance.w);
 
 }

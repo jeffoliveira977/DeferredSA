@@ -106,3 +106,60 @@ bool MeshCulling::Render(vector<CEntity*> list, Math::Frustum frustum)
 
 	return true;
 }
+
+#include "Renderer.h"
+#include "CRenderer.h"
+
+bool MeshCulling::GetMeshRenderList(int8_t scan, std::vector<CEntity*>& meshList)
+{
+	auto ScanSectorList = [](int sectorX, int sectorY, int8_t scan, std::vector<CEntity*>& meshList) {
+		if (sectorX >= 0 && sectorY >= 0 && sectorX < MAX_SECTORS_X && sectorY < MAX_SECTORS_Y)
+		{
+			CSector* sector = GetSector(sectorX, sectorY);
+			CRepeatSector* repeatSector = GetRepeatSector(sectorX, sectorY);
+
+			float sectorPosX = (sectorX - 60) * 50.0f;
+			float sectorPosY = (sectorY - 60) * 50.0f;
+			float camDistX = sectorPosX - CRenderer::ms_vecCameraPosition.x;
+			float camDistY = sectorPosY - CRenderer::ms_vecCameraPosition.y;
+			float d = sqrt(camDistY * camDistY + camDistX * camDistX);
+
+			//if(d >= CRenderer::ms_fFarClipPlane / 2)
+			//    return;
+			//PrintMessage("%f %f", CRenderer::ms_vecCameraPosition.z, distanceToSector);
+
+			auto CastShadowSectorList = [](CPtrList& ptrList, std::vector<CEntity*>& meshList)
+			{
+				for (auto node = ptrList.GetNode(); node; node = node->pNext)
+				{
+					CEntity* entity = reinterpret_cast<CEntity*>(node->pItem);
+					if (entity->m_nScanCode != CWorld::ms_nCurrentScanCode)
+					{
+						entity->m_nScanCode = CWorld::ms_nCurrentScanCode;
+						meshList.push_back(entity);
+					}
+				}
+			};
+
+			if (scan & MeshRenderList::BUILDING_SCAN)
+				CastShadowSectorList(sector->m_buildings, meshList);	
+			CastShadowSectorList(sector->m_dummies, meshList);			
+			if (scan & MeshRenderList::VEHICLE_SCAN)
+				CastShadowSectorList(repeatSector->m_lists[REPEATSECTOR_VEHICLES], meshList);
+			if (scan & MeshRenderList::PED_SCAN)
+				CastShadowSectorList(repeatSector->m_lists[REPEATSECTOR_PEDS], meshList);
+			if (scan & MeshRenderList::OBJECT_SCAN)
+				CastShadowSectorList(repeatSector->m_lists[REPEATSECTOR_OBJECTS], meshList);
+		}
+	};
+
+	auto x = GetSectorX(CRenderer::ms_vecCameraPosition.x);
+	auto y = GetSectorY(CRenderer::ms_vecCameraPosition.y);
+
+	int sectorCount = 10;
+	for (int j = -sectorCount; j < sectorCount; j++)
+		for (int i = -sectorCount; i < sectorCount; i++)
+			ScanSectorList(x + i, y + j, scan, meshList);
+	
+	return true;
+}

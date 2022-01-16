@@ -186,9 +186,10 @@ void Renderer::RenderRoads()
 #include "CScene.h"
 
 #define InsertSorted(alpha, info) ((CLink<CVisibilityPlugins::AlphaObjectInfo>* ( __thiscall*)(CLinkList<CVisibilityPlugins::AlphaObjectInfo>*, CVisibilityPlugins::AlphaObjectInfo*))0x733910)(alpha, info)
-
+void AddEntity(CEntity* entity);
 bool InsertEntityIntoEntityList(CEntity* entity, float distance, void* callback)
 {
+    AddEntity(entity);
     CVisibilityPlugins::AlphaObjectInfo info{};
     info.m_entity = entity;
     info.m_pCallback = callback;
@@ -377,33 +378,18 @@ bool IsGlassModel(CEntity* pEntity)
 }
 void Renderer::AddEntityToRenderList(CEntity* pEntity, float fDistance)
 {
+
     CBaseModelInfo* pBaseModelInfo = CModelInfo::ms_modelInfoPtrs[pEntity->m_nModelIndex];
     pBaseModelInfo->SetHasBeenPreRendered(false);
-    gAalphas.clear();
-    if (pEntity->m_pRwObject)
-    {
-        if (RwObjectGetType(pEntity->m_pRwObject) == rpATOMIC) {
-            AtomicCallback(pEntity->m_pRwAtomic, (void*)pEntity);
-        }
-       /* else if (RwObjectGetType(pEntity->m_pRwObject) == rpCLUMP) {
-            RpClumpForAllAtomics(pEntity->m_pRwClump, ScanAlpha, (void*)pEntity);
-        }*/
-    }
-  
-    if (IsGlassModel(pEntity))
-        return;
-  /*  if(!pEntity->m_bDistanceFade)
-    {
-        if(pEntity->m_bDrawLast && CVisibilityPlugins::InsertEntityIntoSortedList(pEntity, fDistance))
-        {
+    if (!pEntity->m_bDistanceFade) {
+        if (pEntity->m_bDrawLast && CVisibilityPlugins::InsertEntityIntoSortedList(pEntity, fDistance)) {
             pEntity->m_bDistanceFade = false;
             return;
         }
     }
-    else if(CVisibilityPlugins::InsertEntityIntoSortedList(pEntity, fDistance))
-    {
+    else if (CVisibilityPlugins::InsertEntityIntoSortedList(pEntity, fDistance)) {
         return;
-    }*/
+    }
     if(pEntity->m_nNumLodChildren && !pEntity->m_bUnderwater)
     {
         CRenderer::ms_aVisibleLodPtrs[CRenderer::ms_nNoOfVisibleLods] = pEntity;
@@ -425,6 +411,7 @@ void Renderer::AddToLodRenderList(CEntity* entity, float distance)
     ++CRenderer::ms_pLodRenderList;
 
     ShadowCasterEntity->AddObject(entity);
+
 }
 
 bool Renderer::InsertEntityIntoSortedList(CEntity* entity, float distance)
@@ -469,8 +456,8 @@ void Renderer::ScanSectorList(int sectorX, int sectorY)
                     bool bInvisibleEntity = false;
                     float fDistance = 0.0f;
                     int visibility = CRenderer::SetupEntityVisibility(entity, fDistance);
-                   // if(visibility != RENDERER_STREAMME && !entity->IsEntityOccluded())
-                    //        ShadowCasterEntity->AddObject(entity);
+                    if(visibility != RENDERER_STREAMME && !entity->IsEntityOccluded())
+                            ShadowCasterEntity->AddObject(entity);
 
                     switch(visibility)
                     {
@@ -676,7 +663,7 @@ void Renderer::Hook()
    // plugin::patch::Nop(0x535FCD, 5);
     patch::SetUChar(0x00535FC3, 1);
 
-    //plugin::patch::RedirectJump(0x00734570, Renderer::InsertEntityIntoSortedList);
+   // plugin::patch::RedirectJump(0x00734570, Renderer::InsertEntityIntoSortedList);
     // plugin::patch::RedirectJump(0x005534B0, Renderer::AddEntityToRenderList);
     //plugin::patch::RedirectJump(0x00553710, Renderer::AddToLodRenderList);
     //plugin::patch::RedirectJump(0x00553260, Renderer::RenderOneNonRoad);
@@ -688,8 +675,8 @@ void Renderer::Hook()
     plugin::patch::RedirectJump(0x005556E0, Renderer::ConstructRenderList);
 
     // Compatibility with Open Limit Adjuster
-    patch::RedirectJump(0x55352E, CRenderer__AddEntityToRenderList___VisibleEntity_HOOK);
-    patch::RedirectJump(0x5534FA, CRenderer__AddEntityToRenderList___VisibleLod_HOOK);
+    //patch::RedirectJump(0x55352E, CRenderer__AddEntityToRenderList___VisibleEntity_HOOK);
+    //patch::RedirectJump(0x5534FA, CRenderer__AddEntityToRenderList___VisibleLod_HOOK);
 
 }
 
@@ -747,10 +734,10 @@ void Renderer::ConstructRenderList()
     CRenderer::ms_fCameraHeading = TheCamera.GetHeading();
     CRenderer::ms_fFarClipPlane = Scene.m_pRwCamera->farPlane;
     CRenderer::ResetLodRenderLists();
-    CRenderer::ScanWorld();
+   /* CRenderer::*/ScanWorld();
 
-    if (CGame::currArea == 0 && CGameIdle::m_fShadowDNBalance <= 1.0)
-        ShadowCasterEntity->Update(GetSectorX(CRenderer::ms_vecCameraPosition.x), GetSectorY(CRenderer::ms_vecCameraPosition.y));
+  /*  if (CGame::currArea == 0 && CGameIdle::m_fShadowDNBalance <= 1.0)
+        ShadowCasterEntity->Update(GetSectorX(CRenderer::ms_vecCameraPosition.x), GetSectorY(CRenderer::ms_vecCameraPosition.y));*/
 
     CRenderer::ProcessLodRenderLists();
     CStreaming::StartRenderEntities();
