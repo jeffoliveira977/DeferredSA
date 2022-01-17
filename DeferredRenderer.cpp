@@ -110,14 +110,14 @@ void DeferredRendering::Stop()
 
 	static XMVECTOR vFrustumCornersWS[8] =
 	{
-		{-1.0, 1.0, 0.0, 0.0}, // near top left
-		{1.0, 1.0, 0.0, 0.0 }, // near top right
-		{-1.0, -1.0, 0.0, 0.0}, // near bottom left
-		{1.0, -1.0, 0.0, 0.0}, // near bottom right
-		{-1.0, 1.0, 1.0, 0.0}, // far top left
-		{1.0, 1.0, 1.0, 0.0}, // far top right
-		{-1.0, -1.0, 1.0, 0.0}, // far bottom left
-		{1.0, -1.0, 1.0, 0.0} // far bottom right
+		{-1.0, 1.0, 0.0, 1.0}, // near top left
+		{1.0, 1.0, 0.0, 1.0 }, // near top right
+		{-1.0, -1.0, 0.0, 1.0}, // near bottom left
+		{1.0, -1.0, 0.0, 1.0}, // near bottom right
+		{-1.0, 1.0, 1.0, 1.0}, // far top left
+		{1.0, 1.0, 1.0, 1.0}, // far top right
+		{-1.0, -1.0, 1.0, 1.0}, // far bottom left
+		{1.0, -1.0, 1.0, 1.0} // far bottom right
 	};
 
 	XMVECTOR det;

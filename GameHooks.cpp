@@ -66,7 +66,7 @@ void CRealTimeShadowManager__Update()
 	 CascadedShadowManagement->Update();
 	 shadowTimer.Stop();
 
-	 PrintMessage("%s", shadowTimer.GetTimerResult().c_str());
+	 //PrintMessage("%s", shadowTimer.GetTimerResult().c_str());
 
 	CubemapReflection::Update();
 	 CubemapReflection::RenderScene();

@@ -100,7 +100,7 @@ void ShadowFrustum::DirectionalLightTransform(RwCamera* mainCam, CVector lightDi
         XMStoreFloat3(&extents, maxExtents - minExtents);
 
         float longEdge = max(extents.x, extents.y);
-        longEdge *= 0.5;
+        //longEdge *= 0.5;
         float nearZ =-300;
         float farZ = 50.0f + -nearZ;
       //  PrintMessage("%f", farZ);
@@ -155,7 +155,7 @@ void ShadowFrustum::CalculateShadowDistances(const RwReal nearClip, const RwReal
     m_fShadowDistances[3] = nearClip + farClip * mDistanceCoefficients[2];
     m_fShadowDistances[4] = farClip;
     return;*/
-    m_partitionMode = PartitionMode_Logarithmic;
+    m_partitionMode = PartitionMode_Manual;
     if(m_partitionMode == PartitionMode_Manual)
     {
         m_fShadowDistances[0] = nearClip;

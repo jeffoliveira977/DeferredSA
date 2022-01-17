@@ -203,10 +203,13 @@ void ShadowCaster::Render(int i)
     RwRenderStateSet(rwRENDERSTATEZWRITEENABLE, (void*)TRUE);
     RwRenderStateSet(rwRENDERSTATEZTESTENABLE, (void*)TRUE);
   
+    static int count[4];
+    count[0] = count[1] = count[2] = count[3] = 0;
     for (auto entity : m_castEntity[0])
     {
         if (MeshCulling::InFrustum(entity, CascadedShadowManagement->Desc[i].mFrustumCulling))
         {
+            count[i]++;
             if (entity == nullptr || entity->m_pRwObject == nullptr)
                 continue;
 
@@ -247,6 +250,8 @@ void ShadowCaster::Render(int i)
             entity->m_bImBeingRendered = false;
         }
     }
+   /* if(i==2)
+    PrintMessage("%d %d", count[i], m_castEntity[0].size());*/
     //VisibilityPlugins::RenderWeaponPedsNoMuzzleFlash();
      CVisibilityPlugins::RenderWeaponPedsForPC();
 }

@@ -107,36 +107,40 @@ void CascadedShadowRendering::UpdateImgui()
         ImGui::InputFloat("DistanceCoefficients 2", &mDistanceCoefficients[2], 0.0001, 0.001, "%.6f");
         ImGui::InputFloat("DistanceCoefficients 3", &mDistanceCoefficients[3], 0.0001, 0.001, "%.6f");
 
-        mINI::INIFile file("DeferredConfig.ini");
-        mINI::INIStructure ini;
 
-        file.read(ini);
-
-        int n = 0, o = 0;
-        for(auto const& it : ini)
+        if (GetKeyState(VK_TAB) & 0x8000)
         {
-            auto const& section = it.first;
-            auto const& collection = it.second;
-            for(auto const& it2 : collection)
-            {
-                auto const& key = it2.first;
-                if(section.compare("SHADOW") == 0)
-                {
-                    if(key.find("DistanceCoefficients") != std::string::npos)
-                    {
-                        ini[section][key] = std::to_string(mDistanceCoefficients[n]);
-                        n++;
-                    }
-                    else if(key.find("BiasCoefficients") != std::string::npos)
-                    {
-                        ini[section][key] = std::to_string(BiasCoefficients[o]);
-                        o++;
-                    }
+            mINI::INIFile file("DeferredConfig.ini");
+            mINI::INIStructure ini;
 
+            file.read(ini);
+
+            int n = 0, o = 0;
+            for (auto const& it : ini)
+            {
+                auto const& section = it.first;
+                auto const& collection = it.second;
+                for (auto const& it2 : collection)
+                {
+                    auto const& key = it2.first;
+                    if (section.compare("SHADOW") == 0)
+                    {
+                        if (key.find("DistanceCoefficients") != std::string::npos)
+                        {
+                            ini[section][key] = std::to_string(mDistanceCoefficients[n]);
+                            n++;
+                        }
+                        else if (key.find("BiasCoefficients") != std::string::npos)
+                        {
+                            ini[section][key] = std::to_string(BiasCoefficients[o]);
+                            o++;
+                        }
+
+                    }
                 }
             }
+            file.write(ini);
         }
-        file.write(ini);
     }
 }
 
