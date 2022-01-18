@@ -17,7 +17,7 @@ class ShadowFrustum
 {
 public:
 	void CalculateShadowDistances(const RwReal fNear, const RwReal fFar);
-	void DirectionalLightTransform(RwCamera* mainCam, CVector lightDir, int shadowCascade);
+	void CreateMatrices(RwCamera* mainCam, CVector lightDir, int shadowCascade);
 
 	
 	XMMATRIX m_LightSpaceMatrix;

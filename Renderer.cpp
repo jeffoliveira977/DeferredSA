@@ -688,7 +688,7 @@ void Renderer::ConstructRenderList()
         const auto sunDirs = reinterpret_cast<RwV3d*>(0xB7CA50);
         const auto curr_sun_dir = *reinterpret_cast<int*>(0xB79FD0);
         const auto curr_sun_dirvec = sunDirs[curr_sun_dir];
-        CascadedShadowManagement->DirectionalLightTransform(Scene.m_pRwCamera, curr_sun_dirvec, 0);
+        CascadedShadowManagement->CreateMatrices(Scene.m_pRwCamera, curr_sun_dirvec, 0);
     }
 
     eZoneAttributes zoneAttributes = CCullZones__FindTunnelAttributesForCoors(TheCamera.GetPosition());

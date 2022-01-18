@@ -34,7 +34,7 @@ void GetCameraFrustumCorners(RwCamera* camera, RwReal nearClip, RwReal farClip, 
 //#define RWCAMERA_TRANS
 
 #include "CScene.h"
-void ShadowFrustum::DirectionalLightTransform(RwCamera* mainCam, CVector lightDir, int shadowCascade)
+void ShadowFrustum::CreateMatrices(RwCamera* mainCam, CVector lightDir, int shadowCascade)
 {
     XMVECTOR lightDirection = XMVectorSet(lightDir.x, lightDir.y, lightDir.z, 1.0f);
 
