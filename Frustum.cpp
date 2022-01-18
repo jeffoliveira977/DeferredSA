@@ -67,7 +67,7 @@ namespace Math
 		for (int i = 0; i < 6; i++)
 			Planes.push_back(planes[i]);
 
-#if 0
+#if 1
 		Corners[0] = IntersectionPoint(Planes[0], Planes[2], Planes[4]);
 		Corners[1] = IntersectionPoint(Planes[0], Planes[3], Planes[4]);
 		Corners[2] = IntersectionPoint(Planes[0], Planes[3], Planes[5]);
