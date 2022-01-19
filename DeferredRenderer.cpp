@@ -165,9 +165,9 @@ void DeferredRendering::Stop()
 	RenderLights();
 	AtmosphericScattering();
 
-	//mAmbientOcclusion->Render();
-	//mVolumetricClouds->Render(mScreenRT.get());
-	//mVolumetricLight->Render(mScreenRT.get());
+	mAmbientOcclusion->Render();
+	mVolumetricClouds->Render(mScreenRT.get());
+	mVolumetricLight->Render(mScreenRT.get());
 
 	_rwD3D9SetPixelShader(NULL);
 	//_rwD3D9SetVertexShader(NULL);
@@ -182,8 +182,8 @@ void DeferredRendering::RenderPostProcessing()
 	RwRenderStateSet(rwRENDERSTATECULLMODE, (void*)rwCULLMODECULLNONE);
 	RwD3D9SetRenderState(D3DRS_ALPHABLENDENABLE, TRUE);
 
-	/*mPostProcessing->RenderFXAA(mScreenRT.get());
-	mPostProcessing->RenderBloom(mScreenRT.get());*/
+	mPostProcessing->RenderFXAA(mScreenRT.get());
+	mPostProcessing->RenderBloom(mScreenRT.get());
 }
 
 void DeferredRendering::RenderLights()
