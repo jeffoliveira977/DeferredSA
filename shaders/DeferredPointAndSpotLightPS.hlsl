@@ -26,8 +26,8 @@ float LightRadius : register(c12);
 float LightIntensity : register(c13);
 float LightConeAngle : register(c14);
 float LightExponent : register(c15);
-float CastShadow : register(c16);
-float UsePattern : register(c17);
+bool CastShadow : register(c16);
+bool UsePattern : register(c17);
 row_major float4x4 ShadowMatrix : register(c18);
 
 sampler2D SamplerShadow : register(s5);
@@ -275,7 +275,7 @@ float4 main(float4 position: TEXCOORD3, float2 texCoord : TEXCOORD0, float3 frus
     //if (projCoords.z > 1.0f)
     //    s = 1.0;
     
-    if(CastShadow == 0.0f)
+    if(CastShadow)
         s = 1.0;
     
     float4 flashlight = 1.0f;

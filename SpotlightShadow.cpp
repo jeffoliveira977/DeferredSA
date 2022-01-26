@@ -60,7 +60,7 @@ void SpotlightShadow::AddObject(CEntity* entity)
 void SpotlightShadow::Update()
 {
 	gLightManager.SortSpotLights();
-	//RwD3D9SetRenderState(D3DRS_COLORWRITEENABLE, D3DCOLORWRITEENABLE_RED);
+	RwD3D9SetRenderState(D3DRS_COLORWRITEENABLE, D3DCOLORWRITEENABLE_RED);
 
 	RWSRCGLOBAL(curCamera) = Scene.m_pRwCamera;
 

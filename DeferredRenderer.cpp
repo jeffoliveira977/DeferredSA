@@ -298,7 +298,7 @@ void DeferredRendering::RenderLights()
 	}
 
 	// PrintMessage("%d %d", maxLights, count);
-	 //gLightManager.SortSpotLights();
+	 gLightManager.SortSpotLights();
 	mSpotLightPS->Apply();
 	maxLights = min((size_t)30, gLightManager.GetSpotLightCount());
 
@@ -306,12 +306,6 @@ void DeferredRendering::RenderLights()
 	for (size_t i = 0; i < maxLights; i++)
 	{
 		auto light = gLightManager.GetSpotLightAt(i);
-
-		CVector dx = CVector(light->GetPosition().x, light->GetPosition().y, light->GetPosition().z) - camPos;
-
-		auto drawShadow = 0.0f;
-		if (!light->mDrawShadow)
-			drawShadow = 1.0;
 
 		rwD3D9SetSamplerState(5, D3DSAMP_MAGFILTER, D3DTEXF_POINT);
 		rwD3D9SetSamplerState(5, D3DSAMP_MINFILTER, D3DTEXF_POINT);
@@ -329,8 +323,7 @@ void DeferredRendering::RenderLights()
 		 rwD3D9SetSamplerState(6, D3DSAMP_ADDRESSW, D3DTADDRESS_CLAMP);
 		 RwD3D9SetTexture(gRandomNoise, 6);
 
-		 auto usePattern = light->mUsePattern ? 1.0f : 0.0f;
-		 if (usePattern)
+		 if (light->mUsePattern)
 		 {
 			 rwD3D9SetSamplerState(6, D3DSAMP_MAGFILTER, D3DTEXF_LINEAR);
 			 rwD3D9SetSamplerState(6, D3DSAMP_MINFILTER, D3DTEXF_LINEAR);
@@ -351,8 +344,8 @@ void DeferredRendering::RenderLights()
 		 mSpotLightPS->SetFloat("LightIntensity", light->GetIntensity());
 		 mSpotLightPS->SetFloat("LightConeAngle", cosSpotAngle);
 		 mSpotLightPS->SetFloat("LightExponent", spotexponent);
-		 mSpotLightPS->SetFloat("CastShadow", drawShadow);
-		 mSpotLightPS->SetFloat("UsePattern", usePattern);
+		 mSpotLightPS->SetBool("CastShadow", light->mDrawShadow);
+		 mSpotLightPS->SetBool("UsePattern", light->mUsePattern);
 		 mSpotLightPS->SetMatrix("ShadowMatrix", &light->mMatrix);
 		Quad::Render();
 	}
