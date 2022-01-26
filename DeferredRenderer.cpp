@@ -183,7 +183,7 @@ void DeferredRendering::RenderPostProcessing()
 	RwD3D9SetRenderState(D3DRS_ALPHABLENDENABLE, TRUE);
 
 	mPostProcessing->RenderFXAA(mScreenRT.get());
-	mPostProcessing->RenderBloom(mScreenRT.get());
+	//mPostProcessing->RenderBloom(mScreenRT.get());
 }
 
 void DeferredRendering::RenderLights()
@@ -307,13 +307,9 @@ void DeferredRendering::RenderLights()
 	{
 		auto light = gLightManager.GetSpotLightAt(i);
 
-		auto radius = light->GetRadius();
-		auto intensity = light->GetIntensity();
-		auto coneAngle = light->GetAngle();
-
 		CVector dx = CVector(light->GetPosition().x, light->GetPosition().y, light->GetPosition().z) - camPos;
 
-		float drawShadow = 0.0;
+		auto drawShadow = 0.0f;
 		if (!light->mDrawShadow)
 			drawShadow = 1.0;
 
@@ -333,7 +329,8 @@ void DeferredRendering::RenderLights()
 		 rwD3D9SetSamplerState(6, D3DSAMP_ADDRESSW, D3DTADDRESS_CLAMP);
 		 RwD3D9SetTexture(gRandomNoise, 6);
 
-		 if (light->mUsePattern)
+		 auto usePattern = light->mUsePattern ? 1.0f : 0.0f;
+		 if (usePattern)
 		 {
 			 rwD3D9SetSamplerState(6, D3DSAMP_MAGFILTER, D3DTEXF_LINEAR);
 			 rwD3D9SetSamplerState(6, D3DSAMP_MINFILTER, D3DTEXF_LINEAR);
@@ -343,27 +340,22 @@ void DeferredRendering::RenderLights()
 			 rwD3D9SetSamplerState(6, D3DSAMP_ADDRESSW, D3DTADDRESS_WRAP);
 			 RwD3D9SetTexture(gFlashLight, 7);
 		 }
-		 float usePattern = light->mUsePattern ? 1.0 : 0.0;
+
 		 light->mExponent = 2.0f;
-		 float cosSpotAngle = cos(XMConvertToRadians(coneAngle));
-		 float spotexponent = light->mExponent / (1 - cosSpotAngle);
-		_rwD3D9SetPixelShaderConstant(9, &light->GetPosition(), 1);
-		_rwD3D9SetPixelShaderConstant(10, &light->GetDirection(), 1);
-		_rwD3D9SetPixelShaderConstant(11, &light->GetColor(), 1);
-		_rwD3D9SetPixelShaderConstant(12, &radius, 1);
-		_rwD3D9SetPixelShaderConstant(13, &intensity, 1);
-		_rwD3D9SetPixelShaderConstant(14, &cosSpotAngle, 1);
-		_rwD3D9SetPixelShaderConstant(15, &spotexponent, 1);
-		_rwD3D9SetPixelShaderConstant(16, &drawShadow, 1);
-		_rwD3D9SetPixelShaderConstant(17, &usePattern, 1);
-		_rwD3D9SetPixelShaderConstant(18, &(light->mMatrix) , 4);
+		 auto cosSpotAngle = cos(XMConvertToRadians(light->GetAngle()));
+		 auto spotexponent = light->mExponent / (1.0f - cosSpotAngle);
+		 mSpotLightPS->SetFloat3("LightPosition", light->GetPosition());
+		 mSpotLightPS->SetFloat3("LightDirection", light->GetDirection());
+		 mSpotLightPS->SetFloat3("LightColor", light->GetColor());
+		 mSpotLightPS->SetFloat("LightRadius", light->GetRadius());
+		 mSpotLightPS->SetFloat("LightIntensity", light->GetIntensity());
+		 mSpotLightPS->SetFloat("LightConeAngle", cosSpotAngle);
+		 mSpotLightPS->SetFloat("LightExponent", spotexponent);
+		 mSpotLightPS->SetFloat("CastShadow", drawShadow);
+		 mSpotLightPS->SetFloat("UsePattern", usePattern);
+		 mSpotLightPS->SetMatrix("ShadowMatrix", &light->mMatrix);
 		Quad::Render();
 	}
-
-
-	//static uint maxlight = 0;
-	//maxlight = max(maxlight, gLightManager.GetPointLightCount());
-	//
 
 
 	// Render to default surface

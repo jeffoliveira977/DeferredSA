@@ -807,9 +807,9 @@ HRESULT ConstantTable::Initialize(void* byteCode)
 
     if(object->constants == nullptr)
     {
-        return E_OUTOFMEMORY;
         free_constant_table(object);
         delete[] object;
+        return E_OUTOFMEMORY;
     }
 
     constant_info = (LPD3DXSHADER_CONSTANTINFO)(object->ctab + ctab_header->ConstantInfo);
@@ -896,6 +896,11 @@ void ConstantTable::SetFloat(const std::string constant, float f)
 void ConstantTable::SetFloatArray(const std::string constant, float* f, uint32_t count)
 {
     set_scalar_array(mConstantTable, constant, f, count, D3DXPT_FLOAT);
+}
+
+void ConstantTable::SetFloat3(const std::string constant, XMFLOAT3 f)
+{
+    set_vector_array(mConstantTable, constant, &f, 3, D3DXPT_FLOAT);
 }
 
 void ConstantTable::SetVector(const std::string constant, XMVECTOR* vector)

@@ -34,7 +34,7 @@ public:
     void SetFloat(const std::string constant, float f);
     void SetFloatArray(const std::string constant, float* f, uint32_t count);
 
-
+    void SetFloat3(const std::string constant, XMFLOAT3 f);
     void SetVector(const std::string constant, XMVECTOR* vector);
     void SetVectorArray(const std::string constant, XMVECTOR* vector, uint32_t count);
 

@@ -64,7 +64,7 @@ void SpotlightShadow::Update()
 
 	RWSRCGLOBAL(curCamera) = Scene.m_pRwCamera;
 
-	uint32_t maxLights = min((size_t)20, gLightManager.GetSpotLightCount());
+	uint32_t maxLights = min((size_t)10, gLightManager.GetSpotLightCount());
 
 	for (size_t i = 0; i < maxLights; i++)
 	{
@@ -137,8 +137,8 @@ void SpotlightShadow::RenderEntities(SpotLight*light, int i)
 
 	for (auto entity : m_renderableList)
 	{
-		//if (MeshCulling::InFrustum(entity, light->GetFrustum()))
-		//{
+		if (MeshCulling::InFrustum(entity, light->GetFrustum()))
+		{
 			if (entity == nullptr || entity->m_pRwObject == nullptr)
 				continue;
 
@@ -177,7 +177,7 @@ void SpotlightShadow::RenderEntities(SpotLight*light, int i)
 			}
 
 			entity->m_bImBeingRendered = false;
-		//}
+		}
 	}
 	CVisibilityPlugins::RenderWeaponPedsForPC();
 }
