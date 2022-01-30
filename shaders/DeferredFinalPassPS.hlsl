@@ -143,7 +143,7 @@ float4 main(float4 position : TEXCOORD2, float2 texCoord : TEXCOORD0, float2 vpo
     float4 Parameters = TEXTURE2D_MATERIALPROPS(texCoord);
     float specularFactor = Parameters.x;
     float Roughness = 1 - Parameters.y;
-    int materialType = ConvertToMatType(Parameters.w);
+    int materialType = (Parameters.w);
 
     float depth;
     float3 normal;
@@ -210,9 +210,9 @@ float4 main(float4 position : TEXCOORD2, float2 texCoord : TEXCOORD0, float2 vpo
             // fresnel
             float f;
             f = clamp(1.0 - dot(normal, -viewDir), 0.0, 1.0);
-            f = pow(f, 8.0);
+            f = pow(f, 2.0);
             R.rgb *= f;
-            R.rgb+= jitter*f;
+            //R.rgb+= jitter*f;
             R.rgb *= fade;
 
         }

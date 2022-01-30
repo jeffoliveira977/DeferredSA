@@ -67,6 +67,6 @@ void PSFillGBuffer(float4 albedo, float depth, float3 normal, float4 glow, float
     output.Glow = glow;
     output.Glow.z = depth;
     output.Radiance = radiance;
-    output.Radiance.w = ConvertFromMatType(radiance.w);
+    output.Radiance.w = (radiance.w);
 
 }

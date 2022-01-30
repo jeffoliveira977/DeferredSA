@@ -100,6 +100,7 @@
       <Filter>imgui</Filter>
     </ClCompile>
     <ClCompile Include="MeshCulling.cpp" />
+    <ClCompile Include="SamplerState.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="GTADef.h" />
@@ -196,6 +197,7 @@
       <Filter>imgui</Filter>
     </ClInclude>
     <ClInclude Include="MeshCulling.h" />
+    <ClInclude Include="SamplerState.h" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="imgui">

@@ -6,7 +6,7 @@
 #include "VolumetricLight.h"
 #include "AmbientOcclusion.h"
 #include "RenderTarget.h"
-
+#include "SamplerState.h"
 enum RenderingStage
 {
 	stageDeferred,
@@ -24,6 +24,8 @@ enum RenderingStage
 class DeferredRendering
 {
 public:
+	SamplerState mShadowSampler;
+	SamplerState mDefaultSampler;
 
 	unique_ptr<PostProcessing> mPostProcessing;
 

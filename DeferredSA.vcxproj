@@ -151,6 +151,7 @@
     <ClCompile Include="RenderTarget.cpp" />
     <ClCompile Include="RenderTargetManager.cpp" />
     <ClCompile Include="RwIndexBuffer.cpp" />
+    <ClCompile Include="SamplerState.cpp" />
     <ClCompile Include="ShaderConstant.cpp" />
     <ClCompile Include="ShaderManager.cpp" />
     <ClCompile Include="ShaderState.cpp" />
@@ -222,6 +223,7 @@
     <ClInclude Include="RenderTarget.h" />
     <ClInclude Include="RenderTargetManager.h" />
     <ClInclude Include="RwIndexBuffer.h" />
+    <ClInclude Include="SamplerState.h" />
     <ClInclude Include="ShaderConstant.h" />
     <ClInclude Include="ShaderManager.h" />
     <ClInclude Include="ShaderState.h" />
