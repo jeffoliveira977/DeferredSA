@@ -11,7 +11,7 @@ public:
     uint32_t mMagFilter;
     uint32_t mMinFilter;
     uint32_t mMipFilter;
-    uint32_t mMipmapLodBias;
+    float mMipmapLodBias;
     uint32_t mMaxMipLevel;
     uint32_t mMaxAnisotropy;
  

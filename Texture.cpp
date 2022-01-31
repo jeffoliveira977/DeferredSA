@@ -32,7 +32,7 @@ Texture::~Texture()
 
 void Texture::Initialize()
 {
-	/*if(mFileName.size())
+	if(mFileName.size())
 	{
 		RwInt32 width, height, depth, flags;
 
@@ -51,17 +51,17 @@ void Texture::Initialize()
 		mRaster = RwRasterCreate(width, height, depth, flags);
 		RwRasterSetFromImage(mRaster, image);
 	}
-	else*/
+	else
 	{
-		//RwBool validFormat = FALSE;
+		RwBool validFormat = FALSE;
 
-		//if(mFlags & rwRASTERTYPEZBUFFER)
-		//	validFormat = _rwD3D9CheckValidZBufferTextureFormat(mFormat);
-		//else
-		//	validFormat = _rwD3D9CheckValidCameraTextureFormat(mFormat);
+		if(mFlags & rwRASTERTYPEZBUFFER)
+			validFormat = _rwD3D9CheckValidZBufferTextureFormat(mFormat);
+		else
+			validFormat = _rwD3D9CheckValidCameraTextureFormat(mFormat);
 
-		//if(!validFormat)
-		//	throw std::invalid_argument("Texture::Initialize() - Invalid texture format");
+		if(!validFormat)
+			throw std::invalid_argument("Texture::Initialize() - Invalid texture format");
 
 		if(mFlags == rwRASTERTYPEZBUFFER)
 			mRaster = RwRasterCreate(mWidth, mHeight, 32, rwRASTERTYPEZBUFFER);
@@ -96,4 +96,12 @@ RwRaster* Texture::GetRaster()
 IDirect3DSurface9* Texture::GetSurface()
 {
 	return mSurface;
+}
+
+void Texture::Apply(SamplerState* sampler, uint32_t stage)
+{
+	if (sampler)
+		sampler->Apply(stage);
+
+	_rwD3D9RWSetRasterStage(mRaster, stage);
 }

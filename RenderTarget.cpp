@@ -60,3 +60,19 @@ LPSURFACE RenderTarget::GetSurface()
 
 	return mSurface;
 }
+
+void RenderTarget::SetAsTexture(SamplerState* sampler, uint32_t stage)
+{
+	if (sampler)
+		sampler->Apply(stage);
+
+	_rwD3D9RWSetRasterStage(mRaster, stage);
+}
+
+void RenderTarget::SetAsRenderTarget(uint32_t index)
+{
+	RwD3D9SetRenderTarget(index, mRaster);
+
+	// Keeps original surface
+	CurrentRenderSurface[0] = RwD3D9RenderSurface;
+}

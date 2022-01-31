@@ -19,12 +19,15 @@
 #include "RenderableSphere.h"
 #include "CCamera.h"
 #include "LightManager.h"
-
+#include "Texture.h"
 
 RenderingStage gRenderState;
 DeferredRendering *DeferredContext;
-RwTexture* gRandomNoise = 0;
-RwTexture* gFlashLight = 0;
+//RwTexture* gRandomNoise = 0;
+//RwTexture* gFlashLight = 0;
+Texture* gFlashLight;
+Texture* gRandomNoise;
+
 void DeferredRendering::Initialize()
 {
 	mPointLightPS = unique_ptr<PixelShader>(new PixelShader());
@@ -78,10 +81,11 @@ void DeferredRendering::Initialize()
 	mAmbientOcclusion = unique_ptr<AmbientOcclusion>(new AmbientOcclusion());
 	mAmbientOcclusion->Initialize();
 
+	gFlashLight = new Texture("DeferredSA/textures/flashlight2.png");
+	gFlashLight->Initialize();
 
-	gFlashLight = LoadTextureFromFile("DeferredSA/textures/flashlight2.png");
-
-	gRandomNoise = LoadBMPTextureFromFile("DeferredSA/textures/pcfnoise.bmp");
+	gRandomNoise = new Texture("DeferredSA/textures/pcfnoise.bmp");
+	gRandomNoise->Initialize();
 
 	mShadowSampler.mMagFilter = D3DTEXF_POINT;
 	mShadowSampler.mMinFilter = D3DTEXF_POINT;
@@ -90,39 +94,43 @@ void DeferredRendering::Initialize()
 	mShadowSampler.mAddressV = D3DTADDRESS_BORDER;
 	mShadowSampler.mAddressW = D3DTADDRESS_BORDER;
 
-
 	//mDefaultSampler.mAddressU = D3DTADDRESS_CLAMP;
 	//mDefaultSampler.mAddressV = D3DTADDRESS_CLAMP;
 	//mDefaultSampler.mAddressW = D3DTADDRESS_CLAMP;
 }
+
 XMMATRIX view, projection;
 void DeferredRendering::Start()
 {
 	gRenderState = stageDeferred;
 
-	RwRaster* rasters[] = {
-		mGraphicsBuffer[0]->GetRaster(),
-		mGraphicsBuffer[1]->GetRaster(),
-		mGraphicsBuffer[2]->GetRaster(),
-		mGraphicsBuffer[3]->GetRaster()
-	};
+	mGraphicsBuffer[0]->SetAsRenderTarget(0);
+	mGraphicsBuffer[1]->SetAsRenderTarget(1);
+	mGraphicsBuffer[2]->SetAsRenderTarget(2);
+	mGraphicsBuffer[3]->SetAsRenderTarget(3);
 
-	rwD3D9SetRenderTargets(rasters, 4, 0);
-	ShaderContext->SetViewProjectionMatrix(4, true);
-	ShaderContext->SetViewMatrix(4);
+	rwD3D9Clear(nullptr, rwCAMERACLEARIMAGE);
+
+	RwD3D9GetTransform(D3DTS_VIEW, &view);
+	RwD3D9GetTransform(D3DTS_PROJECTION, &projection);
+
+	_rwD3D9SetVertexShaderConstant(4, &view, 4); ;
+	_rwD3D9SetVertexShaderConstant(8, &projection, 4);
+	_rwD3D9SetPixelShaderConstant(4, &view, 4);
 
 	_rwD3D9SetPixelShaderConstant(18, &(XMMatrixInverse(0, view* projection)), 4);
 }
+
 XMFLOAT4 corners[4];
 void DeferredRendering::Stop()
 {
 	RwD3D9GetTransform(D3DTS_VIEW, &view);
 	RwD3D9GetTransform(D3DTS_PROJECTION, &projection);
 
-	ShaderContext->SetInverseViewMatrix(0);
-	ShaderContext->SetProjectionMatrix(4);
+	_rwD3D9SetPixelShaderConstant(0, &XMMatrixInverse(nullptr, view), 4);
+	_rwD3D9SetPixelShaderConstant(4, &projection, 4);
 
-	static XMVECTOR vFrustumCornersWS[8] =
+	XMVECTOR vFrustumCornersWS[8] =
 	{
 		{-1.0, 1.0, 0.0, 1.0}, // near top left
 		{1.0, 1.0, 0.0, 1.0 }, // near top right
@@ -134,42 +142,34 @@ void DeferredRendering::Stop()
 		{1.0, -1.0, 1.0, 1.0} // far bottom right
 	};
 
-	XMVECTOR det;
-	XMMATRIX invM = XMMatrixInverse(&det, view * projection);
-	XMFLOAT3 Corners[8];
+	XMMATRIX invM = XMMatrixInverse(nullptr, view * projection);
+	XMFLOAT4 Corners[8];
 	for (int i = 0; i < 8; i++)
 	{
 		auto vertices = XMVector3TransformCoord(vFrustumCornersWS[i], invM);
-		XMStoreFloat3(&Corners[i], vertices);
+		XMStoreFloat4(&Corners[i], vertices);
 	}
 	
-	//XMFLOAT4 corners[4];
 	for (int i = 0; i < 4; ++i)
 	{
-		corners[i].x = Corners[i + 4].x -= Corners[i].x;
-		corners[i].y = Corners[i + 4].y -= Corners[i].y;
-		corners[i].z = Corners[i + 4].z -= Corners[i].z;
+		Corners[i].x = Corners[i + 4].x -= Corners[i].x;
+		Corners[i].y = Corners[i + 4].y -= Corners[i].y;
+		Corners[i].z = Corners[i + 4].z -= Corners[i].z;
 	}
 
-	 _rwD3D9SetVertexShaderConstant(0, corners, 4);
+	 _rwD3D9SetVertexShaderConstant(0, Corners, 4);
 
-	for(size_t i = 0; i < 4; i++)
-	{
-		mDefaultSampler.Apply(i);
-	}
-
-	_rwD3D9RWSetRasterStage(mGraphicsLight->GetRaster(), 0);
-	_rwD3D9RWSetRasterStage(mGraphicsBuffer[0]->GetRaster(), 1);
-	_rwD3D9RWSetRasterStage(mGraphicsBuffer[1]->GetRaster(), 2);
-	_rwD3D9RWSetRasterStage(mGraphicsBuffer[2]->GetRaster(), 3);
-	_rwD3D9RWSetRasterStage(mGraphicsBuffer[3]->GetRaster(), 4);
+	mGraphicsLight->SetAsTexture(&mDefaultSampler, 0);
+	mGraphicsBuffer[0]->SetAsTexture(&mDefaultSampler, 1);
+	mGraphicsBuffer[1]->SetAsTexture(&mDefaultSampler, 2);
+	mGraphicsBuffer[2]->SetAsTexture(&mDefaultSampler, 3);
+	mGraphicsBuffer[3]->SetAsTexture(&mDefaultSampler, 4);
 
 	// We need to disable Z buffer
 	RwRenderStateSet(rwRENDERSTATEZWRITEENABLE, FALSE);
 	RwRenderStateSet(rwRENDERSTATEZTESTENABLE, FALSE);
 	RwRenderStateSet(rwRENDERSTATECULLMODE, (void*)rwCULLMODECULLNONE);
 	RwD3D9SetRenderState(D3DRS_ALPHATESTENABLE, FALSE);
-
 
 	RenderLights();
 	AtmosphericScattering();
@@ -201,7 +201,7 @@ void DeferredRendering::RenderLights()
 	ShaderContext->SetSunDirection(11);
 	ShaderContext->SetFogParams(12);
 
-	if (!CGame::currArea && CGameIdle::m_fShadowDNBalance < 1.0)
+	if (!CGame::currArea && CGameIdle::m_fShadowDNBalance < 1.0f)
 	{
 		CascadedShadowManagement->UpdateBuffer();
 
@@ -253,8 +253,7 @@ void DeferredRendering::RenderLights()
 		mShadowSampler.Apply(5);
 		_rwD3D9RWSetRasterStage(light->mShadowRaster, 5);
 
-		mDefaultSampler.Apply(6);
-		RwD3D9SetTexture(gRandomNoise, 6);
+		gRandomNoise->Apply(&mDefaultSampler, 6);
 
 		_rwD3D9SetPixelShaderConstant(9, &light->GetPosition(), 1);
 		_rwD3D9SetPixelShaderConstant(10, &light->GetDirection(), 1);
@@ -277,33 +276,28 @@ void DeferredRendering::RenderLights()
 		auto light = gLightManager.GetSpotLightAt(i);
 
 		mShadowSampler.Apply(5);
-		 _rwD3D9RWSetRasterStage(light->mColorRaster, 5);
+		_rwD3D9RWSetRasterStage(light->mColorRaster, 5);
 
-		 mDefaultSampler.Apply(6);
-		 RwD3D9SetTexture(gRandomNoise, 6);
+		gRandomNoise->Apply(&mDefaultSampler, 6);
 
-		 if (light->mUsePattern)
-		 {
-			 mDefaultSampler.Apply(7);
-			 RwD3D9SetTexture(gFlashLight, 7);
-		 }
-
-		 light->mExponent = 2.0f;
-		 auto cosSpotAngle = cos(XMConvertToRadians(light->GetAngle()));
-		 auto spotexponent = light->mExponent / (1.0f - cosSpotAngle);
-		 mSpotLightPS->SetFloat3("LightPosition", light->GetPosition());
-		 mSpotLightPS->SetFloat3("LightDirection", light->GetDirection());
-		 mSpotLightPS->SetFloat3("LightColor", light->GetColor());
-		 mSpotLightPS->SetFloat("LightRadius", light->GetRadius());
-		 mSpotLightPS->SetFloat("LightIntensity", light->GetIntensity());
-		 mSpotLightPS->SetFloat("LightConeAngle", cosSpotAngle);
-		 mSpotLightPS->SetFloat("LightExponent", spotexponent);
-		 mSpotLightPS->SetBool("CastShadow", light->mDrawShadow);
-		 mSpotLightPS->SetBool("UsePattern", light->mUsePattern);
-		 mSpotLightPS->SetMatrix("ShadowMatrix", &light->mMatrix);
+		if (light->mUsePattern)
+			gFlashLight->Apply(&mDefaultSampler, 7);
+		
+		light->mExponent = 2.0f;
+		auto cosSpotAngle = cos(XMConvertToRadians(light->GetAngle()));
+		auto spotexponent = light->mExponent / (1.0f - cosSpotAngle);
+		mSpotLightPS->SetFloat3("LightPosition", light->GetPosition());
+		mSpotLightPS->SetFloat3("LightDirection", light->GetDirection());
+		mSpotLightPS->SetFloat3("LightColor", light->GetColor());
+		mSpotLightPS->SetFloat("LightRadius", light->GetRadius());
+		mSpotLightPS->SetFloat("LightIntensity", light->GetIntensity());
+		mSpotLightPS->SetFloat("LightConeAngle", cosSpotAngle);
+		mSpotLightPS->SetFloat("LightExponent", spotexponent);
+		mSpotLightPS->SetBool("CastShadow", light->mDrawShadow);
+		mSpotLightPS->SetBool("UsePattern", light->mUsePattern);
+		mSpotLightPS->SetMatrix("ShadowMatrix", &light->mMatrix);
 		Quad::Render();
 	}
-
 
 	// Render to default surface
 	__rwD3D9SetRenderTarget(0, RwD3D9RenderSurface);

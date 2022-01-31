@@ -1,6 +1,6 @@
 #pragma once
 #include "CommonD.h"
-
+#include "SamplerState.h"
 class Texture
 {
 	RwRaster* mRaster;
@@ -21,5 +21,7 @@ public:
 	void Release();
 	RwRaster* GetRaster();
 	IDirect3DSurface9* GetSurface();
+
+	void Apply(SamplerState*sampler, uint32_t stage);
 };
 

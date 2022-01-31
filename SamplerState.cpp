@@ -27,7 +27,7 @@ void SamplerState::Apply(uint32_t stage)
 	rwD3D9SetSamplerState(stage, D3DSAMP_ADDRESSV, mAddressV);
 	rwD3D9SetSamplerState(stage, D3DSAMP_ADDRESSW, mAddressW);
 	rwD3D9SetSamplerState(stage, D3DSAMP_BORDERCOLOR, mBorderColor);
-	rwD3D9SetSamplerState(stage, D3DSAMP_MIPMAPLODBIAS, mMipmapLodBias);
+	rwD3D9SetSamplerState(stage, D3DSAMP_MIPMAPLODBIAS, *(uint32_t*)&mMipmapLodBias);
 	rwD3D9SetSamplerState(stage, D3DSAMP_MAXMIPLEVEL, mMaxMipLevel);
 	rwD3D9SetSamplerState(stage, D3DSAMP_MAXANISOTROPY, mMaxAnisotropy);
 }

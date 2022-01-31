@@ -1,5 +1,6 @@
 #pragma once
 #include "CommonD.h"
+#include "SamplerState.h"
 class RenderTarget
 {
 public:
@@ -12,6 +13,10 @@ public:
 
 	RwRaster* GetRaster();
 	LPSURFACE GetSurface();
+
+	void SetAsTexture(SamplerState*sampler, uint32_t stage);
+	void SetAsRenderTarget(uint32_t index);
+
 private:
 	D3DFORMAT mFormat;
 	RwRaster* mRaster;

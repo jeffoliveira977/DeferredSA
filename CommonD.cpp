@@ -83,7 +83,7 @@ void rwD3D9SetDepthStencil(RwRaster* depthStencil)
 	_rwD3D9SetDepthStencilSurface((LPSURFACE)zRaster->texture);
 }
 
-void rwD3D9Clear(RwRGBA* col, RwInt32 clearFlags)
+void rwD3D9Clear(RwRGBA* color, RwInt32 clearFlags)
 {
 	D3DVIEWPORT9        viewport;
 	RwUInt32            d3d9ClearFlags = 0;
@@ -105,13 +105,13 @@ void rwD3D9Clear(RwRGBA* col, RwInt32 clearFlags)
 		d3d9ClearFlags |= D3DCLEAR_STENCIL;
 	}
 
-	if(col)
+	if(color)
 	{
-		packedColor = (D3DCOLOR)(((col->alpha) << 24) | ((col->red) << 16) |
-			((col->green) << 8) | (col->blue));
+		packedColor = (D3DCOLOR)(((color->alpha) << 24) | ((color->red) << 16) |
+			((color->green) << 8) | (color->blue));
 	}
 
-	IDirect3DDevice9_Clear(RwD3DDevice, 0, NULL, d3d9ClearFlags, col? packedColor:0, 1.0, 0.0);
+	IDirect3DDevice9_Clear(RwD3DDevice, 0, NULL, d3d9ClearFlags, color? packedColor : 0, 1.0f, 0.0f);
 }
 
 #include <fstream>
