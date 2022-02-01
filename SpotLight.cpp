@@ -2,6 +2,7 @@
 
 SpotLight::SpotLight()
 {
+	mExponent = 2.0f;
 }
 
 void SpotLight::SetMatrix(XMMATRIX matrix)
@@ -10,7 +11,7 @@ void SpotLight::SetMatrix(XMMATRIX matrix)
 
 void SpotLight::SetColor(XMFLOAT3 color)
 {
-	mColor = color;
+	mColor = XMLoadFloat3(&color);
 }
 
 void SpotLight::SetAngle(float angle)
@@ -55,7 +56,9 @@ XMMATRIX SpotLight::GetProjection()
 
 XMFLOAT3 SpotLight::GetColor()
 {
-	return mColor;
+	XMFLOAT3 color;
+	XMStoreFloat3(&color, mColor);
+	return color;
 }
 
 XMFLOAT3 SpotLight::GetDirection()

@@ -33,12 +33,12 @@ public:
 	float mExponent;
 	XMMATRIX mMatrix;
 	bool mUsePattern;
-private:
+//private:
 	Math::Frustum mFrustum;
 
 	XMMATRIX mView;
 	XMMATRIX mProjection;
-	XMFLOAT3 mColor;
+	XMVECTOR mColor;
 	XMVECTOR mPosition;
 	XMVECTOR mDirection;
 

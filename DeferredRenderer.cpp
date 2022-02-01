@@ -235,6 +235,7 @@ void DeferredRendering::RenderLights()
 	// gLightManager.SortPointLights();
 	CVector camPos = TheCamera.GetPosition();
 
+
 	int count = 0;
 	uint32_t maxLights = min((size_t)20, gLightManager.GetPointLightCount());
 	for (int i = 0; i < maxLights; i++)
@@ -264,12 +265,18 @@ void DeferredRendering::RenderLights()
 
 		Quad::Render();
 
-	}
-
+	}	
+	
 	// PrintMessage("%d %d", maxLights, count);
-	 gLightManager.SortSpotLights();
+	//gLightManager.SortSpotLights();
 	mSpotLightPS->Apply();
 	maxLights = min((size_t)30, gLightManager.GetSpotLightCount());
+
+	static CPerfTimer shadowTimer("Shadow Time");
+	shadowTimer.Start();
+
+	gRandomNoise->Apply(&mDefaultSampler, 6);
+	gFlashLight->Apply(&mDefaultSampler, 7);
 
 	for (size_t i = 0; i < maxLights; i++)
 	{
@@ -277,27 +284,34 @@ void DeferredRendering::RenderLights()
 
 		mShadowSampler.Apply(5);
 		_rwD3D9RWSetRasterStage(light->mColorRaster, 5);
-
-		gRandomNoise->Apply(&mDefaultSampler, 6);
-
-		if (light->mUsePattern)
-			gFlashLight->Apply(&mDefaultSampler, 7);
-		
-		light->mExponent = 2.0f;
+	
 		auto cosSpotAngle = cos(XMConvertToRadians(light->GetAngle()));
 		auto spotexponent = light->mExponent / (1.0f - cosSpotAngle);
-		mSpotLightPS->SetFloat3("LightPosition", light->GetPosition());
-		mSpotLightPS->SetFloat3("LightDirection", light->GetDirection());
-		mSpotLightPS->SetFloat3("LightColor", light->GetColor());
-		mSpotLightPS->SetFloat("LightRadius", light->GetRadius());
-		mSpotLightPS->SetFloat("LightIntensity", light->GetIntensity());
-		mSpotLightPS->SetFloat("LightConeAngle", cosSpotAngle);
-		mSpotLightPS->SetFloat("LightExponent", spotexponent);
-		mSpotLightPS->SetBool("CastShadow", light->mDrawShadow);
-		mSpotLightPS->SetBool("UsePattern", light->mUsePattern);
-		mSpotLightPS->SetMatrix("ShadowMatrix", &light->mMatrix);
+
+		struct
+		{
+			XMVECTOR LightPos;
+			XMVECTOR LightDir;
+			XMVECTOR LightColor;
+			XMVECTOR Paramns;
+			XMMATRIX Mat;
+		} spotdata;
+
+		spotdata.LightPos = XMVectorSetW(light->mPosition, light->mRadius);
+		spotdata.LightDir = XMVectorSetW(light->mDirection, light->mIntensity);
+		spotdata.LightColor = light->mColor;
+		spotdata.Paramns = XMVectorSet(cosSpotAngle, spotexponent, static_cast<float>(light->mDrawShadow), static_cast<float>(light->mUsePattern));
+		spotdata.Mat = light->mMatrix;
+
+		_rwD3D9SetPixelShaderConstant(9, &spotdata, 8);
 		Quad::Render();
 	}
+
+	shadowTimer.Stop();
+
+	static float maxr=0.0f;
+	maxr = max(maxr, shadowTimer.GetTimer());
+	PrintMessage("%f %f", maxr, shadowTimer.GetTimer());
 
 	// Render to default surface
 	__rwD3D9SetRenderTarget(0, RwD3D9RenderSurface);

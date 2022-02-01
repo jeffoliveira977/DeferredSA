@@ -605,11 +605,16 @@ public:
     {
         msCount = chrono::duration_cast<std::chrono::microseconds>(hr_clock::now() - beg).count();
     }
+    float GetTimer()
+    {
+        return static_cast<float>(msCount) / 1000.0f;
+    }
+
     // Return counter debug info.
     string GetTimerResult()
     {
         char buff[100];
-        snprintf(buff, sizeof(buff), "%.3f", (msCount / 1000.0));
+        snprintf(buff, sizeof(buff), "%.3f", (msCount / 1000.0f));
 
         return m_Name + ": " + string(buff) + " ms";
     }

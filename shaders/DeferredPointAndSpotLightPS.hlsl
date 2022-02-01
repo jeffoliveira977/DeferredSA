@@ -11,24 +11,38 @@ row_major float4x4 ProjectionMatrix : register(c4);
 float2 FarClip: register(c8);
 
 struct LightData{
-    float4 position;  // Position xyz, Range w
-    float4 direction; // Direction xyz, Light type w
-    float4 color;
+    float4 lightpos;
+    float4 lightdir;
+    float4 lightcolor;
+    float4 paramns;
+    row_major float4x4 mat;
 };
+
+
 
 LightData lightData : register(c9);
 
+#define LightPosition lightData.lightpos.xyz
+#define  LightDirection lightData.lightdir.xyz
+#define  LightColor  lightData.lightcolor.xyz
+#define  LightRadius lightData.lightpos.w
+#define  LightIntensity lightData.lightdir.w
+#define  LightConeAngle lightData.paramns.x
+#define  LightExponent  lightData.paramns.y
+#define  CastShadow  lightData.paramns.z
+#define  UsePattern  lightData.paramns.w
+#define ShadowMatrix lightData.mat
 
-float3 LightPosition : register(c9);
-float3 LightDirection:  register(c10);
-float3 LightColor : register(c11);
-float LightRadius : register(c12);
-float LightIntensity : register(c13);
-float LightConeAngle : register(c14);
-float LightExponent : register(c15);
-bool CastShadow : register(c16);
-bool UsePattern : register(c17);
-row_major float4x4 ShadowMatrix : register(c18);
+//float3 LightPosition: register(c9);
+//float3 LightDirection:  register(c10);
+//float3 LightColor: register(c11);
+//float LightRadius: register(c12);
+//float LightIntensity: register(c13);
+//float LightConeAngle: register(c14);
+//float LightExponent: register(c15);
+//bool CastShadow: register(c16);
+//bool UsePattern: register(c17);
+//row_major float4x4 ShadowMatrix: register(c18);
 
 sampler2D SamplerShadow : register(s5);
 sampler2D SamplerNoise : register(s6);
@@ -275,7 +289,7 @@ float4 main(float4 position: TEXCOORD3, float2 texCoord : TEXCOORD0, float3 frus
     //if (projCoords.z > 1.0f)
     //    s = 1.0;
     
-    if(CastShadow)
+   // if(CastShadow)
         s = 1.0;
     
     float4 flashlight = 1.0f;
