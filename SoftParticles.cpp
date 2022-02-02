@@ -38,7 +38,7 @@ void SoftParticles::Initialize()
 
    //mVertexBuffer = new VertexBuffer();
     //mVertexBuffer->Initialize(TOTAL_TEMP_BUFFER_VERTICES, sizeof(RwIm3DVertex));
-    mVertexBuffer = DynamicVertexBuffer::CreateDynamicVertexBuffer(TOTAL_TEMP_BUFFER_VERTICES, sizeof(RwIm3DVertex));
+    mVertexBuffer = DynamicVertexBuffer::Create(TOTAL_TEMP_BUFFER_VERTICES, sizeof(RwIm3DVertex));
 
     D3DVERTEXELEMENT9 declaration[] =
     {
@@ -93,7 +93,7 @@ void SoftParticles::Render()
     mVertexBuffer->Map(3 * stride * g_fx.m_nVerticesCount, (void**)&bufferMem);
     std::copy(aTempBufferVertices, aTempBufferVertices + g_fx.m_nVerticesCount * 3, bufferMem);
     mVertexBuffer->Unmap();
-    RwD3D9SetStreamSource(0, mVertexBuffer->GetBuffer(), 0, stride);
+    RwD3D9SetStreamSource(0, mVertexBuffer->GetObject(), 0, stride);
 
     rwD3D9DrawPrimitive(D3DPT_TRIANGLELIST, 0, g_fx.m_nVerticesCount);
 }

@@ -29,8 +29,6 @@
     <ClCompile Include="VisibilityPlugins.cpp" />
     <ClCompile Include="ShaderState.cpp" />
     <ClCompile Include="PixelShaderState.cpp" />
-    <ClCompile Include="VertexBuffer.cpp" />
-    <ClCompile Include="RwIndexBuffer.cpp" />
     <ClCompile Include="RenderableReflectionObjects.cpp" />
     <ClCompile Include="BuldingMeshPipeline.cpp">
       <Filter>Pipeline</Filter>
@@ -63,7 +61,6 @@
     <ClCompile Include="VertexShader.cpp" />
     <ClCompile Include="GameHooks.cpp" />
     <ClCompile Include="ImguiManager.cpp" />
-    <ClCompile Include="IndexBufferManager.cpp" />
     <ClCompile Include="ShaderConstant.cpp" />
     <ClCompile Include="VolumetricClouds.cpp" />
     <ClCompile Include="PostProcessing.cpp" />
@@ -101,7 +98,18 @@
     </ClCompile>
     <ClCompile Include="MeshCulling.cpp" />
     <ClCompile Include="SamplerState.cpp" />
-    <ClCompile Include="DynamicVertexBuffer.cpp" />
+    <ClCompile Include="IndexBufferManager.cpp">
+      <Filter>Engine</Filter>
+    </ClCompile>
+    <ClCompile Include="IndexBuffer.cpp">
+      <Filter>Engine</Filter>
+    </ClCompile>
+    <ClCompile Include="VertexBuffer.cpp">
+      <Filter>Engine</Filter>
+    </ClCompile>
+    <ClCompile Include="DynamicVertexBuffer.cpp">
+      <Filter>Engine</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="GTADef.h" />
@@ -133,8 +141,6 @@
     <ClInclude Include="VisibilityPlugins.h" />
     <ClInclude Include="ShaderState.h" />
     <ClInclude Include="PixelShaderState.h" />
-    <ClInclude Include="VertexBuffer.h" />
-    <ClInclude Include="RwIndexBuffer.h" />
     <ClInclude Include="RenderableReflectionObjects.h" />
     <ClInclude Include="BuldingMeshPipeline.h">
       <Filter>Pipeline</Filter>
@@ -167,7 +173,6 @@
     <ClInclude Include="VertexShader.h" />
     <ClInclude Include="GameHooks.h" />
     <ClInclude Include="ImguiManager.h" />
-    <ClInclude Include="IndexBufferManager.h" />
     <ClInclude Include="ShaderConstant.h" />
     <ClInclude Include="VolumetricClouds.h" />
     <ClInclude Include="PostProcessing.h" />
@@ -199,7 +204,18 @@
     </ClInclude>
     <ClInclude Include="MeshCulling.h" />
     <ClInclude Include="SamplerState.h" />
-    <ClInclude Include="DynamicVertexBuffer.h" />
+    <ClInclude Include="IndexBufferManager.h">
+      <Filter>Engine</Filter>
+    </ClInclude>
+    <ClInclude Include="IndexBuffer.h">
+      <Filter>Engine</Filter>
+    </ClInclude>
+    <ClInclude Include="VertexBuffer.h">
+      <Filter>Engine</Filter>
+    </ClInclude>
+    <ClInclude Include="DynamicVertexBuffer.h">
+      <Filter>Engine</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="imgui">

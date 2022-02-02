@@ -1,33 +1,39 @@
 #include "DynamicVertexBuffer.h"
 
-list<DynamicVertexBuffer::dVB> DynamicVertexBuffer::m_dynamicVertexBufferList;
+list<VertexBuffer*> DynamicVertexBuffer::m_dynamicVertexBufferList;
 
-VertexBuffer* DynamicVertexBuffer::CreateDynamicVertexBuffer(int32_t size, int32_t stride)
+VertexBuffer* DynamicVertexBuffer::Create(uint32_t size, uint32_t stride)
 {
     VertexBuffer* vertexbuffer = new VertexBuffer();
-    vertexbuffer->Initialize(size, stride);
-    m_dynamicVertexBufferList.push_back({ size, stride, vertexbuffer });
+    try
+    {
+        vertexbuffer->Initialize(size, stride);
+    }
+    catch (const std::exception&e)
+    {
+        MessageBox(NULL, e.what(), "Error!", MB_OK);
+        return nullptr;
+    }
+    
+    m_dynamicVertexBufferList.push_back(vertexbuffer);
 
     return vertexbuffer;
 }
 
-void DynamicVertexBuffer::DestroyDynamicVertexBuffer(VertexBuffer* vb)
+void DynamicVertexBuffer::Destroy(VertexBuffer* vertexBuffer)
 {
-    for (auto it = m_dynamicVertexBufferList.begin(); it != m_dynamicVertexBufferList.end(); ++it)
-    {
-        if ((*it).vb == vb)
-        {
-            m_dynamicVertexBufferList.erase(it);
-            SAFE_DELETE(vb);
-        }
-    }
+    if (vertexBuffer == nullptr)
+        return;
+
+    m_dynamicVertexBufferList.remove(vertexBuffer);
+    SAFE_DELETE(vertexBuffer);
 }
 
 void DynamicVertexBuffer::DestroyAll()
 {
     for (auto vertexBuffer : m_dynamicVertexBufferList)
     {
-        SAFE_DELETE(vertexBuffer.vb);
+        SAFE_DELETE(vertexBuffer);
     }
 
     m_dynamicVertexBufferList.clear();
@@ -37,9 +43,9 @@ void DynamicVertexBuffer::Release()
 {
     for (auto vertexBuffer : m_dynamicVertexBufferList)
     {
-        if (vertexBuffer.vb)
+        if (vertexBuffer)
         {
-            vertexBuffer.vb->Release();
+            vertexBuffer->Release();
         }
     }
 }
@@ -48,9 +54,9 @@ void DynamicVertexBuffer::Restore()
 {
     for (auto vertexBuffer : m_dynamicVertexBufferList)
     {
-        if (vertexBuffer.vb)
+        if (vertexBuffer)
         {
-            vertexBuffer.vb->Restore();
+            vertexBuffer->Restore();
         }
     }
 }

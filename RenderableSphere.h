@@ -2,7 +2,7 @@
 
 #include "CommonD.h"
 #include "VertexBuffer.h"
-#include "RwIndexBuffer.h"
+#include "IndexBuffer.h"
 #include "BoundingSphere.h"
 #include "PixelShader.h"
 #include "VertexShader.h"
@@ -36,7 +36,7 @@ class RenderableSphere
 	VertexShader* mVertexShader;
 	PixelShader* mPixelShader;
 	VertexBuffer* mVertexBuffer;
-	RwIndexBuffer* mIndexBuffer;
+	IndexBuffer* mIndexBuffer;
 	XMINT4 mColor;
 	std::vector<Vertex> mVertices;
 	std::vector<RwUInt16> mIndices;

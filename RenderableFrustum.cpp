@@ -2,6 +2,8 @@
 #include "CCamera.h"
 #include "ShaderManager.h"
 #include "DynamicVertexBuffer.h"
+#include "IndexBufferManager.h"
+
 std::vector<RwUInt16> RenderableFrustum::mIndicesL =
 {
 	1,  2,  2,  3,  3,  4,  4,  1,
@@ -39,13 +41,16 @@ void RenderableFrustum::InitGraphicsBuffer()
 {
 	//mVertexBuffer = new VertexBuffer();
 	//mVertexBuffer->Initialize(13, sizeof(Vertex));
-	mVertexBuffer = DynamicVertexBuffer::CreateDynamicVertexBuffer(13, sizeof(Vertex));
+	mVertexBuffer = DynamicVertexBuffer::Create(13, sizeof(Vertex));
 
-	mIndexBuffer[0] = new RwIndexBuffer();
+	/*mIndexBuffer[0] = new RwIndexBuffer();
 	mIndexBuffer[0]->Initialize(mIndicesL.size());
 
 	mIndexBuffer[1] = new RwIndexBuffer();
-	mIndexBuffer[1]->Initialize(mIndicesT.size());
+	mIndexBuffer[1]->Initialize(mIndicesT.size());*/
+
+	mIndexBuffer[0] = DynamicIndexBuffer::Create(mIndicesL.size());
+	mIndexBuffer[1] = DynamicIndexBuffer::Create(mIndicesT.size());
 
 	mVertexShader = RwCreateCompiledVertexShader("Im3dVS");
 	mPixelShader = RwCreateCompiledPixelShader("Im3dPS");
@@ -96,8 +101,8 @@ void RenderableFrustum::Render(bool ortho)
 	mVertexBuffer->Map(numVertices * sizeof(Vertex), (void**)&vertexData);
 	std::copy(mVertices.begin(), mVertices.end(), vertexData);
 	mVertexBuffer->Unmap();
-	RwD3D9SetStreamSource(0, mVertexBuffer->GetBuffer(), 0, sizeof(Vertex));
-	_rwD3D9SetIndices(mIndexBuffer[0]->GetBuffer());
+	RwD3D9SetStreamSource(0, mVertexBuffer->GetObject(), 0, sizeof(Vertex));
+	_rwD3D9SetIndices(mIndexBuffer[0]->GetObject());
 	_rwD3D9DrawIndexedPrimitive(D3DPT_LINELIST, 0, 0, numVertices, 0, mIndicesL.size() / 2);
 
 	// Render Filled box
@@ -113,8 +118,8 @@ void RenderableFrustum::Render(bool ortho)
 	mVertexBuffer->Map(numVertices, (void**)&vertexData);
 	std::copy(mVertices.begin(), mVertices.end(), vertexData);
 	mVertexBuffer->Unmap();
-	RwD3D9SetStreamSource(0, mVertexBuffer->GetBuffer(), 0, sizeof(Vertex));
-	_rwD3D9SetIndices(mIndexBuffer[1]->GetBuffer());
+	RwD3D9SetStreamSource(0, mVertexBuffer->GetObject(), 0, sizeof(Vertex));
+	_rwD3D9SetIndices(mIndexBuffer[1]->GetObject());
 	_rwD3D9DrawIndexedPrimitive(D3DPT_TRIANGLELIST, 0, 0, numVertices, 0, mIndicesT.size() / 3);
 }
 

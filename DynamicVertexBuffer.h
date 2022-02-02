@@ -5,21 +5,14 @@
 class DynamicVertexBuffer
 {
 public:
-	struct dVB
-	{
-		int32_t size;
-		int32_t stride;
-		VertexBuffer* vb;
-	};
-
-	static list<dVB> m_dynamicVertexBufferList;
+	static list<VertexBuffer*> m_dynamicVertexBufferList;
 
 	static void Release();
 	static void Restore();
 
-	static VertexBuffer* CreateDynamicVertexBuffer(int32_t size, int32_t stride);
+	static VertexBuffer* Create(uint32_t size, uint32_t stride);
 
-	static void DestroyDynamicVertexBuffer(VertexBuffer*vb);
+	static void Destroy(VertexBuffer*vb);
 	static void DestroyAll();
 };
 

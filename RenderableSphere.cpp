@@ -3,6 +3,7 @@
 #include "PixelShaderConstant.h"
 #include "VertexShaderConstant.h"
 #include "DynamicVertexBuffer.h"
+#include "IndexBufferManager.h"
 
 RenderableSphere::RenderableSphere()
 {
@@ -27,10 +28,12 @@ void RenderableSphere::Initialize(int slices, int stacks)
 
 	//mVertexBuffer = new VertexBuffer();
 	//mVertexBuffer->Initialize(numVertices, sizeof(Vertex));
-	mVertexBuffer = DynamicVertexBuffer::CreateDynamicVertexBuffer(numVertices, sizeof(Vertex));
+	mVertexBuffer = DynamicVertexBuffer::Create(numVertices, sizeof(Vertex));
 
-	mIndexBuffer = new RwIndexBuffer();
-	mIndexBuffer->Initialize(numIndices * 3);
+	/*mIndexBuffer = new RwIndexBuffer();
+	mIndexBuffer->Initialize(numIndices * 3);*/
+
+	mIndexBuffer = DynamicIndexBuffer::Create(numIndices * 3);
 
 	mVertexShader = new VertexShader();
 	mVertexShader->CreateFromBinary("Im3dVS");
@@ -162,8 +165,8 @@ void RenderableSphere::Render()
 	std::copy(mIndices.begin(), mIndices.end(), indexData);
 	mIndexBuffer->Unmap();
 
-	RwD3D9SetStreamSource(0, mVertexBuffer->GetBuffer(), 0, sizeof(Vertex));
-	_rwD3D9SetIndices(mIndexBuffer->GetBuffer());
+	RwD3D9SetStreamSource(0, mVertexBuffer->GetObject(), 0, sizeof(Vertex));
+	_rwD3D9SetIndices(mIndexBuffer->GetObject());
 
 	XMMATRIX translation = XMMatrixTranslation(mSphere.Center.x, mSphere.Center.y, mSphere.Center.z);
 	XMMATRIX scale = XMMatrixScaling(mSphere.Radius, mSphere.Radius, mSphere.Radius);

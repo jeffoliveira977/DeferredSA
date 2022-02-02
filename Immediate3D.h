@@ -1,7 +1,7 @@
 #pragma once
 #include "CommonD.h"
 #include "VertexBuffer.h"
-#include "RwIndexBuffer.h"
+#include "IndexBuffer.h"
 #include "PixelShader.h"
 #include "VertexShader.h"
 
@@ -11,7 +11,7 @@ public:
     static void Hook();
 private:
     static VertexBuffer* mVertexBuffer;
-    static RwIndexBuffer* mIndexBuffer;
+    static IndexBuffer* mIndexBuffer;
     static VertexShader* mVertexShader;
     static PixelShader* mPixelShader;
 

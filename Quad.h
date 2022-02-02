@@ -1,6 +1,6 @@
 #pragma once
 #include "VertexBuffer.h"
-#include "RwIndexBuffer.h"
+#include "IndexBuffer.h"
 #include "VertexShader.h"
 #include "PixelShader.h"
 
@@ -22,6 +22,6 @@ private:
 	static VertexShader* mVertexShader;
 	static PixelShader* mPixelShader;
 	static VertexBuffer* mVertexBuffer;
-	static RwIndexBuffer* mIndexBuffer;
+	static IndexBuffer* mIndexBuffer;
 	static void* mVertexDeclQuad;
 };

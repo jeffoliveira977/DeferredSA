@@ -7,19 +7,18 @@ public:
 	VertexBuffer();
 	~VertexBuffer();
 
-	void Initialize(RwUInt32 size, RwUInt32 stride, bool dynamic = true);
+	void Initialize(uint32_t size, uint32_t stride, bool dynamic = true);
 	void Release();
 	void Restore();
-	void Copy(RwUInt32 size, void *data);
 	void Apply();
 
 	void Map(RwUInt32 size, void** data);
 	void Unmap();
 
-	IDirect3DVertexBuffer9* GetBuffer();
+	IDirect3DVertexBuffer9* GetObject();
 private:
 	IDirect3DVertexBuffer9* mVertexBuffer;
-	RwUInt32 m_stride;
+	uint32_t m_stride;
 	uint32_t mSize;
 	bool mDynamic;
 };

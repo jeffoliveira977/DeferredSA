@@ -207,14 +207,14 @@ void ShutdowRenderware()
 void LostDevice()
 {
 	DynamicVertexBuffer::Release();
-	IndexBufferManager::Release();
+	DynamicIndexBuffer::Release();
 }
 
 void ResetDevice()
 {
 	//CascadedShadowManagement->UpdateTextures();
 	CWaterLevel::UpdateTextures();
-	IndexBufferManager::Restore();
+	DynamicIndexBuffer::Restore();
 	DynamicVertexBuffer::Restore();
 	//DeferredContext->UpdateTextures();
 	RenderTargetManager::Rebuild();

@@ -3,8 +3,9 @@
 #include "PixelShaderConstant.h"
 #include "IndexBufferManager.h"
 #include "DynamicVertexBuffer.h"
+
 VertexBuffer* Immediate3D::mVertexBuffer = nullptr;
-RwIndexBuffer* Immediate3D::mIndexBuffer = nullptr;
+IndexBuffer* Immediate3D::mIndexBuffer = nullptr;
 VertexShader* Immediate3D::mVertexShader = nullptr;
 PixelShader* Immediate3D::mPixelShader = nullptr;
 
@@ -17,8 +18,6 @@ void Immediate3D::Hook()
 
 void Immediate3D::Close(void)
 {
-   // IndexBufferManager::Release();
-    releaseDynamicIBs();
     if(VertexDeclIm3DNoTex != NULL)
     {
         rwD3D9DeleteVertexDeclaration(VertexDeclIm3DNoTex);
@@ -41,8 +40,6 @@ void Immediate3D::Close(void)
 
 RwBool Immediate3D::Open(void)
 {
-    recreateDynamicIBs();
-    // IndexBufferManager::Restore();
     {
         D3DVERTEXELEMENT9 declaration[] =
         {
@@ -79,10 +76,12 @@ RwBool Immediate3D::Open(void)
         //mVertexBuffer = new VertexBuffer();
         //mVertexBuffer->Initialize(BUFFER_MAX_INDEX, sizeof(RwIm3DVertex));
 
-        mVertexBuffer = DynamicVertexBuffer::CreateDynamicVertexBuffer(BUFFER_MAX_INDEX, sizeof(RwIm3DVertex));
+        mVertexBuffer = DynamicVertexBuffer::Create(BUFFER_MAX_INDEX, sizeof(RwIm3DVertex));
 
-        mIndexBuffer = new RwIndexBuffer();
-        mIndexBuffer->Initialize(BUFFER_MAX_INDEX);
+        /*mIndexBuffer = new RwIndexBuffer();
+        mIndexBuffer->Initialize(BUFFER_MAX_INDEX);*/
+
+        mIndexBuffer = DynamicIndexBuffer::Create(BUFFER_MAX_INDEX);
    /* }
     catch(const std::exception&e)
     {
@@ -138,7 +137,7 @@ RwBool Immediate3D::Render(RxPipelineNodeInstance* self, const RxPipelineNodePar
         mVertexBuffer->Map(numVerts * stride, (void**)&bufferMem);
         std::copy(verts, verts + numVerts, bufferMem);
         mVertexBuffer->Unmap();
-        RwD3D9SetStreamSource(0, mVertexBuffer->GetBuffer(), 0, stride);
+        RwD3D9SetStreamSource(0, mVertexBuffer->GetObject(), 0, stride);
 
         if(stash->indices && stash->numIndices > 0)
         {
@@ -179,7 +178,7 @@ RwBool Immediate3D::Render(RxPipelineNodeInstance* self, const RxPipelineNodePar
             std::copy(indices, indices + numIndices, indexBuffer);
             mIndexBuffer->Unmap();
 
-            _rwD3D9SetIndices(mIndexBuffer->GetBuffer());
+            _rwD3D9SetIndices(mIndexBuffer->GetObject());
             _rwD3D9DrawIndexedPrimitive(primitiveType, 0, 0, numVerts, 0, numPrimitives);
         }
 

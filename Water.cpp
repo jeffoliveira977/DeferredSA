@@ -63,7 +63,7 @@ uint32_t& m_nWaterConfiguration = *(uint32_t*)0xC228A0;
 #include "CFileLoader.h"
 
 VertexBuffer* CWaterLevel::mVertexBuffer = nullptr;
-RwIndexBuffer* CWaterLevel::mIndexBuffer = nullptr;
+IndexBuffer* CWaterLevel::mIndexBuffer = nullptr;
 
 void CWaterLevel::InitShaders()
 {
@@ -75,9 +75,9 @@ void CWaterLevel::InitShaders()
 
     //mVertexBuffer = new VertexBuffer();
    // mVertexBuffer->Initialize(TOTAL_TEMP_BUFFER_VERTICES, sizeof(RwIm3DVertex));
-    mVertexBuffer = DynamicVertexBuffer::CreateDynamicVertexBuffer(TOTAL_TEMP_BUFFER_VERTICES, sizeof(RwIm3DVertex));
+    mVertexBuffer = DynamicVertexBuffer::Create(TOTAL_TEMP_BUFFER_VERTICES, sizeof(RwIm3DVertex));
 
-    mIndexBuffer = new RwIndexBuffer();
+    mIndexBuffer = new IndexBuffer();
     mIndexBuffer->Initialize(TOTAL_TEMP_BUFFER_INDICES);
 
     // g_pWaveCubeDDS = RwD3D9DDSTextureRead("DeferredSA/PuddlesRelief");
@@ -389,8 +389,8 @@ void DrawWater()
     std::copy(aTempBufferIndices, aTempBufferIndices + numIndices, indexBuffer);
     CWaterLevel::mIndexBuffer->Unmap();
 
-    RwD3D9SetStreamSource(0, CWaterLevel::mVertexBuffer->GetBuffer(), 0, stride);
-    _rwD3D9SetIndices(CWaterLevel::mIndexBuffer->GetBuffer());
+    RwD3D9SetStreamSource(0, CWaterLevel::mVertexBuffer->GetObject(), 0, stride);
+    _rwD3D9SetIndices(CWaterLevel::mIndexBuffer->GetObject());
 
     _rwD3D9SetVertexShader(pWaterVSCode->GetObject());
     _rwD3D9SetPixelShader(pWaterPSCode->GetObject());

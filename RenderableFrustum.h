@@ -1,7 +1,7 @@
 #pragma once
 #include "CommonD.h"
 #include "VertexBuffer.h"
-#include "RwIndexBuffer.h"
+#include "IndexBuffer.h"
 #include "Frustum.h"
 
 class RenderableFrustum
@@ -33,7 +33,7 @@ private:
 	RwV2d m_viewWindow;
 	RwMatrix* LTM;
 	VertexBuffer* mVertexBuffer;
-	RwIndexBuffer* mIndexBuffer[2];
+	IndexBuffer* mIndexBuffer[2];
 	void* mVertexShader;
 	void* mPixelShader;
 	XMINT4 mColor;

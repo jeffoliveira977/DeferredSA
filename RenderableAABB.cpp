@@ -1,6 +1,7 @@
 #include "RenderableAABB.h"
 #include "ShaderManager.h"
 #include "DynamicVertexBuffer.h"
+#include "IndexBufferManager.h"
 
 std::list<RwUInt16> RenderableAABB::mIndices =
 {
@@ -27,20 +28,14 @@ void RenderableAABB::Initialize()
 {
 	/*mVertexBuffer = new VertexBuffer();
 	mVertexBuffer->Initialize(24, sizeof(Vertex));*/
-	mVertexBuffer = DynamicVertexBuffer::CreateDynamicVertexBuffer(24, sizeof(Vertex));
+	mVertexBuffer = DynamicVertexBuffer::Create(24, sizeof(Vertex));
 
-	mIndexBuffer = new RwIndexBuffer();
-	mIndexBuffer->Initialize(mIndices.size());
+	//mIndexBuffer = new RwIndexBuffer();
+	//mIndexBuffer->Initialize(mIndices.size());
+	mIndexBuffer = DynamicIndexBuffer::Create(mIndices.size());
 
 	mVertexShader = RwCreateCompiledVertexShader("Im3dVS");
 	mPixelShader = RwCreateCompiledPixelShader("Im3dPS");
-
-	RwUInt32 numIndices = mIndices.size();
-	RwUInt16* indexData = nullptr;
-
-	mIndexBuffer->Map(numIndices * sizeof(RwUInt16), (void**)&indexData);
-	std::copy(mIndices.begin(), mIndices.end(), indexData);
-	mIndexBuffer->Unmap();
 }
 
 void RenderableAABB::Render()
@@ -60,12 +55,20 @@ void RenderableAABB::Render()
 
 	_rwD3D9SetVertexDeclaration(VertexDeclIm3DNoTex);
 
+	RwUInt32 numIndices = mIndices.size();
+	RwUInt16* indexData = nullptr;
+
+	mIndexBuffer->Map(numIndices * sizeof(RwUInt16), (void**)&indexData);
+	std::copy(mIndices.begin(), mIndices.end(), indexData);
+	mIndexBuffer->Unmap();
+	_rwD3D9SetIndices(mIndexBuffer->GetObject());
+
 	Vertex* vertexData = nullptr;
 	mVertexBuffer->Map(mVertices.size() * sizeof(Vertex), (void**)&vertexData);
 	std::copy(mVertices.begin(), mVertices.end(), vertexData);
 	mVertexBuffer->Unmap();
-	RwD3D9SetStreamSource(0, mVertexBuffer->GetBuffer(), 0, sizeof(Vertex));
-	_rwD3D9SetIndices(mIndexBuffer->GetBuffer());
+	RwD3D9SetStreamSource(0, mVertexBuffer->GetObject(), 0, sizeof(Vertex));
+
 
 	float params = 0.0;
 	_rwD3D9SetPixelShaderConstant(0, &params, 1);

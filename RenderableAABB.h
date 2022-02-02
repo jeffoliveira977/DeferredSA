@@ -2,7 +2,7 @@
 
 #include "CommonD.h"
 #include "VertexBuffer.h"
-#include "RwIndexBuffer.h"
+#include "IndexBuffer.h"
 #include "AABB.h"
 
 class RenderableAABB
@@ -33,7 +33,7 @@ class RenderableAABB
 	void* mVertexShader;
 	void* mPixelShader;
 	VertexBuffer* mVertexBuffer;
-	RwIndexBuffer* mIndexBuffer;
+	IndexBuffer* mIndexBuffer;
 	XMINT4 mColor[6];
 	std::vector<Vertex> mVertices;
 	static std::list<RwUInt16> mIndices;

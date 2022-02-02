@@ -1,48 +1,50 @@
 #include "IndexBufferManager.h"
 
-std::list<RwIndexBuffer*> IndexBufferManager::mIndexBufferList;
-// Same thing for dynamic index buffers
+std::list<IndexBuffer*> DynamicIndexBuffer::mIndexBufferList;
 
-
-
-void IndexBufferManager::AddToList(RwIndexBuffer* buffer)
+IndexBuffer* DynamicIndexBuffer::Create(uint32_t size)
 {
-	auto it = std::find(mIndexBufferList.begin(), mIndexBufferList.end(), buffer);
-	if(it != mIndexBufferList.end())
-		
-	MessageBox(0, "not", "Error", MB_OK);
+	IndexBuffer* indexBuffer = new IndexBuffer();
+	indexBuffer->Initialize(size);
 
-	mIndexBufferList.push_back(buffer);
+	mIndexBufferList.push_back(indexBuffer);
+	return indexBuffer;
 }
 
-void IndexBufferManager::Restore()
-{
-	for(auto& buffer : mIndexBufferList)
-	{
-		if(buffer)
-			buffer->Restore();
-	}
-}
-
-void IndexBufferManager::RemoveFromList(RwIndexBuffer* indexBuffer)
+void DynamicIndexBuffer::Destroy(IndexBuffer* indexBuffer)
 {
 	mIndexBufferList.remove(indexBuffer);
+	SAFE_DELETE(indexBuffer);
 }
 
-void IndexBufferManager::Release()
+void DynamicIndexBuffer::Release()
 {
-	for(auto& buffer : mIndexBufferList)
+	for (auto& buffer : mIndexBufferList)
 	{
-		if(buffer)
+		if (buffer)
+		{
 			buffer->Release();
+		}
 	}
 }
 
-void IndexBufferManager::Destroy()
+void DynamicIndexBuffer::Restore()
+{
+	for (auto& buffer : mIndexBufferList)
+	{
+		if (buffer)
+		{
+			buffer->Restore();
+		}
+	}
+}
+
+void DynamicIndexBuffer::DestroyAll()
 {
 	for(auto& buffer : mIndexBufferList)
 	{
-		delete buffer;
+		SAFE_DELETE(buffer);
 	}
+
 	mIndexBufferList.clear();
 }

@@ -182,7 +182,7 @@ void DrawScreenQuad(float x, float y, float width, float height)
 VertexShader* Quad::mVertexShader = nullptr;
 PixelShader* Quad::mPixelShader = nullptr;
 VertexBuffer* Quad::mVertexBuffer = nullptr;
-RwIndexBuffer* Quad::mIndexBuffer = nullptr;
+IndexBuffer* Quad::mIndexBuffer = nullptr;
 void* Quad::mVertexDeclQuad = nullptr;
 
 void Quad::Initialize()
@@ -207,7 +207,7 @@ void Quad::Initialize()
 	mVertexBuffer = new VertexBuffer();
 	mVertexBuffer->Initialize(4, sizeof(QuadVertex), false);
 	
-	mIndexBuffer = new RwIndexBuffer();
+	mIndexBuffer = new IndexBuffer();
 	mIndexBuffer->Initialize(6, false);
 
 
@@ -246,8 +246,8 @@ void Quad::Render(bool useVS)
 	 _rwD3D9SetVertexShader(mVertexShader->GetObject());
 	// _rwD3D9SetPixelShader(mPixelShader->GetObject());
 
-	RwD3D9SetStreamSource(0, mVertexBuffer->GetBuffer(), 0, sizeof(QuadVertex));
-	 _rwD3D9SetIndices(mIndexBuffer->GetBuffer());
+	RwD3D9SetStreamSource(0, mVertexBuffer->GetObject(), 0, sizeof(QuadVertex));
+	 _rwD3D9SetIndices(mIndexBuffer->GetObject());
 	// _rwD3D9SetFVF(D3DFVF_XYZRHW | D3DFVF_TEX1);
 	_rwD3D9SetVertexDeclaration(mVertexDeclQuad);
 	_rwD3D9DrawIndexedPrimitive(D3DPT_TRIANGLELIST, 0, 0, 4, 0, 2);
