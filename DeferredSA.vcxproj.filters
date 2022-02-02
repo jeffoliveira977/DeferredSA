@@ -101,6 +101,7 @@
     </ClCompile>
     <ClCompile Include="MeshCulling.cpp" />
     <ClCompile Include="SamplerState.cpp" />
+    <ClCompile Include="DynamicVertexBuffer.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="GTADef.h" />
@@ -198,6 +199,7 @@
     </ClInclude>
     <ClInclude Include="MeshCulling.h" />
     <ClInclude Include="SamplerState.h" />
+    <ClInclude Include="DynamicVertexBuffer.h" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="imgui">
@@ -211,6 +213,9 @@
     </Filter>
     <Filter Include="mini">
       <UniqueIdentifier>{ad799bbb-31ba-4a3c-96d9-2fcef73d195a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Engine">
+      <UniqueIdentifier>{229d34bd-207b-4d6d-a241-9c99a7816e40}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>

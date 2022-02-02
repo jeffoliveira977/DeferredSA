@@ -1,7 +1,7 @@
 #include "RenderableFrustum.h"
 #include "CCamera.h"
 #include "ShaderManager.h"
-
+#include "DynamicVertexBuffer.h"
 std::vector<RwUInt16> RenderableFrustum::mIndicesL =
 {
 	1,  2,  2,  3,  3,  4,  4,  1,
@@ -37,9 +37,10 @@ RenderableFrustum::~RenderableFrustum()
 
 void RenderableFrustum::InitGraphicsBuffer()
 {
-	mVertexBuffer = new VertexBuffer();
-	mVertexBuffer->Initialize(13, sizeof(Vertex));
-	
+	//mVertexBuffer = new VertexBuffer();
+	//mVertexBuffer->Initialize(13, sizeof(Vertex));
+	mVertexBuffer = DynamicVertexBuffer::CreateDynamicVertexBuffer(13, sizeof(Vertex));
+
 	mIndexBuffer[0] = new RwIndexBuffer();
 	mIndexBuffer[0]->Initialize(mIndicesL.size());
 

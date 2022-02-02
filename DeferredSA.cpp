@@ -202,9 +202,11 @@ void ShutdowRenderware()
 
 #include "IndexBufferManager.h"
 #include "RenderTargetManager.h"
+#include "DynamicVertexBuffer.h"
+
 void LostDevice()
 {
-
+	DynamicVertexBuffer::Release();
 	IndexBufferManager::Release();
 }
 
@@ -213,6 +215,7 @@ void ResetDevice()
 	//CascadedShadowManagement->UpdateTextures();
 	CWaterLevel::UpdateTextures();
 	IndexBufferManager::Restore();
+	DynamicVertexBuffer::Restore();
 	//DeferredContext->UpdateTextures();
 	RenderTargetManager::Rebuild();
 }

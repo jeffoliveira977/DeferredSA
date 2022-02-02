@@ -7,6 +7,7 @@
 #include "plugin.h"
 #include "VertexShader.h"
 #include "PixelShader.h"
+#include "DynamicVertexBuffer.h"
 
 using namespace plugin;
 
@@ -72,8 +73,9 @@ void CWaterLevel::InitShaders()
     pWaterPSCode = new PixelShader();
     pWaterPSCode->CreateFromFile("WaterEffects", "WaterPS");
 
-    mVertexBuffer = new VertexBuffer();
-    mVertexBuffer->Initialize(TOTAL_TEMP_BUFFER_VERTICES, sizeof(RwIm3DVertex));
+    //mVertexBuffer = new VertexBuffer();
+   // mVertexBuffer->Initialize(TOTAL_TEMP_BUFFER_VERTICES, sizeof(RwIm3DVertex));
+    mVertexBuffer = DynamicVertexBuffer::CreateDynamicVertexBuffer(TOTAL_TEMP_BUFFER_VERTICES, sizeof(RwIm3DVertex));
 
     mIndexBuffer = new RwIndexBuffer();
     mIndexBuffer->Initialize(TOTAL_TEMP_BUFFER_INDICES);

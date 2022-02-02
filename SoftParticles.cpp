@@ -5,6 +5,7 @@
 #include "Fx_c.h"
 #include "ShaderManager.h"
 #include "VertexBuffer.h"
+#include "DynamicVertexBuffer.h"
 
 VertexShader* SoftParticles::mVertexShader = nullptr;
 PixelShader* SoftParticles::mPixelShader = nullptr;
@@ -35,8 +36,9 @@ void SoftParticles::Initialize()
     mPixelShader = new PixelShader();
     mPixelShader->CreateFromBinary("SoftParticlesPS");
 
-    mVertexBuffer = new VertexBuffer();
-    mVertexBuffer->Initialize(TOTAL_TEMP_BUFFER_VERTICES, sizeof(RwIm3DVertex));
+   //mVertexBuffer = new VertexBuffer();
+    //mVertexBuffer->Initialize(TOTAL_TEMP_BUFFER_VERTICES, sizeof(RwIm3DVertex));
+    mVertexBuffer = DynamicVertexBuffer::CreateDynamicVertexBuffer(TOTAL_TEMP_BUFFER_VERTICES, sizeof(RwIm3DVertex));
 
     D3DVERTEXELEMENT9 declaration[] =
     {

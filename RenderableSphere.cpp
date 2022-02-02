@@ -2,6 +2,7 @@
 #include "ShaderManager.h"
 #include "PixelShaderConstant.h"
 #include "VertexShaderConstant.h"
+#include "DynamicVertexBuffer.h"
 
 RenderableSphere::RenderableSphere()
 {
@@ -24,8 +25,9 @@ void RenderableSphere::Initialize(int slices, int stacks)
 	int numVertices = 2 + slices * (stacks - 1);
 	int numIndices = 2 * slices + (stacks - 2) * (2 * slices);
 
-	mVertexBuffer = new VertexBuffer();
-	mVertexBuffer->Initialize(numVertices, sizeof(Vertex));
+	//mVertexBuffer = new VertexBuffer();
+	//mVertexBuffer->Initialize(numVertices, sizeof(Vertex));
+	mVertexBuffer = DynamicVertexBuffer::CreateDynamicVertexBuffer(numVertices, sizeof(Vertex));
 
 	mIndexBuffer = new RwIndexBuffer();
 	mIndexBuffer->Initialize(numIndices * 3);

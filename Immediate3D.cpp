@@ -2,6 +2,7 @@
 #include "ShaderManager.h"
 #include "PixelShaderConstant.h"
 #include "IndexBufferManager.h"
+#include "DynamicVertexBuffer.h"
 VertexBuffer* Immediate3D::mVertexBuffer = nullptr;
 RwIndexBuffer* Immediate3D::mIndexBuffer = nullptr;
 VertexShader* Immediate3D::mVertexShader = nullptr;
@@ -75,8 +76,11 @@ RwBool Immediate3D::Open(void)
         mPixelShader = new PixelShader();
         mPixelShader->CreateFromBinary("Im3dPS");
 
-        mVertexBuffer = new VertexBuffer();
-        mVertexBuffer->Initialize(BUFFER_MAX_INDEX, sizeof(RwIm3DVertex));
+        //mVertexBuffer = new VertexBuffer();
+        //mVertexBuffer->Initialize(BUFFER_MAX_INDEX, sizeof(RwIm3DVertex));
+
+        mVertexBuffer = DynamicVertexBuffer::CreateDynamicVertexBuffer(BUFFER_MAX_INDEX, sizeof(RwIm3DVertex));
+
         mIndexBuffer = new RwIndexBuffer();
         mIndexBuffer->Initialize(BUFFER_MAX_INDEX);
    /* }

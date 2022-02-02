@@ -1,5 +1,6 @@
 #include "RenderableAABB.h"
 #include "ShaderManager.h"
+#include "DynamicVertexBuffer.h"
 
 std::list<RwUInt16> RenderableAABB::mIndices =
 {
@@ -24,8 +25,9 @@ RenderableAABB::~RenderableAABB()
 
 void RenderableAABB::Initialize()
 {
-	mVertexBuffer = new VertexBuffer();
-	mVertexBuffer->Initialize(24, sizeof(Vertex));
+	/*mVertexBuffer = new VertexBuffer();
+	mVertexBuffer->Initialize(24, sizeof(Vertex));*/
+	mVertexBuffer = DynamicVertexBuffer::CreateDynamicVertexBuffer(24, sizeof(Vertex));
 
 	mIndexBuffer = new RwIndexBuffer();
 	mIndexBuffer->Initialize(mIndices.size());

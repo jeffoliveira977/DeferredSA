@@ -120,6 +120,7 @@
     <ClCompile Include="CommonD.cpp" />
     <ClCompile Include="CascadedShadowRendering.cpp" />
     <ClCompile Include="DualParaboloidReflection.cpp" />
+    <ClCompile Include="DynamicVertexBuffer.cpp" />
     <ClCompile Include="Frustum.cpp" />
     <ClCompile Include="GameHooks.cpp" />
     <ClCompile Include="ImguiManager.cpp" />
@@ -194,6 +195,7 @@
     <ClInclude Include="CommonD.h" />
     <ClInclude Include="CascadedShadowRendering.h" />
     <ClInclude Include="DualParaboloidReflection.h" />
+    <ClInclude Include="DynamicVertexBuffer.h" />
     <ClInclude Include="Frustum.h" />
     <ClInclude Include="GameHooks.h" />
     <ClInclude Include="ImguiManager.h" />
