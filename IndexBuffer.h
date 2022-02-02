@@ -1,23 +1,26 @@
 #pragma once
 #include "CommonD.h"
 
-class IndexBuffer
+namespace DeferredRenderingEngine
 {
-public:
-	IndexBuffer();
-	~IndexBuffer();
+	class IndexBuffer
+	{
+	public:
+		IndexBuffer();
+		~IndexBuffer();
 
-	void Initialize(uint32_t size, bool dynamic = true);
-	void Release();
-	void Restore();
-	void Map(uint32_t size, void** data);
-	void Unmap();
-	void Apply();
+		void Initialize(uint32_t size, bool dynamic = true);
+		void Release();
+		void Restore();
+		void Map(uint32_t size, void** data);
+		void Unmap();
+		void Apply();
 
-	IDirect3DIndexBuffer9* GetObject();
-private:
+		IDirect3DIndexBuffer9* GetObject();
+	private:
 
-	int mSize;
-	bool mDynamic;
-	IDirect3DIndexBuffer9* m_buffer;
-};
+		int mSize;
+		bool mDynamic;
+		IDirect3DIndexBuffer9* m_buffer;
+	};
+}

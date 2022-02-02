@@ -7,9 +7,10 @@
 #include "VertexBuffer.h"
 #include "DynamicVertexBuffer.h"
 
+
 VertexShader* SoftParticles::mVertexShader = nullptr;
 PixelShader* SoftParticles::mPixelShader = nullptr;
-VertexBuffer* SoftParticles::mVertexBuffer = nullptr;
+DeferredRenderingEngine::VertexBuffer* SoftParticles::mVertexBuffer = nullptr;
 void* SoftParticles::mVertexDeclColor = nullptr;
 
 void SoftParticles::Hook()
@@ -38,7 +39,7 @@ void SoftParticles::Initialize()
 
    //mVertexBuffer = new VertexBuffer();
     //mVertexBuffer->Initialize(TOTAL_TEMP_BUFFER_VERTICES, sizeof(RwIm3DVertex));
-    mVertexBuffer = DynamicVertexBuffer::Create(TOTAL_TEMP_BUFFER_VERTICES, sizeof(RwIm3DVertex));
+    mVertexBuffer = DeferredRenderingEngine::DynamicVertexBuffer::Create(TOTAL_TEMP_BUFFER_VERTICES, sizeof(RwIm3DVertex));
 
     D3DVERTEXELEMENT9 declaration[] =
     {

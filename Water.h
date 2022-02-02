@@ -36,8 +36,8 @@ private:
 public:
     static RwRaster* m_reflection;
     static RwRaster* m_refraction;
-    static VertexBuffer* mVertexBuffer;
-    static IndexBuffer* mIndexBuffer;
+    static DeferredRenderingEngine::VertexBuffer* mVertexBuffer;
+    static DeferredRenderingEngine::IndexBuffer* mIndexBuffer;
     static void AddObject(CEntity* entity, float distance);
     static void SectorList(CPtrList& ptrList);
     static void ScanSectorList(int sectorX, int sectorY);

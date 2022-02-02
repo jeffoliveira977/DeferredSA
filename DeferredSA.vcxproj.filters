@@ -23,7 +23,6 @@
     <ClCompile Include="SpotlightShadow.cpp" />
     <ClCompile Include="ShadowCaster.cpp" />
     <ClCompile Include="Frustum.cpp" />
-    <ClCompile Include="BoundingSphere.cpp" />
     <ClCompile Include="AABB.cpp" />
     <ClCompile Include="Collider.cpp" />
     <ClCompile Include="VisibilityPlugins.cpp" />
@@ -48,12 +47,8 @@
     <ClCompile Include="VehicleMeshPipeline.cpp">
       <Filter>Pipeline</Filter>
     </ClCompile>
-    <ClCompile Include="RenderableFrustum.cpp" />
-    <ClCompile Include="RenderableScene.cpp" />
     <ClCompile Include="CubemapReflection.cpp" />
     <ClCompile Include="DualParaboloidReflection.cpp" />
-    <ClCompile Include="RenderableAABB.cpp" />
-    <ClCompile Include="RenderableSphere.cpp" />
     <ClCompile Include="Texture.cpp" />
     <ClCompile Include="PixelShaderConstant.cpp" />
     <ClCompile Include="VertexShaderConstant.cpp" />
@@ -98,9 +93,6 @@
     </ClCompile>
     <ClCompile Include="MeshCulling.cpp" />
     <ClCompile Include="SamplerState.cpp" />
-    <ClCompile Include="IndexBufferManager.cpp">
-      <Filter>Engine</Filter>
-    </ClCompile>
     <ClCompile Include="IndexBuffer.cpp">
       <Filter>Engine</Filter>
     </ClCompile>
@@ -109,6 +101,22 @@
     </ClCompile>
     <ClCompile Include="DynamicVertexBuffer.cpp">
       <Filter>Engine</Filter>
+    </ClCompile>
+    <ClCompile Include="DynamicIndexBuffer.cpp">
+      <Filter>Engine</Filter>
+    </ClCompile>
+    <ClCompile Include="RenderableSphere.cpp">
+      <Filter>Engine\Renderable</Filter>
+    </ClCompile>
+    <ClCompile Include="RenderableScene.cpp">
+      <Filter>Engine\Renderable</Filter>
+    </ClCompile>
+    <ClCompile Include="BoundingSphere.cpp" />
+    <ClCompile Include="RenderableFrustum.cpp">
+      <Filter>Engine\Renderable</Filter>
+    </ClCompile>
+    <ClCompile Include="RenderableAABB.cpp">
+      <Filter>Engine\Renderable</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -160,12 +168,8 @@
     <ClInclude Include="VehicleMeshPipeline.h">
       <Filter>Pipeline</Filter>
     </ClInclude>
-    <ClInclude Include="RenderableFrustum.h" />
-    <ClInclude Include="RenderableScene.h" />
     <ClInclude Include="CubemapReflection.h" />
     <ClInclude Include="DualParaboloidReflection.h" />
-    <ClInclude Include="RenderableAABB.h" />
-    <ClInclude Include="RenderableSphere.h" />
     <ClInclude Include="Texture.h" />
     <ClInclude Include="PixelShaderConstant.h" />
     <ClInclude Include="VertexShaderConstant.h" />
@@ -204,9 +208,6 @@
     </ClInclude>
     <ClInclude Include="MeshCulling.h" />
     <ClInclude Include="SamplerState.h" />
-    <ClInclude Include="IndexBufferManager.h">
-      <Filter>Engine</Filter>
-    </ClInclude>
     <ClInclude Include="IndexBuffer.h">
       <Filter>Engine</Filter>
     </ClInclude>
@@ -215,6 +216,21 @@
     </ClInclude>
     <ClInclude Include="DynamicVertexBuffer.h">
       <Filter>Engine</Filter>
+    </ClInclude>
+    <ClInclude Include="DynamicIndexBuffer.h">
+      <Filter>Engine</Filter>
+    </ClInclude>
+    <ClInclude Include="RenderableFrustum.h">
+      <Filter>Engine\Renderable</Filter>
+    </ClInclude>
+    <ClInclude Include="RenderableSphere.h">
+      <Filter>Engine\Renderable</Filter>
+    </ClInclude>
+    <ClInclude Include="RenderableScene.h">
+      <Filter>Engine\Renderable</Filter>
+    </ClInclude>
+    <ClInclude Include="RenderableAABB.h">
+      <Filter>Engine\Renderable</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -232,6 +248,9 @@
     </Filter>
     <Filter Include="Engine">
       <UniqueIdentifier>{229d34bd-207b-4d6d-a241-9c99a7816e40}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Engine\Renderable">
+      <UniqueIdentifier>{ae257ba3-3a1a-463f-8566-95344561f817}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>

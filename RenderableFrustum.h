@@ -32,8 +32,8 @@ private:
 	float m_farPlane;
 	RwV2d m_viewWindow;
 	RwMatrix* LTM;
-	VertexBuffer* mVertexBuffer;
-	IndexBuffer* mIndexBuffer[2];
+	DeferredRenderingEngine::VertexBuffer* mVertexBuffer;
+	DeferredRenderingEngine::IndexBuffer* mIndexBuffer[2];
 	void* mVertexShader;
 	void* mPixelShader;
 	XMINT4 mColor;

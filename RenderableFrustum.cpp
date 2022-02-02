@@ -2,7 +2,7 @@
 #include "CCamera.h"
 #include "ShaderManager.h"
 #include "DynamicVertexBuffer.h"
-#include "IndexBufferManager.h"
+#include "DynamicIndexBuffer.h"
 
 std::vector<RwUInt16> RenderableFrustum::mIndicesL =
 {
@@ -41,7 +41,7 @@ void RenderableFrustum::InitGraphicsBuffer()
 {
 	//mVertexBuffer = new VertexBuffer();
 	//mVertexBuffer->Initialize(13, sizeof(Vertex));
-	mVertexBuffer = DynamicVertexBuffer::Create(13, sizeof(Vertex));
+	mVertexBuffer = DeferredRenderingEngine::DynamicVertexBuffer::Create(13, sizeof(Vertex));
 
 	/*mIndexBuffer[0] = new RwIndexBuffer();
 	mIndexBuffer[0]->Initialize(mIndicesL.size());
@@ -49,8 +49,8 @@ void RenderableFrustum::InitGraphicsBuffer()
 	mIndexBuffer[1] = new RwIndexBuffer();
 	mIndexBuffer[1]->Initialize(mIndicesT.size());*/
 
-	mIndexBuffer[0] = DynamicIndexBuffer::Create(mIndicesL.size());
-	mIndexBuffer[1] = DynamicIndexBuffer::Create(mIndicesT.size());
+	mIndexBuffer[0] = DeferredRenderingEngine::DynamicIndexBuffer::Create(mIndicesL.size());
+	mIndexBuffer[1] = DeferredRenderingEngine::DynamicIndexBuffer::Create(mIndicesT.size());
 
 	mVertexShader = RwCreateCompiledVertexShader("Im3dVS");
 	mPixelShader = RwCreateCompiledPixelShader("Im3dPS");

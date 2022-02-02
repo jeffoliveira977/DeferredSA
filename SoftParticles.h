@@ -26,6 +26,6 @@ private:
 
 	static VertexShader* mVertexShader;
 	static PixelShader* mPixelShader;
-	static VertexBuffer *mVertexBuffer;
+	static DeferredRenderingEngine::VertexBuffer *mVertexBuffer;
 	static void* mVertexDeclColor;
 };

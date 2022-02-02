@@ -1,62 +1,65 @@
 #include "DynamicVertexBuffer.h"
 
-list<VertexBuffer*> DynamicVertexBuffer::m_dynamicVertexBufferList;
-
-VertexBuffer* DynamicVertexBuffer::Create(uint32_t size, uint32_t stride)
+namespace DeferredRenderingEngine
 {
-    VertexBuffer* vertexbuffer = new VertexBuffer();
-    try
+    list<VertexBuffer*> DynamicVertexBuffer::m_dynamicVertexBufferList;
+
+    VertexBuffer* DynamicVertexBuffer::Create(uint32_t size, uint32_t stride)
     {
-        vertexbuffer->Initialize(size, stride);
+        VertexBuffer* vertexbuffer = new VertexBuffer();
+        try
+        {
+            vertexbuffer->Initialize(size, stride);
+        }
+        catch (const std::exception & e)
+        {
+            MessageBox(NULL, e.what(), "Error!", MB_OK);
+            return nullptr;
+        }
+
+        m_dynamicVertexBufferList.push_back(vertexbuffer);
+
+        return vertexbuffer;
     }
-    catch (const std::exception&e)
+
+    void DynamicVertexBuffer::Destroy(VertexBuffer* vertexBuffer)
     {
-        MessageBox(NULL, e.what(), "Error!", MB_OK);
-        return nullptr;
-    }
-    
-    m_dynamicVertexBufferList.push_back(vertexbuffer);
+        if (vertexBuffer == nullptr)
+            return;
 
-    return vertexbuffer;
-}
-
-void DynamicVertexBuffer::Destroy(VertexBuffer* vertexBuffer)
-{
-    if (vertexBuffer == nullptr)
-        return;
-
-    m_dynamicVertexBufferList.remove(vertexBuffer);
-    SAFE_DELETE(vertexBuffer);
-}
-
-void DynamicVertexBuffer::DestroyAll()
-{
-    for (auto vertexBuffer : m_dynamicVertexBufferList)
-    {
+        m_dynamicVertexBufferList.remove(vertexBuffer);
         SAFE_DELETE(vertexBuffer);
     }
 
-    m_dynamicVertexBufferList.clear();
-}
-
-void DynamicVertexBuffer::Release()
-{
-    for (auto vertexBuffer : m_dynamicVertexBufferList)
+    void DynamicVertexBuffer::DestroyAll()
     {
-        if (vertexBuffer)
+        for (auto vertexBuffer : m_dynamicVertexBufferList)
         {
-            vertexBuffer->Release();
+            SAFE_DELETE(vertexBuffer);
+        }
+
+        m_dynamicVertexBufferList.clear();
+    }
+
+    void DynamicVertexBuffer::Release()
+    {
+        for (auto vertexBuffer : m_dynamicVertexBufferList)
+        {
+            if (vertexBuffer)
+            {
+                vertexBuffer->Release();
+            }
         }
     }
-}
 
-void DynamicVertexBuffer::Restore()
-{
-    for (auto vertexBuffer : m_dynamicVertexBufferList)
+    void DynamicVertexBuffer::Restore()
     {
-        if (vertexBuffer)
+        for (auto vertexBuffer : m_dynamicVertexBufferList)
         {
-            vertexBuffer->Restore();
+            if (vertexBuffer)
+            {
+                vertexBuffer->Restore();
+            }
         }
     }
 }

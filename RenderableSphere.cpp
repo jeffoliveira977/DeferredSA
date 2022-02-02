@@ -3,7 +3,7 @@
 #include "PixelShaderConstant.h"
 #include "VertexShaderConstant.h"
 #include "DynamicVertexBuffer.h"
-#include "IndexBufferManager.h"
+#include "DynamicIndexBuffer.h"
 
 RenderableSphere::RenderableSphere()
 {
@@ -28,12 +28,12 @@ void RenderableSphere::Initialize(int slices, int stacks)
 
 	//mVertexBuffer = new VertexBuffer();
 	//mVertexBuffer->Initialize(numVertices, sizeof(Vertex));
-	mVertexBuffer = DynamicVertexBuffer::Create(numVertices, sizeof(Vertex));
+	mVertexBuffer = DeferredRenderingEngine::DynamicVertexBuffer::Create(numVertices, sizeof(Vertex));
 
 	/*mIndexBuffer = new RwIndexBuffer();
 	mIndexBuffer->Initialize(numIndices * 3);*/
 
-	mIndexBuffer = DynamicIndexBuffer::Create(numIndices * 3);
+	mIndexBuffer = DeferredRenderingEngine::DynamicIndexBuffer::Create(numIndices * 3);
 
 	mVertexShader = new VertexShader();
 	mVertexShader->CreateFromBinary("Im3dVS");

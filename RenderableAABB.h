@@ -32,8 +32,8 @@ class RenderableAABB
 	XMMATRIX mWorld;
 	void* mVertexShader;
 	void* mPixelShader;
-	VertexBuffer* mVertexBuffer;
-	IndexBuffer* mIndexBuffer;
+	DeferredRenderingEngine::VertexBuffer* mVertexBuffer;
+	DeferredRenderingEngine::IndexBuffer* mIndexBuffer;
 	XMINT4 mColor[6];
 	std::vector<Vertex> mVertices;
 	static std::list<RwUInt16> mIndices;

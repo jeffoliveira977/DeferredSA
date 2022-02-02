@@ -1,11 +1,11 @@
 #include "Immediate3D.h"
 #include "ShaderManager.h"
 #include "PixelShaderConstant.h"
-#include "IndexBufferManager.h"
+#include "DynamicIndexBuffer.h"
 #include "DynamicVertexBuffer.h"
 
-VertexBuffer* Immediate3D::mVertexBuffer = nullptr;
-IndexBuffer* Immediate3D::mIndexBuffer = nullptr;
+DeferredRenderingEngine::VertexBuffer* Immediate3D::mVertexBuffer = nullptr;
+DeferredRenderingEngine::IndexBuffer* Immediate3D::mIndexBuffer = nullptr;
 VertexShader* Immediate3D::mVertexShader = nullptr;
 PixelShader* Immediate3D::mPixelShader = nullptr;
 
@@ -76,12 +76,12 @@ RwBool Immediate3D::Open(void)
         //mVertexBuffer = new VertexBuffer();
         //mVertexBuffer->Initialize(BUFFER_MAX_INDEX, sizeof(RwIm3DVertex));
 
-        mVertexBuffer = DynamicVertexBuffer::Create(BUFFER_MAX_INDEX, sizeof(RwIm3DVertex));
+        mVertexBuffer = DeferredRenderingEngine::DynamicVertexBuffer::Create(BUFFER_MAX_INDEX, sizeof(RwIm3DVertex));
 
         /*mIndexBuffer = new RwIndexBuffer();
         mIndexBuffer->Initialize(BUFFER_MAX_INDEX);*/
 
-        mIndexBuffer = DynamicIndexBuffer::Create(BUFFER_MAX_INDEX);
+        mIndexBuffer = DeferredRenderingEngine::DynamicIndexBuffer::Create(BUFFER_MAX_INDEX);
    /* }
     catch(const std::exception&e)
     {

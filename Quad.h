@@ -21,7 +21,7 @@ public:
 private:
 	static VertexShader* mVertexShader;
 	static PixelShader* mPixelShader;
-	static VertexBuffer* mVertexBuffer;
-	static IndexBuffer* mIndexBuffer;
+	static DeferredRenderingEngine::VertexBuffer* mVertexBuffer;
+	static DeferredRenderingEngine::IndexBuffer* mIndexBuffer;
 	static void* mVertexDeclQuad;
 };

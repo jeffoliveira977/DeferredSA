@@ -10,8 +10,8 @@ class Immediate3D
 public:
     static void Hook();
 private:
-    static VertexBuffer* mVertexBuffer;
-    static IndexBuffer* mIndexBuffer;
+    static DeferredRenderingEngine::VertexBuffer* mVertexBuffer;
+    static DeferredRenderingEngine::IndexBuffer* mIndexBuffer;
     static VertexShader* mVertexShader;
     static PixelShader* mPixelShader;
 

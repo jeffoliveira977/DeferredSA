@@ -133,7 +133,7 @@
     <ClCompile Include="imgui\imgui_tables.cpp" />
     <ClCompile Include="imgui\imgui_widgets.cpp" />
     <ClCompile Include="Immediate3D.cpp" />
-    <ClCompile Include="IndexBufferManager.cpp" />
+    <ClCompile Include="DynamicIndexBuffer.cpp" />
     <ClCompile Include="LightManager.cpp" />
     <ClCompile Include="Mesh.cpp" />
     <ClCompile Include="MeshCulling.cpp" />
@@ -205,7 +205,7 @@
     <ClInclude Include="imgui\imconfig.h" />
     <ClInclude Include="imgui\imgui.h" />
     <ClInclude Include="Immediate3D.h" />
-    <ClInclude Include="IndexBufferManager.h" />
+    <ClInclude Include="DynamicIndexBuffer.h" />
     <ClInclude Include="LightManager.h" />
     <ClInclude Include="Mesh.h" />
     <ClInclude Include="MeshCulling.h" />

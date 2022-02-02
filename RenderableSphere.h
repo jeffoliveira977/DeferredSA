@@ -35,8 +35,8 @@ class RenderableSphere
 	XMMATRIX mWorld;
 	VertexShader* mVertexShader;
 	PixelShader* mPixelShader;
-	VertexBuffer* mVertexBuffer;
-	IndexBuffer* mIndexBuffer;
+	DeferredRenderingEngine::VertexBuffer* mVertexBuffer;
+	DeferredRenderingEngine::IndexBuffer* mIndexBuffer;
 	XMINT4 mColor;
 	std::vector<Vertex> mVertices;
 	std::vector<RwUInt16> mIndices;

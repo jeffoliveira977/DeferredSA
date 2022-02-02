@@ -62,8 +62,8 @@ uint32_t& m_nWaterConfiguration = *(uint32_t*)0xC228A0;
 
 #include "CFileLoader.h"
 
-VertexBuffer* CWaterLevel::mVertexBuffer = nullptr;
-IndexBuffer* CWaterLevel::mIndexBuffer = nullptr;
+DeferredRenderingEngine::VertexBuffer* CWaterLevel::mVertexBuffer = nullptr;
+DeferredRenderingEngine::IndexBuffer* CWaterLevel::mIndexBuffer = nullptr;
 
 void CWaterLevel::InitShaders()
 {
@@ -75,9 +75,9 @@ void CWaterLevel::InitShaders()
 
     //mVertexBuffer = new VertexBuffer();
    // mVertexBuffer->Initialize(TOTAL_TEMP_BUFFER_VERTICES, sizeof(RwIm3DVertex));
-    mVertexBuffer = DynamicVertexBuffer::Create(TOTAL_TEMP_BUFFER_VERTICES, sizeof(RwIm3DVertex));
+    mVertexBuffer = DeferredRenderingEngine::DynamicVertexBuffer::Create(TOTAL_TEMP_BUFFER_VERTICES, sizeof(RwIm3DVertex));
 
-    mIndexBuffer = new IndexBuffer();
+    mIndexBuffer = new DeferredRenderingEngine::IndexBuffer();
     mIndexBuffer->Initialize(TOTAL_TEMP_BUFFER_INDICES);
 
     // g_pWaveCubeDDS = RwD3D9DDSTextureRead("DeferredSA/PuddlesRelief");

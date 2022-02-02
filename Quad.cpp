@@ -181,8 +181,8 @@ void DrawScreenQuad(float x, float y, float width, float height)
 
 VertexShader* Quad::mVertexShader = nullptr;
 PixelShader* Quad::mPixelShader = nullptr;
-VertexBuffer* Quad::mVertexBuffer = nullptr;
-IndexBuffer* Quad::mIndexBuffer = nullptr;
+DeferredRenderingEngine::VertexBuffer* Quad::mVertexBuffer = nullptr;
+DeferredRenderingEngine::IndexBuffer* Quad::mIndexBuffer = nullptr;
 void* Quad::mVertexDeclQuad = nullptr;
 
 void Quad::Initialize()
@@ -204,10 +204,10 @@ void Quad::Initialize()
 	mPixelShader = new PixelShader();
 	mPixelShader->CreateFromBinary("QuadPS");
 
-	mVertexBuffer = new VertexBuffer();
+	mVertexBuffer = new DeferredRenderingEngine::VertexBuffer();
 	mVertexBuffer->Initialize(4, sizeof(QuadVertex), false);
 	
-	mIndexBuffer = new IndexBuffer();
+	mIndexBuffer = new DeferredRenderingEngine::IndexBuffer();
 	mIndexBuffer->Initialize(6, false);
 
 

@@ -2,17 +2,19 @@
 #include "CommonD.h"
 #include "VertexBuffer.h"
 
-class DynamicVertexBuffer
+namespace DeferredRenderingEngine
 {
-public:
-	static list<VertexBuffer*> m_dynamicVertexBufferList;
+	class DynamicVertexBuffer
+	{
+	public:
+		static list<VertexBuffer*> m_dynamicVertexBufferList;
 
-	static void Release();
-	static void Restore();
+		static void Release();
+		static void Restore();
 
-	static VertexBuffer* Create(uint32_t size, uint32_t stride);
+		static VertexBuffer* Create(uint32_t size, uint32_t stride);
 
-	static void Destroy(VertexBuffer*vb);
-	static void DestroyAll();
-};
-
+		static void Destroy(VertexBuffer* vb);
+		static void DestroyAll();
+	};
+}

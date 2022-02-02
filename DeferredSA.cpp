@@ -200,9 +200,11 @@ void ShutdowRenderware()
 	SoftParticles::Release();
 }
 
-#include "IndexBufferManager.h"
+#include "DynamicIndexBuffer.h"
 #include "RenderTargetManager.h"
 #include "DynamicVertexBuffer.h"
+
+using namespace DeferredRenderingEngine;
 
 void LostDevice()
 {
