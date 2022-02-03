@@ -6,15 +6,14 @@ namespace DeferredRenderingEngine
 	class VertexBuffer
 	{
 	public:
-		VertexBuffer();
+		VertexBuffer(uint32_t size, uint32_t stride, bool dynamic = true);
 		~VertexBuffer();
 
-		void Initialize(uint32_t size, uint32_t stride, bool dynamic = true);
-		void Release();
-		void Restore();
+		void Initialize();
+		void Deinitialize();
 		void Apply();
 
-		void Map(RwUInt32 size, void** data);
+		void Map(uint32_t size, void** data);
 		void Unmap();
 
 		IDirect3DVertexBuffer9* GetObject();

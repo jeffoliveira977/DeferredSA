@@ -8,6 +8,7 @@
 #include "VertexShader.h"
 #include "PixelShader.h"
 #include "DynamicVertexBuffer.h"
+#include "DynamicIndexBuffer.h"
 
 using namespace plugin;
 
@@ -77,8 +78,9 @@ void CWaterLevel::InitShaders()
    // mVertexBuffer->Initialize(TOTAL_TEMP_BUFFER_VERTICES, sizeof(RwIm3DVertex));
     mVertexBuffer = DeferredRenderingEngine::DynamicVertexBuffer::Create(TOTAL_TEMP_BUFFER_VERTICES, sizeof(RwIm3DVertex));
 
-    mIndexBuffer = new DeferredRenderingEngine::IndexBuffer();
-    mIndexBuffer->Initialize(TOTAL_TEMP_BUFFER_INDICES);
+    //mIndexBuffer = new DeferredRenderingEngine::IndexBuffer(TOTAL_TEMP_BUFFER_INDICES);
+    //mIndexBuffer->Initialize();
+    mIndexBuffer = DeferredRenderingEngine::DynamicIndexBuffer::Create(TOTAL_TEMP_BUFFER_INDICES);
 
     // g_pWaveCubeDDS = RwD3D9DDSTextureRead("DeferredSA/PuddlesRelief");
     //  Wavemap = LoadBMPTextureFromFile("DeferredSA/Wave.bmp");

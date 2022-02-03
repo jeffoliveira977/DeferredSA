@@ -6,7 +6,6 @@
 class RenderableScene
 {
 public:
-
 	static void InitGraphicsBuffer();
 	static void Render();
 	static void SetRenderList(std::vector<CEntity*>list);

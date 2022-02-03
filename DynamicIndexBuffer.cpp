@@ -6,8 +6,16 @@ namespace DeferredRenderingEngine
 
 	IndexBuffer* DynamicIndexBuffer::Create(uint32_t size)
 	{
-		IndexBuffer* indexBuffer = new IndexBuffer();
-		indexBuffer->Initialize(size);
+		IndexBuffer* indexBuffer = new IndexBuffer(size);
+		try
+		{
+			indexBuffer->Initialize();
+		}
+		catch (const std::exception &e)
+		{
+			MessageBox(NULL, e.what(), "Error!", MB_OK);
+			return nullptr;
+		}
 
 		mIndexBufferList.push_back(indexBuffer);
 		return indexBuffer;
@@ -25,7 +33,7 @@ namespace DeferredRenderingEngine
 		{
 			if (buffer)
 			{
-				buffer->Release();
+				buffer->Deinitialize();
 			}
 		}
 	}
@@ -35,8 +43,15 @@ namespace DeferredRenderingEngine
 		for (auto& buffer : mIndexBufferList)
 		{
 			if (buffer)
-			{
-				buffer->Restore();
+			{			
+				try
+				{
+					buffer->Initialize();
+				}
+				catch (const std::exception & e)
+				{
+					MessageBox(GetActiveWindow(), e.what(), "Error!", MB_OK);
+				}
 			}
 		}
 	}

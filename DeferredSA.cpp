@@ -203,23 +203,26 @@ void ShutdowRenderware()
 #include "DynamicIndexBuffer.h"
 #include "RenderTargetManager.h"
 #include "DynamicVertexBuffer.h"
+#include"RenderableScene.h"
 
 using namespace DeferredRenderingEngine;
 
 void LostDevice()
 {
 	DynamicVertexBuffer::Release();
-	DynamicIndexBuffer::Release();
+	DynamicIndexBuffer::Release();	
+	//RenderableScene::Release();
 }
 
 void ResetDevice()
 {
 	//CascadedShadowManagement->UpdateTextures();
 	CWaterLevel::UpdateTextures();
-	DynamicIndexBuffer::Restore();
+	 DynamicIndexBuffer::Restore();
 	DynamicVertexBuffer::Restore();
 	//DeferredContext->UpdateTextures();
 	RenderTargetManager::Rebuild();
+	//RenderableScene::Restore();
 }
 
 void Hook()

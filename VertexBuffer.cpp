@@ -2,9 +2,12 @@
 
 namespace DeferredRenderingEngine
 {
-    VertexBuffer::VertexBuffer()
+    VertexBuffer::VertexBuffer(uint32_t size, uint32_t stride, bool dynamic)
     {
-        mVertexBuffer = nullptr;
+        mVertexBuffer = nullptr;  
+        m_stride = stride;
+        mSize = size;
+        mDynamic = dynamic;
     }
 
     VertexBuffer::~VertexBuffer()
@@ -12,51 +15,41 @@ namespace DeferredRenderingEngine
         SAFE_RELEASE(mVertexBuffer);
     }
 
-    void VertexBuffer::Initialize(uint32_t size, uint32_t stride, bool dynamic)
+    void VertexBuffer::Initialize()
     {
-        if (size == 0)
-            throw std::invalid_argument("invalid size for allocating vertex buffer");
+        try
+        {
+            HRESULT result;
 
-        if (stride == 0)
-            throw std::invalid_argument("invalid stride for allocating vertex buffer");
+            if (mDynamic)
+                result = RwD3DDevice->CreateVertexBuffer(mSize * m_stride, D3DUSAGE_WRITEONLY | D3DUSAGE_DYNAMIC, 0,
+                    D3DPOOL_DEFAULT, &mVertexBuffer, 0);
+            else
+                result = RwD3DDevice->CreateVertexBuffer(mSize * m_stride, D3DUSAGE_WRITEONLY, 0, D3DPOOL_MANAGED,
+                    &mVertexBuffer, 0);
 
-        m_stride = stride;
-        mSize = size;
-        mDynamic = dynamic;
-
-        HRESULT result;
-        if (dynamic)
-            result = RwD3DDevice->CreateVertexBuffer(size * stride, D3DUSAGE_WRITEONLY | D3DUSAGE_DYNAMIC, 0, D3DPOOL_DEFAULT, &mVertexBuffer, 0);
-        else
-            result = RwD3DDevice->CreateVertexBuffer(size * stride, D3DUSAGE_WRITEONLY, 0, D3DPOOL_MANAGED, &mVertexBuffer, 0);
-
-        if (FAILED(result))
-            throw std::runtime_error("VertexBuffer::Initialize");
+            if (FAILED(result) || mVertexBuffer == nullptr)
+            {
+                throw std::runtime_error("failed to create vertex buffer");
+            }
+        }
+        catch (const std::runtime_error & e)
+        {
+            SAFE_RELEASE(mVertexBuffer);
+            throw std::runtime_error(std::string("VertexBuffer::Initialize - ") + e.what());
+        }
     }
 
-    void VertexBuffer::Release()
+    void VertexBuffer::Deinitialize()
     {
         SAFE_RELEASE(mVertexBuffer);
     }
 
-    void VertexBuffer::Restore()
-    {
-        if (mVertexBuffer)
-            return;
-
-        HRESULT result;
-
-        if (mDynamic)
-            result = RwD3DDevice->CreateVertexBuffer(mSize * m_stride, D3DUSAGE_WRITEONLY | D3DUSAGE_DYNAMIC, 0, D3DPOOL_DEFAULT, &mVertexBuffer, 0);
-        else
-            result = RwD3DDevice->CreateVertexBuffer(mSize * m_stride, D3DUSAGE_WRITEONLY, 0, D3DPOOL_MANAGED, &mVertexBuffer, 0);
-
-        if (FAILED(result))
-            throw std::runtime_error("VertexBuffer::Restore");
-    }
-
     void VertexBuffer::Apply()
     {
+        if (mVertexBuffer == nullptr)
+            return;
+
         RwD3D9SetStreamSource(0, mVertexBuffer, 0, m_stride);
     }
 

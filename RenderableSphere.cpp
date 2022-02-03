@@ -131,7 +131,7 @@ void RenderableSphere::Initialize(int slices, int stacks)
 	mIndices[indicesCount++] = (i - 1) * slices + 1;
 	mIndices[indicesCount++] = vertexCount;
 
-	Vertex* vertexData = nullptr;
+	/*Vertex* vertexData = nullptr;
 	mVertexBuffer->Map(mVertices.size() * sizeof(Vertex), (void**)&vertexData);
 	std::copy(mVertices.begin(), mVertices.end(), vertexData);
 	mVertexBuffer->Unmap();
@@ -139,7 +139,7 @@ void RenderableSphere::Initialize(int slices, int stacks)
 	RwUInt16* indexData = nullptr;
 	mIndexBuffer->Map(mIndices.size() * sizeof(RwUInt16), (void**)&indexData);
 	std::copy(mIndices.begin(), mIndices.end(), indexData);
-	mIndexBuffer->Unmap();
+	mIndexBuffer->Unmap();*/
 
 }
 

@@ -44,7 +44,6 @@ class RenderableSphere
 public:
 	RenderableSphere();
 	~RenderableSphere();
-
 	void Initialize(int slices, int stacks);
 	void Render();
 	void SetSphere(Math::BoundingSphere sphere);

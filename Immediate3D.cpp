@@ -18,28 +18,32 @@ void Immediate3D::Hook()
 
 void Immediate3D::Close(void)
 {
-    if(VertexDeclIm3DNoTex != NULL)
+
+    if (VertexDeclIm3DNoTex != NULL)
     {
         rwD3D9DeleteVertexDeclaration(VertexDeclIm3DNoTex);
         VertexDeclIm3DNoTex = NULL;
     }
 
-    if(VertexDeclIm3DOld != NULL)
+    if (VertexDeclIm3DOld != NULL)
     {
         rwD3D9DeleteVertexDeclaration(VertexDeclIm3DOld);
         VertexDeclIm3DOld = NULL;
     }
 
-    delete mVertexBuffer;
     delete mPixelShader;
     delete mVertexShader;
     delete mIndexBuffer;
 
-   return;
+    DeferredRenderingEngine::DynamicVertexBuffer::Destroy(mVertexBuffer);
+   // DeferredRenderingEngine::DynamicIndexBuffer::Destroy(mIndexBuffer);
+
+    return;
 }
 
 RwBool Immediate3D::Open(void)
 {
+
     {
         D3DVERTEXELEMENT9 declaration[] =
         {
@@ -78,8 +82,8 @@ RwBool Immediate3D::Open(void)
 
         mVertexBuffer = DeferredRenderingEngine::DynamicVertexBuffer::Create(BUFFER_MAX_INDEX, sizeof(RwIm3DVertex));
 
-        /*mIndexBuffer = new RwIndexBuffer();
-        mIndexBuffer->Initialize(BUFFER_MAX_INDEX);*/
+        //mIndexBuffer = new DeferredRenderingEngine::IndexBuffer(BUFFER_MAX_INDEX);
+        //mIndexBuffer->Initialize();
 
         mIndexBuffer = DeferredRenderingEngine::DynamicIndexBuffer::Create(BUFFER_MAX_INDEX);
    /* }

@@ -4,11 +4,11 @@
 
 namespace DeferredRenderingEngine
 {
-    IndexBuffer::IndexBuffer()
+    IndexBuffer::IndexBuffer(uint32_t size, bool dynamic)
     {
         m_buffer = nullptr;
-        mDynamic = false;
-        mSize = 0;
+        mDynamic = dynamic;
+        mSize = size;
     }
 
     IndexBuffer::~IndexBuffer()
@@ -16,48 +16,34 @@ namespace DeferredRenderingEngine
         SAFE_RELEASE(m_buffer);
     }
 
-    void IndexBuffer::Initialize(uint32_t size, bool dynamic)
+    void IndexBuffer::Initialize()
     {
-        mDynamic = dynamic;
-        mSize = size;
+        try
+        {
+            HRESULT result;
 
-        HRESULT result;
-        if (dynamic)
-            result = RwD3DDevice->CreateIndexBuffer(size * sizeof(uint16_t), D3DUSAGE_WRITEONLY | D3DUSAGE_DYNAMIC,
-                D3DFMT_INDEX16, D3DPOOL_DEFAULT, &m_buffer, 0);
-        else
-            result = RwD3DDevice->CreateIndexBuffer(size * sizeof(uint16_t), D3DUSAGE_WRITEONLY,
-                D3DFMT_INDEX16, D3DPOOL_MANAGED, &m_buffer, 0);
+            if (mDynamic)
+                result = RwD3DDevice->CreateIndexBuffer(mSize * sizeof(uint16_t), D3DUSAGE_WRITEONLY | D3DUSAGE_DYNAMIC | D3DUSAGE_DONOTCLIP,
+                    D3DFMT_INDEX16, D3DPOOL_DEFAULT, &m_buffer, 0);
+            else
+                result = RwD3DDevice->CreateIndexBuffer(mSize * sizeof(uint16_t), D3DUSAGE_WRITEONLY,
+                    D3DFMT_INDEX16, D3DPOOL_MANAGED, &m_buffer, 0);
 
-        if (FAILED(result))
-            throw std::runtime_error("RwIndexBuffer::Initialize");
+            if (FAILED(result) || m_buffer == nullptr)
+            {
+                throw std::runtime_error("failed to create index buffer");
+            }
+        }
+        catch (const std::runtime_error &e)
+        {
+            SAFE_RELEASE(m_buffer);
+            throw std::runtime_error(std::string("RwIndexBuffer::Initialize - ") + e.what());
+        }
     }
 
-    void IndexBuffer::Release()
+    void IndexBuffer::Deinitialize()
     {
         SAFE_RELEASE(m_buffer);
-    }
-
-    void IndexBuffer::Restore()
-    {
-        if (m_buffer)
-            return;
-
-        HRESULT result;
-        if (mDynamic)
-        {
-            result = RwD3DDevice->CreateIndexBuffer(mSize * sizeof(uint16_t), D3DUSAGE_WRITEONLY | D3DUSAGE_DYNAMIC,
-                D3DFMT_INDEX16, D3DPOOL_DEFAULT, &m_buffer, nullptr);
-        }
-        else
-        {
-            result = RwD3DDevice->CreateIndexBuffer(mSize * sizeof(uint16_t), D3DUSAGE_WRITEONLY,
-                D3DFMT_INDEX16, D3DPOOL_MANAGED, &m_buffer, nullptr);
-        }
-
-        if (FAILED(result))
-            throw std::runtime_error("RwIndexBuffer::Restore");
-
     }
 
     void IndexBuffer::Map(uint32_t size, void** data)
@@ -65,7 +51,7 @@ namespace DeferredRenderingEngine
         if (m_buffer == nullptr || data == nullptr)
             return;
 
-        m_buffer->Lock(0, size, data, D3DLOCK_DISCARD);
+        m_buffer->Lock(0, size, data, mDynamic ? D3DLOCK_DISCARD : 0);
     }
 
     void IndexBuffer::Unmap()
@@ -78,6 +64,9 @@ namespace DeferredRenderingEngine
 
     void IndexBuffer::Apply()
     {
+        if (m_buffer == nullptr)
+            return;
+
         _rwD3D9SetIndices(m_buffer);
     }
 

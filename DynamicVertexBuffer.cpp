@@ -6,12 +6,12 @@ namespace DeferredRenderingEngine
 
     VertexBuffer* DynamicVertexBuffer::Create(uint32_t size, uint32_t stride)
     {
-        VertexBuffer* vertexbuffer = new VertexBuffer();
+        VertexBuffer* vertexbuffer = new VertexBuffer(size, stride);
         try
         {
-            vertexbuffer->Initialize(size, stride);
+            vertexbuffer->Initialize();
         }
-        catch (const std::exception & e)
+        catch (const std::exception &e)
         {
             MessageBox(NULL, e.what(), "Error!", MB_OK);
             return nullptr;
@@ -47,7 +47,7 @@ namespace DeferredRenderingEngine
         {
             if (vertexBuffer)
             {
-                vertexBuffer->Release();
+                vertexBuffer->Deinitialize();
             }
         }
     }
@@ -58,7 +58,15 @@ namespace DeferredRenderingEngine
         {
             if (vertexBuffer)
             {
-                vertexBuffer->Restore();
+                try
+                {
+                    vertexBuffer->Initialize();
+                }
+                catch (const std::exception &e)
+                {
+                    MessageBox(GetActiveWindow(), e.what(), "Error!", MB_OK);
+                }
+
             }
         }
     }

@@ -6,12 +6,11 @@ namespace DeferredRenderingEngine
 	class IndexBuffer
 	{
 	public:
-		IndexBuffer();
+		IndexBuffer(uint32_t size, bool dynamic = true);
 		~IndexBuffer();
 
-		void Initialize(uint32_t size, bool dynamic = true);
-		void Release();
-		void Restore();
+		void Initialize();
+		void Deinitialize();
 		void Map(uint32_t size, void** data);
 		void Unmap();
 		void Apply();
@@ -19,7 +18,7 @@ namespace DeferredRenderingEngine
 		IDirect3DIndexBuffer9* GetObject();
 	private:
 
-		int mSize;
+		uint32_t mSize;
 		bool mDynamic;
 		IDirect3DIndexBuffer9* m_buffer;
 	};

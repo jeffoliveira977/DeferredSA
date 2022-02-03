@@ -204,11 +204,11 @@ void Quad::Initialize()
 	mPixelShader = new PixelShader();
 	mPixelShader->CreateFromBinary("QuadPS");
 
-	mVertexBuffer = new DeferredRenderingEngine::VertexBuffer();
-	mVertexBuffer->Initialize(4, sizeof(QuadVertex), false);
+	mVertexBuffer = new DeferredRenderingEngine::VertexBuffer(4, sizeof(QuadVertex), false);
+	mVertexBuffer->Initialize();
 	
-	mIndexBuffer = new DeferredRenderingEngine::IndexBuffer();
-	mIndexBuffer->Initialize(6, false);
+	mIndexBuffer = new DeferredRenderingEngine::IndexBuffer(6, false);
+	mIndexBuffer->Initialize();
 
 
 	RwUInt32 stride = sizeof(QuadVertex);
