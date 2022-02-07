@@ -118,6 +118,10 @@
     <ClCompile Include="RenderableAABB.cpp">
       <Filter>Engine\Renderable</Filter>
     </ClCompile>
+    <ClCompile Include="RenderingEngine.cpp">
+      <Filter>Engine</Filter>
+    </ClCompile>
+    <ClCompile Include="Log.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="GTADef.h" />
@@ -232,6 +236,10 @@
     <ClInclude Include="RenderableAABB.h">
       <Filter>Engine\Renderable</Filter>
     </ClInclude>
+    <ClInclude Include="RenderingEngine.h">
+      <Filter>Engine</Filter>
+    </ClInclude>
+    <ClInclude Include="Log.h" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="imgui">

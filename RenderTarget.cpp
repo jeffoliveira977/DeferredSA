@@ -9,9 +9,6 @@ RenderTarget::RenderTarget(D3DFORMAT format):mFormat(format)
 
 RenderTarget::~RenderTarget()
 {
-  
-		
-
 	RwRasterDestroy(mRaster);
 	RenderTargetManager::Remove(this);
 }

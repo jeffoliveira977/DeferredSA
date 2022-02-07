@@ -36,9 +36,13 @@ void PipelinePlugins()
 
 #include "SpotlightShadow.h"
 #include "PointLightShadow.h"
-
+#include "Log.h"
 void Initialize()
 {
+	Log::Initialise("DeferredSA.txt");
+	Log::SetThreshold(Log::LOG_TYPE_DEBUG);
+	PUSH_LOG_STACK;
+
 	CascadedShadowManagement = new CascadedShadowRendering();
 	CascadedShadowManagement->Initialize();
 	

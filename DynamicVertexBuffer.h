@@ -7,14 +7,12 @@ namespace DeferredRenderingEngine
 	class DynamicVertexBuffer
 	{
 	public:
-		static list<VertexBuffer*> m_dynamicVertexBufferList;
-
-		static void Release();
-		static void Restore();
-
+		static list<VertexBuffer*> mVertexBufferList;
 		static VertexBuffer* Create(uint32_t size, uint32_t stride);
-
+		static void Create(VertexBuffer* buffer);
 		static void Destroy(VertexBuffer* vb);
 		static void DestroyAll();
+		static void Release();
+		static void Restore();
 	};
 }

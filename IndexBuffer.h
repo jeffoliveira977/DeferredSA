@@ -20,6 +20,6 @@ namespace DeferredRenderingEngine
 
 		uint32_t mSize;
 		bool mDynamic;
-		IDirect3DIndexBuffer9* m_buffer;
+		IDirect3DIndexBuffer9* mIndexBuffer;
 	};
 }

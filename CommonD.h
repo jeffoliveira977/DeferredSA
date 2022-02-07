@@ -11,7 +11,7 @@
 #include "RenderWare.h"
 
 #include <DirectXMath.h>
-
+#include "Log.h"
 using namespace DirectX;
 using namespace std;
 

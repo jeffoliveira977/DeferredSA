@@ -67,7 +67,7 @@
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <AdditionalIncludeDirectories>$(SolutionDir)imgui;$(PLUGIN_SDK_DIR)\plugin_sa\;$(PLUGIN_SDK_DIR)\plugin_sa\game_sa\;$(PLUGIN_SDK_DIR)\shared\;$(PLUGIN_SDK_DIR)\shared\game\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>_NDEBUG;_CRT_SECURE_NO_WARNINGS;_CRT_NON_CONFORMING_SWPRINTFS;GTASA;GTAGAME_NAME="San Andreas";GTAGAME_ABBR="SA";GTAGAME_ABBRLOW="sa";GTAGAME_PROTAGONISTNAME="CJ";GTAGAME_CITYNAME="San Andreas";_DX9_SDK_INSTALLED;PLUGIN_SGV_10US;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <LanguageStandard>stdcpp17</LanguageStandard>
+      <LanguageStandard>stdcpplatest</LanguageStandard>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WholeProgramOptimization>false</WholeProgramOptimization>
       <ConformanceMode>false</ConformanceMode>
@@ -135,6 +135,7 @@
     <ClCompile Include="Immediate3D.cpp" />
     <ClCompile Include="DynamicIndexBuffer.cpp" />
     <ClCompile Include="LightManager.cpp" />
+    <ClCompile Include="Log.cpp" />
     <ClCompile Include="Mesh.cpp" />
     <ClCompile Include="MeshCulling.cpp" />
     <ClCompile Include="PBSMaterial.cpp" />
@@ -149,6 +150,7 @@
     <ClCompile Include="RenderableReflectionObjects.cpp" />
     <ClCompile Include="RenderableScene.cpp" />
     <ClCompile Include="RenderableSphere.cpp" />
+    <ClCompile Include="RenderingEngine.cpp" />
     <ClCompile Include="RenderTarget.cpp" />
     <ClCompile Include="RenderTargetManager.cpp" />
     <ClCompile Include="IndexBuffer.cpp" />
@@ -207,6 +209,7 @@
     <ClInclude Include="Immediate3D.h" />
     <ClInclude Include="DynamicIndexBuffer.h" />
     <ClInclude Include="LightManager.h" />
+    <ClInclude Include="Log.h" />
     <ClInclude Include="Mesh.h" />
     <ClInclude Include="MeshCulling.h" />
     <ClInclude Include="mini\ini.h" />
@@ -222,6 +225,7 @@
     <ClInclude Include="RenderableReflectionObjects.h" />
     <ClInclude Include="RenderableScene.h" />
     <ClInclude Include="RenderableSphere.h" />
+    <ClInclude Include="RenderingEngine.h" />
     <ClInclude Include="RenderTarget.h" />
     <ClInclude Include="RenderTargetManager.h" />
     <ClInclude Include="IndexBuffer.h" />

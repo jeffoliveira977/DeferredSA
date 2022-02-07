@@ -9,10 +9,11 @@ namespace DeferredRenderingEngine
 		static std::list<IndexBuffer*> mIndexBufferList;
 	public:
 		static IndexBuffer* Create(uint32_t size);
-		static void Restore();
+		static void Create(IndexBuffer* buffer); 
 		static void Destroy(IndexBuffer* buffer);
-		static void Release();
 		static void DestroyAll();
+		static void Restore();
+		static void Release();
 	};
 }
 

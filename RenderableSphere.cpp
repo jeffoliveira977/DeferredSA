@@ -145,7 +145,7 @@ void RenderableSphere::Initialize(int slices, int stacks)
 
 void RenderableSphere::Render()
 {
-	if(mVertexBuffer == nullptr || mVertices.size() == 0)
+	if(mVertexBuffer == nullptr || mIndexBuffer == nullptr || mVertices.size() == 0)
 		return;
 
 	for (size_t i = 0; i < mVertices.size(); i++)

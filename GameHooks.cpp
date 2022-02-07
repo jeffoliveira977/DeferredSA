@@ -196,6 +196,7 @@ void __cdecl HookedCameraUpdateZShiftScale(RwCamera* camera) {
 
 #include "CRenderer.h"
 #include "LightManager.h"
+#include "RenderingEngine.h"
 void GameHooks()
 {
 	//patch::RedirectCall(0x7EE2B0, HookedCameraUpdateZShiftScale);
@@ -243,6 +244,19 @@ void GameHooks()
 
 	plugin::patch::RedirectCall(0x74D234, CreateGeometryCheckNormals);
 	plugin::patch::RedirectCall(0x5D71D9, SetGeometryUsageFlag);
+
+	plugin::patch::RedirectJump(0x7F5500, DeferredRenderingEngine::RenderingEngine::CreateVertexBuffer);
+	plugin::patch::RedirectJump(0x7F56A0, DeferredRenderingEngine::RenderingEngine::DestroyVertexBuffer);
+	plugin::patch::RedirectJump(0x7F5CB0, DeferredRenderingEngine::RenderingEngine::VertexBufferManagerOpen);
+	plugin::patch::RedirectJump(0x7F5D20, DeferredRenderingEngine::RenderingEngine::VertexBufferManagerClose);
+
+	plugin::patch::RedirectJump(0x7F5940, DeferredRenderingEngine::RenderingEngine::DynamicVertexBufferManagerCreate);
+	plugin::patch::RedirectJump(0x7F5A00, DeferredRenderingEngine::RenderingEngine::DynamicVertexBufferCreate);
+	plugin::patch::RedirectJump(0x7F5AE0, DeferredRenderingEngine::RenderingEngine::DynamicVertexBufferDestroy);
+	plugin::patch::RedirectJump(0x7F5B10, DeferredRenderingEngine::RenderingEngine::DynamicVertexBufferLock);
+	plugin::patch::RedirectJump(0x7F5C90, DeferredRenderingEngine::RenderingEngine::DynamicVertexBufferUnlock);
+	plugin::patch::RedirectJump(0x7F5840, DeferredRenderingEngine::RenderingEngine::DynamicVertexBufferRelease);
+	plugin::patch::RedirectJump(0x7F58D0, DeferredRenderingEngine::RenderingEngine::DynamicVertexBufferRestore);
 
 	Immediate3D::Hook();
 	SoftParticles::Hook();

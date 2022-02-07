@@ -2,7 +2,7 @@
 
 namespace DeferredRenderingEngine
 {
-    list<VertexBuffer*> DynamicVertexBuffer::m_dynamicVertexBufferList;
+    list<VertexBuffer*> DynamicVertexBuffer::mVertexBufferList;
 
     VertexBuffer* DynamicVertexBuffer::Create(uint32_t size, uint32_t stride)
     {
@@ -17,9 +17,17 @@ namespace DeferredRenderingEngine
             return nullptr;
         }
 
-        m_dynamicVertexBufferList.push_back(vertexbuffer);
+        mVertexBufferList.push_back(vertexbuffer);
 
         return vertexbuffer;
+    }
+
+    void DynamicVertexBuffer::Create(VertexBuffer* buffer)
+    {
+        if (buffer == nullptr)
+            return;
+
+        mVertexBufferList.push_back(buffer);
     }
 
     void DynamicVertexBuffer::Destroy(VertexBuffer* vertexBuffer)
@@ -27,23 +35,23 @@ namespace DeferredRenderingEngine
         if (vertexBuffer == nullptr)
             return;
 
-        m_dynamicVertexBufferList.remove(vertexBuffer);
+        mVertexBufferList.remove(vertexBuffer);
         SAFE_DELETE(vertexBuffer);
     }
 
     void DynamicVertexBuffer::DestroyAll()
     {
-        for (auto vertexBuffer : m_dynamicVertexBufferList)
+        for (auto vertexBuffer : mVertexBufferList)
         {
             SAFE_DELETE(vertexBuffer);
         }
 
-        m_dynamicVertexBufferList.clear();
+        mVertexBufferList.clear();
     }
 
     void DynamicVertexBuffer::Release()
     {
-        for (auto vertexBuffer : m_dynamicVertexBufferList)
+        for (auto vertexBuffer : mVertexBufferList)
         {
             if (vertexBuffer)
             {
@@ -54,7 +62,7 @@ namespace DeferredRenderingEngine
 
     void DynamicVertexBuffer::Restore()
     {
-        for (auto vertexBuffer : m_dynamicVertexBufferList)
+        for (auto vertexBuffer : mVertexBufferList)
         {
             if (vertexBuffer)
             {

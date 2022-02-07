@@ -184,7 +184,8 @@ PixelShader* Quad::mPixelShader = nullptr;
 DeferredRenderingEngine::VertexBuffer* Quad::mVertexBuffer = nullptr;
 DeferredRenderingEngine::IndexBuffer* Quad::mIndexBuffer = nullptr;
 void* Quad::mVertexDeclQuad = nullptr;
-
+#include "DynamicVertexBuffer.h"
+#include "DynamicIndexBuffer.h"
 void Quad::Initialize()
 {
 	CreateQuadRender();
@@ -204,26 +205,14 @@ void Quad::Initialize()
 	mPixelShader = new PixelShader();
 	mPixelShader->CreateFromBinary("QuadPS");
 
-	mVertexBuffer = new DeferredRenderingEngine::VertexBuffer(4, sizeof(QuadVertex), false);
-	mVertexBuffer->Initialize();
-	
-	mIndexBuffer = new DeferredRenderingEngine::IndexBuffer(6, false);
-	mIndexBuffer->Initialize();
+	//mVertexBuffer = new DeferredRenderingEngine::VertexBuffer(4, sizeof(QuadVertex), false);
+	//mVertexBuffer->Initialize();
+	//
+	//mIndexBuffer = new DeferredRenderingEngine::IndexBuffer(6, false);
+	//mIndexBuffer->Initialize();
 
-
-	RwUInt32 stride = sizeof(QuadVertex);
-	QuadVertex* bufferMem = nullptr;
-	mVertexBuffer->Map(stride * 4, (void**)&bufferMem);
-	std::copy(verts, verts + 4, bufferMem);
-	mVertexBuffer->Unmap();
-
-	static RwUInt16 indices[] = {0, 3, 2, 0, 1, 3};
-	RwUInt16* indexBuffer = nullptr;
-	mIndexBuffer->Map(sizeof(RwUInt16) * 6, (void**)&indexBuffer);
-	std::copy(indices, indices + 6, indexBuffer);
-	mIndexBuffer->Unmap();
-
-
+	mVertexBuffer = DeferredRenderingEngine::DynamicVertexBuffer::Create(4, sizeof(QuadVertex));
+	mIndexBuffer = DeferredRenderingEngine::DynamicIndexBuffer::Create(6);
 
 }
 
@@ -241,6 +230,20 @@ void Quad::Render(bool useVS)
 {
 	/*DrawScreenQuad();
 	return;*/
+
+	RwUInt32 stride = sizeof(QuadVertex);
+	QuadVertex* bufferMem = nullptr;
+	mVertexBuffer->Map(stride * 4, (void**)&bufferMem);
+	std::copy(verts, verts + 4, bufferMem);
+	mVertexBuffer->Unmap();
+
+	static RwUInt16 indices[] = { 0, 3, 2, 0, 1, 3 };
+	RwUInt16* indexBuffer = nullptr;
+	mIndexBuffer->Map(sizeof(RwUInt16) * 6, (void**)&indexBuffer);
+	std::copy(indices, indices + 6, indexBuffer);
+	mIndexBuffer->Unmap();
+
+
 
 	if(useVS)
 	 _rwD3D9SetVertexShader(mVertexShader->GetObject());
