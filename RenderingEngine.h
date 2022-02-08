@@ -11,7 +11,7 @@ namespace DeferredRenderingEngine
 		struct dVB
 		{
 			UINT size;
-			IDirect3DVertexBuffer9* vb;
+			VertexBuffer* vb;
 
 			bool operator==(dVB& a) 
 			{

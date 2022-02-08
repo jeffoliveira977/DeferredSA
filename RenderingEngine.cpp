@@ -34,7 +34,8 @@ namespace DeferredRenderingEngine
         {
             if (buffer.vb)
             {
-                SAFE_RELEASE(buffer.vb);
+                SAFE_DELETE(buffer.vb);
+                //SAFE_RELEASE(buffer.vb);
             }
         }
         mDynamicVertexBufferList.clear();
@@ -43,7 +44,8 @@ namespace DeferredRenderingEngine
         {
             if (buffer.vertexBuffer)
             {
-                buffer.vertexBuffer->Deinitialize();
+                SAFE_DELETE(buffer.vertexBuffer);
+                Log::Debug("RenderingEngine::DestroyVertexBuffer %i", buffer.vertexBuffer);
             }
         }
         StrideList.clear();
@@ -109,16 +111,26 @@ namespace DeferredRenderingEngine
 
     void RenderingEngine::DestroyVertexBuffer(uint32_t stride, uint32_t size, IDirect3DVertexBuffer9* vertexBuffer, uint32_t offset)
     {
+        if (vertexBuffer == nullptr)
+            return;
+
         for (auto& itri = StrideList.begin(); itri != StrideList.end(); itri++)
         {
-            if (itri->vertexBuffer->GetObject() == vertexBuffer)
+            if (itri->vertexBuffer && itri->vertexBuffer->GetObject() == vertexBuffer)
             {
                 Log::Debug("RenderingEngine::DestroyVertexBuffer %i", vertexBuffer);
-                itri->vertexBuffer->Deinitialize();
+                SAFE_DELETE(itri->vertexBuffer);
+                SAFE_RELEASE(vertexBuffer);
+                itri->size = 0;
+                itri->stride = 0;
+              //  Log::Debug("RenderingEngine::DestroyVertexBuffer %i", vertexBuffer);
+       
                 StrideList.erase(itri);
-                return;
+                //Log::Debug("RenderingEngine::DestroyVertexBuffer %i", vertexBuffer);
+                break;
             }
         }
+        return;
     }
 
     bool RenderingEngine::DynamicVertexBufferManagerCreate()
@@ -128,7 +140,7 @@ namespace DeferredRenderingEngine
         mCurrentDynamicVertexBufferInfo = 0;
         if (RwD3D9DeviceCaps->DevCaps & D3DDEVCAPS_HWTRANSFORMANDLIGHT)
         {
-            for (int i = 0; i < 4; i++)
+            for (size_t i = 0; i < 4; i++)
             {
                 mDynamicVertexBufferInfo[i].offset = 0;
                 mDynamicVertexBufferInfo[i].size = 0x40000;
@@ -144,7 +156,7 @@ namespace DeferredRenderingEngine
             if (!DynamicVertexBufferCreate(0x40000u, &mDynamicVertexBufferInfo[0].vertexbuffer))
                 return false;
 
-            for (int i = 1; i < 4; i++)
+            for (size_t i = 1; i < 4; i++)
             {
                 mDynamicVertexBufferInfo[i].offset = 0;
                 mDynamicVertexBufferInfo[i].size = 0;
@@ -175,18 +187,17 @@ namespace DeferredRenderingEngine
 
     bool RenderingEngine::DynamicVertexBufferCreate(uint32_t size, IDirect3DVertexBuffer9** vertexBuffer)
     {
-        auto hr = RwD3DDevice->CreateVertexBuffer(size, D3DUSAGE_WRITEONLY | D3DUSAGE_DYNAMIC, 0,
-            D3DPOOL_DEFAULT, vertexBuffer, 0);
-
-        if (FAILED(hr))
-        {
-            Log::Warn("RenderingEngine::DynamicVertexBufferRestore - failed to create vertex buffer");
+        auto buffer = new VertexBuffer(size, 1);
+        if (buffer == nullptr)
             return false;
-        }
+
+        buffer->Initialize();
 
         dVB vb;
         vb.size = size;
-        vb.vb = *vertexBuffer;
+        vb.vb = buffer;
+        *vertexBuffer = buffer->GetObject();
+        
         mDynamicVertexBufferList.push_back(vb);
         Log::Debug("RenderingEngine::DynamicVertexBufferCreate - base size %i", size);
 
@@ -200,10 +211,10 @@ namespace DeferredRenderingEngine
 
         for (auto itri = mDynamicVertexBufferList.begin(); itri != mDynamicVertexBufferList.end(); itri++)
         {
-            if (itri->vb == vertexbuffer)
+            if (itri->vb && itri->vb->GetObject() == vertexbuffer)
             {
                 Log::Debug("RenderingEngine::DynamicVertexBufferDestroy - %i", vertexbuffer);
-                SAFE_RELEASE(vertexbuffer);
+                SAFE_DELETE(itri->vb);
                 mDynamicVertexBufferList.erase(itri);
                 break;
             }
@@ -284,7 +295,7 @@ namespace DeferredRenderingEngine
         }
         else
         {
-            auto hr = mDynamicVertexBufferInfo[mCurrentDynamicVertexBufferInfo].vertexbuffer->Lock(lockOffset, lockSize, vertexDataOut,
+            auto hr = mDynamicVertexBufferInfo[mCurrentDynamicVertexBufferInfo].vertexbuffer->Lock(0, lockSize, vertexDataOut,
                 D3DLOCK_NOSYSLOCK | D3DLOCK_DISCARD);
 
             if (FAILED(hr))
@@ -313,16 +324,9 @@ namespace DeferredRenderingEngine
 
         for (auto& buffer : mDynamicVertexBufferList)
         {
-            if (buffer.vb == nullptr)
+            if (buffer.vb)
             {
-                auto hr = RwD3DDevice->CreateVertexBuffer(buffer.size, D3DUSAGE_DYNAMIC | D3DUSAGE_WRITEONLY,
-                    NULL, D3DPOOL_DEFAULT, &buffer.vb, nullptr);
-
-                if (FAILED(hr))
-                {
-                    Log::Warn("RenderingEngine::DynamicVertexBufferRestore - failed to create vertex buffer");
-                    return;
-                }
+                buffer.vb->Initialize();
                 Log::Debug("RenderingEngine::DynamicVertexBufferRestore - created vertex buffer with base size, %i", buffer.size);
             }
         }
@@ -340,7 +344,7 @@ namespace DeferredRenderingEngine
         {
             if (buffer.vb)
             {
-                SAFE_RELEASE(buffer.vb);
+                buffer.vb->Deinitialize();
                 Log::Debug("RenderingEngine::DynamicVertexBufferRelease - %i", buffer.vb);
             }
         }

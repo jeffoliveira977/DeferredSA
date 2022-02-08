@@ -13,6 +13,7 @@ namespace DeferredRenderingEngine
     VertexBuffer::~VertexBuffer()
     {
         SAFE_RELEASE(mVertexBuffer);
+        Log::Debug("VertexBuffer::VertexBuffer %i", mVertexBuffer);
     }
 
     void VertexBuffer::Initialize()
@@ -30,10 +31,11 @@ namespace DeferredRenderingEngine
 
             if (FAILED(result) || mVertexBuffer == nullptr)
             {
-                throw std::runtime_error("failed to create vertex buffer");
+                throw std::runtime_error("failed to create vertex buffer"); 
+                Log::Debug("VertexBuffer::Initialize - failed to create vertex buffer");
             }
         }
-        catch (const std::runtime_error & e)
+        catch (const std::runtime_error &e)
         {
             SAFE_RELEASE(mVertexBuffer);
             throw std::runtime_error(std::string("VertexBuffer::Initialize - ") + e.what());
