@@ -61,10 +61,10 @@ namespace DeferredRenderingEngine
 			//std::list<RxD3D9createdVBlistEntry*> vblist;
 		};
 
-		static std::vector<RxD3D9StrideEntry> StrideList;
+		static std::list<RxD3D9StrideEntry> StrideList;
 		static int mCurrentDynamicVertexBufferInfo;
 		static DVB_Manager mDynamicVertexBufferInfo[4];
-		static std::list<dVB>* mDynamicVertexBufferList;
+		static std::list<dVB> mDynamicVertexBufferList;
 		static std::list<IndexBuffer*> mDynamicIndexBufferList;
 	public:
 
