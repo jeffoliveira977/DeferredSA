@@ -2,18 +2,20 @@
 
 namespace DeferredRenderingEngine
 {
+    uint32_t VertexBuffer::mCount = 0;
     VertexBuffer::VertexBuffer(uint32_t size, uint32_t stride, bool dynamic)
     {
         mVertexBuffer = nullptr;  
         m_stride = stride;
         mSize = size;
-        mDynamic = dynamic;
+        mDynamic = dynamic;        
+        mCount++;
     }
 
     VertexBuffer::~VertexBuffer()
     {
-        SAFE_RELEASE(mVertexBuffer);
-        Log::Debug("VertexBuffer::VertexBuffer %i", mVertexBuffer);
+        Deinitialize();        
+        mCount--;
     }
 
     void VertexBuffer::Initialize()
@@ -40,10 +42,12 @@ namespace DeferredRenderingEngine
             SAFE_RELEASE(mVertexBuffer);
             throw std::runtime_error(std::string("VertexBuffer::Initialize - ") + e.what());
         }
+        Log::Debug("VertexBuffer::Initialize - id %i", mCount);
     }
 
     void VertexBuffer::Deinitialize()
     {
+        Log::Debug("VertexBuffer::Deinitialize - id %i", mCount);
         SAFE_RELEASE(mVertexBuffer);
     }
 

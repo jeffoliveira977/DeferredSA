@@ -22,6 +22,7 @@ namespace DeferredRenderingEngine
 		uint32_t m_stride;
 		uint32_t mSize;
 		bool mDynamic;
+		static uint32_t mCount;
 	};
 }
 

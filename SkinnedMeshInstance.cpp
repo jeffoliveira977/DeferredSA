@@ -158,6 +158,7 @@ RwBool _rpD3D9SkinAtomicCreateVertexBuffer(void* object, RxD3D9ResEntryHeader* r
         instancedData->baseIndex = instancedData->minVert +
             (vertexStream->offset / vertexStream->stride);
 
+
         instancedData++;
     }
     while(--numMeshes);
@@ -619,23 +620,10 @@ RwResEntry* _rxD3D9SkinInstance(RpAtomic* atomic, void* owner, RwResEntry** resE
 
     _rpD3D9SkinAtomicCreateVertexBuffer(atomic, resEntryHeader);
 
-    if(skin)
+    if (skin)
     {
-        if(skin->meshBoneRLECount)
-            skin->boneCount = skin->boneLimit;
-        else
-            skin->boneCount = skin->numBoneIds;
-
-        animHier = RpSkinAtomicGetHAnimHierarchy(atomic);
-
-        if(animHier)
-        {
-            skin->useVS = TRUE;
-        }
-        else
-        {
-            skin->useVS = FALSE;
-        }
+        skin->boneCount = skin->numBoneIds;
+        skin->useVS = TRUE;
     }
 
     _rpD3D9SkinGeometryReinstance(atomic, resEntryHeader, rpGEOMETRYLOCKALL);

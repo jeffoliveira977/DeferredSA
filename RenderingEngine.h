@@ -10,13 +10,8 @@ namespace DeferredRenderingEngine
 	{
 		struct dVB
 		{
-			UINT size;
+			uint32_t size;
 			VertexBuffer* vb;
-
-			bool operator==(dVB& a) 
-			{
-				return (a.vb == this->vb && a.size == this->size);
-			}
 		};
 
 		struct DVB_Manager
@@ -25,47 +20,21 @@ namespace DeferredRenderingEngine
 			uint32_t size;
 			IDirect3DVertexBuffer9* vertexbuffer;
 		}; 
-
-		struct RxD3D9DynamicVertexBuffer
+		
+		struct rxD3D9VertexDeclarationItem
 		{
-			RwUInt32            size;
-			RwUInt32            used;
-			IDirect3DIndexBuffer9* vertexBuffer;
+			LPDIRECT3DVERTEXDECLARATION9 vertexdeclaration;
+			uint32_t numElements;
+			D3DVERTEXELEMENT9* elements;
 		};
 
-		struct RxD3D9freeVBlistEntry
-		{
-			RwUInt32                offset;
-			RwUInt32                size;
-			IDirect3DIndexBuffer9* vertexBuffer;
-		};
-
-		struct RxD3D9createdVBlistEntry
-		{
-			void* vertexBuffer;
-		};
-
-		struct RxD3D9StrideEntry
-		{
-			RwUInt32                    stride;
-			VertexBuffer* vertexBuffer;
-			RwUInt32                offset;
-			RwUInt32                size;
-
-			bool operator==(RxD3D9StrideEntry& a)
-			{
-				return (a.stride == this->stride && a.size == this->size && a.offset == this->offset);
-			}
-
-			//std::list<RxD3D9freeVBlistEntry*> freelist;
-			//std::list<RxD3D9createdVBlistEntry*> vblist;
-		};
-
-		static std::list<RxD3D9StrideEntry> StrideList;
-		static int mCurrentDynamicVertexBufferInfo;
+		static std::list<VertexBuffer*> mVertexBufferList;
+		static uint32_t mCurrentDynamicVertexBufferInfo;
 		static DVB_Manager mDynamicVertexBufferInfo[4];
 		static std::list<dVB> mDynamicVertexBufferList;
 		static std::list<IndexBuffer*> mDynamicIndexBufferList;
+
+		static std::vector<rxD3D9VertexDeclarationItem> m_vertexDeclarations;
 	public:
 
 		static bool DynamicVertexBufferListCreate();
@@ -86,5 +55,11 @@ namespace DeferredRenderingEngine
 		static void DynamicVertexBufferUnlock(IDirect3DVertexBuffer9* vertexBufferOut);
 		static void DynamicVertexBufferRestore();
 		static void DynamicVertexBufferRelease();
+
+
+		static bool CreateVertexDeclaration(D3DVERTEXELEMENT9* elements,
+			IDirect3DVertexDeclaration9** decl);
+
+		static void DeleteVertexDeclaration(IDirect3DVertexDeclaration9* decl);
 	};
 }

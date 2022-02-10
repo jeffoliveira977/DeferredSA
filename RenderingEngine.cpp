@@ -1,12 +1,17 @@
 #include "RenderingEngine.h"
 
+RwFreeList* RwFreeListCreate(RwInt32 entrySize, RwInt32 entriesPerBlock, RwInt32 alignment, RwUInt32 hint) {
+    return ((RwFreeList * (__cdecl*)(RwInt32, RwInt32, RwInt32, RwUInt32))0x801980)(entrySize, entriesPerBlock, alignment, hint);
+}
+
 namespace DeferredRenderingEngine
 {
-    std::list<RenderingEngine::RxD3D9StrideEntry> RenderingEngine::StrideList;
-    int RenderingEngine::mCurrentDynamicVertexBufferInfo;
+    std::list<VertexBuffer*> RenderingEngine::mVertexBufferList;
+    uint32_t RenderingEngine::mCurrentDynamicVertexBufferInfo;
     RenderingEngine::DVB_Manager RenderingEngine::mDynamicVertexBufferInfo[4]{};
     std::list<RenderingEngine::dVB> RenderingEngine::mDynamicVertexBufferList;
     std::list<IndexBuffer*> RenderingEngine::mDynamicIndexBufferList;
+    std::vector<RenderingEngine::rxD3D9VertexDeclarationItem> RenderingEngine::m_vertexDeclarations;
 
     bool RenderingEngine::DynamicVertexBufferListCreate()
     {
@@ -21,6 +26,7 @@ namespace DeferredRenderingEngine
     {
         Log::Debug("RenderingEngine::VertexBufferManagerOpen");
         VertexBufferManagerClose();
+
         DynamicVertexBufferManagerCreate();
     }
 
@@ -35,77 +41,33 @@ namespace DeferredRenderingEngine
             if (buffer.vb)
             {
                 SAFE_DELETE(buffer.vb);
-                //SAFE_RELEASE(buffer.vb);
             }
         }
         mDynamicVertexBufferList.clear();
 
-        for (auto& buffer : StrideList)
+        for (auto& buffer : mVertexBufferList)
         {
-            if (buffer.vertexBuffer)
+            if (buffer)
             {
-                SAFE_DELETE(buffer.vertexBuffer);
-                Log::Debug("RenderingEngine::DestroyVertexBuffer %i", buffer.vertexBuffer);
+                SAFE_DELETE(buffer);
             }
         }
-        StrideList.clear();
+
+        mVertexBufferList.clear();
     }
 
     bool RenderingEngine::CreateVertexBuffer(uint32_t stride, uint32_t size, IDirect3DVertexBuffer9** vertexBuffer, uint32_t* offset)
     {
+        auto buffer = new VertexBuffer(size, 1, false);
+        if (buffer == nullptr)
+            return false;
 
-        static uint32_t         DefaultVBSize = 128 * 1024;
+        buffer->Initialize();
 
-        auto& itri = StrideList.begin();
-        for (; itri != StrideList.end(); itri++)
-        {
-            if (itri->stride == stride && itri->size >= size)
-            {
-                break;
-            }
-        }
+        *vertexBuffer = buffer->GetObject();
+        *offset = 0;
 
-        if (itri == StrideList.end())
-        {
-            RxD3D9StrideEntry stridelist;
-            stridelist.stride = stride;
-            stridelist.offset = 0;
-            stridelist.size = (((DefaultVBSize + (stride - 1)) / stride) * stride);
-
-            if (size >= stridelist.size)
-            {
-                stridelist.size = size;
-            }
-
-            auto buffer = new VertexBuffer(stridelist.size, 1, false);
-            if (buffer == nullptr)
-                return false;
-
-            buffer->Initialize();
-
-            stridelist.size -= size;
-            stridelist.offset = size;
-            stridelist.vertexBuffer = buffer;
-
-            *vertexBuffer = buffer->GetObject();
-            *offset = 0;
-
-            StrideList.push_back(stridelist);
-            Log::Debug("RenderingEngine::CreateVertexBuffer - base: size %i %i stride %i %i", stridelist.size, size, stridelist.stride, stride);
-            return true;
-        }
-        else
-        {
-            Log::Debug("RenderingEngine::CreateVertexBuffer - sharing vertex buffer: size %i %i stride %i %i", itri->size, size, itri->stride, stride);
-        }
-
-        *vertexBuffer = itri->vertexBuffer->GetObject();
-        *offset = itri->offset;
-        auto nextOffset = (*offset) + size;
-
-        itri->size -= nextOffset - itri->offset;
-        itri->offset = nextOffset;
-
+        mVertexBufferList.push_back(buffer);
         return true;
     }
 
@@ -114,19 +76,12 @@ namespace DeferredRenderingEngine
         if (vertexBuffer == nullptr)
             return;
 
-        for (auto& itri = StrideList.begin(); itri != StrideList.end(); itri++)
+        for (auto& itri = mVertexBufferList.begin(); itri != mVertexBufferList.end(); itri++)
         {
-            if (itri->vertexBuffer && itri->vertexBuffer->GetObject() == vertexBuffer)
+            if ((*itri) && (*itri)->GetObject() == vertexBuffer)
             {
-                Log::Debug("RenderingEngine::DestroyVertexBuffer %i", vertexBuffer);
-                SAFE_DELETE(itri->vertexBuffer);
-                SAFE_RELEASE(vertexBuffer);
-                itri->size = 0;
-                itri->stride = 0;
-              //  Log::Debug("RenderingEngine::DestroyVertexBuffer %i", vertexBuffer);
-       
-                StrideList.erase(itri);
-                //Log::Debug("RenderingEngine::DestroyVertexBuffer %i", vertexBuffer);
+                SAFE_DELETE((*itri));
+                mVertexBufferList.erase(itri);
                 break;
             }
         }
@@ -197,7 +152,7 @@ namespace DeferredRenderingEngine
         vb.size = size;
         vb.vb = buffer;
         *vertexBuffer = buffer->GetObject();
-        
+
         mDynamicVertexBufferList.push_back(vb);
         Log::Debug("RenderingEngine::DynamicVertexBufferCreate - base size %i", size);
 
@@ -346,6 +301,80 @@ namespace DeferredRenderingEngine
             {
                 buffer.vb->Deinitialize();
                 Log::Debug("RenderingEngine::DynamicVertexBufferRelease - %i", buffer.vb);
+            }
+        }
+    }
+
+    bool RenderingEngine::CreateVertexDeclaration(D3DVERTEXELEMENT9* elements, IDirect3DVertexDeclaration9** vertexdeclaration)
+    {
+
+        uint32_t numelements = 0;
+        while (elements[numelements].Type != D3DDECLTYPE_UNUSED)
+        {
+            numelements++;
+        }
+        numelements++;
+        
+        uint32_t sizeElements = numelements * sizeof(D3DVERTEXELEMENT9);
+        uint32_t n = 0;
+        for (size_t i = 0; i < m_vertexDeclarations.size(); i++)
+        {
+            if (m_vertexDeclarations[i].numElements == numelements)
+            {
+                if (std::memcmp(m_vertexDeclarations[i].elements, elements, sizeElements)==0)
+                {
+                    n = i;
+                    break;
+                }
+            }
+        }
+
+        if (n == 0)
+        {
+            auto hr = IDirect3DDevice9_CreateVertexDeclaration(RwD3DDevice, elements, vertexdeclaration);
+
+            if (SUCCEEDED(hr))
+            {
+                rxD3D9VertexDeclarationItem item;
+                item.vertexdeclaration = *vertexdeclaration;
+                item.numElements = numelements;
+                item.elements = new D3DVERTEXELEMENT9[sizeElements];
+                memcpy(item.elements, elements, sizeElements);
+
+                m_vertexDeclarations.push_back(item);
+            }
+            else
+            {
+                *vertexdeclaration = nullptr;
+                return false;
+            }
+            Log::Debug("RenderingEngine::CreateVertexDeclaration - created %i", vertexdeclaration);
+           
+        }
+        else
+        {
+          
+            IDirect3DVertexDeclaration9_AddRef(m_vertexDeclarations[n].vertexdeclaration);
+            *vertexdeclaration = m_vertexDeclarations[n].vertexdeclaration;
+
+            Log::Debug("RenderingEngine::CreateVertexDeclaration - sharing %i", vertexdeclaration);
+           
+        }
+
+        return true;
+    }
+
+    void RenderingEngine::DeleteVertexDeclaration(IDirect3DVertexDeclaration9* vertexdeclaration)
+    {
+        for (uint32_t n = 0; n < m_vertexDeclarations.size(); n++)
+        {
+            if (m_vertexDeclarations[n].vertexdeclaration == vertexdeclaration)
+            {
+                Log::Debug("RenderingEngine::DeleteVertexDeclaration - %i", vertexdeclaration);
+                IDirect3DVertexDeclaration9_Release(m_vertexDeclarations[n].vertexdeclaration);
+                SAFE_DELETE(m_vertexDeclarations[n].elements);
+                m_vertexDeclarations.erase(m_vertexDeclarations.begin() + n);
+                break;
             }
         }
     }

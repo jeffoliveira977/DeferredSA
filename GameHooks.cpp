@@ -258,6 +258,9 @@ void GameHooks()
 	plugin::patch::RedirectJump(0x7F5840, DeferredRenderingEngine::RenderingEngine::DynamicVertexBufferRelease);
 	plugin::patch::RedirectJump(0x7F58D0, DeferredRenderingEngine::RenderingEngine::DynamicVertexBufferRestore);
 
+	plugin::patch::RedirectJump(0x7FAA30, DeferredRenderingEngine::RenderingEngine::CreateVertexDeclaration);
+	plugin::patch::RedirectJump(0x7FAC10, DeferredRenderingEngine::RenderingEngine::DeleteVertexDeclaration);
+
 	Immediate3D::Hook();
 	SoftParticles::Hook();
     CWaterLevel::Hook();
