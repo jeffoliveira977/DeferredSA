@@ -9,6 +9,7 @@ namespace Math
 	public:
 		XMFLOAT3 Min;
 		XMFLOAT3 Max;
+		XMFLOAT3 Corners[8];
 
 		AABB();
 		AABB(XMFLOAT3 min, XMFLOAT3 max);

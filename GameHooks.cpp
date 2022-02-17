@@ -302,13 +302,45 @@ void GameHooks()
 	plugin::patch::RedirectJump(0x7F6B40, DeferredRenderingEngine::RenderingEngine::D3D9ClearCacheMatrix);
 	plugin::patch::RedirectJump(0x7F5F70, DeferredRenderingEngine::RenderingEngine::D3D9System);
 
-
+	plugin::patch::RedirectJump(0x7FC2D0, DeferredRenderingEngine::RenderingEngine::SetRenderState);
+	plugin::patch::RedirectJump(0x7FC320, DeferredRenderingEngine::RenderingEngine::GetRenderState);
+	plugin::patch::RedirectJump(0x7FCAC0, DeferredRenderingEngine::RenderingEngine::_rwD3D9RenderStateOpen);
 	plugin::patch::RedirectJump(0x7FC3C0, DeferredRenderingEngine::RenderingEngine::SetSamplerState);
 	plugin::patch::RedirectJump(0x7FC400, DeferredRenderingEngine::RenderingEngine::GetSamplerState);
 	plugin::patch::RedirectJump(0x7FC200, DeferredRenderingEngine::RenderingEngine::RenderStateFlushCache);
 	plugin::patch::RedirectJump(0x7FC340, DeferredRenderingEngine::RenderingEngine::SetTextureStageState);
 	plugin::patch::RedirectJump(0x7FC3A0, DeferredRenderingEngine::RenderingEngine::GetTextureStageState);
 
+
+
+	plugin::patch::RedirectJump(0x7FDE60, DeferredRenderingEngine::RenderingEngine::_rwD3D9SetTextureAnisotropyOffset);
+	plugin::patch::RedirectJump(0x7FDB80, DeferredRenderingEngine::RenderingEngine::_rwD3D9RenderStateTextureFilter);
+	plugin::patch::RedirectJump(0x7FDA90, DeferredRenderingEngine::RenderingEngine::_rwD3D9RenderStateTextureAddress);
+	plugin::patch::RedirectJump(0x7FDB00, DeferredRenderingEngine::RenderingEngine::_rwD3D9RenderStateTextureAddressU);
+	plugin::patch::RedirectJump(0x7FDB40, DeferredRenderingEngine::RenderingEngine::_rwD3D9RenderStateTextureAddressV);
+	plugin::patch::RedirectJump(0x7FDC30, DeferredRenderingEngine::RenderingEngine::_rwD3D9RenderStateSrcBlend);
+	plugin::patch::RedirectJump(0x7FDC80, DeferredRenderingEngine::RenderingEngine::_rwD3D9RenderStateDestBlend);
+
+	plugin::patch::RedirectJump(0x7FDE70, DeferredRenderingEngine::RenderingEngine::RwD3D9SetTexture);
+
+	plugin::patch::RedirectJump(0x7FE0A0, DeferredRenderingEngine::RenderingEngine::_rwD3D9RenderStateVertexAlphaEnable);
+	plugin::patch::RedirectJump(0x7FE190, DeferredRenderingEngine::RenderingEngine::_rwD3D9RenderStateIsVertexAlphaEnable);
+	plugin::patch::RedirectJump(0x7FECC0, DeferredRenderingEngine::RenderingEngine::rwD3D9RenderStateBorderColor);
+	plugin::patch::RedirectJump(0x7FEC70, DeferredRenderingEngine::RenderingEngine::rwD3D9RenderStateShadeMode);
+	plugin::patch::RedirectJump(0x7FED00, DeferredRenderingEngine::RenderingEngine::rwD3D9RenderStateCullMode);
+	plugin::patch::RedirectJump(0x7FEA70, DeferredRenderingEngine::RenderingEngine::rwD3D9RenderStateZWriteEnable);
+	plugin::patch::RedirectJump(0x7FEB70, DeferredRenderingEngine::RenderingEngine::rwD3D9RenderStateZTestEnable);
+	plugin::patch::RedirectJump(0x7FE420, DeferredRenderingEngine::RenderingEngine::_rwD3D9RenderStateStencilEnable);
+	plugin::patch::RedirectJump(0x7FE1F0, DeferredRenderingEngine::RenderingEngine::_rwD3D9RenderStateStencilFail);
+	plugin::patch::RedirectJump(0x7FE240, DeferredRenderingEngine::RenderingEngine::_rwD3D9RenderStateStencilZFail);
+	plugin::patch::RedirectJump(0x7FE290, DeferredRenderingEngine::RenderingEngine::_rwD3D9RenderStateStencilPass);
+	plugin::patch::RedirectJump(0x7FE2E0, DeferredRenderingEngine::RenderingEngine::_rwD3D9RenderStateStencilFunction);
+	plugin::patch::RedirectJump(0x7FE330, DeferredRenderingEngine::RenderingEngine::_rwD3D9RenderStateStencilFunctionRef);
+	plugin::patch::RedirectJump(0x7FE380, DeferredRenderingEngine::RenderingEngine::_rwD3D9RenderStateStencilFunctionMask);
+	plugin::patch::RedirectJump(0x7FE3D0, DeferredRenderingEngine::RenderingEngine::_rwD3D9RenderStateStencilFunctionWriteMask);
+
+
+	plugin::patch::RedirectJump(0x7FE420, DeferredRenderingEngine::RenderingEngine::_rwD3D9RWSetRenderState);
 
 
 	plugin::patch::RedirectJump(0x7F9F30, DeferredRenderingEngine::RenderingEngine::SetFVF);

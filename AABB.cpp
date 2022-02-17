@@ -48,7 +48,10 @@ namespace Math
 			{Max.x, Max.y, Max.z}
 		};
 		
-		return corners;
+		for (size_t i = 0; i < 8; i++)
+			Corners[i] = corners[i];
+
+		return Corners;
 	}
 
 	void AABB::Transform(XMMATRIX matrix)
