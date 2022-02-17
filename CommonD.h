@@ -49,7 +49,7 @@ struct _rwD3D9RasterExt
 #define CurrentRenderSurface ((IDirect3DSurface9 **)0xC98090)
 #define CurrentDepthStencilSurface (*(IDirect3DSurface9 **)0xC9808C)
 #define RwD3D9RenderSurface (*(IDirect3DSurface9 **)0xC97C30)
-#define RwD3D9DepthStencilSurface (*(IDirect3DSurface9 **)0xC97C2C)
+#define RwD3D9DepthStencilSurface (&*(IDirect3DSurface9 **)0xC97C2C)
 
 #define _rxPipelineGlobalsOffset    (*(RwInt32*)0xC9BC60)
 #define meshModule                 (*(RwModuleInfo*)0xC9B8C0)
@@ -95,6 +95,16 @@ struct _rxD3D9Im3DVertexNoTex
     RwReal z;
     RwUInt32 color;
 };
+#define RwRasterGetTypeMacro(_raster) \
+    (((_raster)->cType) & rwRASTERTYPEMASK)
+#define RwRasterGetType(_raster)                  \
+    RwRasterGetTypeMacro(_raster)
+#define FLOATASINT(f) (*((const RwInt32 *)&(f)))
+#define FLOATASDWORD(fvariable) (*((const DWORD *)&(fvariable)))
+
+#define rwMatrixSetFlags(m, flagsbit)     ((m)->flags = (flagsbit))
+#define rwMatrixGetFlags(m)               ((m)->flags)
+#define rwMatrixTestFlags(m, flagsbit)    ((m)->flags & (RwInt32)(flagsbit))
 
 #define RwLongToRGBAReal(o, i)                  \
 (o)->alpha = (RwReal)(i >> 24 & 0xFF) / 255.0f; \
@@ -102,8 +112,8 @@ struct _rxD3D9Im3DVertexNoTex
 (o)->green = (RwReal)(i >> 8 & 0xFF) / 255.0f;  \
 (o)->blue  = (RwReal)(i & 0xFF) / 255.0f;       \
 
-#define RwD3D9D3D9ViewTransform ( *(RwMatrix *)0xC9BC80 )
-#define RwD3D9D3D9ProjTransform ( *(RwMatrix *)0x8E2458 )
+#define RwD3D9D3D9ViewTransform ( *(D3DMATRIX *)0xC9BC80 )
+#define RwD3D9D3D9ProjTransform ( *(D3DMATRIX *)0x8E2458 )
 #define RwCameraSync( camera )                                                 \
     ( (RwCamera * (__cdecl *)(RwCamera *))0x7EE5A0 )( camera )
 

@@ -8,6 +8,7 @@ namespace DeferredRenderingEngine
 {
 	class RenderingEngine
 	{
+	public:
 		struct dVB
 		{
 			uint32_t size;
@@ -36,40 +37,6 @@ namespace DeferredRenderingEngine
 
 		static std::vector<rxD3D9VertexDeclarationItem> m_vertexDeclarations;
 
-		static IDirect3DSurface9* mCurrentDepthStencilSurface;
-		static IDirect3DSurface9* mCurrentRenderSurface[8];
-
-		static void* mLastVertexShaderUsed; 
-		static void* mLastPixelShaderUsed;
-
-		static RxD3D9VertexStream mLastVertexStreamUsed[4];
-
-		static IDirect3DIndexBuffer9* mLastIndexBufferUsed;
-
-		typedef struct
-		{
-			uint32_t value;
-			bool changed;
-		} RxStateCache;
-
-		static RxStateCache mRenderStateCache[210];
-		static uint32_t mRenderStateD3D[210];
-		static D3DRENDERSTATETYPE mRenderStateChanges[210];
-		static uint32_t mNumRenderStateChanges;
-
-		static RxStateCache mTextureStageStateCache[RWD3D9_MAX_TEXTURE_STAGES][33];
-		static RwUInt32 mTextureStageStateD3D[RWD3D9_MAX_TEXTURE_STAGES][33];
-
-		typedef struct
-		{
-			uint32_t stage;
-			D3DTEXTURESTAGESTATETYPE type;
-		} RxTextureStageChangeType;
-
-		static uint32_t mNumTextureStageStateChanges;
-		static RxTextureStageChangeType mTextureStageStateChanges[RWD3D9_MAX_TEXTURE_STAGES * 33];
-		static uint32_t mSamplerStageStateD3D[RWD3D9_MAX_TEXTURE_STAGES][14];
-
 	public:
 
 		static bool DynamicVertexBufferListCreate();
@@ -85,8 +52,7 @@ namespace DeferredRenderingEngine
 		static bool DynamicVertexBufferCreate(uint32_t size, IDirect3DVertexBuffer9** vertexbuffer);
 		static bool DynamicVertexBufferDestroy(IDirect3DVertexBuffer9* vertexbuffer);
 		static bool DynamicIndexBufferCreate(uint32_t size, IDirect3DIndexBuffer9** vertexbuffer);
-		static bool DynamicVertexBufferLock(uint32_t vertexSize, uint32_t numVertex, IDirect3DVertexBuffer9** vertexBufferOut,
-			void** vertexDataOut, uint32_t* baseIndexOut);
+		static bool DynamicVertexBufferLock(uint32_t vertexSize, uint32_t numVertex, IDirect3DVertexBuffer9** vertexBufferOut, void** vertexDataOut, uint32_t* baseIndexOut);
 		static void DynamicVertexBufferUnlock(IDirect3DVertexBuffer9* vertexBufferOut);
 		static void DynamicVertexBufferRestore();
 		static void DynamicVertexBufferRelease();
@@ -94,8 +60,10 @@ namespace DeferredRenderingEngine
 		static bool CreateVertexDeclaration(D3DVERTEXELEMENT9* elements, IDirect3DVertexDeclaration9** decl);
 		static void DeleteVertexDeclaration(IDirect3DVertexDeclaration9* decl);
 
-		static bool SetRenderTarget(uint32_t index, IDirect3DSurface9* rendertarget);
+		static bool SetRenderTarget(uint32_t index, RwRaster* raster);
+		static bool _SetRenderTarget(uint32_t index, IDirect3DSurface9* rendertarget);
 		static bool SetDepthStencilSurface(IDirect3DSurface9* depthStencilSurface);
+		static IDirect3DSurface9* GetCurrentD3DRenderTarget(uint32_t index);
 
 		static bool CreateVertexShader(DWORD* function, IDirect3DVertexShader9** shader);
 		static void DeleteVertexShader(IDirect3DVertexShader9* shader);
@@ -114,11 +82,58 @@ namespace DeferredRenderingEngine
 		static void SetTextureStageState(uint32_t stage, uint32_t type, uint32_t value);
 		static void GetTextureStageState(uint32_t stage, uint32_t type, void* value);
 
-		void SetSamplerState(uint32_t stage, uint32_t type, uint32_t value);
-		void GetSamplerState(uint32_t stage, uint32_t type, void* value);
-		void ForceSamplerState(uint32_t stage, uint32_t type, uint32_t value);
+		static void SetSamplerState(uint32_t stage, uint32_t type, uint32_t value);
+		static void GetSamplerState(uint32_t stage, uint32_t type, void* value);
+		static void ForceSamplerState(uint32_t stage, uint32_t type, uint32_t value);
 
-		void ForceRenderState(uint32_t state, uint32_t value);
-		void ForceTextureStageState(uint32_t stage, uint32_t type, uint32_t value);
+		static void ForceRenderState(uint32_t state, uint32_t value);
+		static void ForceTextureStageState(uint32_t stage, uint32_t type, uint32_t value);
+
+		static void DrawIndexedPrimitiveUP(uint32_t primitiveType, uint32_t minIndex, uint32_t numVertices, uint32_t primitiveCount, const void* indexData,
+			const void* vertexStreamZeroData, uint32_t vertexStreamZeroStride);
+		static void DrawPrimitiveUP(uint32_t primitiveType, uint32_t primitiveCount, const void* vertexStreamZeroData, uint32_t vertexStreamZeroStride);
+		static void DrawIndexedPrimitive(uint32_t primitiveType, int32_t baseVertexIndex, uint32_t minIndex, uint32_t numVertices, uint32_t startIndex, uint32_t primitiveCount);
+		static void DrawPrimitive(uint32_t primitiveType, uint32_t startVertex, uint32_t primitiveCount);
+
+		static bool SetTransform(uint32_t state, const void* matrix);
+		static void GetTransform(uint32_t state, void* matrix);
+		static bool SetTransformWorld(const RwMatrix* matrix);
+
+		static bool IndexBufferCreate(uint32_t numIndices, IDirect3DIndexBuffer9** indexBuffer);
+		static bool IndexBuffer32bitsCreate(uint32_t numIndices, IDirect3DIndexBuffer9** indexBuffer);
+		
+		static void SetVertexShader(IDirect3DVertexShader9* shader);
+		static void SetPixelShader(IDirect3DPixelShader9* shader);
+
+		static void SetFVF(uint32_t fvf);
+		static void SetVertexDeclaration(IDirect3DVertexDeclaration9* vertexDeclaration);
+
+		static bool CameraBeginUpdate(RwCamera* camera);
+		static bool CameraClear(RwCamera* camera, RwRGBA* color, RwInt32 clearFlags);
+		static bool CameraEndUpdate(RwCamera* camera);
+		static bool RasterShowRaster(void* raster, void* inOut, RwInt32 flags);
+
+		static bool BeginScene();
+		static bool TestState();
+
+
+		static bool RestoreVideoMemory();
+		static void ReleaseVideoMemory();
+
+
+		static void D3D9SetPresentParameters(const D3DDISPLAYMODE* mode, RwUInt32 flags, D3DFORMAT adapterFormat);
+		static RwBool D3D9DeviceSystemOpen(void* out __RWUNUSED__, void* inOut, RwInt32 in __RWUNUSED__);
+		static RwBool D3D9DeviceSystemClose(void* pOut __RWUNUSED__, void* pInOut __RWUNUSED__, RwInt32 nIn __RWUNUSED__);
+		static RwBool D3D9DeviceSystemStart(void* out __RWUNUSED__, void* inOut __RWUNUSED__, RwInt32 in __RWUNUSED__);
+		static RwBool D3D9DeviceSystemFinalizeStart(void* out __RWUNUSED__, void* inOut __RWUNUSED__, RwInt32 in __RWUNUSED__);
+		static RwBool D3D9DeviceSystemStop(void* out __RWUNUSED__, void* inOut __RWUNUSED__, RwInt32 in __RWUNUSED__);
+		static void D3D9CreateDisplayModesList(void);
+		static RwBool D3D9System(RwInt32 request, void* out, void* inOut, RwInt32 in);
+		static RwDevice* _rwDeviceGetHandle(void);
+
+		static void D3D9ClearCacheShaders();
+		static void D3D9ClearCacheMatrix();
+		static void	D3D9ClearCache();
+		static void	D3D9ClearCacheLights();
 	};
 }

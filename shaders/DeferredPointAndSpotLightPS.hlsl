@@ -289,7 +289,7 @@ float4 main(float4 position: TEXCOORD3, float2 texCoord : TEXCOORD0, float3 frus
     //if (projCoords.z > 1.0f)
     //    s = 1.0;
     
-   // if(CastShadow)
+    if(CastShadow)
         s = 1.0;
     
     float4 flashlight = 1.0f;

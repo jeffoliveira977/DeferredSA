@@ -90,20 +90,20 @@ void CMirrors__BeforeMainRender()
 	CWaterLevel::RenderReflection(CRenderer_RenderRoadsAndBuildings);
 }
 
-RwUInt32& SelectedMultisamplingLevels = *(RwUInt32*)0x008E2430;
-RwUInt32& SelectedMultisamplingLevelsNonMask = *(RwUInt32*)0x008E2438;
+RwUInt32& SelectedMultisamplingLevels2 = *(RwUInt32*)0x008E2430;
+RwUInt32& SelectedMultisamplingLevelsNonMask2 = *(RwUInt32*)0x008E2438;
 
 RwBool rwD3D9ChangeMultiSamplingLevels(RwUInt32)
 {
-	SelectedMultisamplingLevels = 0;
-	SelectedMultisamplingLevelsNonMask = 0;
+	SelectedMultisamplingLevels2 = 0;
+	SelectedMultisamplingLevelsNonMask2 = 0;
 	return TRUE;
 }
 
 void rwD3D9EngineSetMultiSamplingLevels(RwUInt32)
 {
-	SelectedMultisamplingLevels = 0;
-	SelectedMultisamplingLevelsNonMask = 0;
+	SelectedMultisamplingLevels2 = 0;
+	SelectedMultisamplingLevelsNonMask2 = 0;
 }
 
 unsigned int gCurrentLevel;
@@ -197,6 +197,31 @@ void __cdecl HookedCameraUpdateZShiftScale(RwCamera* camera) {
 #include "CRenderer.h"
 #include "LightManager.h"
 #include "RenderingEngine.h"
+
+bool mCamClear(void* a, void* b, int c)
+{
+	return DeferredRenderingEngine::RenderingEngine::CameraClear(static_cast<RwCamera*>(a), static_cast<RwRGBA*>(b), c);
+}
+bool mCamBU(void* a, void* b, int c)
+{
+	UNREFERENCED_PARAMETER(a);
+	UNREFERENCED_PARAMETER(c);
+	return  DeferredRenderingEngine::RenderingEngine::CameraBeginUpdate(static_cast<RwCamera*>(b));
+}
+
+
+bool mCameraEndUpdate(void* a, void* b, int c)
+{
+	UNREFERENCED_PARAMETER(a);
+	UNREFERENCED_PARAMETER(c);
+	return  DeferredRenderingEngine::RenderingEngine::CameraEndUpdate(static_cast<RwCamera*>(b));
+}
+bool mRasterShowRaster(void* a, void* b, int c)
+{
+	UNREFERENCED_PARAMETER(b); 
+	return DeferredRenderingEngine::RenderingEngine::RasterShowRaster(static_cast<RwRaster*>(a), b, c);
+}
+
 void GameHooks()
 {
 	//patch::RedirectCall(0x7EE2B0, HookedCameraUpdateZShiftScale);
@@ -260,6 +285,56 @@ void GameHooks()
 
 	plugin::patch::RedirectJump(0x7FAA30, DeferredRenderingEngine::RenderingEngine::CreateVertexDeclaration);
 	plugin::patch::RedirectJump(0x7FAC10, DeferredRenderingEngine::RenderingEngine::DeleteVertexDeclaration);
+
+	bool(*pClear)(void*, void*, int) = &mCamClear;
+	bool (*pBeginUpdate)(void*, void*, int) = &mCamBU;
+	bool(*pEndUpdate)(void*, void*, int) = &mCameraEndUpdate;
+	bool(*pRasterShowRaster)(void*, void*, int) = &mRasterShowRaster;
+	plugin::patch::RedirectJump(0x7F7730, mCamClear);
+	plugin::patch::RedirectJump(0x7F8F20, mCamBU);
+	plugin::patch::RedirectJump(0x7F98D0, mCameraEndUpdate);
+	plugin::patch::RedirectJump(0x7F99B0, mRasterShowRaster);
+
+
+	plugin::patch::RedirectJump(0x7F6CB0, DeferredRenderingEngine::RenderingEngine::D3D9SetPresentParameters);
+
+	plugin::patch::RedirectJump(0x7F6B00, DeferredRenderingEngine::RenderingEngine::D3D9ClearCacheShaders);
+	plugin::patch::RedirectJump(0x7F6B40, DeferredRenderingEngine::RenderingEngine::D3D9ClearCacheMatrix);
+	plugin::patch::RedirectJump(0x7F5F70, DeferredRenderingEngine::RenderingEngine::D3D9System);
+
+
+	plugin::patch::RedirectJump(0x7FC3C0, DeferredRenderingEngine::RenderingEngine::SetSamplerState);
+	plugin::patch::RedirectJump(0x7FC400, DeferredRenderingEngine::RenderingEngine::GetSamplerState);
+	plugin::patch::RedirectJump(0x7FC200, DeferredRenderingEngine::RenderingEngine::RenderStateFlushCache);
+	plugin::patch::RedirectJump(0x7FC340, DeferredRenderingEngine::RenderingEngine::SetTextureStageState);
+	plugin::patch::RedirectJump(0x7FC3A0, DeferredRenderingEngine::RenderingEngine::GetTextureStageState);
+
+
+
+	plugin::patch::RedirectJump(0x7F9F30, DeferredRenderingEngine::RenderingEngine::SetFVF);
+	plugin::patch::RedirectJump(0x7FA1C0, DeferredRenderingEngine::RenderingEngine::SetIndices);
+	plugin::patch::RedirectJump(0x7FA030, DeferredRenderingEngine::RenderingEngine::SetStreamSource);
+	plugin::patch::RedirectJump(0x7FA090, DeferredRenderingEngine::RenderingEngine::SetStreams);
+	plugin::patch::RedirectJump(0x7F9FF0, DeferredRenderingEngine::RenderingEngine::SetPixelShader);
+	plugin::patch::RedirectJump(0x7F9FB0, DeferredRenderingEngine::RenderingEngine::SetVertexShader);
+	plugin::patch::RedirectJump(0x7F9F70, DeferredRenderingEngine::RenderingEngine::SetVertexDeclaration);
+
+
+	plugin::patch::RedirectJump(0x7FA390, DeferredRenderingEngine::RenderingEngine::SetTransform);
+	plugin::patch::RedirectJump(0x7FA520, DeferredRenderingEngine::RenderingEngine::SetTransformWorld);
+	plugin::patch::RedirectJump(0x7FA4F0, DeferredRenderingEngine::RenderingEngine::GetTransform);
+
+	plugin::patch::RedirectJump(0x7F9E90, DeferredRenderingEngine::RenderingEngine::SetRenderTarget);
+	plugin::patch::RedirectJump(0x7F5F20, DeferredRenderingEngine::RenderingEngine::_SetRenderTarget);
+	plugin::patch::RedirectJump(0x7F9E80, DeferredRenderingEngine::RenderingEngine::GetCurrentD3DRenderTarget);
+	plugin::patch::RedirectJump(0x7F5EF0, DeferredRenderingEngine::RenderingEngine::SetDepthStencilSurface);
+
+	plugin::patch::RedirectJump(0x7FA320, DeferredRenderingEngine::RenderingEngine::DrawIndexedPrimitive);
+	plugin::patch::RedirectJump(0x7FA1F0, DeferredRenderingEngine::RenderingEngine::DrawIndexedPrimitiveUP);
+	plugin::patch::RedirectJump(0x7FA360, DeferredRenderingEngine::RenderingEngine::DrawPrimitive);
+	plugin::patch::RedirectJump(0x7FA290, DeferredRenderingEngine::RenderingEngine::DrawPrimitiveUP);
+
+	plugin::patch::RedirectJump(0x7FAA00, DeferredRenderingEngine::RenderingEngine::IndexBuffer32bitsCreate);
 
 	Immediate3D::Hook();
 	SoftParticles::Hook();

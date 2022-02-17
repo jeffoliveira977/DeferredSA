@@ -6,7 +6,7 @@ namespace DeferredRenderingEngine
 
     VertexBuffer* DynamicVertexBuffer::Create(uint32_t size, uint32_t stride)
     {
-        VertexBuffer* vertexbuffer = new VertexBuffer(size, stride);
+        VertexBuffer* vertexbuffer = new VertexBuffer(size, stride,false);
         try
         {
             vertexbuffer->Initialize();

@@ -39,9 +39,7 @@ void PipelinePlugins()
 #include "Log.h"
 void Initialize()
 {
-	Log::Initialise("DeferredSA.txt");
-	Log::SetThreshold(Log::LOG_TYPE_DEBUG);
-	PUSH_LOG_STACK;
+
 
 	CascadedShadowManagement = new CascadedShadowRendering();
 	CascadedShadowManagement->Initialize();
@@ -213,24 +211,27 @@ using namespace DeferredRenderingEngine;
 
 void LostDevice()
 {
-	DynamicVertexBuffer::Release();
-	DynamicIndexBuffer::Release();	
+	//DynamicVertexBuffer::Release();
+	//DynamicIndexBuffer::Release();	
 	//RenderableScene::Release();
 }
 
 void ResetDevice()
 {
 	//CascadedShadowManagement->UpdateTextures();
-	CWaterLevel::UpdateTextures();
-	 DynamicIndexBuffer::Restore();
-	DynamicVertexBuffer::Restore();
+	//CWaterLevel::UpdateTextures();
+	// DynamicIndexBuffer::Restore();
+	//DynamicVertexBuffer::Restore();
 	//DeferredContext->UpdateTextures();
-	RenderTargetManager::Rebuild();
+	//RenderTargetManager::Rebuild();
 	//RenderableScene::Restore();
 }
 
 void Hook()
 {
+	Log::Initialise("DeferredSA.txt");
+	Log::SetThreshold(Log::LOG_TYPE_DEBUG);
+	PUSH_LOG_STACK;
 	SetWindowsHookEx(WH_GETMESSAGE, MessageProc, NULL, GetCurrentThreadId());
 
 	plugin::Events::initRwEvent += Initialize;
