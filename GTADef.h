@@ -807,3 +807,14 @@ MACRO_START                                                     \
     rwSqrtMacro(&(_result), _result);                           \
 }                                                               \
 MACRO_STOP
+
+
+#define RwRasterGetFormatMacro(_raster) \
+    ((((_raster)->cFormat) & (rwRASTERFORMATMASK >> 8)) << 8)
+#define RwRasterGetFormat(_raster)                  \
+    RwRasterGetFormatMacro(_raster)
+#define RwRasterGetParentMacro(_raster) \
+    ((_raster)->parent)
+
+#define RwRasterGetParent(_raster)                  \
+    RwRasterGetParentMacro(_raster)

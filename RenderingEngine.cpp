@@ -87,6 +87,10 @@ _rwIntelSSEV3dTransformVectors(RwV3d* vectorsOut, const RwV3d* vectorsIn, RwInt3
     return ((RwV3d * (__cdecl*)(RwV3d*, const RwV3d*, RwInt32, const RwMatrix*))0x0080D180)(vectorsOut, vectorsIn, numVectors, matrix);
 }
 
+#define HAS_ALPHA           (1<<0)
+#define IS_CUBE             (1<<1)
+#define USE_AUTOMIPMAPGEN   (1<<2)
+#define IS_COMPRESSED       (1<<3)
 
 #define D3D9DeviceSystemStandards(out, inOut, numStandardsFunctions) ((signed int (__cdecl*) (void*, void*,RwInt32))0x007F72E0)(out,inOut,numStandardsFunctions)
 
@@ -98,15 +102,15 @@ _rwIntelSSEV3dTransformVectors(RwV3d* vectorsOut, const RwV3d* vectorsIn, RwInt3
 
 #define D3D9CalculateMaxMultisamplingLevels() ((void (__cdecl*)())0x007F6BF0)()
 
-#define _rwD3D9RasterClose() ((void (__cdecl*)())0x004CC170)()
+//#define _rwD3D9RasterClose() ((void (__cdecl*)())0x004CC170)()
 #define _rwD3D9VertexBufferManagerClose() ((void (__cdecl*)())0x007F5D20)()
 #define _rwD3D9Im2DRenderClose() ((void (__cdecl*)())0x007FB5F0)()
 #define _rwD3D9Im3DRenderClose() ((void (__cdecl*)())0x0080DFB0 )()
 #define _rwD3D9DynamicVertexBufferRelease() ((void (__cdecl*)())0x007F5840 )()
-#define _rxD3D9VideoMemoryRasterListRelease() ((void (__cdecl*)())0x004CB640 )()
+//#define _rxD3D9VideoMemoryRasterListRelease() ((void (__cdecl*)())0x004CB640 )()
 #define RwFreeListPurgeAllFreeLists() ((void (__cdecl*)())0x00801F90 )()
 
-#define _rwD3D9RasterOpen() ((void (__cdecl*)())0x004CC150)()
+//#define _rwD3D9RasterOpen() ((void (__cdecl*)())0x004CC150)()
 #define _rwD3D9RenderStateOpen() ((void (__cdecl*)())0x007FCAC0)()
 #define _rwD3D9VertexBufferManagerOpen() ((signed int (__cdecl*)())0x007F5CB0)()
 #define _rwProcessorRelease() ((void (__cdecl*)())0x0085742B)()
@@ -125,7 +129,71 @@ _rwIntelSSEV3dTransformVectors(RwV3d* vectorsOut, const RwV3d* vectorsIn, RwInt3
 #define RWRETURN(value) return(value)
 #define RWRETURNVOID() return
 
+struct _rwD3D9NativeTexture
+{
+    RwInt32 id; /* RwPlatformID,(rwID_D3D9) defined in batype.h */
+    RwInt32 filterAndAddress; /* Same as in babintex.c */
+    RwChar  name[rwTEXTUREBASENAMELENGTH]; /* Texture name */
+    RwChar  mask[rwTEXTUREBASENAMELENGTH]; /* Texture mask name */
+};
 
+struct _rwD3D9NativeRaster
+{
+    RwUInt32    format;         /* Raster format flags */
+    D3DFORMAT   d3dFormat;      /* D3D pixel format */
+    RwUInt16    width;          /* Raster width */
+    RwUInt16    height;         /* Raster height */
+    RwUInt8     depth;          /* Raster depth */
+    RwUInt8     numMipLevels;   /* The number of mip levels to load */
+    RwUInt8     type;           /* The raster type */
+    RwUInt8     flags;          /* This raster has an alpha component, automipmapgen, etc */
+};
+
+struct _rwD3D9RasterConvData
+{
+    D3DFORMAT   format;
+    RwUInt8     depth;
+    RwUInt8     alpha;
+};
+
+struct _rwD3D9FormatInfo
+{
+    RwUInt8 alpha;
+    RwUInt8 depth;
+    RwUInt16 rwFormat;
+};
+
+#define NUMPIXELFORMATS     11
+
+#define MAX_PIXEL_FORMATS   128
+
+#define SETFORMATINFO(_format, _alpha, _depth, _rwformat)   \
+    _rwD3D9PixelFormatInfo[_format].alpha = _alpha; \
+    _rwD3D9PixelFormatInfo[_format].depth = _depth; \
+    _rwD3D9PixelFormatInfo[_format].rwFormat = _rwformat
+
+
+#define IS_D3DFORMAT_ZBUFFER(_d3dformat)    ((_d3dformat) >= D3DFMT_D16_LOCKABLE && (_d3dformat) <= D3DFMT_D16)
+
+#define FMT2TBL(_p) (((_p) & rwRASTERFORMATPIXELFORMATMASK) >> 8)
+
+ _rwD3D9RasterConvData _rwRasterConvTable[NUMPIXELFORMATS] =
+{
+    {D3DFMT_UNKNOWN,       0, 0},   /* rwRASTERFORMATDEFAULT */
+    {D3DFMT_A1R5G5B5,     16, 1},   /* rwRASTERFORMAT1555    */
+    {D3DFMT_R5G6B5,       16, 0},   /* rwRASTERFORMAT565     */
+    {D3DFMT_A4R4G4B4,     16, 1},   /* rwRASTERFORMAT4444    */
+    {D3DFMT_L8,            8, 0},   /* rwRASTERFORMATLUM8    */
+    {D3DFMT_A8R8G8B8,     32, 1},   /* rwRASTERFORMAT8888    */
+    {D3DFMT_X8R8G8B8,     32, 0},   /* rwRASTERFORMAT888     */
+    {D3DFMT_D16,          16, 0},   /* rwRASTERFORMAT16      */
+    {D3DFMT_D24X8,        32, 0},   /* rwRASTERFORMAT24      */
+    {D3DFMT_D32,          32, 0},   /* rwRASTERFORMAT32      */
+    {D3DFMT_X1R5G5B5,     16, 0}    /* rwRASTERFORMAT555     */
+};
+
+ /* D3D9 pixel format table */
+ _rwD3D9FormatInfo _rwD3D9PixelFormatInfo[MAX_PIXEL_FORMATS];
 
 bool bWindowIconic;
 bool bChangeVideo;
@@ -138,6 +206,95 @@ struct rwD3D9AdapterInformation
     int32_t         displayDepth;
     int32_t         flags;
 };
+
+typedef struct _rxD3D9VideoMemoryRaster RxD3D9VideoMemoryRaster;
+struct _rxD3D9VideoMemoryRaster
+{
+    RwRaster* raster;
+    RxD3D9VideoMemoryRaster* next;
+};
+
+RwInt32& _RwD3D9RasterExtOffset = *(RwInt32*)0xB4E9E0;    /* Raster extension offset */
+
+/* empty index for a new pallete */
+ RwUInt32& NumPaletteIndexFree = *(RwUInt32*)0xB4E9E8;
+ RwUInt32& MaxPaletteIndexFree = *(RwUInt32*)0xB4E9EC;
+ RwUInt32& MaxPaletteIndex = *(RwUInt32*)0xB4E9F0;
+ RwUInt16*& PaletteIndexFree = *(RwUInt16**)0xB4E9F4;
+
+ RwFreeList*& PaletteFreeList = *(RwFreeList**)0xB4E9F8;
+
+ static RwUInt32
+     FindAvailablePaletteIndex(void)
+ {
+     RwUInt32 index;
+
+
+     if (NumPaletteIndexFree)
+     {
+         NumPaletteIndexFree--;
+         index = PaletteIndexFree[NumPaletteIndexFree];
+     }
+     else
+     {
+         index = MaxPaletteIndex;
+
+         MaxPaletteIndex++;
+     }
+
+     RWRETURN(index);
+ }
+
+  void
+     AddAvailablePaletteIndex(RwUInt32 index)
+ {
+
+     if (NumPaletteIndexFree >= MaxPaletteIndexFree)
+     {
+         MaxPaletteIndexFree += 512;
+
+         if (PaletteIndexFree == NULL)
+         {
+             PaletteIndexFree = (RwUInt16*)
+                 RwMalloc(MaxPaletteIndexFree * sizeof(RwUInt16),
+                     rwID_DRIVERMODULE | rwMEMHINTDUR_EVENT |
+                     rwMEMHINTFLAG_RESIZABLE);
+         }
+         else
+         {
+             PaletteIndexFree = (RwUInt16*)
+                 RwRealloc(PaletteIndexFree,
+                     MaxPaletteIndexFree * sizeof(RwUInt16),
+                     rwID_DRIVERMODULE |
+                     rwMEMHINTDUR_EVENT |
+                     rwMEMHINTFLAG_RESIZABLE);
+         }
+     }
+
+     PaletteIndexFree[NumPaletteIndexFree++] = (RwUInt16)index;
+
+     RWRETURNVOID();
+ }
+
+  RwInt32
+      _rwD3D9FindMSB(RwInt32 num)
+  {
+      RwInt32 pos = -1;
+
+
+      while (num)
+      {
+          pos++;
+          num >>= 1;
+      }
+
+      RWRETURN(pos);
+  }
+
+/* Video memory raster list */
+ RxD3D9VideoMemoryRaster*& VideoMemoryRasters = *(RxD3D9VideoMemoryRaster**)0xB4E9FC;
+ RwFreeList*& VideoMemoryRastersFreeList = *(RwFreeList**)0xB4EA00;
+
 
  static D3DPRESENT_PARAMETERS& Present = *(D3DPRESENT_PARAMETERS*)0xC9C040;
 rwD3D9AdapterInformation& _RwD3D9AdapterInformation = *(rwD3D9AdapterInformation*)0x00C9BCE0;
@@ -2258,7 +2415,7 @@ namespace DeferredRenderingEngine
         IDirect3DSurface9_Release(RwD3D9DepthStencilSurface);
 
         bool rv;
-        rv = InitVideoMemoryRasters();
+        rv = _rxD3D9VideoMemoryRasterListRestore();
 
         rwD3D9DynamicVertexBufferRestore();
 
@@ -2321,6 +2478,11 @@ namespace DeferredRenderingEngine
         {
             D3D9ReleaseDeviceCallback();
         }
+    }
+
+    const void* RenderingEngine::D3D9GetCaps()
+    {
+        return &_RwD3D9DeviceCaps;
     }
 
     void RenderingEngine::D3D9SetPresentParameters(const D3DDISPLAYMODE* mode, RwUInt32 flags, D3DFORMAT adapterFormat)
@@ -3401,4 +3563,2879 @@ namespace DeferredRenderingEngine
 
         RWRETURNVOID();
     }
+
+    RwBool RenderingEngine::D3D9RasterLock(void* pixelsIn, void* rasterIn, RwInt32 accessMode)
+    {
+        RwUInt8** pixels = (RwUInt8**)pixelsIn;
+        RwRaster* raster = (RwRaster*)rasterIn;
+        RwRaster* topRaster;
+        _rwD3D9RasterExt* rasExt;
+        _rwD3D9RasterExt* topRasExt;
+        RwUInt8         mipLevel;
+        RwUInt32        flags;
+        HRESULT         hr = D3D_OK;
+
+
+        /* Can't rasters that have already been locked */
+        if (raster->cpPixels != NULL)
+        {
+            RWRETURN(FALSE);
+        }
+
+        rasExt = RASTEREXTFROMRASTER(raster);
+
+        /* Get the top level raster as this is the only one with a valid texture */
+        topRaster = raster;
+        while ((topRaster = topRaster->parent) != topRaster->parent) {};
+
+        topRasExt = RASTEREXTFROMRASTER(topRaster);
+
+        /* Prepare lock info */
+        mipLevel = (RwUInt8)((accessMode & (RwInt32)0xFF00) >> 8);
+
+        flags = D3DLOCK_NOSYSLOCK;
+
+        if (!(accessMode & rwRASTERLOCKWRITE))
+        {
+            flags |= D3DLOCK_NO_DIRTY_UPDATE | D3DLOCK_READONLY;
+        }
+
+        switch (raster->cType & rwRASTERTYPEMASK)
+        {
+        case rwRASTERTYPENORMAL:
+        case rwRASTERTYPETEXTURE:
+        {
+            if (topRasExt->cube)
+            {
+                hr = IDirect3DCubeTexture9_GetCubeMapSurface((LPDIRECT3DCUBETEXTURE9)topRasExt->texture,
+                    (D3DCUBEMAP_FACES)topRasExt->face,
+                    mipLevel,
+                    &(rasExt->lockedSurface));
+            }
+            else
+            {
+                hr = IDirect3DTexture9_GetSurfaceLevel(topRasExt->texture, mipLevel, &(rasExt->lockedSurface));
+            }
+
+            if (SUCCEEDED(hr))
+            {
+                if (topRaster == raster)
+                {
+                    hr = IDirect3DSurface9_LockRect(rasExt->lockedSurface,
+                        &rasExt->lockedRect,
+                        NULL,
+                        flags);
+                }
+                else
+                {
+                    RECT rect;
+
+                    rect.left = raster->nOffsetX;
+                    rect.top = raster->nOffsetY;
+                    rect.right = raster->nOffsetX + raster->width;
+                    rect.bottom = raster->nOffsetY + raster->height;
+
+                    hr = IDirect3DSurface9_LockRect(rasExt->lockedSurface,
+                        &rasExt->lockedRect,
+                        &rect,
+                        flags);
+                }
+            }
+
+            if (SUCCEEDED(hr))
+            {
+                if (accessMode & rwRASTERLOCKREAD)
+                {
+                    raster->privateFlags |= rwRASTERPIXELLOCKEDREAD;
+                }
+
+                if (accessMode & rwRASTERLOCKWRITE)
+                {
+                    raster->privateFlags |= rwRASTERPIXELLOCKEDWRITE;
+                }
+            }
+            else
+            {
+                RWRETURN(FALSE);
+            }
+        }
+        break;
+
+        case rwRASTERTYPECAMERATEXTURE:
+        case rwRASTERTYPECAMERA:
+        {
+            LPSURFACE       surface;
+            D3DSURFACE_DESC d3dDesc;
+
+            if ((raster->cType & rwRASTERTYPEMASK) == rwRASTERTYPECAMERATEXTURE)
+            {
+                if (topRasExt->cube)
+                {
+                    hr = IDirect3DCubeTexture9_GetCubeMapSurface((LPDIRECT3DCUBETEXTURE9)topRasExt->texture,
+                        (D3DCUBEMAP_FACES)topRasExt->face,
+                        mipLevel,
+                        &surface);
+                }
+                else
+                {
+                    hr = IDirect3DTexture9_GetSurfaceLevel(topRasExt->texture, mipLevel, &surface);
+                }
+            }
+            else
+            {
+                if (topRasExt->swapChain)
+                {
+                    surface = (LPSURFACE)topRasExt->texture;
+                }
+                else
+                {
+                    surface = RwD3D9RenderSurface;
+                }
+
+                hr = D3D_OK;
+            }
+
+            if (SUCCEEDED(hr))
+            {
+                IDirect3DSurface9_GetDesc(surface, &d3dDesc);
+
+                /* Create a system memory surface */
+                hr = IDirect3DDevice9_CreateOffscreenPlainSurface(_RwD3DDevice,
+                    d3dDesc.Width,
+                    d3dDesc.Height,
+                    d3dDesc.Format,
+                    D3DPOOL_SYSTEMMEM,
+                    &(rasExt->lockedSurface),
+                    NULL);
+
+                if (SUCCEEDED(hr))
+                {
+                    /* Copy the contents if needed */
+                    if (accessMode & rwRASTERLOCKREAD)
+                    {
+                        IDirect3DDevice9_GetRenderTargetData(_RwD3DDevice,
+                            surface,
+                            rasExt->lockedSurface);
+                    }
+
+                    if (SUCCEEDED(hr))
+                    {
+                        if (topRaster == raster)
+                        {
+                            hr = IDirect3DSurface9_LockRect(rasExt->lockedSurface,
+                                &rasExt->lockedRect,
+                                NULL,
+                                flags);
+                        }
+                        else
+                        {
+                            RECT rect;
+
+                            rect.left = raster->nOffsetX;
+                            rect.top = raster->nOffsetY;
+                            rect.right = raster->nOffsetX + raster->width;
+                            rect.bottom = raster->nOffsetY + raster->height;
+
+                            hr = IDirect3DSurface9_LockRect(rasExt->lockedSurface,
+                                &rasExt->lockedRect,
+                                &rect,
+                                flags);
+                        }
+
+                        if (SUCCEEDED(hr))
+                        {
+                            if (accessMode & rwRASTERLOCKREAD)
+                            {
+                                raster->privateFlags |= rwRASTERPIXELLOCKEDREAD;
+                            }
+
+                            if (accessMode & rwRASTERLOCKWRITE)
+                            {
+                                raster->privateFlags |= rwRASTERPIXELLOCKEDWRITE;
+                            }
+                        }
+                    }
+
+                    if (FAILED(hr))
+                    {
+                        IDirect3DSurface9_Release(rasExt->lockedSurface);
+                    }
+                }
+
+                if ((raster->cType & rwRASTERTYPEMASK) == rwRASTERTYPECAMERATEXTURE)
+                {
+                    IDirect3DSurface9_Release(surface);
+                }
+            }
+
+            if (FAILED(hr))
+            {
+                RWRETURN(FALSE);
+            }
+        }
+        break;
+
+        case rwRASTERTYPEZBUFFER:
+        default:
+            RWRETURN(FALSE);
+            break;
+        }
+
+        /* Pixels */
+        raster->cpPixels = (RwUInt8*)rasExt->lockedRect.pBits;
+
+        /* Cache original width, height & stride */
+        raster->originalWidth = raster->width;
+        raster->originalHeight = raster->height;
+
+        /* Mip level width, height & stride */
+        raster->width = raster->width >> mipLevel;
+        raster->height = raster->height >> mipLevel;
+
+        /* Clamp width and height to 1 */
+        if (raster->width == 0)
+        {
+            raster->width = 1;
+        }
+
+        if (raster->height == 0)
+        {
+            raster->height = 1;
+        }
+
+        /* Set the stride */
+        raster->stride = rasExt->lockedRect.Pitch;
+
+        /* Cache the mip level locked */
+        rasExt->lockedMipLevel = mipLevel;
+
+        /* Save off the pixel pointer */
+        (*pixels) = raster->cpPixels;
+
+        RWRETURN(TRUE);
+    }
+
+    RwBool RenderingEngine::D3D9RasterUnlock(void* unused1 __RWUNUSED__, void* rasterIn, RwInt32 unused3 __RWUNUSED__)
+    {
+        RwRaster* raster = (RwRaster*)rasterIn;
+        _rwD3D9RasterExt* rasExt;
+
+        /* Can't unlock rasters that have not been locked */
+        if (raster->cpPixels == NULL)
+        {
+            RWRETURN(FALSE);
+        }
+
+        rasExt = RASTEREXTFROMRASTER(raster);
+
+        switch (raster->cType & rwRASTERTYPEMASK)
+        {
+        case rwRASTERTYPENORMAL:
+        case rwRASTERTYPETEXTURE:
+        {
+            IDirect3DSurface9_UnlockRect(rasExt->lockedSurface);
+
+            IDirect3DSurface9_Release(rasExt->lockedSurface);
+
+            /* Restore the original width, height & stride */
+            raster->width = raster->originalWidth;
+            raster->height = raster->originalHeight;
+
+            raster->stride = 0;
+            raster->cpPixels = NULL;
+
+            if ((raster->privateFlags & rwRASTERPIXELLOCKEDWRITE) &&
+                (raster->cFormat & (rwRASTERFORMATAUTOMIPMAP >> 8)) &&
+                (rasExt->lockedMipLevel == 0) &&
+                (rasExt->automipmapgen == 0))
+            {
+                RwRaster* topRaster;
+
+                raster->privateFlags = (RwUInt8)(raster->privateFlags & ~rwRASTERPIXELLOCKED);
+
+                rasExt->lockedMipLevel = (RwUInt8)-1;
+
+                /* Get the top level raster as this is the only one with a valid texture */
+                topRaster = raster;
+                while ((topRaster = topRaster->parent) != topRaster->parent) {};
+
+                RwTextureRasterGenerateMipmaps(topRaster, NULL);
+            }
+            else
+            {
+                raster->privateFlags = (RwUInt8)(raster->privateFlags & ~rwRASTERPIXELLOCKED);
+            }
+        }
+        break;
+
+        case rwRASTERTYPECAMERATEXTURE:
+        case rwRASTERTYPECAMERA:
+        {
+            /* Restore the original width, height & stride */
+            raster->width = raster->originalWidth;
+            raster->height = raster->originalHeight;
+
+            raster->stride = 0;
+            raster->cpPixels = NULL;
+
+            /* Unlock system memory surface */
+            IDirect3DSurface9_UnlockRect(rasExt->lockedSurface);
+
+            /* Update video memory surface if needed */
+            if (raster->privateFlags & rwRASTERPIXELLOCKEDWRITE)
+            {
+                LPSURFACE           surface;
+                HRESULT             hr;
+                RwRaster* topRaster;
+                _rwD3D9RasterExt* topRasExt;
+
+
+                /* Get the top level raster as this is the only one with a valid texture */
+                topRaster = raster;
+                while ((topRaster = topRaster->parent) != topRaster->parent) {};
+
+                topRasExt = RASTEREXTFROMRASTER(topRaster);
+
+                if ((raster->cType & rwRASTERTYPEMASK) == rwRASTERTYPECAMERATEXTURE)
+                {
+                    if (topRasExt->cube)
+                    {
+                        hr = IDirect3DCubeTexture9_GetCubeMapSurface((LPDIRECT3DCUBETEXTURE9)topRasExt->texture,
+                            (D3DCUBEMAP_FACES)topRasExt->face,
+                            rasExt->lockedMipLevel,
+                            &surface);
+                    }
+                    else
+                    {
+                        hr = IDirect3DTexture9_GetSurfaceLevel(topRasExt->texture,
+                            rasExt->lockedMipLevel,
+                            &surface);
+                    }
+                }
+                else
+                {
+                    if (topRasExt->swapChain)
+                    {
+                        surface = (LPSURFACE)topRasExt->texture;
+                    }
+                    else
+                    {
+                        surface = RwD3D9RenderSurface;
+                    }
+
+                    hr = D3D_OK;
+                }
+
+                if (SUCCEEDED(hr))
+                {
+                    if (topRaster == raster)
+                    {
+                        hr = IDirect3DDevice9_UpdateSurface(_RwD3DDevice, rasExt->lockedSurface, NULL, surface, NULL);
+                    }
+                    else
+                    {
+                        RECT rect;
+                        POINT pt;
+
+                        rect.left = raster->nOffsetX;
+                        rect.top = raster->nOffsetY;
+                        rect.right = rect.left + raster->width;
+                        rect.bottom = rect.top + raster->height;
+
+                        pt.x = raster->nOffsetX;
+                        pt.y = raster->nOffsetY;
+
+                        hr = IDirect3DDevice9_UpdateSurface(_RwD3DDevice, rasExt->lockedSurface, &rect, surface, &pt);
+                    }
+
+                    if ((raster->cType & rwRASTERTYPEMASK) == rwRASTERTYPECAMERATEXTURE)
+                    {
+                        IDirect3DSurface9_Release(surface);
+                    }
+                }
+
+                IDirect3DSurface9_Release(rasExt->lockedSurface);
+
+                raster->privateFlags = (RwUInt8)(raster->privateFlags & ~rwRASTERPIXELLOCKED);
+
+                if ((raster->cType & rwRASTERTYPEMASK) == rwRASTERTYPECAMERATEXTURE)
+                {
+                    if ((raster->cFormat & (rwRASTERFORMATAUTOMIPMAP >> 8)) &&
+                        (rasExt->lockedMipLevel == 0))
+                    {
+                        rasExt->lockedMipLevel = (RwUInt8)-1;
+
+                        RwTextureRasterGenerateMipmaps(topRaster, NULL);
+                    }
+                }
+            }
+            else
+            {
+                IDirect3DSurface9_Release(rasExt->lockedSurface);
+
+                raster->privateFlags = (RwUInt8)(raster->privateFlags & ~rwRASTERPIXELLOCKED);
+            }
+        }
+        break;
+
+        case rwRASTERTYPEZBUFFER:
+        default:
+            RWRETURN(FALSE);
+            break;
+        }
+
+        RWRETURN(TRUE);
+    }
+
+    RwInt32 RenderingEngine::D3D9FindCorrectRasterFormat(RwRasterType type, RwInt32 flags)
+    {
+        RwUInt32    format = flags & rwRASTERFORMATMASK;
+
+        switch (type)
+        {
+        case rwRASTERTYPENORMAL:
+        case rwRASTERTYPETEXTURE:
+            if ((format & rwRASTERFORMATPIXELFORMATMASK) == rwRASTERFORMATDEFAULT)
+            {
+                /* Check if we are requesting a default pixel format palette texture */
+                if (format & rwRASTERFORMATPAL8)
+                {
+                    if (_rwD3D9CheckValidTextureFormat(D3DFMT_P8))
+                    {
+                        if (_RwD3D9DeviceCaps.TextureCaps & D3DPTEXTURECAPS_ALPHAPALETTE)
+                        {
+                            format |= rwRASTERFORMAT8888;
+                        }
+                        else
+                        {
+                            format |= rwRASTERFORMAT888;
+                        }
+                    }
+                    else
+                    {
+                        format &= (~rwRASTERFORMATPAL8);
+                    }
+                }
+
+                if ((format & rwRASTERFORMATPAL8) == 0)
+                {
+                    /*
+                     * By default textures are 8888, but make mipmap generation flag and
+                     * palletized flags persist
+                     */
+                    if (_rwD3D9CheckValidTextureFormat(D3DFMT_A8R8G8B8))
+                    {
+                        format |= rwRASTERFORMAT8888;
+                    }
+                    else
+                    {
+                        if (_rwD3D9CheckValidTextureFormat(D3DFMT_A4R4G4B4))
+                        {
+                            format |= rwRASTERFORMAT4444;
+                        }
+                        else
+                        {
+                            format |= rwRASTERFORMAT1555;
+                        }
+                    }
+                }
+            }
+            else
+            {
+                /* No support for 4 bits palettes */
+                if (format & rwRASTERFORMATPAL4)
+                {
+                    /* Change it to a 8 bits palette */
+                    format &= (~rwRASTERFORMATPAL4);
+
+                    format |= rwRASTERFORMATPAL8;
+                }
+
+                if (format & rwRASTERFORMATPAL8)
+                {
+                    if (!_rwD3D9CheckValidTextureFormat(D3DFMT_P8) ||
+                        (((format & rwRASTERFORMATPIXELFORMATMASK) == rwRASTERFORMAT8888) &&
+                        ((_RwD3D9DeviceCaps.TextureCaps & D3DPTEXTURECAPS_ALPHAPALETTE) == 0)))
+                    {
+                        /* Change it to a default format */
+                        format &= (~rwRASTERFORMATPAL8);
+
+                        if ((format & rwRASTERFORMATPIXELFORMATMASK) == rwRASTERFORMAT888)
+                        {
+                            if (_RwD3D9AdapterInformation.displayDepth > 16)
+                            {
+                                if (_rwD3D9CheckValidTextureFormat(D3DFMT_X8R8G8B8))
+                                {
+                                    format |= rwRASTERFORMAT888;
+                                }
+                                else
+                                {
+                                    format &= (~rwRASTERFORMAT888);
+
+                                    format |= rwRASTERFORMAT565;
+                                }
+                            }
+                            else
+                            {
+                                format &= (~rwRASTERFORMAT888);
+
+                                format |= rwRASTERFORMAT565;
+                            }
+                        }
+                        else
+                        {
+                            if (_RwD3D9AdapterInformation.displayDepth > 16)
+                            {
+                                if (_rwD3D9CheckValidTextureFormat(D3DFMT_A8R8G8B8))
+                                {
+                                    format |= rwRASTERFORMAT8888;
+                                }
+                                else
+                                {
+                                    format &= (~rwRASTERFORMAT8888);
+
+                                    if (_rwD3D9CheckValidTextureFormat(D3DFMT_A4R4G4B4))
+                                    {
+                                        format |= rwRASTERFORMAT4444;
+                                    }
+                                    else
+                                    {
+                                        format |= rwRASTERFORMAT1555;
+                                    }
+                                }
+                            }
+                            else
+                            {
+                                format &= (~rwRASTERFORMAT8888);
+
+                                if (_rwD3D9CheckValidTextureFormat(D3DFMT_A4R4G4B4))
+                                {
+                                    format |= rwRASTERFORMAT4444;
+                                }
+                                else
+                                {
+                                    format |= rwRASTERFORMAT1555;
+                                }
+                            }
+                        }
+                    }
+                }
+                else
+                {
+                    if ((format & rwRASTERFORMATPIXELFORMATMASK) == rwRASTERFORMAT8888)
+                    {
+                        if (!_rwD3D9CheckValidTextureFormat(D3DFMT_A8R8G8B8))
+                        {
+                            format &= (~rwRASTERFORMAT8888);
+
+                            if (_rwD3D9CheckValidTextureFormat(D3DFMT_A4R4G4B4))
+                            {
+                                format |= rwRASTERFORMAT4444;
+                            }
+                            else
+                            {
+                                format |= rwRASTERFORMAT1555;
+                            }
+                        }
+                    }
+                    else if ((format & rwRASTERFORMATPIXELFORMATMASK) == rwRASTERFORMAT888)
+                    {
+                        if (!_rwD3D9CheckValidTextureFormat(D3DFMT_X8R8G8B8))
+                        {
+                            format &= (~rwRASTERFORMAT888);
+
+                            format |= rwRASTERFORMAT565;
+                        }
+                    }
+                    else if ((format & rwRASTERFORMATPIXELFORMATMASK) == rwRASTERFORMAT4444)
+                    {
+                        if (!_rwD3D9CheckValidTextureFormat(D3DFMT_A4R4G4B4))
+                        {
+                            format &= (~rwRASTERFORMAT4444);
+
+                            format |= rwRASTERFORMAT1555;
+                        }
+                    }
+                    else if ((format & rwRASTERFORMATPIXELFORMATMASK) == rwRASTERFORMATLUM8)
+                    {
+                        if (!_rwD3D9CheckValidTextureFormat(D3DFMT_L8))
+                        {
+                            format &= (~rwRASTERFORMATLUM8);
+
+                            if (_rwD3D9CheckValidTextureFormat(D3DFMT_X8R8G8B8))
+                            {
+                                format |= D3DFMT_X8R8G8B8;
+                            }
+                            else
+                            {
+                                format |= rwRASTERFORMAT565;
+                            }
+                        }
+                    }
+                }
+            }
+            break;
+
+        case rwRASTERTYPECAMERATEXTURE:
+            if ((format & rwRASTERFORMATPIXELFORMATMASK) == rwRASTERFORMATDEFAULT)
+            {
+                if (16 == _RwD3D9ZBufferDepth)
+                {
+                    format |= rwRASTERFORMAT565;
+                }
+                else
+                {
+                    if (_rwD3D9CheckValidCameraTextureFormat(D3DFMT_X8R8G8B8))
+                    {
+                        format |= rwRASTERFORMAT888;
+                    }
+                    else
+                    {
+                        format |= rwRASTERFORMAT565;
+                    }
+                }
+            }
+            else
+            {
+                const RwInt32 depth = _rwRasterConvTable[FMT2TBL(format)].depth;
+
+                if (16 == _RwD3D9ZBufferDepth)
+                {
+                    if (depth == 32)
+                    {
+                        if ((format & rwRASTERFORMATPIXELFORMATMASK) == rwRASTERFORMAT8888)
+                        {
+                            format &= (~rwRASTERFORMAT8888);
+
+                            format |= rwRASTERFORMAT4444;
+                        }
+                        else if ((format & rwRASTERFORMATPIXELFORMATMASK) == rwRASTERFORMAT888)
+                        {
+                            format &= (~rwRASTERFORMAT888);
+
+                            format |= rwRASTERFORMAT565;
+                        }
+                        else
+                        {
+                            format = rwRASTERFORMAT565;
+                        }
+                    }
+
+                    if ((format & rwRASTERFORMATPIXELFORMATMASK) == rwRASTERFORMAT4444)
+                    {
+                        if (!_rwD3D9CheckValidCameraTextureFormat(D3DFMT_A4R4G4B4))
+                        {
+                            format &= (~rwRASTERFORMAT4444);
+
+                            format |= rwRASTERFORMAT1555;
+                        }
+                    }
+
+                    if ((format & rwRASTERFORMATPIXELFORMATMASK) == rwRASTERFORMAT1555)
+                    {
+                        if (!_rwD3D9CheckValidCameraTextureFormat(D3DFMT_A1R5G5B5))
+                        {
+                            format &= (~rwRASTERFORMAT1555);
+
+                            format |= rwRASTERFORMAT565;
+                        }
+                    }
+                }
+                else
+                {
+                    if (depth == 16)
+                    {
+                        if ((format & rwRASTERFORMATPIXELFORMATMASK) == rwRASTERFORMAT4444)
+                        {
+                            format &= (~rwRASTERFORMAT4444);
+
+                            format |= rwRASTERFORMAT8888;
+                        }
+                        else if ((format & rwRASTERFORMATPIXELFORMATMASK) == rwRASTERFORMAT1555)
+                        {
+                            format &= (~rwRASTERFORMAT1555);
+
+                            format |= rwRASTERFORMAT8888;
+                        }
+                        else if ((format & rwRASTERFORMATPIXELFORMATMASK) == rwRASTERFORMAT565)
+                        {
+                            format &= (~rwRASTERFORMAT565);
+
+                            format |= rwRASTERFORMAT888;
+                        }
+                        else
+                        {
+                            format = rwRASTERFORMAT888;
+                        }
+                    }
+
+                    if ((format & rwRASTERFORMATPIXELFORMATMASK) == rwRASTERFORMAT8888)
+                    {
+                        if (!_rwD3D9CheckValidCameraTextureFormat(D3DFMT_A8R8G8B8))
+                        {
+                            format &= (~rwRASTERFORMAT8888);
+
+                            format |= rwRASTERFORMAT888;
+                        }
+                    }
+                }
+            }
+            break;
+
+        case rwRASTERTYPECAMERA:
+            /* Always force default */
+            if ((format & rwRASTERFORMATPIXELFORMATMASK) == rwRASTERFORMATDEFAULT)
+            {
+                format = rwD3D9FindRwFormat(Present.BackBufferFormat);
+            }
+            break;
+
+        case rwRASTERTYPEZBUFFER:
+            /* Always force default */
+            if ((format & rwRASTERFORMATPIXELFORMATMASK) == rwRASTERFORMATDEFAULT)
+            {
+                if (16 == _RwD3D9ZBufferDepth)
+                {
+                    format = rwRASTERFORMAT16;
+                }
+                else if (32 == _RwD3D9ZBufferDepth)
+                {
+                    format = rwRASTERFORMAT32;
+                }
+            }
+            break;
+
+        default:
+            break;
+        }
+
+        RWRETURN(format);
+    }
+
+    RwBool RenderingEngine::D3D9CheckRasterFormat(void* rasterIn, RwInt32 flags)
+    {
+        RwRaster* raster = (RwRaster*)rasterIn;
+        RwUInt32    format = flags & rwRASTERFORMATMASK;
+
+        /* Copy over types */
+        raster->cType = (RwUInt8)(flags & rwRASTERTYPEMASK);
+        raster->cFlags = (RwUInt8)(flags & ~rwRASTERTYPEMASK);
+
+        format = (RwRasterType) D3D9FindCorrectRasterFormat((RwRasterType)raster->cType, flags);
+
+        raster->cFormat = (RwUInt8)(format >> 8);
+
+        raster->depth = _rwRasterConvTable[FMT2TBL(format)].depth;
+
+        RWRETURN(TRUE);
+    }
+
+    RwBool RenderingEngine::rwD3D9SetRasterFormat(void* rasterIn, RwInt32 flags)
+    {
+        RwRaster* raster = (RwRaster*)rasterIn;
+        RwUInt32    format = flags & rwRASTERFORMATMASK;
+
+        /* Copy over types */
+        raster->cType = (RwUInt8)(flags & rwRASTERTYPEMASK);
+        raster->cFlags = (RwUInt8)(flags & ~rwRASTERTYPEMASK);
+
+        switch (raster->cType & rwRASTERTYPEMASK)
+        {
+        case rwRASTERTYPENORMAL:
+        case rwRASTERTYPETEXTURE:
+            if ((format & rwRASTERFORMATPIXELFORMATMASK) == rwRASTERFORMATDEFAULT)
+            {
+                /* Check if we are requesting a default pixel format palette texture */
+                if (format & rwRASTERFORMATPAL8)
+                {
+                    if (_rwD3D9CheckValidTextureFormat(D3DFMT_P8))
+                    {
+                        if (_RwD3D9DeviceCaps.TextureCaps & D3DPTEXTURECAPS_ALPHAPALETTE)
+                        {
+                            format |= rwRASTERFORMAT8888;
+                        }
+                        else
+                        {
+                            format |= rwRASTERFORMAT888;
+                        }
+
+                        raster->depth = 8;
+                    }
+                    else
+                    {
+                        RWRETURN(FALSE);
+                    }
+                }
+                else
+                {
+                    /*
+                     * By default textures are 8888, but make mipmap generation flag and
+                     * palletized flags persist
+                     */
+                    if (_RwD3D9AdapterInformation.displayDepth > 16)
+                    {
+                        if (_rwD3D9CheckValidTextureFormat(D3DFMT_A8R8G8B8))
+                        {
+                            format |= rwRASTERFORMAT8888;
+
+                            raster->depth = 32;
+                        }
+                        else
+                        {
+                            if (_rwD3D9CheckValidTextureFormat(D3DFMT_A4R4G4B4))
+                            {
+                                format |= rwRASTERFORMAT4444;
+                            }
+                            else
+                            {
+                                format |= rwRASTERFORMAT1555;
+                            }
+
+                            raster->depth = 16;
+                        }
+                    }
+                    else
+                    {
+                        if (_rwD3D9CheckValidTextureFormat(D3DFMT_A4R4G4B4))
+                        {
+                            format |= rwRASTERFORMAT4444;
+                        }
+                        else
+                        {
+                            format |= rwRASTERFORMAT1555;
+                        }
+
+                        raster->depth = 16;
+                    }
+                }
+            }
+            else
+            {
+                /* No support for 4 bits palettes */
+                if (format & rwRASTERFORMATPAL4)
+                {
+                    RWRETURN(FALSE);
+                }
+                else
+                {
+                    if (format & rwRASTERFORMATPAL8)
+                    {
+                        if (_rwD3D9CheckValidTextureFormat(D3DFMT_P8) &&
+                            (((format & rwRASTERFORMATPIXELFORMATMASK) == rwRASTERFORMAT888) ||
+                            (((format & rwRASTERFORMATPIXELFORMATMASK) == rwRASTERFORMAT8888) &&
+                                (_RwD3D9DeviceCaps.TextureCaps & D3DPTEXTURECAPS_ALPHAPALETTE))))
+                        {
+                            raster->depth = 8;
+                        }
+                        else
+                        {
+                            RWRETURN(FALSE);
+                        }
+                    }
+                    else
+                    {
+                        D3DFORMAT d3dFormat;
+
+                        d3dFormat = _rwRasterConvTable[FMT2TBL(format)].format;
+
+                        if (IS_D3DFORMAT_ZBUFFER(d3dFormat))
+                        {
+                            if (_rwD3D9CheckValidZBufferTextureFormat(d3dFormat))
+                            {
+                                raster->depth = _rwRasterConvTable[FMT2TBL(format)].depth;
+                            }
+                            else
+                            {
+                                RWRETURN(FALSE);
+                            }
+                        }
+                        else
+                        {
+                            if (_rwD3D9CheckValidTextureFormat(d3dFormat))
+                            {
+                                raster->depth = _rwRasterConvTable[FMT2TBL(format)].depth;
+                            }
+                            else
+                            {
+                                RWRETURN(FALSE);
+                            }
+                        }
+                    }
+                }
+            }
+
+            /* check automipmapgen */
+            if ((format & rwRASTERFORMATPAL8) == 0 &&
+                (flags & (rwRASTERFORMATAUTOMIPMAP | rwRASTERFORMATMIPMAP)) == (rwRASTERFORMATAUTOMIPMAP | rwRASTERFORMATMIPMAP))
+            {
+                if (_rwD3D9CheckAutoMipmapGenTextureFormat(_rwRasterConvTable[FMT2TBL(format)].format))
+                {
+                    _rwD3D9RasterExt* rasExt = RASTEREXTFROMRASTER(raster);
+
+                    rasExt->automipmapgen = 1;
+                }
+            }
+            break;
+
+        case rwRASTERTYPECAMERATEXTURE:
+            if ((format & rwRASTERFORMATPIXELFORMATMASK) == rwRASTERFORMATDEFAULT)
+            {
+                /*
+                 * Raster should match back buffer bit depth
+                 */
+                if (16 == _RwD3D9AdapterInformation.displayDepth)
+                {
+                    format |= rwRASTERFORMAT565;
+
+                    raster->depth = 16;
+                }
+                else
+                {
+                    if (_rwD3D9CheckValidCameraTextureFormat(D3DFMT_X8R8G8B8))
+                    {
+                        format |= rwRASTERFORMAT888;
+
+                        raster->depth = 32;
+                    }
+                    else
+                    {
+                        format |= rwRASTERFORMAT565;
+
+                        raster->depth = 16;
+                    }
+                }
+            }
+            else
+            {
+                RwInt32 depth;
+
+                depth = _rwRasterConvTable[FMT2TBL(format)].depth;
+
+                if (_rwD3D9CheckValidCameraTextureFormat(_rwRasterConvTable[FMT2TBL(format)].format))
+                {
+                    raster->depth = depth;
+                }
+                else
+                {
+                    RWRETURN(FALSE);
+                }
+            }
+
+            /* check automipmapgen */
+            if ((flags & (rwRASTERFORMATAUTOMIPMAP | rwRASTERFORMATMIPMAP)) == (rwRASTERFORMATAUTOMIPMAP | rwRASTERFORMATMIPMAP))
+            {
+                if (_rwD3D9CheckAutoMipmapGenCameraTextureFormat(_rwRasterConvTable[FMT2TBL(format)].format))
+                {
+                    _rwD3D9RasterExt* rasExt = RASTEREXTFROMRASTER(raster);
+
+                    rasExt->automipmapgen = 1;
+                }
+            }
+            break;
+
+        case rwRASTERTYPECAMERA:
+            /* Always force default */
+            if ((format & rwRASTERFORMATPIXELFORMATMASK) == rwRASTERFORMATDEFAULT)
+            {
+                format = rwD3D9FindRwFormat(Present.BackBufferFormat);
+            }
+            else
+            {
+                const RwUInt32 mainCameraFormat = rwD3D9FindRwFormat(Present.BackBufferFormat);
+
+                if (mainCameraFormat != format)
+                {
+                    RWRETURN(FALSE);
+                }
+            }
+
+            raster->depth = _RwD3D9AdapterInformation.displayDepth;
+            break;
+
+        case rwRASTERTYPEZBUFFER:
+            /* Always force default */
+            if ((format & rwRASTERFORMATPIXELFORMATMASK) == rwRASTERFORMATDEFAULT)
+            {
+                if (16 == _RwD3D9ZBufferDepth)
+                {
+                    raster->depth = 16;
+                    format = rwRASTERFORMAT16;
+                }
+                else if (32 == _RwD3D9ZBufferDepth)
+                {
+                    raster->depth = 32;
+                    format = rwRASTERFORMAT32;
+                }
+            }
+            else
+            {
+                if ((format & rwRASTERFORMATPIXELFORMATMASK) == rwRASTERFORMAT16 && _RwD3D9ZBufferDepth == 16)
+                {
+                    raster->depth = 16;
+                }
+                else if ((format & rwRASTERFORMATPIXELFORMATMASK) == rwRASTERFORMAT32 && _RwD3D9ZBufferDepth == 32)
+                {
+                    raster->depth = 32;
+                }
+                else
+                {
+                    RWRETURN(FALSE);
+                }
+            }
+            break;
+
+        default:
+            RWRETURN(FALSE);
+            break;
+        }
+
+        raster->cFormat = (RwUInt8)(format >> 8);
+
+        RWRETURN(TRUE);
+    }
+
+     RwUInt32 RenderingEngine::rwD3D9FindRwFormat(D3DFORMAT d3dFormat)
+    {
+        RWRETURN(_rwD3D9PixelFormatInfo[d3dFormat].rwFormat);
+    }
+
+    RwBool RenderingEngine::_rwD3D9CheckValidTextureFormat(RwInt32 format)
+    {
+        const D3DFORMAT  adapterFormat = _RwD3D9AdapterInformation.mode.Format;
+        HRESULT             hr;
+
+        hr = IDirect3D9_CheckDeviceFormat(_RwDirect3DObject, _RwD3DAdapterIndex, _RwD3DAdapterType,
+            adapterFormat, 0,D3DRTYPE_TEXTURE,(D3DFORMAT)format);
+
+        RWRETURN(SUCCEEDED(hr));
+    }
+
+    RwBool RenderingEngine::_rwD3D9CheckValidCameraTextureFormat(RwInt32 format)
+    {
+        HRESULT             hr;
+        const D3DFORMAT  adapterFormat = _RwD3D9AdapterInformation.mode.Format;
+
+        hr = IDirect3D9_CheckDeviceFormat(_RwDirect3DObject, _RwD3DAdapterIndex, _RwD3DAdapterType,
+            adapterFormat, D3DUSAGE_RENDERTARGET,   D3DRTYPE_TEXTURE,  (D3DFORMAT)format);
+
+        if (SUCCEEDED(hr))
+        {
+            hr = IDirect3D9_CheckDepthStencilMatch(_RwDirect3DObject,   _RwD3DAdapterIndex, _RwD3DAdapterType,
+                adapterFormat,  (D3DFORMAT)format, Present.AutoDepthStencilFormat);
+        }
+
+        RWRETURN(SUCCEEDED(hr));
+    }
+
+    RwBool RenderingEngine::_rwD3D9CheckValidZBufferTextureFormat(RwInt32 format)
+    {
+        HRESULT             hr;
+        const D3DFORMAT  adapterFormat = _RwD3D9AdapterInformation.mode.Format;
+
+
+        hr = IDirect3D9_CheckDeviceFormat(_RwDirect3DObject, _RwD3DAdapterIndex,  _RwD3DAdapterType,
+            adapterFormat,  D3DUSAGE_DEPTHSTENCIL,  D3DRTYPE_TEXTURE,  (D3DFORMAT)format);
+      
+        if (SUCCEEDED(hr))
+        {
+
+            hr = IDirect3D9_CheckDepthStencilMatch(_RwDirect3DObject, _RwD3DAdapterIndex,_RwD3DAdapterType,
+                adapterFormat,   adapterFormat,  (D3DFORMAT)format);
+        }
+
+        RWRETURN(SUCCEEDED(hr));
+    }
+
+    RwBool RenderingEngine::_rwD3D9CheckValidCubeTextureFormat(RwInt32 format)
+    {
+        const D3DFORMAT adapterFormat = _RwD3D9AdapterInformation.mode.Format;
+        HRESULT         hr;
+
+        hr = IDirect3D9_CheckDeviceFormat(_RwDirect3DObject, _RwD3DAdapterIndex, _RwD3DAdapterType,
+            adapterFormat, 0,  D3DRTYPE_CUBETEXTURE, (D3DFORMAT)format);
+
+        RWRETURN(SUCCEEDED(hr));
+    }
+
+    RwBool RenderingEngine::_rwD3D9CheckValidCameraCubeTextureFormat(RwInt32 format)
+    {
+        HRESULT             hr;
+        const D3DFORMAT  adapterFormat = _RwD3D9AdapterInformation.mode.Format;
+
+        hr = IDirect3D9_CheckDeviceFormat(_RwDirect3DObject,  _RwD3DAdapterIndex,_RwD3DAdapterType,
+            adapterFormat,  D3DUSAGE_RENDERTARGET,    D3DRTYPE_CUBETEXTURE, (D3DFORMAT)format);
+
+        if (SUCCEEDED(hr))
+        {
+            hr = IDirect3D9_CheckDepthStencilMatch(_RwDirect3DObject, _RwD3DAdapterIndex, _RwD3DAdapterType,
+                adapterFormat, (D3DFORMAT)format, Present.AutoDepthStencilFormat);
+        }
+
+        RWRETURN(SUCCEEDED(hr));
+    }
+
+    RwBool RenderingEngine::_rwD3D9CheckAutoMipmapGenCubeTextureFormat(RwInt32 format)
+    {
+        if (_RwD3D9DeviceCaps.Caps2 & D3DCAPS2_CANAUTOGENMIPMAP)
+        {
+            const D3DFORMAT adapterFormat = _RwD3D9AdapterInformation.mode.Format;
+            HRESULT         hr;
+
+            hr = IDirect3D9_CheckDeviceFormat(_RwDirect3DObject, _RwD3DAdapterIndex, _RwD3DAdapterType,
+                adapterFormat,  D3DUSAGE_AUTOGENMIPMAP,D3DRTYPE_CUBETEXTURE, (D3DFORMAT)format);
+
+            RWRETURN(hr == D3D_OK);
+        }
+        else
+        {
+            RWRETURN(FALSE);
+        }
+    }
+
+    RwBool RenderingEngine::_rwD3D9CheckAutoMipmapGenCameraTextureFormat(RwInt32 format)
+    {
+        if (_RwD3D9DeviceCaps.Caps2 & D3DCAPS2_CANAUTOGENMIPMAP)
+        {
+            const D3DFORMAT  adapterFormat = _RwD3D9AdapterInformation.mode.Format;
+            HRESULT             hr;
+
+            hr = IDirect3D9_CheckDeviceFormat(_RwDirect3DObject, _RwD3DAdapterIndex, _RwD3DAdapterType,
+                adapterFormat,
+                D3DUSAGE_AUTOGENMIPMAP | D3DUSAGE_RENDERTARGET,  D3DRTYPE_TEXTURE,  (D3DFORMAT)format);
+
+            RWRETURN(hr == D3D_OK);
+        }
+        else
+        {
+            RWRETURN(FALSE);
+        }
+    }
+
+    RwBool RenderingEngine::_rwD3D9CheckValidZBufferFormat(RwInt32 format)
+    {
+        HRESULT             hr;
+        const D3DFORMAT  adapterFormat = _RwD3D9AdapterInformation.mode.Format;
+
+
+        hr = IDirect3D9_CheckDeviceFormat(_RwDirect3DObject, _RwD3DAdapterIndex,_RwD3DAdapterType,
+            adapterFormat, D3DUSAGE_DEPTHSTENCIL, D3DRTYPE_SURFACE, (D3DFORMAT)format);
+        
+        if (SUCCEEDED(hr))
+        {
+
+            hr = IDirect3D9_CheckDepthStencilMatch(_RwDirect3DObject,_RwD3DAdapterIndex, _RwD3DAdapterType,
+                adapterFormat, adapterFormat, (D3DFORMAT)format);
+        }
+
+        RWRETURN(SUCCEEDED(hr));
+    }
+
+
+    RwBool  RenderingEngine::_rwD3D9CheckAutoMipmapGenTextureFormat(RwInt32 format)
+    {
+
+        if (_RwD3D9DeviceCaps.Caps2 & D3DCAPS2_CANAUTOGENMIPMAP)
+        {
+            const D3DFORMAT  adapterFormat = _RwD3D9AdapterInformation.mode.Format;
+            HRESULT             hr;
+
+            hr = IDirect3D9_CheckDeviceFormat(_RwDirect3DObject,_RwD3DAdapterIndex,  _RwD3DAdapterType,
+                adapterFormat, D3DUSAGE_AUTOGENMIPMAP,  D3DRTYPE_TEXTURE, (D3DFORMAT)format);
+            RWRETURN(hr == D3D_OK);
+        }
+        else
+        {
+            RWRETURN(FALSE);
+        }
+    }
+
+    RwBool RenderingEngine::_rwD3D9RasterHasAlpha(const RwRaster* raster)
+    {
+        const _rwD3D9RasterExt* rasExt;
+
+        rasExt = RASTEREXTFROMCONSTRASTER(raster);
+
+        RWRETURN(rasExt->alpha);
+    }
+
+    RwBool RenderingEngine::_rwD3D9TextureHasAlpha(const RwTexture* texture)
+    {
+        if (texture->raster != NULL)
+        {
+            const _rwD3D9RasterExt* rasExt;
+
+            rasExt = RASTEREXTFROMRASTER(texture->raster);
+
+            RWRETURN(rasExt->alpha);
+        }
+        else
+        {
+            RWRETURN(FALSE);
+        }
+    }
+    RwBool RenderingEngine::_rwD3D9NativeTextureRead(void* streamIn, void* textureIn, RwInt32 unused3 __RWUNUSED__)
+    {
+        RwStream* stream = (RwStream*)streamIn;
+        RwRaster* raster = (RwRaster*)NULL;
+        RwTexture* texture;
+        RwUInt32            length, version;
+        _rwD3D9NativeRaster   nativeRaster;
+        _rwD3D9NativeTexture  nativeTexture;
+        _rwD3D9RasterExt* rasExt;
+
+        if (!RwStreamFindChunk(stream, rwID_STRUCT, &length, &version))
+        {
+            RWRETURN(FALSE);
+        }
+
+        if (!((version >= rwLIBRARYBASEVERSION) &&
+            (version <= rwLIBRARYCURRENTVERSION)))
+        {
+            RWRETURN(FALSE);
+        }
+
+        /*
+         * Don't have to worry about endianness as this is platform specific
+         */
+
+         /* ID, filter & addressing modes */
+        if (RwStreamRead(stream, (void*)&nativeTexture,
+            sizeof(_rwD3D9NativeTexture)) != sizeof(_rwD3D9NativeTexture))
+        {
+            RWRETURN(FALSE);
+        }
+
+        if (rwID_PCD3D9 != nativeTexture.id)
+        {
+            RWRETURN(FALSE);
+        }
+
+        /* Native raster data structure */
+        if (RwStreamRead(stream, (void*)&nativeRaster,
+            sizeof(_rwD3D9NativeRaster)) != sizeof(_rwD3D9NativeRaster))
+        {
+            RWRETURN(FALSE);
+        }
+
+        if (nativeRaster.flags & IS_COMPRESSED)
+        {
+            RwUInt32 dxtFormat;
+
+            /* Get compressed format */
+            dxtFormat = nativeRaster.d3dFormat;
+
+            if (_rwD3D9CheckValidTextureFormat(dxtFormat))
+            {
+                RwUInt32 levels;
+
+                /* Create a raster */
+                raster = RwRasterCreate(nativeRaster.width, nativeRaster.height,
+                    (RwInt32)nativeRaster.depth, nativeRaster.type | nativeRaster.format | rwRASTERDONTALLOCATE);
+
+                if (NULL == raster)
+                {
+                    RWRETURN(FALSE);
+                }
+
+                /* Get the raster extension */
+                rasExt = RASTEREXTFROMRASTER(raster);
+
+                levels = ((RwRasterGetFormat(raster) & rwRASTERFORMATMIPMAP) ?
+                    nativeRaster.numMipLevels : 1);
+
+                if ((nativeRaster.flags & IS_CUBE) != 0)
+                {
+                    if ((_RwD3D9DeviceCaps.CubeTextureFilterCaps & (D3DPTFILTERCAPS_MIPFPOINT | D3DPTFILTERCAPS_MIPFLINEAR)) == 0)
+                    {
+                        if (levels > 1)
+                        {
+                            RwRasterDestroy(raster);
+
+                            RWRETURN(FALSE);
+                        }
+                    }
+
+                    rasExt->cube = TRUE;
+
+                    /* check automipmapgen */
+                    if ((nativeRaster.format & (rwRASTERFORMATAUTOMIPMAP | rwRASTERFORMATMIPMAP)) == (rwRASTERFORMATAUTOMIPMAP | rwRASTERFORMATMIPMAP))
+                    {
+                        if (_rwD3D9CheckAutoMipmapGenCubeTextureFormat(dxtFormat))
+                        {
+                            rasExt->automipmapgen = 1;
+                        }
+                    }
+
+                    if (FAILED(IDirect3DDevice9_CreateCubeTexture(_RwD3DDevice, raster->width,
+                        levels,
+                        (rasExt->automipmapgen ? D3DUSAGE_AUTOGENMIPMAP : 0),
+                        (D3DFORMAT)dxtFormat, D3DPOOL_MANAGED, (LPDIRECT3DCUBETEXTURE9*)&(rasExt->texture),
+                        NULL)))
+                    {
+                        RwRasterDestroy(raster);
+
+                        RWRETURN(FALSE);
+                    }
+                    else
+                    {
+                        /* Remove the rwRASTERDONTALLOCATE flag so it will get destroyed */
+                        raster->cFlags &= ~rwRASTERDONTALLOCATE;
+
+                        /* Copy alpha flag */
+                        rasExt->alpha = (nativeRaster.flags & HAS_ALPHA) != 0;
+
+                        /* Mark as cube texture */
+                        rasExt->cube = TRUE;
+
+                        /* Mark as compressed texture */
+                        rasExt->compressed = TRUE;
+
+                        rasExt->d3dFormat = (D3DFORMAT)dxtFormat;
+                    }
+                }
+                else
+                {
+                    /* check automipmapgen */
+                    if ((nativeRaster.format & (rwRASTERFORMATAUTOMIPMAP | rwRASTERFORMATMIPMAP)) == (rwRASTERFORMATAUTOMIPMAP | rwRASTERFORMATMIPMAP))
+                    {
+                        if (_rwD3D9CheckAutoMipmapGenTextureFormat(dxtFormat))
+                        {
+                            rasExt->automipmapgen = 1;
+                        }
+                    }
+
+                    /* Create the texture, if mipped 0 gets all the mip levels */
+                    if (FAILED(IDirect3DDevice9_CreateTexture(_RwD3DDevice, raster->width, raster->height,
+                        levels, (rasExt->automipmapgen ? D3DUSAGE_AUTOGENMIPMAP : 0),
+                        (D3DFORMAT)dxtFormat, D3DPOOL_MANAGED, &(rasExt->texture), NULL)))
+                    {
+                        RwRasterDestroy(raster);
+
+                        RWRETURN(FALSE);
+                    }
+                    else
+                    {
+                        /* Remove the rwRASTERDONTALLOCATE flag so it will get destroyed */
+                        raster->cFlags &= ~rwRASTERDONTALLOCATE;
+
+                        /* Copy alpha flag */
+                        rasExt->alpha = (nativeRaster.flags & HAS_ALPHA) != 0;
+
+                        /* Mark as compressed texture */
+                        rasExt->compressed = TRUE;
+
+                        rasExt->d3dFormat = (D3DFORMAT)dxtFormat;
+                    }
+                }
+            }
+            else
+            {
+                RWRETURN(FALSE);
+            }
+        }
+        else if ((nativeRaster.flags & IS_CUBE) != 0)
+        {
+            RwUInt32 levels;
+
+            /* Create a raster */
+            raster = RwRasterCreate(nativeRaster.width, nativeRaster.height,
+                (RwInt32)nativeRaster.depth, nativeRaster.type | nativeRaster.format | rwRASTERDONTALLOCATE);
+
+            if (NULL == raster)
+            {
+                RWRETURN(FALSE);
+            }
+
+            /* Get the raster extension */
+            rasExt = RASTEREXTFROMRASTER(raster);
+
+            levels = ((RwRasterGetFormat(raster) & rwRASTERFORMATMIPMAP) ?
+                nativeRaster.numMipLevels : 1);
+
+            if ((_RwD3D9DeviceCaps.CubeTextureFilterCaps & (D3DPTFILTERCAPS_MIPFPOINT | D3DPTFILTERCAPS_MIPFLINEAR)) == 0)
+            {
+                if (levels > 1)
+                {
+                    RwRasterDestroy(raster);
+
+                    RWRETURN(FALSE);
+                }
+            }
+
+            /* Mark as cube texture */
+            rasExt->cube = TRUE;
+
+            /* check automipmapgen */
+            if ((nativeRaster.format & (rwRASTERFORMATAUTOMIPMAP | rwRASTERFORMATMIPMAP)) == (rwRASTERFORMATAUTOMIPMAP | rwRASTERFORMATMIPMAP))
+            {
+                if (_rwD3D9CheckAutoMipmapGenCubeTextureFormat(nativeRaster.d3dFormat))
+                {
+                    rasExt->automipmapgen = 1;
+                }
+            }
+
+            if (FAILED(IDirect3DDevice9_CreateCubeTexture(_RwD3DDevice, raster->width, levels,
+                (rasExt->automipmapgen ? D3DUSAGE_AUTOGENMIPMAP : 0),
+                nativeRaster.d3dFormat, D3DPOOL_MANAGED, (LPDIRECT3DCUBETEXTURE9*)&(rasExt->texture),
+                NULL)))
+            {
+                RwRasterDestroy(raster);
+
+                RWRETURN(FALSE);
+            }
+            else
+            {
+                /* Remove the rwRASTERDONTALLOCATE flag so it will get destroyed */
+                raster->cFlags &= ~rwRASTERDONTALLOCATE;
+
+                /* Copy alpha flag */
+                rasExt->alpha = (nativeRaster.flags & HAS_ALPHA) != 0;
+            }
+        }
+        else if (nativeRaster.format & ~(rwRASTERFORMATAUTOMIPMAP | rwRASTERFORMATMIPMAP)) /* Is an standard RW format? */
+        {
+            /* Create a raster */
+            raster = RwRasterCreate(nativeRaster.width, nativeRaster.height,
+                (RwInt32)nativeRaster.depth, nativeRaster.type | nativeRaster.format);
+            if (!raster)
+            {
+                RWRETURN(FALSE);
+            }
+
+            /* Get the raster extension */
+            rasExt = RASTEREXTFROMRASTER(raster);
+
+            rasExt->compressed = 0;
+        }
+        else
+        {
+            /* Create a raster */
+            raster = RwD3D9RasterCreate(nativeRaster.width, nativeRaster.height,
+                nativeRaster.d3dFormat,
+                nativeRaster.type |  (nativeRaster.format & (rwRASTERFORMATAUTOMIPMAP | rwRASTERFORMATMIPMAP)));
+            if (!raster)
+            {
+                RWRETURN(FALSE);
+            }
+
+            /* Get the raster extension */
+            rasExt = RASTEREXTFROMRASTER(raster);
+        }
+
+        /* check automipmap support */
+        if (nativeRaster.flags & USE_AUTOMIPMAPGEN)
+        {
+            if (rasExt->automipmapgen == 0)
+            {
+                RwRasterDestroy(raster);
+
+                RWRETURN(FALSE);
+            }
+        }
+
+        /* Check format and size */
+        if (nativeRaster.format == (RwUInt32)RwRasterGetFormat(raster) &&
+            nativeRaster.d3dFormat == rasExt->d3dFormat &&
+            nativeRaster.width == raster->width &&
+            nativeRaster.height == raster->height)
+        {
+            RwUInt32    autoMipmap, face, numMipLevels, i;
+
+            /* Load the palette if palletized */
+            if (nativeRaster.format & rwRASTERFORMATPAL4)
+            {
+                RwUInt8* palette;
+                RwUInt32    size;
+
+                palette = RwRasterLockPalette(raster, rwRASTERLOCKWRITE);
+
+                size = sizeof(PALETTEENTRY) * 32;
+                if (RwStreamRead(stream, (void*)palette, size) != size)
+                {
+                    RwRasterUnlockPalette(raster);
+
+                    RwRasterDestroy(raster);
+
+                    RWRETURN(FALSE);
+                }
+
+                RwRasterUnlockPalette(raster);
+            }
+            else if (nativeRaster.format & rwRASTERFORMATPAL8)
+            {
+                RwUInt8* palette;
+                RwUInt32    size;
+
+                palette = RwRasterLockPalette(raster, rwRASTERLOCKWRITE);
+
+                size = sizeof(PALETTEENTRY) * 256;
+                if (RwStreamRead(stream, (void*)palette, size) != size)
+                {
+                    RwRasterUnlockPalette(raster);
+
+                    RwRasterDestroy(raster);
+
+                    RWRETURN(FALSE);
+                }
+
+                RwRasterUnlockPalette(raster);
+            }
+
+            /* Remove AUTOMIPMAP flag to avoid unlock invoking mipmap create */
+            autoMipmap = raster->cFormat & (rwRASTERFORMATAUTOMIPMAP >> 8);
+            raster->cFormat &= ~autoMipmap;
+
+            /* Prepare support for cube textures */
+            if (rasExt->cube)
+            {
+                face = 6;
+            }
+            else
+            {
+                face = 1;
+            }
+
+            if (rasExt->automipmapgen)
+            {
+                numMipLevels = 1; /* Read only first level */
+            }
+            else
+            {
+                numMipLevels = nativeRaster.numMipLevels;
+            }
+
+            rasExt->face = 0;
+
+            /* Load mips into raster */
+            do
+            {
+                for (i = 0; i < numMipLevels; i++)
+                {
+                    RwUInt8* pixels;
+                    RwUInt32    size;
+
+                    pixels = RwRasterLock(raster, (RwUInt8)i, rwRASTERLOCKWRITE);
+
+                    /* Size in bytes of mip to load */
+                    if (RwStreamRead(stream, (void*)&size, sizeof(RwUInt32)) != sizeof(RwUInt32))
+                    {
+                        RwRasterUnlock(raster);
+                        RwRasterDestroy(raster);
+
+                        RWRETURN(FALSE);
+                    }
+
+                    if (size == 0 && raster != 0)
+                    {
+                        auto rasterExt = RASTEREXTFROMRASTER(raster);
+
+                        // simply copy the data from previous level
+                        if (raster->cType == rwRASTERTYPETEXTURE && rasterExt->compressed && rasterExt->texture)
+                        {
+                            D3DLOCKED_RECT rect;
+                            rasterExt->texture->LockRect(i - 1, &rect, NULL, D3DLOCK_READONLY);
+
+                            RwUInt32 sz = 16;
+                            if (rasterExt->d3dFormat == D3DFMT_DXT1)
+                                sz = 8;
+
+                            memcpy(pixels, rect.pBits, sz);
+
+                            rasterExt->texture->UnlockRect(i - 1);
+                        }
+                    }
+
+                    /* Read the mip level */
+                    if (RwStreamRead(stream, (void*)pixels, size) != size)
+                    {
+                        RwRasterUnlock(raster);
+                        RwRasterDestroy(raster);
+
+                        RWRETURN(FALSE);
+                    }
+
+                    RwRasterUnlock(raster);
+                }
+
+                if (rasExt->cube)
+                {
+                    rasExt->face += 1;
+                }
+            } while (--face);
+
+            /* Restore auto mip flag */
+            raster->cFormat |= autoMipmap;
+        }
+        else
+        {
+            RwRasterDestroy(raster);
+
+            RWRETURN(FALSE);
+        }
+
+        texture = RwTextureCreate(raster);
+        if (!texture)
+        {
+            RwRasterDestroy(raster);
+
+            RWRETURN(FALSE);
+        }
+
+        RwTextureSetFilterMode(texture, nativeTexture.filterAndAddress & 0xFF);
+        RwTextureSetAddressingU(texture, (nativeTexture.filterAndAddress >> 8) & 0x0F);
+        RwTextureSetAddressingV(texture, (nativeTexture.filterAndAddress >> 12) & 0x0F);
+        RwTextureSetName(texture, nativeTexture.name);
+        RwTextureSetMaskName(texture, nativeTexture.mask);
+
+        *((RwTexture**)textureIn) = texture;
+
+        RWRETURN(TRUE);
+    }
+
+    RwBool RenderingEngine::_rwD3D9CubeRasterCreate(RwRaster* raster, RwUInt32 d3dformat, RwInt32 mipmapLevels)
+    {
+        _rwD3D9RasterExt* rasExt;
+        RwUInt32 levels;
+        HRESULT hr;
+
+        rasExt = RASTEREXTFROMRASTER(raster);
+
+        rasExt->cube = TRUE;
+
+        rasExt->d3dFormat = (D3DFORMAT)d3dformat;
+
+        if (_RwD3D9DeviceCaps.CubeTextureFilterCaps & (D3DPTFILTERCAPS_MIPFPOINT | D3DPTFILTERCAPS_MIPFLINEAR))
+        {
+            levels = mipmapLevels;
+        }
+        else
+        {
+            levels = 1;
+        }
+
+        if ((raster->cType & rwRASTERTYPEMASK) != rwRASTERTYPECAMERATEXTURE)
+        {
+            hr = 
+                IDirect3DDevice9_CreateCubeTexture(_RwD3DDevice,
+                    raster->width,
+                    levels,
+                    (rasExt->automipmapgen ? D3DUSAGE_AUTOGENMIPMAP : 0),
+                    rasExt->d3dFormat,
+                    D3DPOOL_MANAGED,
+                    (LPDIRECT3DCUBETEXTURE9*)&(rasExt->texture),
+                    NULL);
+        }
+        else
+        {
+            hr = 
+                IDirect3DDevice9_CreateCubeTexture(_RwD3DDevice,
+                    raster->width,
+                    levels,
+                    (rasExt->automipmapgen ? D3DUSAGE_AUTOGENMIPMAP : 0) |
+                    D3DUSAGE_RENDERTARGET,
+                    rasExt->d3dFormat,
+                    D3DPOOL_DEFAULT,
+                    (LPDIRECT3DCUBETEXTURE9*)&(rasExt->texture),
+                    NULL);
+
+            if (SUCCEEDED(hr))
+            {
+                rxD3D9VideoMemoryRasterListAdd(raster);
+            }
+        }
+
+        if (FAILED(hr))
+        {
+            RWRETURN(FALSE);
+        }
+
+        /* Remove the rwRASTERDONTALLOCATE flag so it will get destroyed */
+        raster->cFlags &= ~rwRASTERDONTALLOCATE;
+
+        RWRETURN(TRUE);
+    }
+
+    void  RenderingEngine::_rwD3D9CubeRasterSelectFace(RwRaster* raster, RwUInt32 face)
+    {
+        _rwD3D9RasterExt* rasExt;
+
+        rasExt = RASTEREXTFROMRASTER(raster);
+        rasExt->face = face;
+
+        RWRETURNVOID();
+    }
+
+    RwBool RenderingEngine::_rwD3D9RasterIsCubeRaster(const RwRaster* raster)
+    {
+        const _rwD3D9RasterExt* rasExt;
+
+        rasExt = RASTEREXTFROMCONSTRASTER(raster);
+
+        RWRETURN(rasExt->cube);
+    }
+
+    void  RenderingEngine::_rwD3D9CheckRasterSize(RwInt32* width, RwInt32* height, RwUInt32 rasterFlags)
+    {
+
+        /* Clamp the raster to the max texture size */
+        if (*width > (RwInt32)_RwD3D9DeviceCaps.MaxTextureWidth)
+        {
+            *width = _RwD3D9DeviceCaps.MaxTextureWidth;
+        }
+
+        if (*height > (RwInt32)_RwD3D9DeviceCaps.MaxTextureHeight)
+        {
+            *height = _RwD3D9DeviceCaps.MaxTextureHeight;
+        }
+
+        if ((rasterFlags & rwRASTERTYPEMASK) == rwRASTERTYPENORMAL ||
+            (rasterFlags & rwRASTERFORMATMIPMAP) == 0)
+        {
+            if ((_RwD3D9DeviceCaps.TextureCaps & D3DPTEXTURECAPS_POW2) != 0 &&
+                (_RwD3D9DeviceCaps.TextureCaps & D3DPTEXTURECAPS_NONPOW2CONDITIONAL) == 0)
+            {
+                /* Make it a power of two (round down) */
+                *width = 1 << _rwD3D9FindMSB(*width);
+                *height = 1 << _rwD3D9FindMSB(*height);
+            }
+        }
+        else
+        {
+            if (_RwD3D9DeviceCaps.TextureCaps & D3DPTEXTURECAPS_POW2)
+            {
+                /* Make it a power of two (round down) */
+                *width = 1 << _rwD3D9FindMSB(*width);
+                *height = 1 << _rwD3D9FindMSB(*height);
+            }
+        }
+
+        if (_RwD3D9DeviceCaps.TextureCaps & D3DPTEXTURECAPS_SQUAREONLY)
+        {
+            /* Make it square of smallest dimension */
+            if (*width < *height)
+            {
+                *height = *width;
+            }
+            else
+            {
+                *width = *height;
+            }
+        }
+
+        RWRETURNVOID();
+    }
+
+     RwBool  RenderingEngine::rwD3D9CreateTextureRaster(RwRaster* raster, _rwD3D9RasterExt* rasExt)
+    {
+        RwUInt32    rasFormat;
+        RwUInt32    pixelFormat;
+        HRESULT     hr;
+
+
+        rasFormat = RwRasterGetFormat(raster);
+        pixelFormat = rasFormat & rwRASTERFORMATPIXELFORMATMASK;
+
+        if ((rasFormat & rwRASTERFORMATPAL4) || (rasFormat & rwRASTERFORMATPAL8))
+        {
+            if (!((rwRASTERFORMAT888 == pixelFormat) ||
+                (rwRASTERFORMAT8888 == pixelFormat)))
+            {
+                RWRETURN(FALSE);
+            }
+
+            /* Create the palette */
+            if (PaletteFreeList == NULL)
+            {
+                PaletteFreeList = RwFreeListCreate(sizeof(_rwD3D9Palette), 64, 4,
+                    rwID_DRIVERMODULE | rwMEMHINTDUR_EVENT);
+            }
+
+            rasExt->palette = (_rwD3D9Palette*)RwFreeListAlloc(PaletteFreeList,
+                rwID_DRIVERMODULE | rwMEMHINTDUR_EVENT);
+
+            if (rasExt->palette)
+            {
+                rasExt->palette->globalindex = FindAvailablePaletteIndex();
+            }
+
+            rasExt->d3dFormat = D3DFMT_P8;
+            Log::Debug("RenderingEngine::rwD3D9CreateTextureRaster - texture has palette");
+        }
+        else
+        {
+            rasExt->d3dFormat = _rwRasterConvTable[FMT2TBL(rasFormat)].format;
+        }
+
+        /* Does this raster format have an alpha component */
+        rasExt->alpha = _rwRasterConvTable[FMT2TBL(rasFormat)].alpha;
+
+        /* Check the size of the texture */
+        _rwD3D9CheckRasterSize(&(raster->width), &(raster->height), raster->cType | rasFormat);
+
+        /* Create the texture, if mipped 0 gets all the mip levels */
+        if (rasExt->cube)
+        {
+            hr = IDirect3DDevice9_CreateCubeTexture(_RwD3DDevice, raster->width,
+                (rasFormat & rwRASTERFORMATMIPMAP) ? 0 : 1,
+                (rasExt->automipmapgen ? D3DUSAGE_AUTOGENMIPMAP : 0),
+                rasExt->d3dFormat,
+                D3DPOOL_MANAGED,
+                (LPDIRECT3DCUBETEXTURE9*)&(rasExt->texture),
+                NULL);
+        }
+        else
+        {
+            if (IS_D3DFORMAT_ZBUFFER(rasExt->d3dFormat))
+            {
+                hr = IDirect3DDevice9_CreateTexture(_RwD3DDevice, raster->width,
+                    raster->height,
+                    1,
+                    D3DUSAGE_DEPTHSTENCIL,
+                    rasExt->d3dFormat,
+                    D3DPOOL_DEFAULT,
+                    &(rasExt->texture),
+                    NULL);
+
+                if (SUCCEEDED(hr))
+                {
+                    rxD3D9VideoMemoryRasterListAdd(raster);
+                }
+            }
+            else
+            {
+                hr = IDirect3DDevice9_CreateTexture(_RwD3DDevice, raster->width,
+                    raster->height,
+                    (rasFormat & rwRASTERFORMATMIPMAP) ? 0 : 1,
+                    (rasExt->automipmapgen ? D3DUSAGE_AUTOGENMIPMAP : 0),
+                    rasExt->d3dFormat,
+                    D3DPOOL_MANAGED,
+                    &(rasExt->texture),
+                    NULL);
+            }
+        }
+
+        if (FAILED(hr))
+        {
+            if (D3DFMT_P8 == rasExt->d3dFormat)
+            {
+                if (rasExt->palette)
+                {
+                    AddAvailablePaletteIndex(rasExt->palette->globalindex);
+
+                    RwFreeListFree(PaletteFreeList, rasExt->palette);
+                    rasExt->palette = NULL;
+                }
+            }
+
+            RWRETURN(FALSE);
+        }
+
+        if (rasExt->palette != NULL)
+        {
+            rxD3D9VideoMemoryRasterListAdd(raster);
+        }
+
+        RWRETURN(TRUE);
+    }
+
+    RwBool RenderingEngine::_rwD3D9RasterCreate(void* unused1 __RWUNUSED__, void* rasterIn, RwInt32 flags)
+    {
+        RwRaster* raster = (RwRaster*)rasterIn;
+        _rwD3D9RasterExt* rasExt = RASTEREXTFROMRASTER(raster);
+
+        /* Initialise structure to something sensible */
+        raster->cType = (RwUInt8)(flags & rwRASTERTYPEMASK);
+        raster->cFlags = (RwUInt8)(flags & ~rwRASTERTYPEMASK);
+        raster->cpPixels = NULL;
+        raster->palette = NULL;
+
+        rasExt->texture = NULL;
+        rasExt->palette = NULL;
+        rasExt->alpha = 0;
+        rasExt->cube = 0;
+        rasExt->automipmapgen = 0;
+        rasExt->compressed = 0;
+        rasExt->face = 0;
+        rasExt->lockedMipLevel = (RwUInt8)-1;
+        rasExt->lockedSurface = NULL;
+        rasExt->d3dFormat = D3DFMT_UNKNOWN;
+
+        /* Set up the raster format and depth */
+        if (!rwD3D9SetRasterFormat(raster, flags))
+        {
+            RWRETURN(FALSE);
+        }
+
+        /*
+         * If it is not a camera buffer, then we need to allocate real memory for it
+         */
+        if ((raster->width) && (raster->height))
+        {
+            switch (raster->cType & rwRASTERTYPEMASK)
+            {
+            case rwRASTERTYPENORMAL:
+            {
+                if (!(raster->cFlags & rwRASTERDONTALLOCATE))
+                {
+                    if (!rwD3D9CreateTextureRaster(raster, rasExt))
+                    {
+                        RWRETURN(FALSE);
+                    }
+                }
+            }
+            break;
+
+            case rwRASTERTYPETEXTURE:
+            {
+                if (!(raster->cFlags & rwRASTERDONTALLOCATE))
+                {
+
+                    if (!rwD3D9CreateTextureRaster(raster, rasExt))
+                    {
+                        RWRETURN(FALSE);
+                    }
+                }
+            }
+            break;
+
+            case rwRASTERTYPECAMERATEXTURE:
+            {
+                if (!(raster->cFlags & rwRASTERDONTALLOCATE))
+                {
+
+
+                    if (!rwD3D9CreateCameraTextureRaster(raster, rasExt))
+                    {
+                        RWRETURN(FALSE);
+                    }
+
+                    rxD3D9VideoMemoryRasterListAdd(raster);
+                }
+            }
+            break;
+
+            case rwRASTERTYPEZBUFFER:
+            {
+                if (!(raster->cFlags & rwRASTERDONTALLOCATE))
+                {
+
+                    if (!rwD3D9CreateZBufferRaster(raster, rasExt))
+                    {
+                        RWRETURN(FALSE);
+                    }
+
+                    rxD3D9VideoMemoryRasterListAdd(raster);
+                }
+            }
+            break;
+
+            case rwRASTERTYPECAMERA:
+            {
+                RECT    rect;
+
+                GetClientRect(*WindowHandle, &rect);
+
+                if ((raster->cFlags & rwRASTERDONTALLOCATE) != 0 ||
+                    (rect.right >= raster->width && rect.bottom >= raster->height))
+                {
+
+                    /* Find the depth of the backbuffer */
+                    if (Present.BackBufferFormat == D3DFMT_A8R8G8B8 ||
+                        Present.BackBufferFormat == D3DFMT_X8R8G8B8 ||
+                        Present.BackBufferFormat == D3DFMT_A2R10G10B10)
+                    {
+                        raster->depth = 32;
+                    }
+                    else if (Present.BackBufferFormat == D3DFMT_R5G6B5 ||
+                        Present.BackBufferFormat == D3DFMT_X1R5G5B5 ||
+                        Present.BackBufferFormat == D3DFMT_A1R5G5B5)
+                    {
+                        raster->depth = 16;
+                    }
+                    else
+                    {
+                        raster->depth = 0;
+                    }
+
+                    /* Very little to do here - the camera is global */
+                    raster->stride = 0;
+                    raster->cpPixels = NULL;
+                    raster->cFlags = (RwUInt8)rwRASTERDONTALLOCATE;
+
+                    raster->originalWidth = raster->width;
+                    raster->originalHeight = raster->height;
+
+                    rasExt->d3dFormat = Present.BackBufferFormat;
+
+                    rxD3D9VideoMemoryRasterListAdd(raster);
+
+                    RWRETURN(TRUE);
+                }
+                else
+                {
+                    RWRETURN(FALSE);
+                }
+            }
+            break;
+
+            }
+        }
+        else
+        {
+            raster->cFlags = rwRASTERDONTALLOCATE;   /* Not allocated */
+
+            raster->stride = 0;
+            if (raster->depth == 0)
+            {
+                raster->depth = 16;
+            }
+
+            /* Camera Sub rasters need to be added */
+            if (raster->cType == rwRASTERTYPECAMERA)
+            {
+                rxD3D9VideoMemoryRasterListAdd(raster);
+            }
+
+            RWRETURN(TRUE);
+        }
+
+        RWRETURN(TRUE);
+    }
+
+    RwBool RenderingEngine::rwD3D9CreateZBufferRaster(RwRaster* raster, _rwD3D9RasterExt* rasExt)
+    {
+        RECT        rect;
+
+        /* Find the Z-Buffer depth */
+        if (16 == _RwD3D9ZBufferDepth)
+        {
+            if (_rwD3D9CheckValidZBufferFormat(D3DFMT_D15S1))
+            {
+                rasExt->d3dFormat = D3DFMT_D15S1;
+            }
+            else
+            {
+                rasExt->d3dFormat = D3DFMT_D16;
+            }
+        }
+        else if (32 == _RwD3D9ZBufferDepth)
+        {
+            if (_rwD3D9CheckValidZBufferFormat(D3DFMT_D24S8))
+            {
+                rasExt->d3dFormat = D3DFMT_D24S8;
+            }
+            else if (_rwD3D9CheckValidZBufferFormat(D3DFMT_D24X4S4))
+            {
+                rasExt->d3dFormat = D3DFMT_D24X4S4;
+            }
+            else if (_rwD3D9CheckValidZBufferFormat(D3DFMT_D32))
+            {
+                rasExt->d3dFormat = D3DFMT_D32;
+            }
+            else
+            {
+                rasExt->d3dFormat = D3DFMT_D24X8;
+            }
+        }
+
+        rasExt->alpha = 0;
+
+        GetClientRect(*WindowHandle, &rect);
+
+        if (rect.right != raster->width || rect.bottom != raster->height)
+        {
+            HRESULT hr;
+
+            /* Remove managed resources from memory when creating a video memory resource */
+            IDirect3DDevice9_EvictManagedResources(_RwD3DDevice);
+
+            hr = IDirect3DDevice9_CreateDepthStencilSurface(_RwD3DDevice,
+                raster->width,
+                raster->height,
+                rasExt->d3dFormat,
+                Present.MultiSampleType,
+                Present.MultiSampleQuality,
+                FALSE,
+                (LPSURFACE*)&(rasExt->texture),
+                NULL);
+
+            if (hr == D3DERR_OUTOFVIDEOMEMORY)
+            {
+                RWRETURN(FALSE);
+            }
+            else if (FAILED(hr))
+            {
+                RWRETURN(FALSE);
+            }
+        }
+        else
+        {
+            rasExt->texture = (LPDIRECT3DTEXTURE9)RwD3D9DepthStencilSurface;
+        }
+
+        RWRETURN(TRUE);
+    }
+
+    RwBool RenderingEngine::rwD3D9CreateCameraTextureRaster(RwRaster* raster, _rwD3D9RasterExt* rasExt)
+    {
+        RwUInt32    rasFormat;
+        RwUInt32    pixelFormat;
+        HRESULT     hr;
+
+        rasFormat = RwRasterGetFormat(raster);
+        pixelFormat = rasFormat & rwRASTERFORMATPIXELFORMATMASK;
+
+        /* rwRASTERTYPECAMERATEXTURE can not be palletized */
+        if ((rasFormat & rwRASTERFORMATPAL4) || (rasFormat & rwRASTERFORMATPAL8))
+        {
+            RWRETURN(FALSE);
+        }
+
+        rasExt->d3dFormat = _rwRasterConvTable[FMT2TBL(rasFormat)].format;
+
+        /* Does this raster format have an alpha component */
+        rasExt->alpha = _rwRasterConvTable[FMT2TBL(rasFormat)].alpha;
+
+        /* Check the size of the texture */
+        _rwD3D9CheckRasterSize(&(raster->width), &(raster->height), raster->cType | rasFormat);
+
+        /* Remove managed resources from memory when creating a video memory resource */
+        IDirect3DDevice9_EvictManagedResources(_RwD3DDevice);
+
+        /* Create the texture, if mipped 0 gets all the mip levels */
+        if (rasExt->cube)
+        {
+            hr = IDirect3DDevice9_CreateCubeTexture(_RwD3DDevice, raster->width,
+                (rasFormat & rwRASTERFORMATMIPMAP) ? 0 : 1,
+                (rasExt->automipmapgen ? D3DUSAGE_AUTOGENMIPMAP : 0) | D3DUSAGE_RENDERTARGET,
+                rasExt->d3dFormat,
+                D3DPOOL_DEFAULT,
+                (LPDIRECT3DCUBETEXTURE9*)&(rasExt->texture),
+                NULL);
+        }
+        else
+        {
+            hr = IDirect3DDevice9_CreateTexture(_RwD3DDevice, raster->width,
+                raster->height,
+                (rasFormat & rwRASTERFORMATMIPMAP) ? 0 : 1,
+                (rasExt->automipmapgen ? D3DUSAGE_AUTOGENMIPMAP : 0) | D3DUSAGE_RENDERTARGET,
+                rasExt->d3dFormat,
+                D3DPOOL_DEFAULT,
+                &(rasExt->texture),
+                NULL);
+        }
+
+        if (hr == D3DERR_OUTOFVIDEOMEMORY)
+        {
+            RWRETURN(FALSE);
+        }
+        else if (FAILED(hr))
+        {
+            if (rasExt->cube)
+            {
+                hr = IDirect3DDevice9_CreateCubeTexture(_RwD3DDevice, raster->width,
+                    (rasFormat & rwRASTERFORMATMIPMAP) ? 0 : 1,
+                    (rasExt->automipmapgen ? D3DUSAGE_AUTOGENMIPMAP : 0),
+                    Present.BackBufferFormat,
+                    D3DPOOL_DEFAULT,
+                    (LPDIRECT3DCUBETEXTURE9*)&(rasExt->texture),
+                    NULL);
+            }
+            else
+            {
+                hr = IDirect3DDevice9_CreateTexture(_RwD3DDevice, raster->width,
+                    raster->height,
+                    (rasFormat & rwRASTERFORMATMIPMAP) ? 0 : 1,
+                    (rasExt->automipmapgen ? D3DUSAGE_AUTOGENMIPMAP : 0),
+                    Present.BackBufferFormat,
+                    D3DPOOL_DEFAULT,
+                    &(rasExt->texture),
+                    NULL);
+            }
+
+            if (FAILED(hr))
+            {
+                RWRETURN(FALSE);
+            }
+            else
+            {
+                raster->cFormat = (RwUInt8)(rwD3D9FindRwFormat(Present.BackBufferFormat) >> 8);
+                raster->depth = _RwD3D9AdapterInformation.displayDepth;
+            }
+        }
+
+        RWRETURN(TRUE);
+    }
+
+    RwBool  RenderingEngine::_rwD3D9RasterDestroy(void* unused1 __RWUNUSED__, void* raster,  RwInt32 unused3 __RWUNUSED__)
+    {
+        RwRaster* ras = (RwRaster*)raster;
+        _rwD3D9RasterExt* rasExt;
+        RwUInt32            n;
+
+        rasExt = RASTEREXTFROMRASTER(ras);
+
+        /* Check if it's the current rendering raster */
+        for (n = 0; n < RWD3D9_MAX_TEXTURE_STAGES; n++)
+        {
+            if (_rwD3D9RWGetRasterStage(n) == ras)
+            {
+                _rwD3D9RWSetRasterStage(NULL, n);
+            }
+        }
+
+        /*
+         * Only free up the surface if this raster owns it (ie, it's not a sub
+         * raster and it's not created with dontallocate flag)
+         */
+        if ((ras->parent == ras))
+        {
+            switch (ras->cType)
+            {
+            case (rwRASTERTYPENORMAL):
+            {
+                if (!(ras->cFlags & rwRASTERDONTALLOCATE))
+                {
+                    if (rasExt->palette != NULL)
+                    {
+                        rxD3D9VideoMemoryRasterListRemove(ras);
+
+                        AddAvailablePaletteIndex(rasExt->palette->globalindex);
+
+                        RwFreeListFree(PaletteFreeList, rasExt->palette);
+                        rasExt->palette = NULL;
+                    }
+                    else if (IS_D3DFORMAT_ZBUFFER(rasExt->d3dFormat))
+                    {
+                        rxD3D9VideoMemoryRasterListRemove(ras);
+                    }
+
+                    /* Destroy the texture */
+                    if (rasExt->texture)
+                    {
+                        IDirect3DTexture9_Release(rasExt->texture);
+                    }
+                }
+            }
+            break;
+
+            case (rwRASTERTYPETEXTURE):
+            {
+                if (!(ras->cFlags & rwRASTERDONTALLOCATE))
+                {
+                    if (rasExt->palette != NULL)
+                    {
+                        rxD3D9VideoMemoryRasterListRemove(ras);
+
+                        AddAvailablePaletteIndex(rasExt->palette->globalindex);
+
+                        RwFreeListFree(PaletteFreeList, rasExt->palette);
+                        rasExt->palette = NULL;
+                    }
+                    else if (IS_D3DFORMAT_ZBUFFER(rasExt->d3dFormat))
+                    {
+                        rxD3D9VideoMemoryRasterListRemove(ras);
+                    }
+
+                    /* Destroy the texture */
+                    if (rasExt->texture)
+                    {
+                        IDirect3DTexture9_Release(rasExt->texture);
+                    }
+                }
+            }
+            break;
+
+            case (rwRASTERTYPECAMERATEXTURE):
+            {
+                if (!(ras->cFlags & rwRASTERDONTALLOCATE))
+                {
+                    rxD3D9VideoMemoryRasterListRemove(ras);
+
+                    /* Destroy the texture */
+                    if (rasExt->texture)
+                    {
+                        IDirect3DTexture9_Release(rasExt->texture);
+                    }
+                }
+            }
+            break;
+
+            case (rwRASTERTYPEZBUFFER):
+            {
+                if (!(ras->cFlags & rwRASTERDONTALLOCATE))
+                {
+                    rxD3D9VideoMemoryRasterListRemove(ras);
+
+                    /* Destroy the surface */
+                    if ((LPSURFACE)rasExt->texture != RwD3D9DepthStencilSurface)
+                    {
+                        if (rasExt->texture)
+                        {
+                            IDirect3DSurface9_Release((LPSURFACE)rasExt->texture);
+                        }
+                    }
+                }
+            }
+            break;
+
+            case (rwRASTERTYPECAMERA):
+            {
+                rxD3D9VideoMemoryRasterListRemove(ras);
+            }
+            break;
+
+            default:
+                RWRETURN(FALSE);
+                break;
+            }
+        }
+        else
+        {
+            /* Camera Sub rasters need to be removed */
+            if (ras->cType == rwRASTERTYPECAMERA)
+            {
+                rxD3D9VideoMemoryRasterListRemove(ras);
+            }
+        }
+
+        RWRETURN(TRUE);
+    }
+
+     void* RenderingEngine::rwD3D9RasterCtor(void* object,
+            RwInt32 offsetInObject __RWUNUSED__,
+            RwInt32 sizeInObject __RWUNUSED__)
+    {
+        _rwD3D9RasterExt* rasExt = RASTEREXTFROMRASTER(object);
+
+
+        /* These are used to detect when we are using a camera for the first time */
+        rasExt->swapChain = NULL;
+
+        RWRETURN(object);
+    }
+
+     void* RenderingEngine::rwD3D9RasterDtor(void* object,
+            RwInt32 offsetInObject __RWUNUSED__,
+            RwInt32 sizeInObject __RWUNUSED__)
+    {
+        _rwD3D9RasterExt* rasExt = RASTEREXTFROMRASTER(object);
+
+        if (rasExt->swapChain)
+        {
+            IDirect3DSwapChain9_Release(rasExt->swapChain);
+            rasExt->swapChain = NULL;
+        }
+
+        /* Phew! */
+        RWRETURN(object);
+    }
+
+    RwBool RenderingEngine::_rwD3D9RasterPluginAttach()
+    {
+        _RwD3D9RasterExtOffset = RwRasterRegisterPlugin( sizeof(_rwD3D9RasterExt),
+                rwID_DEVICEMODULE, rwD3D9RasterCtor, rwD3D9RasterDtor, NULL);
+
+        if (0 > _RwD3D9RasterExtOffset)
+        {
+            RWRETURN(FALSE);
+        }
+
+        /* Fill format info table */
+        memset(_rwD3D9PixelFormatInfo, 0, MAX_PIXEL_FORMATS * sizeof(_rwD3D9FormatInfo));
+
+        SETFORMATINFO(D3DFMT_R8G8B8, FALSE, 24, 0);
+        SETFORMATINFO(D3DFMT_A8R8G8B8, TRUE, 32, rwRASTERFORMAT8888);
+        SETFORMATINFO(D3DFMT_X8R8G8B8, FALSE, 32, rwRASTERFORMAT888);
+        SETFORMATINFO(D3DFMT_R5G6B5, FALSE, 16, rwRASTERFORMAT565);
+        SETFORMATINFO(D3DFMT_X1R5G5B5, FALSE, 16, rwRASTERFORMAT555);
+        SETFORMATINFO(D3DFMT_A1R5G5B5, TRUE, 16, rwRASTERFORMAT1555);
+        SETFORMATINFO(D3DFMT_A4R4G4B4, TRUE, 16, rwRASTERFORMAT4444);
+        SETFORMATINFO(D3DFMT_R3G3B2, FALSE, 8, 0);
+        SETFORMATINFO(D3DFMT_A8, TRUE, 8, 0);
+        SETFORMATINFO(D3DFMT_A8R3G3B2, TRUE, 16, 0);
+        SETFORMATINFO(D3DFMT_X4R4G4B4, FALSE, 16, 0);
+        SETFORMATINFO(D3DFMT_A2B10G10R10, TRUE, 32, 0);
+        SETFORMATINFO(D3DFMT_A8B8G8R8, TRUE, 32, 0);
+        SETFORMATINFO(D3DFMT_X8B8G8R8, FALSE, 32, 0);
+        SETFORMATINFO(D3DFMT_G16R16, FALSE, 32, 0);
+        SETFORMATINFO(D3DFMT_A2R10G10B10, TRUE, 32, 0);
+        SETFORMATINFO(D3DFMT_A16B16G16R16, TRUE, 64, 0);
+        SETFORMATINFO(D3DFMT_A8P8, TRUE, 16, 0);
+        SETFORMATINFO(D3DFMT_P8, FALSE, 8, rwRASTERFORMATPAL8);
+        SETFORMATINFO(D3DFMT_L8, FALSE, 8, rwRASTERFORMATLUM8);
+        SETFORMATINFO(D3DFMT_A8L8, TRUE, 16, 0);
+        SETFORMATINFO(D3DFMT_A4L4, TRUE, 8, 0);
+        SETFORMATINFO(D3DFMT_V8U8, FALSE, 16, 0);
+        SETFORMATINFO(D3DFMT_L6V5U5, FALSE, 16, 0);
+        SETFORMATINFO(D3DFMT_X8L8V8U8, FALSE, 32, 0);
+        SETFORMATINFO(D3DFMT_Q8W8V8U8, FALSE, 32, 0);
+        SETFORMATINFO(D3DFMT_V16U16, FALSE, 32, 0);
+        SETFORMATINFO(D3DFMT_A2W10V10U10, TRUE, 32, 0);
+        SETFORMATINFO(D3DFMT_D16_LOCKABLE, FALSE, 16, rwRASTERFORMAT16);
+        SETFORMATINFO(D3DFMT_D32, FALSE, 32, rwRASTERFORMAT32);
+        SETFORMATINFO(D3DFMT_D15S1, FALSE, 16, rwRASTERFORMAT16);
+        SETFORMATINFO(D3DFMT_D24S8, FALSE, 32, rwRASTERFORMAT32);
+        SETFORMATINFO(D3DFMT_D24X8, FALSE, 32, rwRASTERFORMAT32);
+        SETFORMATINFO(D3DFMT_D24X4S4, FALSE, 32, rwRASTERFORMAT32);
+        SETFORMATINFO(D3DFMT_D16, FALSE, 16, rwRASTERFORMAT16);
+        SETFORMATINFO(D3DFMT_D32F_LOCKABLE, FALSE, 32, rwRASTERFORMAT32);
+        SETFORMATINFO(D3DFMT_D24FS8, FALSE, 32, rwRASTERFORMAT32);
+        SETFORMATINFO(D3DFMT_L16, FALSE, 16, 0);
+        SETFORMATINFO(D3DFMT_Q16W16V16U16, FALSE, 64, 0);
+        SETFORMATINFO(D3DFMT_R16F, FALSE, 16, 0);
+        SETFORMATINFO(D3DFMT_G16R16F, FALSE, 32, 0);
+        SETFORMATINFO(D3DFMT_A16B16G16R16F, TRUE, 64, 0);
+        SETFORMATINFO(D3DFMT_R32F, FALSE, 32, 0);
+        SETFORMATINFO(D3DFMT_G32R32F, FALSE, 64, 0);
+        SETFORMATINFO(D3DFMT_A32B32G32R32F, TRUE, 128, 0);
+        SETFORMATINFO(D3DFMT_CxV8U8, FALSE, 16, 0);
+
+        RWRETURN(TRUE);
+    }
+
+    void RenderingEngine::_rwD3D9RasterOpen(void)
+    {
+        rxD3D9VideoMemoryRasterListCreate();
+    }
+
+    void RenderingEngine::_rwD3D9RasterClose()
+    {
+        rxD3D9VideoMemoryRasterListDestroy();
+
+        NumPaletteIndexFree = 0;
+        MaxPaletteIndexFree = 0;
+        MaxPaletteIndex = 0;
+
+        if (PaletteIndexFree != NULL)
+        {
+            RwFree(PaletteIndexFree);
+            PaletteIndexFree = NULL;
+        }
+
+        if (PaletteFreeList != NULL)
+        {
+            RwFreeListDestroy(PaletteFreeList);
+            PaletteFreeList = NULL;
+        }
+    }
+
+    void RenderingEngine::rxD3D9VideoMemoryRasterListDestroy()
+    {
+        while (VideoMemoryRasters)
+        {
+            RxD3D9VideoMemoryRaster* next = VideoMemoryRasters->next;
+
+            RwFreeListFree(VideoMemoryRastersFreeList, VideoMemoryRasters);
+
+            VideoMemoryRasters = next;
+        }
+
+        if (VideoMemoryRastersFreeList != NULL)
+        {
+            RwFreeListDestroy(VideoMemoryRastersFreeList);
+            VideoMemoryRastersFreeList = NULL;
+        }
+
+        RWRETURNVOID();
+    }
+
+    void RenderingEngine::_rxD3D9VideoMemoryRasterListRelease()
+    {
+        RxD3D9VideoMemoryRaster* currentVideoRaster;
+
+        currentVideoRaster = VideoMemoryRasters;
+        while (currentVideoRaster)
+        {
+            RwRaster* raster = currentVideoRaster->raster;
+            _rwD3D9RasterExt* rasExt = RASTEREXTFROMRASTER(raster);
+            RxD3D9VideoMemoryRaster* next = currentVideoRaster->next;
+
+            if (raster->parent == raster)
+            {
+                switch (raster->cType)
+                {
+                case rwRASTERTYPENORMAL:
+                case rwRASTERTYPETEXTURE:
+                {
+                    if (rasExt->texture)
+                    {
+                        if (IS_D3DFORMAT_ZBUFFER(rasExt->d3dFormat))
+                        {
+                            IDirect3DTexture9_Release(rasExt->texture);
+                            rasExt->texture = NULL;
+                        }
+                    }
+                }
+                break;
+
+                case rwRASTERTYPECAMERATEXTURE:
+                {
+                    if (rasExt->texture)
+                    {
+                        IDirect3DTexture9_Release(rasExt->texture);
+                        rasExt->texture = NULL;
+                    }
+                }
+                break;
+
+                case rwRASTERTYPEZBUFFER:
+                {
+                    if (rasExt->texture)
+                    {
+                        if ((LPSURFACE)rasExt->texture != RwD3D9DepthStencilSurface)
+                        {
+                            IDirect3DSurface9_Release((LPSURFACE)rasExt->texture);
+                            rasExt->texture = NULL;
+                        }
+                    }
+                }
+                break;
+
+                case rwRASTERTYPECAMERA:
+                {
+                    if (rasExt->swapChain)
+                    {
+                        IDirect3DSwapChain9_Release(rasExt->swapChain);
+                    }
+                }
+                break;
+
+                default:
+                    break;
+                }
+            }
+
+            currentVideoRaster = next;
+        }
+
+        RWRETURNVOID();
+    }
+
+    RwBool RenderingEngine::_rxD3D9VideoMemoryRasterListRestore()
+    {
+        RwBool                  result;
+        HRESULT                 hr;
+        RxD3D9VideoMemoryRaster* currentVideoRaster;
+
+        result = TRUE;
+        hr = D3D_OK;
+        currentVideoRaster = VideoMemoryRasters;
+        while (currentVideoRaster)
+        {
+            RwRaster* raster = currentVideoRaster->raster;
+            _rwD3D9RasterExt* rasExt = RASTEREXTFROMRASTER(raster);
+            RxD3D9VideoMemoryRaster* next = currentVideoRaster->next;
+
+            if (raster->parent == raster)
+            {
+                switch (raster->cType)
+                {
+                case rwRASTERTYPENORMAL:
+                case rwRASTERTYPETEXTURE:
+                {
+                    RwUInt32    rasFormat = RwRasterGetFormat(raster);
+
+                    if ((rasFormat & rwRASTERFORMATPAL4) || (rasFormat & rwRASTERFORMATPAL8))
+                    {
+                        if (rasExt->palette)
+                        {
+                            hr = IDirect3DDevice9_SetPaletteEntries(_RwD3DDevice,
+                                rasExt->palette->globalindex,
+                                (PALETTEENTRY*)(rasExt->palette->entries));
+                        }
+                    }
+                    else if (IS_D3DFORMAT_ZBUFFER(rasExt->d3dFormat))
+                    {
+                        hr = IDirect3DDevice9_CreateTexture(_RwD3DDevice,
+                            raster->width,
+                            raster->height,
+                            1,
+                            D3DUSAGE_DEPTHSTENCIL,
+                            rasExt->d3dFormat,
+                            D3DPOOL_DEFAULT,
+                            &(rasExt->texture),
+                            NULL);
+                    }
+                }
+                break;
+
+                case rwRASTERTYPECAMERATEXTURE:
+                {
+                    if (rasExt->texture == NULL)
+                    {
+                        RwUInt32    rasFormat = RwRasterGetFormat(raster);
+                        RwUInt32    levels = ((rasFormat & rwRASTERFORMATMIPMAP) ? 0 : 1);
+
+                        if (rasExt->cube)
+                        {
+                            hr = IDirect3DDevice9_CreateCubeTexture(_RwD3DDevice,
+                                raster->width,
+                                levels,
+                                (rasExt->automipmapgen ? D3DUSAGE_AUTOGENMIPMAP : 0) | D3DUSAGE_RENDERTARGET,
+                                rasExt->d3dFormat,
+                                D3DPOOL_DEFAULT,
+                                (LPDIRECT3DCUBETEXTURE9*)&(rasExt->texture),
+                                NULL);
+                        }
+                        else
+                        {
+                            hr = IDirect3DDevice9_CreateTexture(_RwD3DDevice,
+                                raster->width,
+                                raster->height,
+                                levels,
+                                (rasExt->automipmapgen ? D3DUSAGE_AUTOGENMIPMAP : 0) | D3DUSAGE_RENDERTARGET,
+                                rasExt->d3dFormat,
+                                D3DPOOL_DEFAULT,
+                                &(rasExt->texture),
+                                NULL);
+                        }
+
+                        if (FAILED(hr))
+                        {
+                            if (hr != D3DERR_OUTOFVIDEOMEMORY)
+                            {
+                                if (rasExt->cube)
+                                {
+                                    hr = IDirect3DDevice9_CreateCubeTexture(_RwD3DDevice, raster->width,
+                                        (rasFormat & rwRASTERFORMATMIPMAP) ? 0 : 1,
+                                        (rasExt->automipmapgen ? D3DUSAGE_AUTOGENMIPMAP : 0),
+                                        Present.BackBufferFormat,
+                                        D3DPOOL_DEFAULT,
+                                        (LPDIRECT3DCUBETEXTURE9*)&(rasExt->texture),
+                                        NULL);
+                                }
+                                else
+                                {
+                                    hr = IDirect3DDevice9_CreateTexture(_RwD3DDevice, raster->width,
+                                        raster->height,
+                                        (rasFormat & rwRASTERFORMATMIPMAP) ? 0 : 1,
+                                        (rasExt->automipmapgen ? D3DUSAGE_AUTOGENMIPMAP : 0),
+                                        Present.BackBufferFormat,
+                                        D3DPOOL_DEFAULT,
+                                        &(rasExt->texture),
+                                        NULL);
+                                }
+
+                                raster->cFormat = (RwUInt8)(_rwD3D9PixelFormatInfo[Present.BackBufferFormat].rwFormat >> 8);
+                                raster->depth = _rwD3D9PixelFormatInfo[Present.BackBufferFormat].depth;
+
+                                rasExt->d3dFormat = Present.BackBufferFormat;
+                                rasExt->alpha = _rwD3D9PixelFormatInfo[Present.BackBufferFormat].alpha;
+                            }
+                        }
+                    }
+                }
+                break;
+
+                case rwRASTERTYPEZBUFFER:
+                {
+                    if (rasExt->texture == NULL)
+                    {
+                        /* Find the Z-Buffer depth */
+                        if (16 == _RwD3D9ZBufferDepth)
+                        {
+                            if (_rwD3D9CheckValidZBufferFormat(D3DFMT_D15S1))
+                            {
+                                rasExt->d3dFormat = D3DFMT_D15S1;
+                            }
+                            else
+                            {
+                                rasExt->d3dFormat = D3DFMT_D16;
+                            }
+                        }
+                        else if (32 == _RwD3D9ZBufferDepth)
+                        {
+                            if (_rwD3D9CheckValidZBufferFormat(D3DFMT_D24S8))
+                            {
+                                rasExt->d3dFormat = D3DFMT_D24S8;
+                            }
+                            else if (_rwD3D9CheckValidZBufferFormat(D3DFMT_D24X4S4))
+                            {
+                                rasExt->d3dFormat = D3DFMT_D24X4S4;
+                            }
+                            else if (_rwD3D9CheckValidZBufferFormat(D3DFMT_D32))
+                            {
+                                rasExt->d3dFormat = D3DFMT_D32;
+                            }
+                            else
+                            {
+                                rasExt->d3dFormat = D3DFMT_D24X8;
+                            }
+                        }
+
+                        hr = IDirect3DDevice9_CreateDepthStencilSurface(_RwD3DDevice,
+                            max(1, raster->width),
+                            max(1, raster->height),
+                            rasExt->d3dFormat,
+                            Present.MultiSampleType,
+                            Present.MultiSampleQuality,
+                            FALSE,
+                            (LPSURFACE*)&(rasExt->texture),
+                            NULL);
+                    }
+                    else
+                    {
+                        RECT rect;
+
+                        GetClientRect(*WindowHandle, &rect);
+
+                        raster->width = rect.right;
+                        raster->height = rect.bottom;
+
+                        rasExt->texture = (LPDIRECT3DTEXTURE9)RwD3D9DepthStencilSurface;
+                        rasExt->d3dFormat = Present.AutoDepthStencilFormat;
+                    }
+                }
+                break;
+
+                case rwRASTERTYPECAMERA:
+                {
+                    if (rasExt->swapChain)
+                    {
+                        D3DPRESENT_PARAMETERS   present;
+                        RECT rect;
+
+                        present = Present;
+
+                        present.hDeviceWindow = (HWND)rasExt->window;
+
+                        GetClientRect(present.hDeviceWindow, &rect);
+
+                        if (rect.right)
+                        {
+                            present.BackBufferWidth = 0;
+                        }
+                        else
+                        {
+                            present.BackBufferWidth = 1;
+                        }
+
+                        if (rect.bottom)
+                        {
+                            present.BackBufferHeight = 0;
+                        }
+                        else
+                        {
+                            present.BackBufferHeight = 1;
+                        }
+
+                        present.EnableAutoDepthStencil = FALSE;
+
+                        rasExt->swapChain = NULL;
+
+                        if (D3D_OK == IDirect3DDevice9_CreateAdditionalSwapChain(_RwD3DDevice, &present, &(rasExt->swapChain)))
+                        {
+                            IDirect3DSurface9** ppBackBuffer =
+                                (IDirect3DSurface9**)&(rasExt->texture);
+
+                            hr = IDirect3DSwapChain9_GetBackBuffer(rasExt->swapChain, 0, D3DBACKBUFFER_TYPE_MONO, ppBackBuffer);
+
+                            IDirect3DSurface9_Release((LPSURFACE)rasExt->texture);
+
+                            rasExt->d3dFormat = present.BackBufferFormat;
+                        }
+                    }
+                    else
+                    {
+                        if (_RwD3D9AdapterInformation.mode.Width &&
+                            (RwUInt32)raster->width != Present.BackBufferWidth)
+                        {
+                            raster->width = (raster->width * Present.BackBufferWidth) / _RwD3D9AdapterInformation.mode.Width;
+                        }
+
+                        if (_RwD3D9AdapterInformation.mode.Height &&
+                            (RwUInt32)raster->height != Present.BackBufferHeight)
+                        {
+                            raster->height = (raster->height * Present.BackBufferHeight) / _RwD3D9AdapterInformation.mode.Height;
+                        }
+
+                        raster->depth = _rwD3D9PixelFormatInfo[Present.BackBufferFormat].depth;
+                        raster->cFormat = (RwUInt8)(_rwD3D9PixelFormatInfo[Present.BackBufferFormat].rwFormat >> 8);
+
+                        rasExt->d3dFormat = Present.BackBufferFormat;
+                        rasExt->alpha = _rwD3D9PixelFormatInfo[Present.BackBufferFormat].alpha;
+                    }
+                }
+                break;
+
+                default:
+                    break;
+                }
+            }
+
+            if (FAILED(hr))
+            {
+                result = FALSE;
+            }
+
+            currentVideoRaster = next;
+        }
+
+        RWRETURN(result);
+    }
+
+    void RenderingEngine::rxD3D9VideoMemoryRasterListRemove(RwRaster* raster)
+    {
+        RxD3D9VideoMemoryRaster* currentVideoRaster;
+        RxD3D9VideoMemoryRaster* prevVideoRaster;
+
+
+        currentVideoRaster = VideoMemoryRasters;
+        prevVideoRaster = NULL;
+
+        while (currentVideoRaster)
+        {
+            if (currentVideoRaster->raster == raster)
+            {
+                break;
+            }
+
+            prevVideoRaster = currentVideoRaster;
+            currentVideoRaster = currentVideoRaster->next;
+        }
+
+        if (currentVideoRaster)
+        {
+            if (prevVideoRaster)
+            {
+                prevVideoRaster->next = currentVideoRaster->next;
+            }
+            else
+            {
+                if (VideoMemoryRasters == currentVideoRaster)
+                {
+                    VideoMemoryRasters = currentVideoRaster->next;
+                }
+            }
+
+            RwFreeListFree(VideoMemoryRastersFreeList, currentVideoRaster);
+
+        }
+
+        RWRETURNVOID();
+    }
+
+    void RenderingEngine::rxD3D9VideoMemoryRasterListAdd(RwRaster* raster)
+    {
+        RxD3D9VideoMemoryRaster* videoRaster;
+
+        videoRaster = (RxD3D9VideoMemoryRaster*) RwFreeListAlloc(VideoMemoryRastersFreeList, rwID_DRIVERMODULE | rwMEMHINTDUR_EVENT);
+
+        videoRaster->raster = raster;
+        videoRaster->next = VideoMemoryRasters;
+
+        VideoMemoryRasters = videoRaster;
+        RWRETURNVOID();
+    }
+
+     RwBool RenderingEngine::rxD3D9VideoMemoryRasterListCreate()
+    {
+        VideoMemoryRastersFreeList = RwFreeListCreate( sizeof(RxD3D9VideoMemoryRaster),
+            127,    /* It results in ~1024 Bytes */
+            4, rwID_DRIVERMODULE | rwMEMHINTDUR_EVENT);
+
+        RWRETURN(VideoMemoryRastersFreeList != NULL);
+    }
+
 }

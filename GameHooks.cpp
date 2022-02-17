@@ -234,8 +234,8 @@ void GameHooks()
 	plugin::patch::RedirectJump(0x0070C750, StoreShadowForPole);
 	plugin::patch::RedirectJump(0x00707B40, StoreShadowForPedObject);
 
-	patch::RedirectCall(0x4CDCA4, LockLevel);
-	patch::RedirectCall(0x4CDCD9, ReadLevel);
+	//patch::RedirectCall(0x4CDCA4, LockLevel);
+	//patch::RedirectCall(0x4CDCD9, ReadLevel);
 
 	// Deferred shading don't work with multi sampling, so disable it.
 	patch::RedirectJump(0x007F8A90, rwD3D9ChangeMultiSamplingLevels);
@@ -335,6 +335,29 @@ void GameHooks()
 	plugin::patch::RedirectJump(0x7FA290, DeferredRenderingEngine::RenderingEngine::DrawPrimitiveUP);
 
 	plugin::patch::RedirectJump(0x7FAA00, DeferredRenderingEngine::RenderingEngine::IndexBuffer32bitsCreate);
+
+	plugin::patch::RedirectJump(0x4C9F90, DeferredRenderingEngine::RenderingEngine::D3D9RasterLock);
+	plugin::patch::RedirectJump(0x4CA290, DeferredRenderingEngine::RenderingEngine::D3D9RasterUnlock);
+	plugin::patch::RedirectJump(0x4CC580, DeferredRenderingEngine::RenderingEngine::D3D9CheckRasterFormat);
+	plugin::patch::RedirectJump(0x4CC1D0, DeferredRenderingEngine::RenderingEngine::D3D9FindCorrectRasterFormat);
+	plugin::patch::RedirectJump(0x4CD820, DeferredRenderingEngine::RenderingEngine::_rwD3D9NativeTextureRead);
+	plugin::patch::RedirectJump(0x4C9ED0, DeferredRenderingEngine::RenderingEngine::_rwD3D9CubeRasterCreate);
+	plugin::patch::RedirectJump(0x4CB7C0, DeferredRenderingEngine::RenderingEngine::rwD3D9CreateTextureRaster);
+	plugin::patch::RedirectJump(0x4CCE60, DeferredRenderingEngine::RenderingEngine::_rwD3D9RasterCreate);
+	plugin::patch::RedirectJump(0x4CCD70, DeferredRenderingEngine::RenderingEngine::rwD3D9CreateZBufferRaster);
+	plugin::patch::RedirectJump(0x4CB9C0, DeferredRenderingEngine::RenderingEngine::rwD3D9CreateCameraTextureRaster);
+
+	plugin::patch::RedirectJump(0x4CB640, DeferredRenderingEngine::RenderingEngine::_rxD3D9VideoMemoryRasterListRelease);
+	plugin::patch::RedirectJump(0x4CC970, DeferredRenderingEngine::RenderingEngine::_rxD3D9VideoMemoryRasterListRestore);
+
+	plugin::patch::RedirectJump(0x4CB5E0, DeferredRenderingEngine::RenderingEngine::rxD3D9VideoMemoryRasterListDestroy);
+	plugin::patch::RedirectJump(0x4CB560, DeferredRenderingEngine::RenderingEngine::rxD3D9VideoMemoryRasterListRemove);
+	plugin::patch::RedirectJump(0x4CB530, DeferredRenderingEngine::RenderingEngine::rxD3D9VideoMemoryRasterListAdd);
+
+	plugin::patch::RedirectJump(0x4C9AB0, DeferredRenderingEngine::RenderingEngine::_rwD3D9RasterPluginAttach);
+
+	plugin::patch::RedirectJump(0x4CC150, DeferredRenderingEngine::RenderingEngine::_rwD3D9RasterOpen);
+	plugin::patch::RedirectJump(0x4CC170, DeferredRenderingEngine::RenderingEngine::_rwD3D9RasterClose);
 
 	Immediate3D::Hook();
 	SoftParticles::Hook();

@@ -123,12 +123,12 @@ struct _rxD3D9Im3DVertexNoTex
 #define RwD3D9DeletePixelShader(shader) ((RwBool (__cdecl*)(void *))0x7FACF0)(shader)
 //#define RwD3D9CreatePixelShader(function, shader) ((RwBool (__cdecl*)(const RwUInt32*, void **))0x7FACC0)(function, shader)
 #define RwD3D9CreateVertexShader(function, shader) ((RwBool (__cdecl*)(const RwUInt32*, void **))0x7FAC60)(function, shader)
-#define rxD3D9VideoMemoryRasterListAdd(raster) ((void(__cdecl*)(RwRaster*))0x4CB530)(raster)
+
 #define RwD3D9RasterCreate(width, height, d3dFormat, rasterFormat) ((RwRaster *(__cdecl *)(RwInt32, RwInt32, D3DFORMAT, RwUInt32))0x4CD050)(width, height, d3dFormat, rasterFormat)
 #define _rwD3D9RWSetRasterStage(raster, stage) ((RwBool (__cdecl *)(RwRaster*, RwInt32))0x7FDCD0)(raster, stage)
 #define __rwD3D9SetRenderTarget(index, surface) ((RwBool (__cdecl *)(RwUInt32, IDirect3DSurface9*))0x7F5F20)(index, surface);
 #define _rwD3D9CubeRasterCreate(raster, d3dformat, mipmapLevels) ((RwBool (__cdecl *)(RwRaster *,RwUInt32,RwUInt32))0x4C9ED0)(raster, d3dformat, mipmapLevels)
-#define rwD3D9CreateCameraTextureRaster(raster, rasExt) ((RwBool (__cdecl *)(RwRaster *,_rwD3D9RasterExt*))0x4CB9C0)(raster, rasExt)
+//#define rwD3D9CreateCameraTextureRaster(raster, rasExt) ((RwBool (__cdecl *)(RwRaster *,_rwD3D9RasterExt*))0x4CB9C0)(raster, rasExt)
 #define _rwD3D9CubeRasterSelectFace(raster, face)((void (__cdecl *)(RwRaster *, RwUInt32))0x4C9F40)(raster, face)
 #define RwD3D9DynamicVertexBufferUnlock(buffer) ((RwBool (__cdecl *)(IDirect3DVertexBuffer9*))0x7F5C90)(buffer) 
 #define RwD3D9TextureHasAlpha(texture) ((RwBool (__cdecl*) (RwTexture*)) 0x4C9EA0)(texture)
