@@ -818,3 +818,15 @@ MACRO_STOP
 
 #define RwRasterGetParent(_raster)                  \
     RwRasterGetParentMacro(_raster)
+
+#define RwRasterGetWidthMacro(_raster) \
+    ((_raster)->width)
+
+#define RwRasterGetHeightMacro(_raster) \
+    ((_raster)->height)
+
+#define RwRasterGetWidth(_raster)                   \
+    RwRasterGetWidthMacro(_raster)
+
+#define RwRasterGetHeight(_raster)                  \
+    RwRasterGetHeightMacro(_raster)

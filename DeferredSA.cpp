@@ -219,11 +219,11 @@ void LostDevice()
 void ResetDevice()
 {
 	//CascadedShadowManagement->UpdateTextures();
-	//CWaterLevel::UpdateTextures();
+	CWaterLevel::UpdateTextures();
 	// DynamicIndexBuffer::Restore();
 	//DynamicVertexBuffer::Restore();
-	//DeferredContext->UpdateTextures();
-	//RenderTargetManager::Rebuild();
+	DeferredContext->UpdateTextures();
+	RenderTargetManager::Rebuild();
 	//RenderableScene::Restore();
 }
 
@@ -239,7 +239,7 @@ void Hook()
 	plugin::Events::gameProcessEvent += GameProcess;
 	plugin::Events::shutdownRwEvent += ShutdowRenderware;
 	plugin::Events::drawingEvent += Render;
-	plugin::Events::d3dLostEvent += LostDevice;
-	plugin::Events::d3dResetEvent += ResetDevice;
+	/*plugin::Events::d3dLostEvent += LostDevice;
+	plugin::Events::d3dResetEvent += ResetDevice;*/
 	GameHooks();
 }

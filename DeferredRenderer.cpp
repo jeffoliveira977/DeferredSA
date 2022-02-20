@@ -377,8 +377,6 @@ void DeferredRendering::UpdateImgui()
 		ImGui::InputFloat("BodyThickness", &BodyThickness, 0.01, 0.1, "%.1f");
 	}*/
 }
-D3DPRESENT_PARAMETERS& Present = *(D3DPRESENT_PARAMETERS*)0xC9C040;
-
 
 void DeferredRendering::UpdateTextures()
 {

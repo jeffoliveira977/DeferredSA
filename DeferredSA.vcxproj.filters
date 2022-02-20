@@ -122,6 +122,13 @@
       <Filter>Engine</Filter>
     </ClCompile>
     <ClCompile Include="Log.cpp" />
+    <ClCompile Include="Raster.cpp">
+      <Filter>Engine</Filter>
+    </ClCompile>
+    <ClCompile Include="RenderStates.cpp">
+      <Filter>Engine</Filter>
+    </ClCompile>
+    <ClCompile Include="RWCommon.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="GTADef.h" />
@@ -240,6 +247,13 @@
       <Filter>Engine</Filter>
     </ClInclude>
     <ClInclude Include="Log.h" />
+    <ClInclude Include="Raster.h">
+      <Filter>Engine</Filter>
+    </ClInclude>
+    <ClInclude Include="RenderStates.h">
+      <Filter>Engine</Filter>
+    </ClInclude>
+    <ClInclude Include="RWCommon.h" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="imgui">

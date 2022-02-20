@@ -12,44 +12,20 @@
 
 #include <DirectXMath.h>
 #include "Log.h"
+#include "RWCommon.h"
 using namespace DirectX;
 using namespace std;
 
 typedef void (*RenderCallback)();
 
-struct _rwD3D9Palette
-{
-    PALETTEENTRY    entries[256];
-    RwInt32			globalindex;
-};
-
-typedef LPDIRECT3DSURFACE9 LPSURFACE;
-typedef LPDIRECT3DTEXTURE9 LPTEXTURE;
-
-struct _rwD3D9RasterExt
-{
-    LPTEXTURE               texture;
-    _rwD3D9Palette* palette;
-    RwUInt8                 alpha;              /* This texture has alpha */
-    RwUInt8                 cube : 4;           /* This texture is a cube texture */
-    RwUInt8                 face : 4;           /* The active face of a cube texture */
-    RwUInt8                 automipmapgen : 4;  /* This texture uses automipmap generation */
-    RwUInt8                 compressed : 4;     /* This texture is compressed */
-    RwUInt8                 lockedMipLevel;
-    LPSURFACE               lockedSurface;
-    D3DLOCKED_RECT          lockedRect;
-    D3DFORMAT               d3dFormat;          /* D3D format */
-    LPDIRECT3DSWAPCHAIN9    swapChain;
-    HWND                    window;
-};
 
 #define RwD3D9RasterExtOffset (*(RwInt32*)0xB4E9E0)
 #define RwD3D9DeviceCaps ((D3DCAPS9 *)0xC9BF00)
 #define RwD3DDevice (*(IDirect3DDevice9 **)0xC97C28)
-#define CurrentRenderSurface ((IDirect3DSurface9 **)0xC98090)
-#define CurrentDepthStencilSurface (*(IDirect3DSurface9 **)0xC9808C)
-#define RwD3D9RenderSurface (*(IDirect3DSurface9 **)0xC97C30)
-#define RwD3D9DepthStencilSurface (&*(IDirect3DSurface9 **)0xC97C2C)
+//#define CurrentRenderSurface ((IDirect3DSurface9 **)0xC98090)
+//#define CurrentDepthStencilSurface (*(IDirect3DSurface9 **)0xC9808C)
+//#define RwD3D9RenderSurface (*(IDirect3DSurface9 **)0xC97C30)
+//#define RwD3D9DepthStencilSurface (&*(IDirect3DSurface9 **)0xC97C2C)
 
 #define _rxPipelineGlobalsOffset    (*(RwInt32*)0xC9BC60)
 #define meshModule                 (*(RwModuleInfo*)0xC9B8C0)
@@ -139,9 +115,6 @@ struct _rxD3D9Im3DVertexNoTex
 #define _rwD3D9AtomicDefaultLightingCallback(object) ((void (__cdecl *)(void *)) 0x757400 )(object)
 #define _rpD3D9VertexShaderCacheOpen() ((void (__cdecl *)()) 0x760CF0)()
 #define rwD3D9DrawPrimitive(primitiveType, startVertex, primitiveCount) ((void (__cdecl *)(RwUInt32, RwUInt32, RwUInt32)) 0x007FA360)(primitiveType, startVertex, primitiveCount)
-
-typedef LPDIRECT3DSURFACE9 LPSURFACE;
-typedef LPDIRECT3DTEXTURE9 LPTEXTURE;
 
 struct RpSkin
 {
