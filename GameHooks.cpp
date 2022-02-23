@@ -299,7 +299,7 @@ void GameHooks()
 
 
 	plugin::patch::RedirectJump(0x7F6CB0, DeferredRenderingEngine::RenderingEngine::D3D9SetPresentParameters);
-	plugin::patch::RedirectJump(0x7F8640, DeferredRenderingEngine::RenderingEngine::RwD3D9ChangeVideoMode);
+	 plugin::patch::RedirectJump(0x7F8640, DeferredRenderingEngine::RenderingEngine::RwD3D9ChangeVideoMode);
 
 	plugin::patch::RedirectJump(0x7F6B00, DeferredRenderingEngine::RenderingEngine::D3D9ClearCacheShaders);
 	plugin::patch::RedirectJump(0x7F6B40, DeferredRenderingEngine::RenderingEngine::D3D9ClearCacheMatrix);
