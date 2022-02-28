@@ -95,10 +95,10 @@ namespace DeferredRenderingEngine
 		static void SetFVF(uint32_t fvf);
 		static void SetVertexDeclaration(IDirect3DVertexDeclaration9* vertexDeclaration);
 
-		static bool CameraBeginUpdate(RwCamera* camera);
-		static bool CameraClear(RwCamera* camera, RwRGBA* color, RwInt32 clearFlags);
-		static bool CameraEndUpdate(RwCamera* camera);
-		static bool RasterShowRaster(void* raster, void* inOut, RwInt32 flags);
+		static RwBool CameraClear(void* out __RWUNUSED__, void* cameraIn, RwInt32 nIn __RWUNUSED__);
+		static RwBool CameraBeginUpdate(void* out __RWUNUSED__, void* cameraIn, RwInt32 in __RWUNUSED__);
+		static RwBool CameraEndUpdate(void* camera, void* color, RwInt32 clearFlags);
+		static RwBool RasterShowRaster(void* raster, void* inOut, RwInt32 flags);
 
 		static bool BeginScene();
 		static bool TestState();
@@ -116,7 +116,7 @@ namespace DeferredRenderingEngine
 		static RwBool D3D9DeviceSystemStop(void* out __RWUNUSED__, void* inOut __RWUNUSED__, RwInt32 in __RWUNUSED__);
 		static void D3D9CreateDisplayModesList(void);
 		static RwBool D3D9System(RwInt32 request, void* out, void* inOut, RwInt32 in);
-		// static RwBool D3D9DeviceSystemStandards(void* out, void* inOut __RWUNUSED__, RwInt32 numStandardsFunctions);
+		 static RwBool D3D9DeviceSystemStandards(void* out, void* inOut __RWUNUSED__, RwInt32 numStandardsFunctions);
 		static RwDevice* _rwDeviceGetHandle(void);
 
 		static void D3D9ClearCacheShaders();

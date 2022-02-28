@@ -575,7 +575,7 @@ void*& _rwD3D9LastIndexBufferUsed = *(void**)0x8E2450;
 
 typedef D3DMATRIX* LPD3DMATRIX;
 RwBool& LastWorldMatrixUsedIdentity = *(RwBool*)0xC97C68;
-LPD3DMATRIX(&LastMatrixUsed)[260] = *(LPD3DMATRIX(*)[260])0xC97C70;
+//LPD3DMATRIX(&LastMatrixUsed)[260] = *(LPD3DMATRIX(*)[260])0xC97C70;
 RwFreeList*& MatrixFreeList = *(RwFreeList**)0xC98080;
 
 D3DMATRIX& IdentityMatrix = *(D3DMATRIX*)0x8847A0;
@@ -603,6 +603,9 @@ struct rxD3D9DisplayMode
 };
 
 rxD3D9DisplayMode*& DisplayModes = *(rxD3D9DisplayMode**)0XC97C48; /* Just used during the selection process */
+
+std::unordered_map<int, rxD3D9DisplayMode> mDisplayModes;
+std::unordered_map<int, LPD3DMATRIX> LastMatrixUsed;
 
 #define MAX_BACKBUFFER_FORMATS  3
 const D3DFORMAT BackBufferFormats[MAX_BACKBUFFER_FORMATS] =
@@ -655,18 +658,14 @@ namespace DeferredRenderingEngine
         for (auto& buffer : mDynamicVertexBufferList)
         {
             if (buffer.vb)
-            {
                 SAFE_DELETE(buffer.vb);
-            }
         }
         mDynamicVertexBufferList.clear();
 
         for (auto& buffer : mVertexBufferList)
         {
             if (buffer)
-            {
                 SAFE_DELETE(buffer);
-            }
         }
 
         mVertexBufferList.clear();
@@ -750,7 +749,6 @@ namespace DeferredRenderingEngine
             if (mDynamicVertexBufferInfo[n].vertexbuffer)
             {
                 DynamicVertexBufferDestroy(mDynamicVertexBufferInfo[n].vertexbuffer);
-
                 mDynamicVertexBufferInfo[n].vertexbuffer = nullptr;
             }
         }
@@ -925,9 +923,8 @@ namespace DeferredRenderingEngine
     {
         uint32_t numelements = 0;
         while (elements[numelements].Type != D3DDECLTYPE_UNUSED)
-        {
             numelements++;
-        }
+
         numelements++;
 
         uint32_t sizeElements = numelements * sizeof(D3DVERTEXELEMENT9);
@@ -969,7 +966,6 @@ namespace DeferredRenderingEngine
         }
         else
         {
-
             IDirect3DVertexDeclaration9_AddRef(m_vertexDeclarations[found].vertexdeclaration);
             *vertexdeclaration = m_vertexDeclarations[found].vertexdeclaration;
 
@@ -1004,12 +1000,11 @@ namespace DeferredRenderingEngine
             auto rasExt = RASTEREXTFROMCONSTRASTER(raster->parent);
             if (rasExt->cube)
             {
-                reinterpret_cast<IDirect3DCubeTexture9*>(rasExt->texture)->GetCubeMapSurface((D3DCUBEMAP_FACES)rasExt->face, 0, &surface);
+                auto cube = reinterpret_cast<IDirect3DCubeTexture9*>(rasExt->texture);
+                cube->GetCubeMapSurface((D3DCUBEMAP_FACES)rasExt->face, 0, &surface);
             }
             else
-            {
-                IDirect3DTexture9_GetSurfaceLevel(rasExt->texture, 0, &surface);
-            }
+                rasExt->texture->GetSurfaceLevel(0, &surface);
         }
 
         auto rv = _SetRenderTarget(index, surface);
@@ -1023,9 +1018,9 @@ namespace DeferredRenderingEngine
         if (CurrentRenderSurface[index] != rendertarget)
         {
             CurrentRenderSurface[index] = rendertarget;
-
             return SUCCEEDED(_RwD3DDevice->SetRenderTarget(index, rendertarget));
         }
+
         return true;
     }
 
@@ -1034,7 +1029,6 @@ namespace DeferredRenderingEngine
         if (CurrentDepthStencilSurface != depthStencilSurface)
         {
             CurrentDepthStencilSurface = depthStencilSurface;
-
             return SUCCEEDED(RwD3DDevice->SetDepthStencilSurface(depthStencilSurface));
         }
 
@@ -1045,26 +1039,18 @@ namespace DeferredRenderingEngine
     {
         if (zRaster)
         {
-            /*
-            * Got to get the top level raster as this is the only one with a
-            * texture surface
-            */
             auto zTopRaster = (zRaster)->parent;
-
             auto zRasterExt = RASTEREXTFROMCONSTRASTER(zTopRaster);
 
             if ((RwRasterGetType(zTopRaster) & rwRASTERTYPEMASK) == rwRASTERTYPEZBUFFER)
-            {
                 SetDepthStencilSurface((LPSURFACE)zRasterExt->texture);
-            }
             else
             {
-                LPSURFACE   surfaceLevelZ;
-                IDirect3DTexture9_GetSurfaceLevel(zRasterExt->texture, 0, &surfaceLevelZ);
+                LPSURFACE surfaceLevelZ;
+                zRasterExt->texture->GetSurfaceLevel(0, &surfaceLevelZ);
 
                 SetDepthStencilSurface(surfaceLevelZ);
-
-                IDirect3DSurface9_Release(surfaceLevelZ);
+                surfaceLevelZ->Release();
             }
             return true;
         }
@@ -1085,9 +1071,7 @@ namespace DeferredRenderingEngine
         auto hr = RwD3DDevice->CreateVertexShader(function, shader);
 
         if (SUCCEEDED(hr))
-        {
             _rwD3D9LastVertexShaderUsed = (void*)0xffffffff;
-        }
 
         return SUCCEEDED(hr);
     }
@@ -1102,9 +1086,7 @@ namespace DeferredRenderingEngine
         auto hr = RwD3DDevice->CreatePixelShader(function, shader);
 
         if (SUCCEEDED(hr))
-        {
             _rwD3D9LastPixelShaderUsed = (void*)0xffffffff;
-        }
 
         return SUCCEEDED(hr);
     }
@@ -1244,55 +1226,38 @@ namespace DeferredRenderingEngine
 
     bool RenderingEngine::SetTransform(uint32_t state, const void* matrix)
     {
-        HRESULT hr;
+        if (state > 259)
+            return false;
 
+        HRESULT hr;
         if (matrix)
         {
-            if (LastMatrixUsed[state] &&
-                memcmp(LastMatrixUsed[state], matrix, sizeof(D3DMATRIX)) == 0)
-            {
+            if (LastMatrixUsed[state] && memcmp(LastMatrixUsed[state], matrix, sizeof(D3DMATRIX)) == 0)
                 return true;
-            }
-            else
-            {
-                if (!LastMatrixUsed[state])
-                {
-                    LastMatrixUsed[state] = (D3DMATRIX*)RwFreeListAlloc(MatrixFreeList, rwID_DRIVERMODULE | rwMEMHINTDUR_EVENT);
-                }
 
-                memcpy(LastMatrixUsed[state], matrix, sizeof(D3DMATRIX));
+            if (LastMatrixUsed[state] == nullptr)
+                LastMatrixUsed[state] = new D3DMATRIX;
 
-                hr = RwD3DDevice->SetTransform((D3DTRANSFORMSTATETYPE)state, (const D3DMATRIX*)matrix);
+            memcpy(LastMatrixUsed[state], matrix, sizeof(D3DMATRIX));
+            hr = RwD3DDevice->SetTransform((D3DTRANSFORMSTATETYPE)state, (const D3DMATRIX*)matrix);
 
-                if (state == D3DTS_WORLD)
-                {
-                    LastWorldMatrixUsedIdentity = false;
-                }
-            }
+            if (state == D3DTS_WORLD)
+                LastWorldMatrixUsedIdentity = false;
+
         }
         else
         {
-            if (LastMatrixUsed[state] &&
-                memcmp(LastMatrixUsed[state], &IdentityMatrix, sizeof(D3DMATRIX)) == 0)
-            {
+            if (LastMatrixUsed[state] && memcmp(LastMatrixUsed[state], &IdentityMatrix, sizeof(D3DMATRIX)) == 0)
                 return true;
-            }
-            else
-            {
-                if (!LastMatrixUsed[state])
-                {
-                    LastMatrixUsed[state] = (D3DMATRIX*)RwFreeListAlloc(MatrixFreeList, rwID_DRIVERMODULE | rwMEMHINTDUR_EVENT);
-                }
 
-                memcpy(LastMatrixUsed[state], &IdentityMatrix, sizeof(D3DMATRIX));
+            if (LastMatrixUsed[state] == nullptr)
+                LastMatrixUsed[state] = LastMatrixUsed[state] = new D3DMATRIX;;
 
-                hr = RwD3DDevice->SetTransform((D3DTRANSFORMSTATETYPE)state, &IdentityMatrix);
+            memcpy(LastMatrixUsed[state], &IdentityMatrix, sizeof(D3DMATRIX));
+            hr = RwD3DDevice->SetTransform((D3DTRANSFORMSTATETYPE)state, &IdentityMatrix);
 
-                if (state == D3DTS_WORLD)
-                {
-                    LastWorldMatrixUsedIdentity = true;
-                }
-            }
+            if (state == D3DTS_WORLD)
+                LastWorldMatrixUsedIdentity = true;
         }
 
         return SUCCEEDED(hr);
@@ -1300,16 +1265,12 @@ namespace DeferredRenderingEngine
 
     void RenderingEngine::GetTransform(uint32_t state, void* matrix)
     {
-        if (matrix)
+        if (matrix && state < 260)
         {
             if (LastMatrixUsed[state])
-            {
                 memcpy(matrix, LastMatrixUsed[state], sizeof(D3DMATRIX));
-            }
             else
-            {
                 memcpy(matrix, &IdentityMatrix, sizeof(D3DMATRIX));
-            }
         }
     }
 
@@ -1339,9 +1300,8 @@ namespace DeferredRenderingEngine
             d3dMatrix.m[3][1] = matrix->pos.y;
             d3dMatrix.m[3][2] = matrix->pos.z;
 
-
             if (LastWorldMatrixUsedIdentity ||
-                !memcmp(LastMatrixUsed[D3DTS_WORLD], &d3dMatrix, sizeof(D3DMATRIX)) == 0)
+                !(memcmp(LastMatrixUsed[D3DTS_WORLD], &d3dMatrix, sizeof(D3DMATRIX)) == 0))
             {
                 memcpy(LastMatrixUsed[D3DTS_WORLD], &d3dMatrix, sizeof(D3DMATRIX));
                 LastWorldMatrixUsedIdentity = false;
@@ -1385,13 +1345,9 @@ namespace DeferredRenderingEngine
         {
             auto hr = RwD3DDevice->SetVertexShader(shader);
             if (FAILED(hr))
-            {
                 _rwD3D9LastVertexShaderUsed = (void*)0xffffffff;
-            }
             else
-            {
                 _rwD3D9LastVertexShaderUsed = shader;
-            }
         }
     }
 
@@ -1401,13 +1357,9 @@ namespace DeferredRenderingEngine
         {
             auto hr = RwD3DDevice->SetPixelShader(shader);
             if (FAILED(hr))
-            {
                 _rwD3D9LastPixelShaderUsed = (void*)0xffffffff;
-            }
             else
-            {
                 _rwD3D9LastPixelShaderUsed = shader;
-            }
         }
     }
 
@@ -1417,17 +1369,12 @@ namespace DeferredRenderingEngine
         {
             auto hr = RwD3DDevice->SetFVF(fvf);
             if (FAILED(hr))
-            {
                 _rwD3D9LastFVFUsed = 0xffffffff;
-            }
             else
-            {
                 _rwD3D9LastFVFUsed = fvf;
-            }
 
             _rwD3D9LastVertexDeclarationUsed = (void*)0xffffffff;
         }
-
     }
 
     void RenderingEngine::SetVertexDeclaration(IDirect3DVertexDeclaration9* vertexDeclaration)
@@ -1436,20 +1383,15 @@ namespace DeferredRenderingEngine
         {
             auto hr = RwD3DDevice->SetVertexDeclaration(vertexDeclaration);
             if (FAILED(hr))
-            {
                 _rwD3D9LastVertexDeclarationUsed = (void*)0xffffffff;
-            }
             else
-            {
                 _rwD3D9LastVertexDeclarationUsed = vertexDeclaration;
-            }
 
             _rwD3D9LastFVFUsed = 0xffffffff;
         }
-
     }
 
-    bool RenderingEngine::CameraClear(RwCamera* camera, RwRGBA* color, RwInt32 clearFlags)
+    RwBool RenderingEngine::CameraClear(void* camera, void* color, RwInt32 clearFlags)
     {
         BOOL				bCurrIconic;
         RwBool				bIconicRestore = FALSE;
@@ -1489,89 +1431,33 @@ namespace DeferredRenderingEngine
         topRaster = (raster)->parent;
 
 
-        ///* Check if the size of the main window has changed */
-        //GetClientRect(*WindowHandle, &rect);
+        /* Check if the size of the main window has changed */
+        GetClientRect(*WindowHandle, &rect);
 
-        //bCurrIconic = IsIconic(*WindowHandle);
-        //if (!bCurrIconic && bWindowIconic)
-        //    bIconicRestore = TRUE;
+        bCurrIconic = IsIconic(*WindowHandle);
+        if (!bCurrIconic && bWindowIconic)
+            bIconicRestore = TRUE;
 
-        //if (!rect.right || !rect.bottom || bCurrIconic)
-        //{
-        //    //return false;
-        //}
-        //else if ((RwUInt32)rect.right != _RwD3D9AdapterInformation.mode.Width
-        //    || (RwUInt32)rect.bottom != _RwD3D9AdapterInformation.mode.Height ||
-        //    bIconicRestore)
-        //{
-        //    D3D9DeviceReleaseVideoMemory();
+        if ((RwUInt32)rect.right != _RwD3D9AdapterInformation.mode.Width
+            || (RwUInt32)rect.bottom != _RwD3D9AdapterInformation.mode.Height ||
+            bIconicRestore)
+        {
+            ReleaseVideoMemory();
 
-        //    hr = _RwD3DDevice->TestCooperativeLevel();
+            hr = _RwD3DDevice->TestCooperativeLevel();
 
-        //    Log::Debug("RenderingEngine::CameraClear - rezing window %i %i %i", bIconicRestore, ((RwUInt32)rect.right), ((RwUInt32)rect.bottom));
-        //    if (Present.Windowed)
-        //    {
-        //        Present.BackBufferWidth = rect.right;
-        //        Present.BackBufferHeight = rect.bottom;
-        //        Log::Debug("RenderingEngine::CameraClear - rezing window %i %i", Present.BackBufferWidth, Present.BackBufferHeight);
-        //    }
+            if (Present.Windowed)
+            {
+                Present.BackBufferWidth = rect.right;
+                Present.BackBufferHeight = rect.bottom;
+            }
 
-        //    hr = _RwD3DDevice->Reset(&Present);
-        //    if (FAILED(hr))
-        //        Log::Error("RenderingEngine::CameraBeginUpdate - failed to reset device");
+            hr = _RwD3DDevice->Reset(&Present);
+            if (FAILED(hr))
+                Log::Error("RenderingEngine::CameraBeginUpdate - failed to reset device");
 
-        //    if (SUCCEEDED(hr))
-        //    {
-        //        Log::Debug("RenderingEngine::CameraClear - clear");
-        //        if (!RestoreVideoMemory())
-        //        {
-        //            D3D9DeviceReleaseVideoMemory();
-        //        }
-        //    }
-
-
-        //    /* Check raster type */
-        //    if (rwRASTERTYPECAMERATEXTURE != raster->cType)
-        //    {
-        //        RwRasterDestroy(raster);
-        //        raster = RwRasterCreate(rect.right, rect.bottom, 32, rwRASTERTYPECAMERA);
-
-        //        if (raster)
-        //        {
-        //            RwCameraSetRaster(camera, raster);
-        //        }
-        //        zRaster = RwCameraGetZRaster((RwCamera*)camera);
-        //        RwRasterDestroy(zRaster);
-        //        zRaster = RwRasterCreate(rect.right, rect.bottom, 32, rwRASTERTYPEZBUFFER);
-
-        //        if (zRaster)
-        //        {
-        //            RwCameraSetZRaster(camera, zRaster);
-        //        }
-        //    }
-        //    /* Change window size */
-        //    rect.right = rect.left + _RwD3D9AdapterInformation.mode.Width;
-        //    rect.bottom = rect.top + _RwD3D9AdapterInformation.mode.Height;
-
-        //    if (GetWindowLong(*WindowHandle, GWL_STYLE) & WS_MAXIMIZE)
-        //    {
-        //        SetWindowLong(*WindowHandle, GWL_STYLE, GetWindowLong(*WindowHandle, GWL_STYLE) & ~WS_MAXIMIZE);
-        //    }
-
-        //    AdjustWindowRectEx(&rect,
-        //        GetWindowLong(*WindowHandle, GWL_STYLE),
-        //        (GetMenu(*WindowHandle) != NULL),
-        //        GetWindowLong(*WindowHandle, GWL_EXSTYLE));
-
-        //    SetWindowPos(*WindowHandle, 0,
-        //        rect.left, rect.bottom,
-        //        rect.right - rect.left,
-        //        rect.bottom - rect.top,
-        //        SWP_NOMOVE | SWP_NOZORDER);
-
-        //    _RwD3D9AdapterInformation.mode.Width = rect.right;
-        //    _RwD3D9AdapterInformation.mode.Height = rect.bottom;
-        //}
+            RestoreVideoMemory();
+        }
 
         /* Check raster type */
         if (rwRASTERTYPECAMERATEXTURE == topRaster->cType)
@@ -1605,10 +1491,9 @@ namespace DeferredRenderingEngine
             _RwD3DDevice->SetViewport(&viewport);
 
             auto d3d9ClearFlags = 0u;
-            /* Clear */
+
             if (rwCAMERACLEARIMAGE & clearFlags)
                 d3d9ClearFlags |= D3DCLEAR_TARGET;
-
             if (rwCAMERACLEARZ & clearFlags)
             {
                 d3d9ClearFlags |= D3DCLEAR_ZBUFFER;
@@ -1625,7 +1510,7 @@ namespace DeferredRenderingEngine
         return true;
     }
 
-    bool RenderingEngine::CameraBeginUpdate(RwCamera* cameraIn)
+    RwBool RenderingEngine::CameraBeginUpdate(void* out, void* cameraIn, RwInt32 in)
     {
         BOOL				bCurrIconic;
         RwBool				bIconicRestore = FALSE;
@@ -1646,22 +1531,11 @@ namespace DeferredRenderingEngine
         camera = (RwCamera*)cameraIn;
         dgGGlobals.curCamera = camera;
 
-        camLTM = RwFrameGetLTM(RwCameraGetFrame(camera));
-
-        RwMatrixInvert((RwMatrix*)&_RwD3D9D3D9ViewTransform, camLTM);
-
+        _RwD3D9D3D9ViewTransform = *(D3DMATRIX*)&XMMatrixInverse(nullptr, RwMatrixToXMMATRIX(RwFrameGetLTM(RwCameraGetFrame(camera))));
         _RwD3D9D3D9ViewTransform.m[0][0] = -_RwD3D9D3D9ViewTransform.m[0][0];
-        _RwD3D9D3D9ViewTransform.m[0][3] = 0.0f;
-
         _RwD3D9D3D9ViewTransform.m[1][0] = -_RwD3D9D3D9ViewTransform.m[1][0];
-        _RwD3D9D3D9ViewTransform.m[1][3] = 0.0f;
-
         _RwD3D9D3D9ViewTransform.m[2][0] = -_RwD3D9D3D9ViewTransform.m[2][0];
-        _RwD3D9D3D9ViewTransform.m[2][3] = 0.0f;
-
         _RwD3D9D3D9ViewTransform.m[3][0] = -_RwD3D9D3D9ViewTransform.m[3][0];
-        _RwD3D9D3D9ViewTransform.m[3][3] = 1.0f;
-
         RwD3D9SetTransform(D3DTS_VIEW, &_RwD3D9D3D9ViewTransform);
 
         _RwD3D9D3D9ProjTransform.m[0][0] = camera->recipViewWindow.x;
@@ -1685,7 +1559,6 @@ namespace DeferredRenderingEngine
         }
 
         _RwD3D9D3D9ProjTransform.m[3][2] = -_RwD3D9D3D9ProjTransform.m[2][2] * camera->nearPlane;
-
         RwD3D9SetTransform(D3DTS_PROJECTION, &_RwD3D9D3D9ProjTransform);
 
         raster = RwCameraGetRaster(camera);
@@ -1700,17 +1573,12 @@ namespace DeferredRenderingEngine
 
         bWindowIconic = bCurrIconic;
 
-        if (!rect.right || !rect.bottom || bCurrIconic)
-        {
-            //         return false;
-        }
-        else if ((RwUInt32)rect.right != _RwD3D9AdapterInformation.mode.Width
+        if ((RwUInt32)rect.right != _RwD3D9AdapterInformation.mode.Width
             || (RwUInt32)rect.bottom != _RwD3D9AdapterInformation.mode.Height
             || bIconicRestore)
         {
 
-
-            D3D9DeviceReleaseVideoMemory();
+            ReleaseVideoMemory();
 
             hr = _RwD3DDevice->TestCooperativeLevel();
 
@@ -1722,59 +1590,11 @@ namespace DeferredRenderingEngine
 
             hr = _RwD3DDevice->Reset(&Present);
 
-            if(FAILED(hr))
+            if (FAILED(hr))
                 Log::Error("RenderingEngine::CameraBeginUpdate - failed to reset device");
 
-            if (SUCCEEDED(hr))
-            {
-                if (!RestoreVideoMemory())
-                {
-                    D3D9DeviceReleaseVideoMemory();
-                }
-            }
-            /* Check raster type */
-            if (rwRASTERTYPECAMERATEXTURE != raster->cType)
-            {
-                RwRasterDestroy(raster);
-                raster = RwRasterCreate(rect.right, rect.bottom, 32, rwRASTERTYPECAMERA);
+            RestoreVideoMemory();
 
-                if (raster)
-                {
-                    RwCameraSetRaster(camera, raster);
-                }
-                zRaster = RwCameraGetZRaster((RwCamera*)camera);
-                RwRasterDestroy(zRaster);
-                zRaster = RwRasterCreate(rect.right, rect.bottom, 32, rwRASTERTYPEZBUFFER);
-
-                if (zRaster)
-                {
-                    RwCameraSetZRaster(camera, zRaster);
-                }
-            }
-
-            int width, height;
-            width = GetSystemMetrics(SM_CXSCREEN);
-            height = GetSystemMetrics(SM_CYSCREEN);
-            SetWindowLongPtr(Present.hDeviceWindow, GWL_STYLE,
-                WS_POPUP | WS_CAPTION | WS_MINIMIZEBOX | WS_SYSMENU | WS_VISIBLE);
-            SetWindowPos(Present.hDeviceWindow, NULL, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER | SWP_FRAMECHANGED);
-            RECT rect;
-            GetClientRect(Present.hDeviceWindow, &rect);
-            if (rect.right != Present.BackBufferWidth || rect.bottom != Present.BackBufferHeight)
-            {
-                SetWindowPos(Present.hDeviceWindow, HWND_NOTOPMOST,
-                    0,
-                    0,
-                    Present.BackBufferWidth + (Present.BackBufferWidth - rect.right),
-                    Present.BackBufferHeight +
-                    (Present.BackBufferHeight - rect.bottom), SWP_SHOWWINDOW | SWP_FRAMECHANGED | SWP_NOMOVE);
-                int nModeIndex = RwEngineGetCurrentVideoMode();
-                DisplayModes[nModeIndex].mode.Width= Present.BackBufferWidth + (Present.BackBufferWidth - rect.right);
-                DisplayModes[nModeIndex].mode.Height = Present.BackBufferHeight + (Present.BackBufferHeight - rect.bottom);
-            }
-
-
-         
             _RwD3D9AdapterInformation.mode.Width = rect.right;
             _RwD3D9AdapterInformation.mode.Height = rect.bottom;
             bChangeVideo = FALSE;
@@ -1803,13 +1623,13 @@ namespace DeferredRenderingEngine
         return (BeginScene());
     }
 
-    bool RenderingEngine::CameraEndUpdate(RwCamera* camera)
+    RwBool RenderingEngine::CameraEndUpdate(void* camera, void* color, RwInt32 clearFlags)
     {
         dgGGlobals.curCamera = NULL;
         return true;
     }
 
-    bool RenderingEngine::RasterShowRaster(void* raster, void* inOut, RwInt32 flags)
+    RwBool RenderingEngine::RasterShowRaster(void* raster, void* inOut, RwInt32 flags)
     {
         RwBool              doReset = FALSE;
         RwRaster* topRaster;
@@ -1818,8 +1638,7 @@ namespace DeferredRenderingEngine
 
         if (InsideScene)
         {
-            hr = _RwD3DDevice->EndScene();
-
+            _RwD3DDevice->EndScene();
             InsideScene = false;
         }
 
@@ -1858,7 +1677,6 @@ namespace DeferredRenderingEngine
 
         hr = _RwD3DDevice->Present(NULL, NULL, NULL, NULL);
 
-        /* Check for lost devices */
         if (hr == D3DERR_DEVICELOST)
         {
             hr = _RwD3DDevice->TestCooperativeLevel();
@@ -1868,33 +1686,10 @@ namespace DeferredRenderingEngine
                 D3D9DeviceReleaseVideoMemory();
 
                 hr = _RwD3DDevice->Reset(&Present);
-
                 if (SUCCEEDED(hr))
                 {
                     RestoreVideoMemory();
                 }
-
-                int width, height;
-                width = GetSystemMetrics(SM_CXSCREEN);
-                height = GetSystemMetrics(SM_CYSCREEN);
-                SetWindowLongPtr(Present.hDeviceWindow, GWL_STYLE,
-                    WS_POPUP | WS_CAPTION | WS_MINIMIZEBOX | WS_SYSMENU | WS_VISIBLE);
-                SetWindowPos(Present.hDeviceWindow, NULL, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER | SWP_FRAMECHANGED);
-                RECT rect;
-                GetClientRect(Present.hDeviceWindow, &rect);
-                if (rect.right != Present.BackBufferWidth || rect.bottom != Present.BackBufferHeight)
-                {
-                    SetWindowPos(Present.hDeviceWindow, HWND_NOTOPMOST,
-                        0,
-                        0,
-                        Present.BackBufferWidth + (Present.BackBufferWidth - rect.right),
-                        Present.BackBufferHeight +
-                        (Present.BackBufferHeight - rect.bottom), SWP_SHOWWINDOW | SWP_FRAMECHANGED | SWP_NOMOVE);
-                    int nModeIndex = RwEngineGetCurrentVideoMode();
-                    DisplayModes[nModeIndex].mode.Width = Present.BackBufferWidth + (Present.BackBufferWidth - rect.right);
-                    DisplayModes[nModeIndex].mode.Height = Present.BackBufferHeight + (Present.BackBufferHeight - rect.bottom);
-                }
-
             }
         }
         return SUCCEEDED(hr);
@@ -1902,23 +1697,13 @@ namespace DeferredRenderingEngine
 
     bool RenderingEngine::BeginScene()
     {
-        if (TestState())
-        {
-            if (!InsideScene)
-            {
-                HRESULT hr;
-
-                hr = _RwD3DDevice->BeginScene();
-
-                if (SUCCEEDED(hr))
-                {
-                    InsideScene = true;
-                }
-            }
-        }
-        else
-        {
+        if (!TestState())
             InsideScene = false;
+
+        if (!InsideScene)
+        {
+            if (SUCCEEDED(_RwD3DDevice->BeginScene()))
+                InsideScene = true;
         }
 
         return InsideScene;
@@ -1933,33 +1718,15 @@ namespace DeferredRenderingEngine
             ReleaseVideoMemory();
 
             hr = _RwD3DDevice->Reset(&Present);
-
-            if (hr == D3DERR_INVALIDCALL)
-            {
-                Log::Error("RenderingEngine::TestState - failed to reset device");
-                if (Present.Windowed)
-                {
-                    D3DDISPLAYMODE      adapterDisplayMode;
-
-                    _RwDirect3DObject->GetAdapterDisplayMode(_RwD3DAdapterIndex, &adapterDisplayMode);
-                    Present.BackBufferFormat = _RwD3D9AdapterInformation.mode.Format = adapterDisplayMode.Format;
-                    _RwD3D9AdapterInformation.displayDepth = 32;
-
-                    hr = _RwD3DDevice->Reset(&Present);
-                }
-            }
-
             if (SUCCEEDED(hr))
-            {
                 RestoreVideoMemory();
-            }
         }
 
         return SUCCEEDED(hr);
     }
 
     typedef void (*rwD3D9DeviceRestoreCallBack)(void);
-    rwD3D9DeviceRestoreCallBack D3D9RestoreDeviceCallback = *(rwD3D9DeviceRestoreCallBack*)0x00C980B0;
+    rwD3D9DeviceRestoreCallBack D3D9RestoreDeviceCallback = *(rwD3D9DeviceRestoreCallBack*)0xC980B0;
 
     typedef void (*rwD3D9DeviceReleaseCallBack)(void);
     rwD3D9DeviceReleaseCallBack D3D9ReleaseDeviceCallback = NULL;
@@ -1972,24 +1739,18 @@ namespace DeferredRenderingEngine
         _RwD3DDevice->GetDepthStencilSurface(&RwD3D9DepthStencilSurface);
         IDirect3DSurface9_Release(RwD3D9DepthStencilSurface);
 
-        bool rv;
-        rv = Raster::_rxD3D9VideoMemoryRasterListRestore();
+        bool rv = Raster::_rxD3D9VideoMemoryRasterListRestore();
 
         rwD3D9DynamicVertexBufferRestore();
 
         if (rv)
-        {
-            rwD3D9RenderStateReset();
-        }
+            RenderStates::_rwD3D9RenderStateReset();
 
         rv = rv && rwD3D9Im2DRenderOpen();
-
         rv = rv && rwD3D9Im3DRenderOpen();
 
         if (D3D9RestoreDeviceCallback)
-        {
             D3D9RestoreDeviceCallback();
-        }
 
         return rv;
     }
@@ -2007,9 +1768,7 @@ namespace DeferredRenderingEngine
         _RwD3DDevice->SetIndices(NULL);
 
         for (i = 0; i < MAX_STREAMS; i++)
-        {
             _RwD3DDevice->SetStreamSource(i, NULL, 0, 0);
-        }
 
         _RwD3DDevice->SetPixelShader(NULL);
         _RwD3DDevice->SetVertexDeclaration(NULL);
@@ -2028,9 +1787,7 @@ namespace DeferredRenderingEngine
         RwFreeListPurgeAllFreeLists();
 
         if (D3D9ReleaseDeviceCallback != NULL)
-        {
             D3D9ReleaseDeviceCallback();
-        }
     }
 
     const void* RenderingEngine::D3D9GetCaps()
@@ -2040,207 +1797,53 @@ namespace DeferredRenderingEngine
 
     void RenderingEngine::D3D9SetPresentParameters(const D3DDISPLAYMODE* mode, RwUInt32 flags, D3DFORMAT adapterFormat)
     {
-        if (flags & rwVIDEOMODEEXCLUSIVE)
-        {
-            /* On full screen the adapter format is the display format selected */
-            adapterFormat = mode->Format;
-            Present.Windowed = FALSE;
-            Present.BackBufferCount = 1;
-            Present.FullScreen_RefreshRateInHz = min(mode->RefreshRate, FullScreenRefreshRateInHz);
-            Present.PresentationInterval = D3DPRESENT_INTERVAL_IMMEDIATE;
-            Present.BackBufferWidth = mode->Width;
-            Present.BackBufferHeight = mode->Height;
-            Present.SwapEffect = D3DSWAPEFFECT_FLIP;
-        }
-        else
-        {
-            RECT rect;
-
-            Present.Windowed = TRUE;
-            Present.BackBufferCount = 1;
-            Present.FullScreen_RefreshRateInHz = 0;
-            Present.PresentationInterval = 0;
-
-            /* Check window size */
-            GetWindowRect(*WindowHandle, &rect);
-
-            if ((rect.right - rect.left) == 0)
-                Present.BackBufferWidth = 1;
-            else
-                Present.BackBufferWidth = 0;
-
-            if ((rect.bottom - rect.top) == 0)
-                Present.BackBufferHeight = 1;
-            else
-                Present.BackBufferHeight = 0;
-            Present.SwapEffect = D3DSWAPEFFECT_DISCARD;
-        }
-
-        Present.BackBufferFormat = D3DFMT_A8R8G8B8;
-        Present.EnableAutoDepthStencil = TRUE;
+        Present.BackBufferCount = 1;
+        Present.BackBufferWidth = mode->Width;
+        Present.BackBufferHeight = mode->Height;
         Present.AutoDepthStencilFormat = D3DFMT_D24S8;
         Present.MultiSampleType = D3DMULTISAMPLE_NONE;
         Present.MultiSampleQuality = 0;
-        _RwD3D9ZBufferDepth = 32;
-
         Present.Windowed = TRUE;
-
-        Present.PresentationInterval = 0;
+        Present.PresentationInterval = D3DPRESENT_INTERVAL_ONE;
         Present.FullScreen_RefreshRateInHz = 0;
         Present.EnableAutoDepthStencil = TRUE;
         Present.BackBufferFormat = D3DFMT_A8R8G8B8;
+        Present.SwapEffect = D3DSWAPEFFECT_DISCARD;
 
-        //pParams->MultiSampleType = (D3DMULTISAMPLE_TYPE)8;
-
-        if (Present.MultiSampleType > 0) {
-            Present.SwapEffect = D3DSWAPEFFECT_DISCARD;
-        }
-
-        DWORD dwWndStyle = GetWindowLong(*WindowHandle, GWL_STYLE);
-
-        auto [nMonitorWidth, nMonitorHeight] = GetDesktopRes();
-
-
-        dwWndStyle &= ~WS_OVERLAPPEDWINDOW;
-
-        RECT rect;
-        GetClientRect(*WindowHandle, &rect);
-
-        RECT rcClient = { 0, 0, mode->Width, mode->Height };
-        //AdjustWindowRectEx(&rcClient, dwWndStyle, 0, GetWindowLong(*WindowHandle, GWL_EXSTYLE));
-
-        //int nClientWidth = rcClient.right - rcClient.left;
-        //int nClientHeight = rcClient.bottom - rcClient.top;
-
-        //SetWindowLong(*WindowHandle, GWL_STYLE, dwWndStyle);
-        //nCurrentWidth = (int)rcClient.right;
-        //nCurrentHeight = (int)rcClient.bottom;
-
-        //RsGlobal.maximumWidth = rcClient.right;
-        //RsGlobal.maximumHeight = rcClient.bottom;
-
-
-
-        //if (nClientWidth > nMonitorWidth)
-        //    nClientWidth = nMonitorWidth;
-
-        //if (nClientHeight > nMonitorHeight)
-        //    nClientHeight = nMonitorHeight;
-
-
-        //SetWindowPos(*WindowHandle, 0, 0, 0, rcClient.right, rcClient.bottom, SWP_NOACTIVATE | SWP_NOMOVE);
-        Present.hDeviceWindow = *WindowHandle;
-        int width, height;
-        width = GetSystemMetrics(SM_CXSCREEN);
-        height = GetSystemMetrics(SM_CYSCREEN);
-        SetWindowLong(Present.hDeviceWindow, GWL_STYLE, WS_POPUP);
-        SetWindowPos(Present.hDeviceWindow, NULL, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER | SWP_FRAMECHANGED);
-        MoveWindow(Present.hDeviceWindow, (width / 2) - (Present.BackBufferWidth / 2),
-            (height / 2) - (Present.BackBufferHeight / 2), Present.BackBufferWidth,
-            Present.BackBufferHeight, TRUE);
+        _RwD3D9ZBufferDepth = 32;
     }
 
     RwBool RenderingEngine::RwD3D9ChangeVideoMode(RwInt32 modeIndex)
     {
         bChangeVideo = TRUE;
 
-        if (SystemStarted &&  (modeIndex >= 0) &&
-            (modeIndex < NumDisplayModes))
+        if (SystemStarted && (modeIndex >= 0) &&
+            (modeIndex < mDisplayModes.size()))
         {
             if (_RwD3D9CurrentModeIndex != modeIndex)
             {
-                D3D9DeviceReleaseVideoMemory();
+                ReleaseVideoMemory();
 
-                auto hr = _RwD3DDevice->TestCooperativeLevel();
+                _RwD3DDevice->TestCooperativeLevel();
 
-                D3D9SetPresentParameters(&DisplayModes[modeIndex].mode, DisplayModes[modeIndex].flags, DesktopDisplayMode.Format);
+                D3D9SetPresentParameters(&mDisplayModes[modeIndex].mode, mDisplayModes[modeIndex].flags, DesktopDisplayMode.Format);
 
-                hr = _RwD3DDevice->Reset(&Present);
+                auto hr = _RwD3DDevice->Reset(&Present);
                 if (FAILED(hr))
                 {
                     Log::Error("RenderingEngine::RwD3D9ChangeVideoMode - failed to reset device");
                     return false;
                 }
 
-                if (!RestoreVideoMemory())
-                {
-                    D3D9DeviceReleaseVideoMemory();
-                    return false;
-                }
-
-                RECT rect;
+                RestoreVideoMemory();
 
                 _RwD3D9CurrentModeIndex = modeIndex;
-                _RwD3D9AdapterInformation.mode = DisplayModes[modeIndex].mode;
-                _RwD3D9AdapterInformation.flags = DisplayModes[modeIndex].flags;
+                _RwD3D9AdapterInformation.mode = mDisplayModes[modeIndex].mode;
+                _RwD3D9AdapterInformation.flags = mDisplayModes[modeIndex].flags;
                 _RwD3D9AdapterInformation.displayDepth = 32;
 
-                /* Change window size */
-                if (Present.Windowed == FALSE)
-                {
-                    rect.left = 0;
-                    rect.top = 0;
-                    rect.right = rect.left + _RwD3D9AdapterInformation.mode.Width;
-                    rect.bottom = rect.top + _RwD3D9AdapterInformation.mode.Height;
-
-                    AdjustWindowRectEx(&rect,
-                        GetWindowLong(*WindowHandle, GWL_STYLE),
-                        (GetMenu(*WindowHandle) != NULL),
-                        GetWindowLong(*WindowHandle, GWL_EXSTYLE));
-
-                    SetWindowPos(*WindowHandle, 0,
-                        rect.left, rect.bottom,
-                        rect.right - rect.left,
-                        rect.bottom - rect.top,
-                        SWP_NOMOVE | SWP_NOZORDER);
-                }
-                else
-                {
-                  /*  SetWindowLong(*WindowHandle, GWL_STYLE, WS_OVERLAPPEDWINDOW | WS_VISIBLE);
-
-                    rect.left = 0;
-                    rect.top = 0;
-                    rect.right = rect.left + Present.BackBufferWidth;
-                    rect.bottom = rect.top + Present.BackBufferHeight;
-
-                    AdjustWindowRectEx(&rect,
-                        GetWindowLong(*WindowHandle, GWL_STYLE),
-                        (GetMenu(*WindowHandle) != NULL),
-                        GetWindowLong(*WindowHandle, GWL_EXSTYLE));
-
-                    SetWindowPos(*WindowHandle, 0,
-                        rect.left, rect.bottom,
-                        rect.right - rect.left,
-                        rect.bottom - rect.top,
-                        SWP_NOMOVE | SWP_NOZORDER | SWP_FRAMECHANGED);
-
-                    GetClientRect(*WindowHandle, &rect);*/
-
-                    int width, height;
-                    width = GetSystemMetrics(SM_CXSCREEN);
-                    height = GetSystemMetrics(SM_CYSCREEN);
-                    SetWindowLongPtr(Present.hDeviceWindow, GWL_STYLE,
-                        WS_POPUP | WS_CAPTION | WS_MINIMIZEBOX | WS_SYSMENU | WS_VISIBLE);
-                    SetWindowPos(Present.hDeviceWindow, NULL, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER | SWP_FRAMECHANGED);
-                    RECT rect;
-                    GetClientRect(Present.hDeviceWindow, &rect);
-                    if (rect.right != Present.BackBufferWidth || rect.bottom != Present.BackBufferHeight)
-                    {
-                        SetWindowPos(Present.hDeviceWindow, HWND_NOTOPMOST,
-                            0,
-                            0,
-                            Present.BackBufferWidth + (Present.BackBufferWidth - rect.right),
-                            Present.BackBufferHeight +
-                            (Present.BackBufferHeight - rect.bottom), SWP_SHOWWINDOW | SWP_FRAMECHANGED | SWP_NOMOVE);
-                        int nModeIndex = RwEngineGetCurrentVideoMode();
-                        DisplayModes[nModeIndex].mode.Width = Present.BackBufferWidth + (Present.BackBufferWidth - rect.right);
-                        DisplayModes[nModeIndex].mode.Height = Present.BackBufferHeight + (Present.BackBufferHeight - rect.bottom);
-                    }
-
-                    _RwD3D9AdapterInformation.mode.Width = rect.right;
-                    _RwD3D9AdapterInformation.mode.Height = rect.bottom;
-                }
-
+                SetWindowLong(*WindowHandle, GWL_STYLE, WS_VISIBLE);
+                SetWindowPos(*WindowHandle, 0, 0, 0, Present.BackBufferWidth, Present.BackBufferHeight, SWP_NOMOVE | SWP_NOZORDER);
             }
         }
 
@@ -2251,53 +1854,42 @@ namespace DeferredRenderingEngine
     {
         Log::Debug("RenderingEngine::D3D9CreateDisplayModesList");
 
-        RwInt32 i, format, n, maxmodesformat;
+        RwInt32 i, format, n, maxmodesformat, numDisplaymodes;
 
-        if (DisplayModes)
-            DisplayModes = ((rxD3D9DisplayMode*)RwRealloc(DisplayModes, (1 + _RwD3D9AdapterInformation.modeCount) * sizeof(rxD3D9DisplayMode),
-                rwID_DRIVERMODULE | rwMEMHINTDUR_GLOBAL | rwMEMHINTFLAG_RESIZABLE));
-        else
-            DisplayModes = ((rxD3D9DisplayMode*)RwMalloc((1 + _RwD3D9AdapterInformation.modeCount) * sizeof(rxD3D9DisplayMode),
-                rwID_DRIVERMODULE | rwMEMHINTDUR_GLOBAL | rwMEMHINTFLAG_RESIZABLE));
+        _RwDirect3DObject->GetAdapterDisplayMode(_RwD3DAdapterIndex, &mDisplayModes[0].mode);
 
-        _RwDirect3DObject->GetAdapterDisplayMode(_RwD3DAdapterIndex, &DisplayModes[0].mode);
-
-        DisplayModes[0].flags = 0;
-        NumDisplayModes = 1;
-
+        mDisplayModes[0].flags = 0;
+        numDisplaymodes = 1;
+        
         for (format = 0; format < MAX_BACKBUFFER_FORMATS; format++)
         {
             maxmodesformat = _RwDirect3DObject->GetAdapterModeCount(_RwD3DAdapterIndex, BackBufferFormats[format]);
 
             for (i = 0; i < maxmodesformat; i++)
             {
-                _RwDirect3DObject->EnumAdapterModes(_RwD3DAdapterIndex, BackBufferFormats[format], i, &DisplayModes[NumDisplayModes].mode);
+                _RwDirect3DObject->EnumAdapterModes(_RwD3DAdapterIndex, BackBufferFormats[format], i, &mDisplayModes[numDisplaymodes].mode);
 
                 /* Find a previous similar mode */
-                for (n = 1; n < NumDisplayModes; n++)
+                for (n = 1; n < numDisplaymodes; n++)
                 {
-                    if (DisplayModes[NumDisplayModes].mode.Width == DisplayModes[n].mode.Width
-                        && DisplayModes[NumDisplayModes].mode.Height == DisplayModes[n].mode.Height
-                        && DisplayModes[NumDisplayModes].mode.Format == DisplayModes[n].mode.Format)
+                    if (mDisplayModes[numDisplaymodes].mode.Width == mDisplayModes[n].mode.Width
+                        && mDisplayModes[numDisplaymodes].mode.Height == mDisplayModes[n].mode.Height
+                        && mDisplayModes[numDisplaymodes].mode.Format == mDisplayModes[n].mode.Format)
                         break;
                 }
 
-                if (n >= NumDisplayModes)
+                if (n >= numDisplaymodes)
                 {
-                    DisplayModes[NumDisplayModes].flags = rwVIDEOMODEEXCLUSIVE;
-                    NumDisplayModes++;
+                    mDisplayModes[numDisplaymodes].flags = rwVIDEOMODEEXCLUSIVE;
+                    numDisplaymodes++;
                 }
                 else
                 {
-                    if (DisplayModes[n].mode.RefreshRate < DisplayModes[NumDisplayModes].mode.RefreshRate)
-                        DisplayModes[n].mode.RefreshRate = DisplayModes[NumDisplayModes].mode.RefreshRate;
+                    if (mDisplayModes[n].mode.RefreshRate < mDisplayModes[numDisplaymodes].mode.RefreshRate)
+                        mDisplayModes[n].mode.RefreshRate = mDisplayModes[numDisplaymodes].mode.RefreshRate;
                 }
             }
         }
-
-        if (NumDisplayModes < (1 + _RwD3D9AdapterInformation.modeCount))
-            DisplayModes = ((rxD3D9DisplayMode*)RwRealloc(DisplayModes, NumDisplayModes * sizeof(rxD3D9DisplayMode),
-                rwID_DRIVERMODULE | rwMEMHINTDUR_GLOBAL | rwMEMHINTFLAG_RESIZABLE));
     }
 
     RwBool RenderingEngine::D3D9System(RwInt32 request, void* out, void* inOut, RwInt32 in)
@@ -2305,11 +1897,11 @@ namespace DeferredRenderingEngine
         switch (request)
         {
         case rwDEVICESYSTEMUSEMODE:
-            if (!SystemStarted && (in >= 0) && (in < NumDisplayModes))
+            if (!SystemStarted && (in >= 0) && (in < mDisplayModes.size()))
             {
                 _RwD3D9CurrentModeIndex = in;
-                _RwD3D9AdapterInformation.mode = DisplayModes[in].mode;
-                _RwD3D9AdapterInformation.flags = DisplayModes[in].flags;
+                _RwD3D9AdapterInformation.mode = mDisplayModes[in].mode;
+                _RwD3D9AdapterInformation.flags = mDisplayModes[in].flags;
                 _RwD3D9AdapterInformation.displayDepth = 32;
 
                 /* Calculate max multisampling levels */
@@ -2321,26 +1913,26 @@ namespace DeferredRenderingEngine
                 return false;
 
         case rwDEVICESYSTEMGETNUMMODES:
-            if (!DisplayModes)
+            if (!mDisplayModes.size())
                 D3D9CreateDisplayModesList();
 
-            *((RwInt32*)out) = NumDisplayModes;
+            *((RwInt32*)out) = mDisplayModes.size();
             return true;
 
         case rwDEVICESYSTEMGETMODEINFO:
-            if (!DisplayModes)
+            if (!mDisplayModes.size())
                 D3D9CreateDisplayModesList();
 
-            if ((in >= 0) && (in < NumDisplayModes))
+            if ((in >= 0) && (in < mDisplayModes.size()))
             {
                 RwVideoMode* videoMode = (RwVideoMode*)out;
 
-                videoMode->width = DisplayModes[in].mode.Width;
-                videoMode->height = DisplayModes[in].mode.Height;
+                videoMode->width = mDisplayModes[in].mode.Width;
+                videoMode->height = mDisplayModes[in].mode.Height;
                 videoMode->depth = 32;
-                videoMode->flags = ((RwVideoModeFlag)DisplayModes[in].flags);
-                videoMode->refRate = DisplayModes[in].mode.RefreshRate;
-                videoMode->format = rwD3D9FindRWFormat(DisplayModes[in].mode.Format);
+                videoMode->flags = ((RwVideoModeFlag)mDisplayModes[in].flags);
+                videoMode->refRate = mDisplayModes[in].mode.RefreshRate;
+                videoMode->format = rwD3D9FindRWFormat(mDisplayModes[in].mode.Format);
 
                 return true;
             }
@@ -2421,9 +2013,7 @@ namespace DeferredRenderingEngine
             /* Mode count */
             _RwD3D9AdapterInformation.modeCount = 0;
             for (i = 0; i < MAX_BACKBUFFER_FORMATS; i++)
-            {
                 _RwD3D9AdapterInformation.modeCount += _RwDirect3DObject->GetAdapterModeCount(_RwD3DAdapterIndex, BackBufferFormats[i]);
-            }
 
             /* Get the current mode as the default */
             _RwDirect3DObject->GetAdapterDisplayMode(_RwD3DAdapterIndex, &_RwD3D9AdapterInformation.mode);
@@ -2453,8 +2043,6 @@ namespace DeferredRenderingEngine
             return D3D9DeviceSystemStop(out, inOut, in);
 
             /************* standard device functions ************************/
-
-#define D3D9DeviceSystemStandards(out, inOut, numStandardsFunctions) ((signed int (__cdecl*) (void*, void*,RwInt32))0x007F72E0)(out,inOut,numStandardsFunctions)
 
         case rwDEVICESYSTEMSTANDARDS:
             return D3D9DeviceSystemStandards(out, inOut, in);
@@ -2580,13 +2168,15 @@ namespace DeferredRenderingEngine
         _RwDirect3DObject->GetAdapterDisplayMode(_RwD3DAdapterIndex, &adapterDisplayMode);
 
         memset(&Present, 0, sizeof(D3DPRESENT_PARAMETERS));
-
         D3D9SetPresentParameters(&_RwD3D9AdapterInformation.mode, _RwD3D9AdapterInformation.flags, adapterDisplayMode.Format);
-
-     
        
         Present.hDeviceWindow = *WindowHandle;
-        Present.Flags = 0;
+                Present.Flags = 0;
+
+        SetWindowLong(Present.hDeviceWindow, GWL_STYLE, NULL);
+        SetWindowPos(Present.hDeviceWindow, HWND_NOTOPMOST, 0, 0, Present.BackBufferWidth, Present.BackBufferHeight, SWP_NOACTIVATE | SWP_NOZORDER);
+       
+
 
         //_RwDirect3DObject->GetDeviceCaps(_RwD3DAdapterIndex, _RwD3DAdapterType, &_RwD3D9DeviceCaps);
         //_RwDirect3DObject->GetAdapterIdentifier(_RwD3DAdapterIndex, 0, &adapterInfo);
@@ -2672,14 +2262,7 @@ namespace DeferredRenderingEngine
 
     RwBool RenderingEngine::D3D9DeviceSystemClose(void* pOut __RWUNUSED__, void* pInOut __RWUNUSED__, RwInt32 nIn __RWUNUSED__)
     {
-        if (DisplayModes != NULL)
-        {
-            RwFree(DisplayModes);
-            DisplayModes = NULL;
-
-            NumDisplayModes = 0;
-        }
-
+        mDisplayModes.clear();
         SAFE_RELEASE(_RwDirect3DObject);
 
         Log::Debug("RenderingEngine::D3D9DeviceSystemClose");
@@ -2693,13 +2276,7 @@ namespace DeferredRenderingEngine
 
         SystemStarted = FALSE;
 
-        if (DisplayModes != NULL)
-        {
-            RwFree(DisplayModes);
-            DisplayModes = NULL;
-
-            NumDisplayModes = 0;
-        }
+        mDisplayModes.clear();
 
         /* Restore the saved floating point control register */
         _rwProcessorRelease();
@@ -2719,20 +2296,10 @@ namespace DeferredRenderingEngine
             }
         }
 
-        /* Release the matrix cache */
-        for (n = 0; n < 260; n++)
-        {
-            if (LastMatrixUsed[n] != NULL)
-            {
-                RwFreeListFree(MatrixFreeList, LastMatrixUsed[n]);
-                LastMatrixUsed[n] = NULL;
-            }
-        }
-
-        RwFreeListDestroy(MatrixFreeList);
-        MatrixFreeList = NULL;
-
-        /* Release the lights cache */
+        for (auto matrix : LastMatrixUsed)
+            SAFE_DELETE(matrix.second);
+        LastMatrixUsed.clear();
+        
         MaxNumLights = 0;
         if (LightsCache != NULL)
         {
@@ -2740,18 +2307,13 @@ namespace DeferredRenderingEngine
             LightsCache = NULL;
         }
 
-        /* Release active resources */
         for (n = 0; n < RWD3D9_MAX_TEXTURE_STAGES; n++)
-        {
             _RwD3DDevice->SetTexture(n, NULL);
-        }
 
         _RwD3DDevice->SetIndices(NULL);
 
         for (n = 0; n < MAX_STREAMS; n++)
-        {
             _RwD3DDevice->SetStreamSource(n, NULL, 0, 0);
-        }
 
         _RwD3DDevice->SetPixelShader(NULL);
         _RwD3DDevice->SetVertexDeclaration(NULL);
@@ -2776,93 +2338,66 @@ namespace DeferredRenderingEngine
         return true;
     }
 
-    //RwBool RenderingEngine::D3D9DeviceSystemStandards(void* out, void* inOut __RWUNUSED__,
-    //        RwInt32 numStandardsFunctions)
-    //{
-    //    //RwInt32             i;
-    //    //RwInt32             numDriverFunctions;
-    //    //RwStandardFunc* standardFunctions;
-    //    //RwStandard          rwD3D9Standards[] = {
-    //    //    /* Camera ops */
-    //    //    {rwSTANDARDCAMERABEGINUPDATE, CameraBeginUpdate},
-    //    //    {rwSTANDARDCAMERAENDUPDATE, CameraEndUpdate},
-    //    //    {rwSTANDARDCAMERACLEAR, CameraClear},
+    RwBool  D3D9NullStandard(void* pOut,  void* pInOut, RwInt32 nIn)
+    {
+        return FALSE;
+    }
 
-    //    //    /* Raster/Pixel operations */
-    //    //    {rwSTANDARDRASTERSHOWRASTER, RasterShowRaster},
-    //    //    {rwSTANDARDRGBTOPIXEL, _rwD3D9RGBToPixel},
-    //    //    {rwSTANDARDPIXELTORGB, _rwD3D9PixelToRGB},
-    //    //    {rwSTANDARDRASTERSETIMAGE, _rwD3D9RasterSetFromImage},
-    //    //    {rwSTANDARDIMAGEGETRASTER, _rwD3D9ImageGetFromRaster},
+    RwBool RenderingEngine::D3D9DeviceSystemStandards(void* out, void* inOut, RwInt32 numStandardsFunctions)
+    {
+        struct RwStandard
+        {
+            RwInt32             nStandard;
+            RwStandardFunc      fpStandard;
+        };
 
-    //    //    /* Raster creation and destruction */
-    //    //    {rwSTANDARDRASTERDESTROY, _rwD3D9RasterDestroy},
-    //    //    {rwSTANDARDRASTERCREATE, _rwD3D9RasterCreate},
+        RwStandard rwD3D9Standards[] = {
+            {rwSTANDARDCAMERABEGINUPDATE, CameraBeginUpdate},
+            {rwSTANDARDCAMERAENDUPDATE, CameraEndUpdate},
+            {rwSTANDARDCAMERACLEAR, CameraClear},
+            {rwSTANDARDRASTERSHOWRASTER, RasterShowRaster},
+            {rwSTANDARDRGBTOPIXEL,  D3D9NullStandard},
+            {rwSTANDARDPIXELTORGB,  D3D9NullStandard},
+            {rwSTANDARDRASTERSETIMAGE, (RwStandardFunc)0x8001E0},
+            {rwSTANDARDIMAGEGETRASTER,  (RwStandardFunc)0x7FF270},
+            {rwSTANDARDRASTERDESTROY,  Raster::_rwD3D9RasterDestroy},
+            {rwSTANDARDRASTERCREATE,  Raster::_rwD3D9RasterCreate},
+            {rwSTANDARDIMAGEFINDRASTERFORMAT,  (RwStandardFunc)0x7FFF00},
+            {rwSTANDARDTEXTURESETRASTER,  (RwStandardFunc)0x4CBD40},
+            {rwSTANDARDRASTERLOCK, Raster::D3D9RasterLock},
+            {rwSTANDARDRASTERUNLOCK, Raster::D3D9RasterUnlock},
+            {rwSTANDARDRASTERLOCKPALETTE,D3D9NullStandard},
+            {rwSTANDARDRASTERUNLOCKPALETTE, D3D9NullStandard},
+            {rwSTANDARDRASTERCLEAR, D3D9NullStandard},
+            {rwSTANDARDRASTERCLEARRECT, D3D9NullStandard},
+            {rwSTANDARDRASTERRENDER, D3D9NullStandard},
+            {rwSTANDARDRASTERRENDERSCALED, D3D9NullStandard},
+            {rwSTANDARDRASTERRENDERFAST, D3D9NullStandard},
+            {rwSTANDARDSETRASTERCONTEXT, (RwStandardFunc)0x4CB520},
+            {rwSTANDARDRASTERSUBRASTER,  (RwStandardFunc)0x4CB524},
+            {rwSTANDARDNATIVETEXTUREGETSIZE, D3D9NullStandard},
+            {rwSTANDARDNATIVETEXTUREWRITE, D3D9NullStandard},
+            {rwSTANDARDNATIVETEXTUREREAD, Raster::_rwD3D9NativeTextureRead},
+            {rwSTANDARDRASTERGETMIPLEVELS,D3D9NullStandard}
+        };
 
-    //    //    /* Finding about a raster type */
-    //    //    {rwSTANDARDIMAGEFINDRASTERFORMAT, _rwD3D9ImageFindRasterFormat},
+        auto standardFunctions = (RwStandardFunc*)out;
+        auto numDriverFunctions = sizeof(rwD3D9Standards) / sizeof(RwStandard);
 
-    //    //    /* Texture operations */
-    //    //    {rwSTANDARDTEXTURESETRASTER, _rwD3D9TextureSetRaster},
+        /* Clear out all of the standards initially */
+        for (auto i = 0; i < numStandardsFunctions; i++)
+            standardFunctions[i] = D3D9NullStandard;
 
-    //    //    /* Locking and releasing */
-    //    //    {rwSTANDARDRASTERLOCK, _rwD3D9RasterLock},
-    //    //    {rwSTANDARDRASTERUNLOCK, _rwD3D9RasterUnlock},
-    //    //    {rwSTANDARDRASTERLOCKPALETTE, _rwD3D9RasterLockPalette},
-    //    //    {rwSTANDARDRASTERUNLOCKPALETTE, _rwD3D9RasterUnlockPalette},
+        /* Fill in all of the standards */
+        while (numDriverFunctions--)
+        {
+            if ((rwD3D9Standards->nStandard < numStandardsFunctions) &&
+                (rwD3D9Standards->nStandard >= 0))
+                standardFunctions[rwD3D9Standards[numDriverFunctions]. nStandard] = rwD3D9Standards[numDriverFunctions].fpStandard;     
+        }
 
-    //    //    /* Raster operations */
-    //    //    {rwSTANDARDRASTERCLEAR, _rwD3D9RasterClear},
-    //    //    {rwSTANDARDRASTERCLEARRECT, _rwD3D9RasterClearRect},
-
-    //    //    /* !! */
-    //    //    {rwSTANDARDRASTERRENDER, nullptr},
-    //    //    {rwSTANDARDRASTERRENDERSCALED, nullptr},
-    //    //    {rwSTANDARDRASTERRENDERFAST, nullptr},
-
-    //    //    /* Setting the context */
-    //    //    {rwSTANDARDSETRASTERCONTEXT, _rwD3D9SetRasterContext},
-
-    //    //    /* Creating sub rasters */
-    //    //    {rwSTANDARDRASTERSUBRASTER, _rwD3D9RasterSubRaster},
-
-    //    //    /* Hint for rendering order */
-    //    //    /*{rwSTANDARDHINTRENDERF2B,         _rwD3D9HintRenderFront2Back}, */
-
-    //    //    /* Native texture serialization */
-    //    //    {rwSTANDARDNATIVETEXTUREGETSIZE, _rwD3D9NativeTextureGetSize},
-    //    //    {rwSTANDARDNATIVETEXTUREWRITE, _rwD3D9NativeTextureWrite},
-    //    //    {rwSTANDARDNATIVETEXTUREREAD, _rwD3D9NativeTextureRead},
-
-    //    //    /* Raster Mip Levels */
-    //    //    {rwSTANDARDRASTERGETMIPLEVELS, _rwD3D9RasterGetMipLevels}
-    //    //};
-
-    //    //RWFUNCTION(RWSTRING("D3D9DeviceSystemStandards"));
-
-    //    //standardFunctions = (RwStandardFunc*)out;
-    //    //numDriverFunctions = sizeof(rwD3D9Standards) / sizeof(RwStandard);
-
-    //    ///* Clear out all of the standards initially */
-    //    //for (i = 0; i < numStandardsFunctions; i++)
-    //    //{
-    //    //    standardFunctions[i] = D3D9NullStandard;
-    //    //}
-
-    //    ///* Fill in all of the standards */
-    //    //while (numDriverFunctions--)
-    //    //{
-    //    //    if ((rwD3D9Standards->nStandard < numStandardsFunctions) &&
-    //    //        (rwD3D9Standards->nStandard >= 0))
-    //    //    {
-    //    //        standardFunctions[rwD3D9Standards[numDriverFunctions].
-    //    //            nStandard] =
-    //    //            rwD3D9Standards[numDriverFunctions].fpStandard;
-    //    //    }
-    //    //}
-
-    //    return true;
-    //}
+        return true;
+    }
 
     RwDevice* RenderingEngine::_rwDeviceGetHandle(void)
     {
@@ -2882,7 +2417,7 @@ namespace DeferredRenderingEngine
         NULL, NULL, NULL, NULL  /* These get set up when the 3D Immediate mode module is setup */
         };
 
-        RWRETURN(&rwD3D9DriverDevice);
+        return &rwD3D9DriverDevice;
     }
 
     void RenderingEngine::D3D9ClearCacheShaders()
@@ -2902,42 +2437,18 @@ namespace DeferredRenderingEngine
             LastVertexStreamUsed[n].offset = 0;
             LastVertexStreamUsed[n].stride = 0;
         }
-
-        RWRETURNVOID();
     }
 
     void RenderingEngine::D3D9ClearCacheMatrix()
     {
         LastWorldMatrixUsedIdentity = FALSE;
 
-        if (MatrixFreeList != NULL)
-        {
-            RwUInt32 n;
+        for (auto matrix : LastMatrixUsed)
+            SAFE_DELETE(matrix.second);
+        LastMatrixUsed.clear();
 
-            for (n = 0; n < 260; n++)
-            {
-                if (LastMatrixUsed[n] != NULL)
-                {
-                    RwFreeListFree(MatrixFreeList, LastMatrixUsed[n]);
-                    LastMatrixUsed[n] = NULL;
-                }
-            }
-            RwFreeListPurge(MatrixFreeList);
-        }
-        else
-        {
-            MatrixFreeList = RwFreeListCreate(sizeof(D3DMATRIX), 15, 16,
-                rwID_DRIVERMODULE | rwMEMHINTDUR_EVENT);
-
-            memset(LastMatrixUsed, 0, sizeof(D3DMATRIX*) * 260);
-        }
-
-        /* World matrix always created */
-        LastMatrixUsed[D3DTS_WORLD] = (D3DMATRIX*)RwFreeListAlloc(MatrixFreeList, rwID_DRIVERMODULE | rwMEMHINTDUR_EVENT);
-
+        LastMatrixUsed[D3DTS_WORLD] = new D3DMATRIX;
         memcpy(LastMatrixUsed[D3DTS_WORLD], &IdentityMatrix, sizeof(D3DMATRIX));
-
-        RWRETURNVOID();
     }
 
     void RenderingEngine::D3D9ClearCacheLights()
@@ -2955,22 +2466,12 @@ namespace DeferredRenderingEngine
     {
         RwUInt32 n;
 
-        /* Reset rendertargets cache */
         CurrentDepthStencilSurface = NULL;
         for (n = 0; n < 4; n++)
-        {
             CurrentRenderSurface[n] = NULL;
-        }
 
-        /* Reset the shaders cache */
         D3D9ClearCacheShaders();
-
-        /* Reset the matrix cache */
         D3D9ClearCacheMatrix();
-
-        /* Reset the lights cache */
         D3D9ClearCacheLights();
-
-        RWRETURNVOID();
     }
 }

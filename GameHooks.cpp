@@ -200,29 +200,6 @@ void __cdecl HookedCameraUpdateZShiftScale(RwCamera* camera) {
 #include "RenderStates.h"
 #include "Raster.h"
 
-bool mCamClear(void* a, void* b, int c)
-{
-	return DeferredRenderingEngine::RenderingEngine::CameraClear(static_cast<RwCamera*>(a), static_cast<RwRGBA*>(b), c);
-}
-bool mCamBU(void* a, void* b, int c)
-{
-	UNREFERENCED_PARAMETER(a);
-	UNREFERENCED_PARAMETER(c);
-	return  DeferredRenderingEngine::RenderingEngine::CameraBeginUpdate(static_cast<RwCamera*>(b));
-}
-
-
-bool mCameraEndUpdate(void* a, void* b, int c)
-{
-	UNREFERENCED_PARAMETER(a);
-	UNREFERENCED_PARAMETER(c);
-	return  DeferredRenderingEngine::RenderingEngine::CameraEndUpdate(static_cast<RwCamera*>(b));
-}
-bool mRasterShowRaster(void* a, void* b, int c)
-{
-	UNREFERENCED_PARAMETER(b); 
-	return DeferredRenderingEngine::RenderingEngine::RasterShowRaster(static_cast<RwRaster*>(a), b, c);
-}
 
 void GameHooks()
 {
@@ -288,14 +265,10 @@ void GameHooks()
 	plugin::patch::RedirectJump(0x7FAA30, DeferredRenderingEngine::RenderingEngine::CreateVertexDeclaration);
 	plugin::patch::RedirectJump(0x7FAC10, DeferredRenderingEngine::RenderingEngine::DeleteVertexDeclaration);
 
-	bool(*pClear)(void*, void*, int) = &mCamClear;
-	bool (*pBeginUpdate)(void*, void*, int) = &mCamBU;
-	bool(*pEndUpdate)(void*, void*, int) = &mCameraEndUpdate;
-	bool(*pRasterShowRaster)(void*, void*, int) = &mRasterShowRaster;
-	plugin::patch::RedirectJump(0x7F7730, mCamClear);
-	plugin::patch::RedirectJump(0x7F8F20, mCamBU);
-	plugin::patch::RedirectJump(0x7F98D0, mCameraEndUpdate);
-	plugin::patch::RedirectJump(0x7F99B0, mRasterShowRaster);
+	/*plugin::patch::RedirectJump(0x7F7730, DeferredRenderingEngine::RenderingEngine::CameraClear);
+	plugin::patch::RedirectJump(0x7F8F20, DeferredRenderingEngine::RenderingEngine::CameraBeginUpdate);
+	plugin::patch::RedirectJump(0x7F98D0, DeferredRenderingEngine::RenderingEngine::CameraEndUpdate);
+	plugin::patch::RedirectJump(0x7F99B0, DeferredRenderingEngine::RenderingEngine::RasterShowRaster);*/
 
 
 	plugin::patch::RedirectJump(0x7F6CB0, DeferredRenderingEngine::RenderingEngine::D3D9SetPresentParameters);
@@ -366,14 +339,15 @@ void GameHooks()
 
 	plugin::patch::RedirectJump(0x7FE420, RenderStates::_rwD3D9RWSetRenderState);
 
-	plugin::patch::RedirectJump(0x4C9F90, Raster::D3D9RasterLock);
-	plugin::patch::RedirectJump(0x4CA290, Raster::D3D9RasterUnlock);
+	//plugin::patch::RedirectJump(0x4C9F90, Raster::D3D9RasterLock);
+	//plugin::patch::RedirectJump(0x4CA290, Raster::D3D9RasterUnlock);
 	plugin::patch::RedirectJump(0x4CC580, Raster::D3D9CheckRasterFormat);
 	plugin::patch::RedirectJump(0x4CC1D0, Raster::D3D9FindCorrectRasterFormat);
 	plugin::patch::RedirectJump(0x4CD820, Raster::_rwD3D9NativeTextureRead);
 	plugin::patch::RedirectJump(0x4C9ED0, Raster::_rwD3D9CubeRasterCreate);
 	plugin::patch::RedirectJump(0x4CB7C0, Raster::rwD3D9CreateTextureRaster);
-	plugin::patch::RedirectJump(0x4CCE60, Raster::_rwD3D9RasterCreate);
+	//plugin::patch::RedirectJump(0x4CCE60, Raster::_rwD3D9RasterCreate);
+	//plugin::patch::RedirectJump(0x4CBB00, Raster::_rwD3D9RasterDestroy);
 	plugin::patch::RedirectJump(0x4CCD70, Raster::rwD3D9CreateZBufferRaster);
 	plugin::patch::RedirectJump(0x4CB9C0, Raster::rwD3D9CreateCameraTextureRaster);
 

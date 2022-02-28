@@ -62,5 +62,6 @@ public:
 	static void D3D9TextureStageStateCacheClear();
 	static void D3D9SamplerStageStateCacheClear();
 	static void _rwD3D9RenderStateOpen();
+	static void _rwD3D9RenderStateReset();
 };
 
