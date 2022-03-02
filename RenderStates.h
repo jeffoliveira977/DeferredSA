@@ -57,6 +57,8 @@ public:
 	static RwBool RwD3D9SetTexture(RwTexture* texture, RwUInt32 stage);
 	static RwBool _rwD3D9RWSetRenderState(RwRenderState state, void* param);
 	static RwBool _rwD3D9RWGetRenderState(RwRenderState nState, void* param);
+	static RwBool RwD3D9SetMaterial(const void* material);
+	static RwBool RwD3D9SetSurfaceProperties(const RwSurfaceProperties* surfaceProps, const RwRGBA* color, RwUInt32 flags);
 
 	static void D3D9RenderStateCacheClear();
 	static void D3D9TextureStageStateCacheClear();

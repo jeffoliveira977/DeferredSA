@@ -38,6 +38,8 @@ public:
 	static RwBool _rwD3D9RasterCreate(void* unused1 __RWUNUSED__, void* rasterIn, RwInt32 flags);
 	static RwBool rwD3D9CreateZBufferRaster(RwRaster* raster, _rwD3D9RasterExt* rasExt);
 	static RwBool rwD3D9CreateCameraTextureRaster(RwRaster* raster, _rwD3D9RasterExt* rasExt);
+#undef RwD3D9RasterCreate
+	static RwRaster* RwD3D9RasterCreate(RwUInt32 width, RwUInt32 height, RwUInt32 d3dFormat, RwUInt32 flags);
 	static RwBool _rwD3D9RasterDestroy(void* unused1 __RWUNUSED__, void* raster, RwInt32 unused3 __RWUNUSED__);
 
 	static void* rwD3D9RasterCtor(void* object, RwInt32 offsetInObject __RWUNUSED__, RwInt32 sizeInObject __RWUNUSED__);

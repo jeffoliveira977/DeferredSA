@@ -129,6 +129,21 @@
       <Filter>Engine</Filter>
     </ClCompile>
     <ClCompile Include="RWCommon.cpp" />
+    <ClCompile Include="D3D9Texture.cpp">
+      <Filter>Engine</Filter>
+    </ClCompile>
+    <ClCompile Include="D3D9RenderTarget.cpp">
+      <Filter>Engine</Filter>
+    </ClCompile>
+    <ClCompile Include="D3D9DepthStencil.cpp">
+      <Filter>Engine</Filter>
+    </ClCompile>
+    <ClCompile Include="D3D9CubeMap.cpp">
+      <Filter>Engine</Filter>
+    </ClCompile>
+    <ClCompile Include="D3D9BaseTexture.cpp">
+      <Filter>Engine</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="GTADef.h" />
@@ -254,6 +269,21 @@
       <Filter>Engine</Filter>
     </ClInclude>
     <ClInclude Include="RWCommon.h" />
+    <ClInclude Include="D3D9RenderTarget.h">
+      <Filter>Engine</Filter>
+    </ClInclude>
+    <ClInclude Include="D3D9DepthStencil.h">
+      <Filter>Engine</Filter>
+    </ClInclude>
+    <ClInclude Include="D3D9CubeMap.h">
+      <Filter>Engine</Filter>
+    </ClInclude>
+    <ClInclude Include="D3D9Texture.h">
+      <Filter>Engine</Filter>
+    </ClInclude>
+    <ClInclude Include="D3D9BaseTexture.h">
+      <Filter>Engine</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="imgui">

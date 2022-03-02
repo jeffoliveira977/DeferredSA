@@ -1,9 +1,9 @@
 #include "RenderStates.h"
 #include "RWCommon.h"
 
-_rwD3D9StateCache& _RwD3D9StateCache = *(_rwD3D9StateCache*)0xC9A4C0;
+_rwD3D9StateCache _RwD3D9StateCache/* = *(_rwD3D9StateCache*)0xC9A4C0*/;
 
-RwInt32& D3D9AnisotTextureOffset = *(RwInt32*)0xC9A5E8;
+RwInt32 D3D9AnisotTextureOffset =0;
 #define CONSTTEXTUREGETANISOT(tex) \
     (*((const RwUInt8*)(((const RwUInt8*)tex) + D3D9AnisotTextureOffset)))
 
@@ -33,6 +33,15 @@ uint32_t TextureStageStateD3D[RWD3D9_MAX_TEXTURE_STAGES][33];
 uint32_t SamplerStageStateD3D[RWD3D9_MAX_TEXTURE_STAGES][14];
 uint32_t NumTextureStageStateChanges = 0;
 RxTextureStageChangeType TextureStageStateChanges[RWD3D9_MAX_TEXTURE_STAGES * 33];
+
+D3DMATERIAL9 LastMaterial;
+
+RwUInt32 LastMaterialFlags = 0;
+RwUInt32 LastMaterialColor = 0;
+RwReal LastMaterialDiffuse = 0.0f;
+RwReal LastMaterialAmbient = 0.0f;
+RwRGBAReal LastMaterialAmbientSaturated;
+RwRGBAReal& AmbientSaturated = *(RwRGBAReal*)0x8E2418;
 
 void RenderStates::RenderStateFlushCache()
 {
@@ -959,13 +968,156 @@ RwBool RenderStates::_rwD3D9RWGetRenderState(RwRenderState nState, void* param)
         *(RwUInt32*)param = RenderStateCache[D3DRS_ALPHAREF].value;
         return true;
     }
-    default:
-    {
-        break;
-    }
     }
 
     return false;
+}
+
+RwBool RenderStates::RwD3D9SetMaterial(const void* material)
+{
+    if (memcmp((const RwUInt32*)&LastMaterial, (const RwUInt32*)material, sizeof(D3DMATERIAL9)) != 0)
+    {
+        memcpy(&LastMaterial, material, sizeof(D3DMATERIAL9));
+        LastMaterialFlags = 0;
+
+        auto hr = IDirect3DDevice9_SetMaterial(_RwD3DDevice, (const D3DMATERIAL9*)material);
+
+        return SUCCEEDED(hr);
+    }
+    return true;
+}
+
+RwBool RenderStates::RwD3D9SetSurfaceProperties(const RwSurfaceProperties* surfaceProps, const RwRGBA* color, RwUInt32 flags)
+{
+    /* Keep only useful flags */
+    flags &= (rxGEOMETRY_MODULATE | rxGEOMETRY_PRELIT);
+
+    if (FLOATASINT(LastMaterialDiffuse) != FLOATASINT(surfaceProps->diffuse) ||
+        FLOATASINT(LastMaterialAmbient) != FLOATASINT(surfaceProps->ambient) ||
+        LastMaterialColor != *((const RwUInt32*)color) ||
+        LastMaterialFlags != flags ||
+        FLOATASINT(LastMaterialAmbientSaturated.red) != FLOATASINT(AmbientSaturated.red) ||
+        FLOATASINT(LastMaterialAmbientSaturated.green) != FLOATASINT(AmbientSaturated.green) ||
+        FLOATASINT(LastMaterialAmbientSaturated.blue) != FLOATASINT(AmbientSaturated.blue))
+    {
+        HRESULT             hr;
+
+        LastMaterialDiffuse = surfaceProps->diffuse;
+        LastMaterialAmbient = surfaceProps->ambient;
+        LastMaterialColor = *((const RwUInt32*)color);
+        LastMaterialFlags = flags;
+        LastMaterialAmbientSaturated.red = AmbientSaturated.red;
+        LastMaterialAmbientSaturated.green = AmbientSaturated.green;
+        LastMaterialAmbientSaturated.blue = AmbientSaturated.blue;
+
+        if ((flags & rxGEOMETRY_MODULATE) &&
+            *((const RwUInt32*)color) != 0xffffffff)
+        {
+            RwReal coef;
+
+            auto COLORSCALAR = 1.0f / 255.0f;
+            coef = surfaceProps->diffuse * COLORSCALAR;
+
+            LastMaterial.Diffuse.r = (color->red) * coef;
+            LastMaterial.Diffuse.g = (color->green) * coef;
+            LastMaterial.Diffuse.b = (color->blue) * coef;
+            LastMaterial.Diffuse.a = (color->alpha) * COLORSCALAR;
+
+            coef = surfaceProps->ambient * COLORSCALAR;
+
+            if (flags & rxGEOMETRY_PRELIT)
+            {
+                SetRenderState(D3DRS_AMBIENT, ((D3DCOLOR)((((RwUInt32)color->alpha) << 24) | (((RwUInt32)color->red) << 16) | (((RwUInt32)color->green) << 8) | ((RwUInt32)color->blue))));
+                SetRenderState(D3DRS_COLORVERTEX, TRUE);
+                SetRenderState(D3DRS_AMBIENTMATERIALSOURCE, D3DMCS_COLOR1);
+                SetRenderState(D3DRS_EMISSIVEMATERIALSOURCE, D3DMCS_MATERIAL);
+
+                LastMaterial.Ambient.r = 0.0f;
+                LastMaterial.Ambient.g = 0.0f;
+                LastMaterial.Ambient.b = 0.0f;
+                LastMaterial.Ambient.a = 1.0f;
+
+                LastMaterial.Emissive.r = (color->red) * AmbientSaturated.red * coef;
+                LastMaterial.Emissive.g = (color->green) * AmbientSaturated.green * coef;
+                LastMaterial.Emissive.b = (color->blue) * AmbientSaturated.blue * coef;
+                LastMaterial.Emissive.a = 1.0f;
+            }
+            else
+            {
+                SetRenderState(D3DRS_AMBIENT, 0xffffffff);
+                SetRenderState(D3DRS_COLORVERTEX, FALSE);
+                SetRenderState(D3DRS_AMBIENTMATERIALSOURCE, D3DMCS_MATERIAL);
+                SetRenderState(D3DRS_EMISSIVEMATERIALSOURCE, D3DMCS_MATERIAL);
+
+                LastMaterial.Ambient.r = (color->red) * AmbientSaturated.red * coef;
+                LastMaterial.Ambient.g = (color->green) * AmbientSaturated.green * coef;
+                LastMaterial.Ambient.b = (color->blue) * AmbientSaturated.blue * coef;
+                LastMaterial.Ambient.a = 1.0f;
+
+                LastMaterial.Emissive.r = 0.0f;
+                LastMaterial.Emissive.g = 0.0f;
+                LastMaterial.Emissive.b = 0.0f;
+                LastMaterial.Emissive.a = 1.0f;
+            }
+        }
+        else
+        {
+            LastMaterial.Diffuse.b = LastMaterial.Diffuse.g =
+                LastMaterial.Diffuse.r = surfaceProps->diffuse;
+
+            LastMaterial.Diffuse.a = 1.f;
+
+            SetRenderState(D3DRS_AMBIENT, 0xffffffff);
+            SetRenderState(D3DRS_AMBIENTMATERIALSOURCE, D3DMCS_MATERIAL);
+
+            if (flags & rxGEOMETRY_PRELIT)
+            {
+                /* Emmisive color from the vertex colors */
+                SetRenderState(D3DRS_COLORVERTEX, TRUE);
+                SetRenderState(D3DRS_EMISSIVEMATERIALSOURCE, D3DMCS_COLOR1);
+            }
+            else
+            {
+                /* Emmisive color from material, set to black */
+                SetRenderState(D3DRS_COLORVERTEX, FALSE);
+                SetRenderState(D3DRS_EMISSIVEMATERIALSOURCE, D3DMCS_MATERIAL);
+            }
+            LastMaterial.Emissive.r = 0.0f;
+            LastMaterial.Emissive.g = 0.0f;
+            LastMaterial.Emissive.b = 0.0f;
+            LastMaterial.Emissive.a = 1.0f;
+
+            if (surfaceProps->ambient != 1.f)
+            {
+                LastMaterial.Ambient.r =
+                    surfaceProps->ambient * AmbientSaturated.red;
+                LastMaterial.Ambient.g =
+                    surfaceProps->ambient * AmbientSaturated.green;
+                LastMaterial.Ambient.b =
+                    surfaceProps->ambient * AmbientSaturated.blue;
+            }
+            else
+            {
+                LastMaterial.Ambient.r = AmbientSaturated.red;
+                LastMaterial.Ambient.g = AmbientSaturated.green;
+                LastMaterial.Ambient.b = AmbientSaturated.blue;
+            }
+            LastMaterial.Ambient.a = 1.0f;
+        }
+
+        LastMaterial.Specular.r = 0.0f;
+        LastMaterial.Specular.g = 0.0f;
+        LastMaterial.Specular.b = 0.0f;
+        LastMaterial.Specular.a = 1.0f;
+
+        LastMaterial.Power = 0.0f;
+
+        hr = IDirect3DDevice9_SetMaterial(_RwD3DDevice, &LastMaterial);
+
+        return SUCCEEDED(hr);
+    }
+
+    return TRUE;
 }
 
 void RenderStates::D3D9RenderStateCacheClear()
@@ -1225,25 +1377,25 @@ void RenderStates::_rwD3D9RenderStateReset()
         _RwD3D9StateCache.stage[i].curTexRaster = NULL;
 
         /* Texture filter mode - Liner/Trilinear */
-        RwD3D9SetSamplerState(i, D3DSAMP_MINFILTER,  _RwD3D9FilterModeConvTable[_RwD3D9StateCache.stage[i].filterMode].minmag);
-        RwD3D9SetSamplerState(i, D3DSAMP_MAGFILTER, _RwD3D9FilterModeConvTable[_RwD3D9StateCache.stage[i].filterMode].minmag);
-        RwD3D9SetSamplerState(i, D3DSAMP_MIPFILTER, _RwD3D9FilterModeConvTable[_RwD3D9StateCache.stage[i].filterMode].mip);
+        SetSamplerState(i, D3DSAMP_MINFILTER,  _RwD3D9FilterModeConvTable[_RwD3D9StateCache.stage[i].filterMode].minmag);
+        SetSamplerState(i, D3DSAMP_MAGFILTER, _RwD3D9FilterModeConvTable[_RwD3D9StateCache.stage[i].filterMode].minmag);
+        SetSamplerState(i, D3DSAMP_MIPFILTER, _RwD3D9FilterModeConvTable[_RwD3D9StateCache.stage[i].filterMode].mip);
 
         /* Texture addressing mode */
-        RwD3D9SetSamplerState(i, D3DSAMP_ADDRESSU, _RwD3D9AddressConvTable[_RwD3D9StateCache.stage[i].texAddressU]);
-        RwD3D9SetSamplerState(i, D3DSAMP_ADDRESSV,  _RwD3D9AddressConvTable[_RwD3D9StateCache.stage[i].texAddressV]);
+        SetSamplerState(i, D3DSAMP_ADDRESSU, _RwD3D9AddressConvTable[_RwD3D9StateCache.stage[i].texAddressU]);
+        SetSamplerState(i, D3DSAMP_ADDRESSV,  _RwD3D9AddressConvTable[_RwD3D9StateCache.stage[i].texAddressV]);
 
         /* Border color */
-        RwD3D9SetSamplerState(i, D3DSAMP_BORDERCOLOR, _RwD3D9StateCache.stage[i].borderColor);
+        SetSamplerState(i, D3DSAMP_BORDERCOLOR, _RwD3D9StateCache.stage[i].borderColor);
 
         /* Max Anisotropy Level: 1 to disable it */
-        RwD3D9SetSamplerState(i, D3DSAMP_MAXANISOTROPY, _RwD3D9StateCache.stage[i].maxAnisotropy);
+        SetSamplerState(i, D3DSAMP_MAXANISOTROPY, _RwD3D9StateCache.stage[i].maxAnisotropy);
 
         /* Disable stage if not the first one */
         if (i)
         {
-            RwD3D9SetTextureStageState(i, D3DTSS_COLOROP, D3DTOP_DISABLE);
-            RwD3D9SetTextureStageState(i, D3DTSS_ALPHAOP, D3DTOP_DISABLE);
+            SetTextureStageState(i, D3DTSS_COLOROP, D3DTOP_DISABLE);
+            SetTextureStageState(i, D3DTSS_ALPHAOP, D3DTOP_DISABLE);
         }
     }
 
@@ -1277,10 +1429,10 @@ void RenderStates::_rwD3D9RenderStateReset()
     SetRenderState(D3DRS_CULLMODE, _RwD3D9CullModeConvTable[_RwD3D9StateCache.cullMode]);
 
     /* Vertex color only until a texture has been set */
-    RwD3D9SetTextureStageState(0, D3DTSS_COLOROP, D3DTOP_SELECTARG2);
-    RwD3D9SetTextureStageState(0, D3DTSS_COLORARG2, D3DTA_DIFFUSE);
-    RwD3D9SetTextureStageState(0, D3DTSS_ALPHAOP, D3DTOP_SELECTARG2);
-    RwD3D9SetTextureStageState(0, D3DTSS_ALPHAARG2, D3DTA_DIFFUSE);
+    SetTextureStageState(0, D3DTSS_COLOROP, D3DTOP_SELECTARG2);
+    SetTextureStageState(0, D3DTSS_COLORARG2, D3DTA_DIFFUSE);
+    SetTextureStageState(0, D3DTSS_ALPHAOP, D3DTOP_SELECTARG2);
+    SetTextureStageState(0, D3DTSS_ALPHAARG2, D3DTA_DIFFUSE);
 
     /* Diffuse, Specular & Ambient colors come from the material */
     SetRenderState(D3DRS_DIFFUSEMATERIALSOURCE, D3DMCS_MATERIAL);

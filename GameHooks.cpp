@@ -304,20 +304,32 @@ void GameHooks()
 
 	plugin::patch::RedirectJump(0x7FC2D0, RenderStates::SetRenderState);
 	plugin::patch::RedirectJump(0x7FC320, RenderStates::GetRenderState);
-	plugin::patch::RedirectJump(0x7FCAC0, RenderStates::_rwD3D9RenderStateOpen);
-	plugin::patch::RedirectJump(0x7FC3C0, RenderStates::SetSamplerState);
-	plugin::patch::RedirectJump(0x7FC400, RenderStates::GetSamplerState);
-	plugin::patch::RedirectJump(0x7FC200, RenderStates::RenderStateFlushCache);
 	plugin::patch::RedirectJump(0x7FC340, RenderStates::SetTextureStageState);
 	plugin::patch::RedirectJump(0x7FC3A0, RenderStates::GetTextureStageState);
+	plugin::patch::RedirectJump(0x7FC3C0, RenderStates::SetSamplerState);
+	plugin::patch::RedirectJump(0x7FC400, RenderStates::GetSamplerState);
 
-	plugin::patch::RedirectJump(0x7FDE60, RenderStates::_rwD3D9SetTextureAnisotropyOffset);
-	plugin::patch::RedirectJump(0x7FDB80, RenderStates::_rwD3D9RenderStateTextureFilter);
+	plugin::patch::RedirectJump(0x7FC430, RenderStates::RwD3D9SetMaterial);
+	plugin::patch::RedirectJump(0x7FC4D0, RenderStates::RwD3D9SetSurfaceProperties);
+
+	plugin::patch::RedirectJump(0x7FCAC0, RenderStates::_rwD3D9RenderStateOpen);
+	plugin::patch::RedirectJump(0x7FD100, RenderStates::_rwD3D9RenderStateReset);
+	plugin::patch::RedirectJump(0x7FD810, RenderStates::_rwD3D9RWGetRenderState);
+
 	plugin::patch::RedirectJump(0x7FDA90, RenderStates::_rwD3D9RenderStateTextureAddress);
 	plugin::patch::RedirectJump(0x7FDB00, RenderStates::_rwD3D9RenderStateTextureAddressU);
 	plugin::patch::RedirectJump(0x7FDB40, RenderStates::_rwD3D9RenderStateTextureAddressV);
+
+	plugin::patch::RedirectJump(0x7FDB80, RenderStates::_rwD3D9RenderStateTextureFilter);
 	plugin::patch::RedirectJump(0x7FDC30, RenderStates::_rwD3D9RenderStateSrcBlend);
 	plugin::patch::RedirectJump(0x7FDC80, RenderStates::_rwD3D9RenderStateDestBlend);
+
+	plugin::patch::RedirectJump(0x7FDCD0, RenderStates::_rwD3D9RWSetRasterStage);
+	plugin::patch::RedirectJump(0x7FDE50, RenderStates::_rwD3D9RWGetRasterStage);
+
+	plugin::patch::RedirectJump(0x7FC200, RenderStates::RenderStateFlushCache);
+
+	plugin::patch::RedirectJump(0x7FDE60, RenderStates::_rwD3D9SetTextureAnisotropyOffset);
 
 	plugin::patch::RedirectJump(0x7FDE70, RenderStates::RwD3D9SetTexture);
 
@@ -338,16 +350,18 @@ void GameHooks()
 	plugin::patch::RedirectJump(0x7FE3D0, RenderStates::_rwD3D9RenderStateStencilFunctionWriteMask);
 
 	plugin::patch::RedirectJump(0x7FE420, RenderStates::_rwD3D9RWSetRenderState);
+	
 
-	//plugin::patch::RedirectJump(0x4C9F90, Raster::D3D9RasterLock);
-	//plugin::patch::RedirectJump(0x4CA290, Raster::D3D9RasterUnlock);
+
+	plugin::patch::RedirectJump(0x4C9F90, Raster::D3D9RasterLock);
+	plugin::patch::RedirectJump(0x4CA290, Raster::D3D9RasterUnlock);
 	plugin::patch::RedirectJump(0x4CC580, Raster::D3D9CheckRasterFormat);
 	plugin::patch::RedirectJump(0x4CC1D0, Raster::D3D9FindCorrectRasterFormat);
 	plugin::patch::RedirectJump(0x4CD820, Raster::_rwD3D9NativeTextureRead);
 	plugin::patch::RedirectJump(0x4C9ED0, Raster::_rwD3D9CubeRasterCreate);
 	plugin::patch::RedirectJump(0x4CB7C0, Raster::rwD3D9CreateTextureRaster);
-	//plugin::patch::RedirectJump(0x4CCE60, Raster::_rwD3D9RasterCreate);
-	//plugin::patch::RedirectJump(0x4CBB00, Raster::_rwD3D9RasterDestroy);
+	plugin::patch::RedirectJump(0x4CCE60, Raster::_rwD3D9RasterCreate);
+	plugin::patch::RedirectJump(0x4CBB00, Raster::_rwD3D9RasterDestroy);
 	plugin::patch::RedirectJump(0x4CCD70, Raster::rwD3D9CreateZBufferRaster);
 	plugin::patch::RedirectJump(0x4CB9C0, Raster::rwD3D9CreateCameraTextureRaster);
 

@@ -116,6 +116,11 @@
     <ClCompile Include="CGameIdle.cpp" />
     <ClCompile Include="Collider.cpp" />
     <ClCompile Include="CubemapReflection.cpp" />
+    <ClCompile Include="D3D9BaseTexture.cpp" />
+    <ClCompile Include="D3D9CubeMap.cpp" />
+    <ClCompile Include="D3D9DepthStencil.cpp" />
+    <ClCompile Include="D3D9RenderTarget.cpp" />
+    <ClCompile Include="D3D9Texture.cpp" />
     <ClCompile Include="DefaultMeshPipeline.cpp" />
     <ClCompile Include="CommonD.cpp" />
     <ClCompile Include="CascadedShadowRendering.cpp" />
@@ -196,6 +201,11 @@
     <ClInclude Include="CGameIdle.h" />
     <ClInclude Include="Collider.h" />
     <ClInclude Include="CubemapReflection.h" />
+    <ClInclude Include="D3D9BaseTexture.h" />
+    <ClInclude Include="D3D9CubeMap.h" />
+    <ClInclude Include="D3D9DepthStencil.h" />
+    <ClInclude Include="D3D9RenderTarget.h" />
+    <ClInclude Include="D3D9Texture.h" />
     <ClInclude Include="DefaultMeshPipeline.h" />
     <ClInclude Include="CommonD.h" />
     <ClInclude Include="CascadedShadowRendering.h" />
