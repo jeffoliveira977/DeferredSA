@@ -25,7 +25,7 @@ void D3D9RenderTarget::Initialize()
     if (rasExt->cube)
     {     
         hr = _RwD3DDevice->CreateCubeTexture(mRaster->width, (mRaster->cFormat & rwRASTERFORMATMIPMAP) ? 0 : 1,
-            (rasExt->automipmapgen ? D3DUSAGE_AUTOGENMIPMAP : 0) | D3DUSAGE_RENDERTARGET, rasExt->d3dFormat, D3DPOOL_DEFAULT, (LPDIRECT3DCUBETEXTURE9*)&mD3D9Texture, nullptr);
+            (rasExt->automipmapgen ? D3DUSAGE_AUTOGENMIPMAP : 0) | D3DUSAGE_RENDERTARGET, rasExt->d3dFormat, D3DPOOL_DEFAULT, (IDirect3DCubeTexture9**)&mD3D9Texture, nullptr);
     }
     else
     {
@@ -43,7 +43,7 @@ void D3D9RenderTarget::Initialize()
 
 void D3D9RenderTarget::Unitialize()
 {
-    SAFE_RELEASE(mD3D9Texture)
+    SAFE_RELEASE(mD3D9Texture);
 }
 
 void D3D9RenderTarget::Lock(uint flags, uint level, void* pixelsIn)
@@ -56,21 +56,21 @@ void D3D9RenderTarget::Lock(uint flags, uint level, void* pixelsIn)
     auto rasExt = RASTEREXTFROMRASTER(mRaster);
 
     if (rasExt->cube)
-        hr = reinterpret_cast<LPDIRECT3DCUBETEXTURE9>(mD3D9Texture)->GetCubeMapSurface((D3DCUBEMAP_FACES)rasExt->face, level, &surface);
+        hr = reinterpret_cast<IDirect3DCubeTexture9*>(mD3D9Texture)->GetCubeMapSurface((D3DCUBEMAP_FACES)rasExt->face, level, &surface);
     else
         hr = mD3D9Texture->GetSurfaceLevel(level, &surface);
    
     D3DSURFACE_DESC d3dDesc;
     surface->GetDesc(&d3dDesc);
 
-    hr = _RwD3DDevice->CreateOffscreenPlainSurface(d3dDesc.Width, d3dDesc.Height, d3dDesc.Format, D3DPOOL_SYSTEMMEM, &(rasExt->lockedSurface), NULL);
+    hr = _RwD3DDevice->CreateOffscreenPlainSurface(d3dDesc.Width, d3dDesc.Height, d3dDesc.Format, D3DPOOL_SYSTEMMEM, &(rasExt->lockedSurface), nullptr);
     if (SUCCEEDED(hr))
     {
         _RwD3DDevice->GetRenderTargetData(surface, rasExt->lockedSurface);
 
         if (SUCCEEDED(hr))
         {
-            hr = rasExt->lockedSurface->LockRect(&rasExt->lockedRect, NULL, flags);
+            hr = rasExt->lockedSurface->LockRect(&rasExt->lockedRect, nullptr, flags);
 
             if (FAILED(hr))
                 rasExt->lockedSurface->Release();
