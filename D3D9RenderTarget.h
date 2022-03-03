@@ -3,7 +3,6 @@
 
 class D3D9RenderTarget : public D3D9BaseTexture
 {
-	IDirect3DTexture9* mD3D9Texture;
 public:
 	D3D9RenderTarget(RwRaster* raster);
 	~D3D9RenderTarget();

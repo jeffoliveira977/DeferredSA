@@ -5,7 +5,10 @@ class D3D9BaseTexture
 {
 protected:
 	RwRaster* mRaster;
+	IDirect3DTexture9* mD3D9Texture;
 public:
+
+	IDirect3DTexture9* GetObject();
 
 	D3D9BaseTexture(RwRaster* raster);
 	~D3D9BaseTexture();

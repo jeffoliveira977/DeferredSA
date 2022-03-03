@@ -1,8 +1,7 @@
 #include "D3D9Texture.h"
 
 D3D9Texture::D3D9Texture(RwRaster* raster) :
-    D3D9BaseTexture(raster),
-   mD3D9Texture(nullptr)
+    D3D9BaseTexture(raster)
 {
     Initialize();
 }

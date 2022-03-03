@@ -1,7 +1,6 @@
 #include "D3D9CubeMap.h"
 D3D9CubeMap::D3D9CubeMap(RwRaster* raster) :
-    D3D9BaseTexture(raster),
-    mD3D9Texture(nullptr)
+    D3D9BaseTexture(raster)
 {
     Initialize();
 }
@@ -18,7 +17,7 @@ void D3D9CubeMap::Initialize()
 
     auto rasExt = RASTEREXTFROMRASTER(mRaster);
     auto hr = _RwD3DDevice->CreateCubeTexture(mRaster->width, (mRaster->cFormat & rwRASTERFORMATMIPMAP) ? 0 : 1, 
-        (rasExt->automipmapgen ? D3DUSAGE_AUTOGENMIPMAP : 0), rasExt->d3dFormat, D3DPOOL_MANAGED, &mD3D9Texture, nullptr);
+        (rasExt->automipmapgen ? D3DUSAGE_AUTOGENMIPMAP : 0), rasExt->d3dFormat, D3DPOOL_MANAGED, (IDirect3DCubeTexture9**)&mD3D9Texture, nullptr);
 
     if (FAILED(hr) || mD3D9Texture == nullptr)
     {
@@ -38,7 +37,7 @@ void D3D9CubeMap::Lock(uint flags, uint level, void* pixelsIn)
         return;
 
     auto rasExt = RASTEREXTFROMRASTER(mRaster);
-    auto hr = mD3D9Texture->GetCubeMapSurface((D3DCUBEMAP_FACES)rasExt->face, level, &(rasExt->lockedSurface));
+    auto hr = ((IDirect3DCubeTexture9*)mD3D9Texture)->GetCubeMapSurface((D3DCUBEMAP_FACES)rasExt->face, level, &(rasExt->lockedSurface));
 
     if (SUCCEEDED(hr))
         hr = rasExt->lockedSurface->LockRect(&rasExt->lockedRect, nullptr, flags);

@@ -1,8 +1,14 @@
 #include "D3D9BaseTexture.h"
 
+IDirect3DTexture9* D3D9BaseTexture::GetObject()
+{
+	return mD3D9Texture;
+}
+
 D3D9BaseTexture::D3D9BaseTexture(RwRaster* raster)
 {
 	mRaster = raster;
+	mD3D9Texture = nullptr;
 }
 
 D3D9BaseTexture::~D3D9BaseTexture()

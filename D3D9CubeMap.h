@@ -3,7 +3,6 @@
 
 class D3D9CubeMap : public D3D9BaseTexture
 {	
-IDirect3DCubeTexture9* mD3D9Texture;
 public:
 	D3D9CubeMap(RwRaster* raster);
 	~D3D9CubeMap();

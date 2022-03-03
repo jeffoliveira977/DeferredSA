@@ -2,11 +2,6 @@
 #include "GTADef.h"
 
 #undef RwD3D9RasterCreate
-//RwUInt32& NumPaletteIndexFree = *(RwUInt32*)0xB4E9E8;
-//RwUInt32& MaxPaletteIndexFree = *(RwUInt32*)0xB4E9EC;
-//RwUInt32& MaxPaletteIndex = *(RwUInt32*)0xB4E9F0;
-//RwUInt16*& PaletteIndexFree = *(RwUInt16**)0xB4E9F4;
-//RwFreeList*& PaletteFreeList = *(RwFreeList**)0xB4E9F8;
 
 #define SETFORMATINFO(_format, _alpha, _depth, _rwformat)   \
     _rwD3D9PixelFormatInfo[_format].alpha = _alpha; \
@@ -17,44 +12,6 @@
 _rwD3D9FormatInfo _rwD3D9PixelFormatInfo[MAX_PIXEL_FORMATS];
 
 std::list<RwRaster*> RasterList;
-
-//RwUInt32 FindAvailablePaletteIndex(void)
-//{
-//    RwUInt32 index;
-//
-//    if (NumPaletteIndexFree)
-//    {
-//        NumPaletteIndexFree--;
-//        index = PaletteIndexFree[NumPaletteIndexFree];
-//    }
-//    else
-//    {
-//        index = MaxPaletteIndex;
-//        MaxPaletteIndex++;
-//    }
-//
-//    return index;
-//}
-//
-//void AddAvailablePaletteIndex(RwUInt32 index)
-//{
-//
-//    if (NumPaletteIndexFree >= MaxPaletteIndexFree)
-//    {
-//        MaxPaletteIndexFree += 512;
-//
-//        if (PaletteIndexFree == nullptr)
-//            PaletteIndexFree = (RwUInt16*) RwMalloc(MaxPaletteIndexFree * sizeof(RwUInt16),
-//                    rwID_DRIVERMODULE | rwMEMHINTDUR_EVENT | rwMEMHINTFLAG_RESIZABLE);
-//        else
-//            PaletteIndexFree = (RwUInt16*) RwRealloc(PaletteIndexFree,  MaxPaletteIndexFree * sizeof(RwUInt16),
-//                    rwID_DRIVERMODULE |  rwMEMHINTDUR_EVENT | rwMEMHINTFLAG_RESIZABLE);
-//    }
-//
-//    PaletteIndexFree[NumPaletteIndexFree++] = (RwUInt16)index;
-//
-//    return;
-//}
 
 RwInt32 _rwD3D9FindMSB(RwInt32 num)
 {
@@ -68,10 +25,6 @@ RwInt32 _rwD3D9FindMSB(RwInt32 num)
 
     return pos;
 }
-
-///* Video memory raster list */
-//RxD3D9VideoMemoryRaster*& VideoMemoryRasters = *(RxD3D9VideoMemoryRaster**)0xB4E9FC;
-//RwFreeList*& VideoMemoryRastersFreeList = *(RwFreeList**)0xB4EA00;
 
 RwInt32& _RwD3D9RasterExtOffset = *(RwInt32*)0xB4E9E0;    /* Raster extension offset */
 
@@ -416,20 +369,6 @@ RwInt32 Raster::D3D9FindCorrectRasterFormat(RwRasterType type, RwInt32 flags)
     case rwRASTERTYPETEXTURE:
         if ((format & rwRASTERFORMATPIXELFORMATMASK) == rwRASTERFORMATDEFAULT)
         {
-            ///* Check if we are requesting a default pixel format palette texture */
-            //if (format & rwRASTERFORMATPAL8)
-            //{
-            //    if (_rwD3D9CheckValidTextureFormat(D3DFMT_P8))
-            //    {
-            //        if (_RwD3D9DeviceCaps.TextureCaps & D3DPTEXTURECAPS_ALPHAPALETTE)
-            //            format |= rwRASTERFORMAT8888;
-            //        else
-            //            format |= rwRASTERFORMAT888;
-            //    }
-            //    else
-            //        format &= (~rwRASTERFORMATPAL8);
-            //}
-
             if ((format & rwRASTERFORMATPAL8) == 0)
             {
                 /*
@@ -450,110 +389,46 @@ RwInt32 Raster::D3D9FindCorrectRasterFormat(RwRasterType type, RwInt32 flags)
         }
         else
         {
-            ///* No support for 4 bits palettes */
-            //if (format & rwRASTERFORMATPAL4)
-            //{
-            //    /* Change it to a 8 bits palette */
-            //    format &= (~rwRASTERFORMATPAL4);
-            //    format |= rwRASTERFORMATPAL8;
-            //}
 
-            //if (format & rwRASTERFORMATPAL8)
-            //{
-            //    if (!_rwD3D9CheckValidTextureFormat(D3DFMT_P8) ||
-            //        (((format & rwRASTERFORMATPIXELFORMATMASK) == rwRASTERFORMAT8888) &&
-            //        ((_RwD3D9DeviceCaps.TextureCaps & D3DPTEXTURECAPS_ALPHAPALETTE) == 0)))
-            //    {
-            //        /* Change it to a default format */
-            //        format &= (~rwRASTERFORMATPAL8);
 
-            //        if ((format & rwRASTERFORMATPIXELFORMATMASK) == rwRASTERFORMAT888)
-            //        {
-            //            if (_RwD3D9AdapterInformation.displayDepth > 16)
-            //            {
-            //                if (_rwD3D9CheckValidTextureFormat(D3DFMT_X8R8G8B8))
-            //                    format |= rwRASTERFORMAT888;
-            //                else
-            //                {
-            //                    format &= (~rwRASTERFORMAT888);
-            //                    format |= rwRASTERFORMAT565;
-            //                }
-            //            }
-            //            else
-            //            {
-            //                format &= (~rwRASTERFORMAT888);
-            //                format |= rwRASTERFORMAT565;
-            //            }
-            //        }
-            //        else
-            //        {
-            //            if (_RwD3D9AdapterInformation.displayDepth > 16)
-            //            {
-            //                if (_rwD3D9CheckValidTextureFormat(D3DFMT_A8R8G8B8))
-            //                    format |= rwRASTERFORMAT8888;
-            //                else
-            //                {
-            //                    format &= (~rwRASTERFORMAT8888);
-
-            //                    if (_rwD3D9CheckValidTextureFormat(D3DFMT_A4R4G4B4))
-            //                        format |= rwRASTERFORMAT4444;
-            //                    else
-            //                        format |= rwRASTERFORMAT1555;
-            //                }
-            //            }
-            //            else
-            //            {
-            //                format &= (~rwRASTERFORMAT8888);
-
-            //                if (_rwD3D9CheckValidTextureFormat(D3DFMT_A4R4G4B4))
-            //                    format |= rwRASTERFORMAT4444;
-            //                else
-            //                    format |= rwRASTERFORMAT1555;
-            //            }
-            //        }
-            //    }
-            //}
-            //else
+            if ((format & rwRASTERFORMATPIXELFORMATMASK) == rwRASTERFORMAT8888)
             {
-                if ((format & rwRASTERFORMATPIXELFORMATMASK) == rwRASTERFORMAT8888)
+                if (!_rwD3D9CheckValidTextureFormat(D3DFMT_A8R8G8B8))
                 {
-                    if (!_rwD3D9CheckValidTextureFormat(D3DFMT_A8R8G8B8))
-                    {
-                        format &= (~rwRASTERFORMAT8888);
+                    format &= (~rwRASTERFORMAT8888);
 
-                        if (_rwD3D9CheckValidTextureFormat(D3DFMT_A4R4G4B4))
-                            format |= rwRASTERFORMAT4444;
-                        else
-                            format |= rwRASTERFORMAT1555;
-                    }
-                }
-                else if ((format & rwRASTERFORMATPIXELFORMATMASK) == rwRASTERFORMAT888)
-                {
-                    if (!_rwD3D9CheckValidTextureFormat(D3DFMT_X8R8G8B8))
-                    {
-                        format &= (~rwRASTERFORMAT888);
-                        format |= rwRASTERFORMAT565;
-                    }
-                }
-                else if ((format & rwRASTERFORMATPIXELFORMATMASK) == rwRASTERFORMAT4444)
-                {
-                    if (!_rwD3D9CheckValidTextureFormat(D3DFMT_A4R4G4B4))
-                    {
-                        format &= (~rwRASTERFORMAT4444);
+                    if (_rwD3D9CheckValidTextureFormat(D3DFMT_A4R4G4B4))
+                        format |= rwRASTERFORMAT4444;
+                    else
                         format |= rwRASTERFORMAT1555;
-                    }
                 }
-                else if ((format & rwRASTERFORMATPIXELFORMATMASK) == rwRASTERFORMATLUM8)
+            }
+            else if ((format & rwRASTERFORMATPIXELFORMATMASK) == rwRASTERFORMAT888)
+            {
+                if (!_rwD3D9CheckValidTextureFormat(D3DFMT_X8R8G8B8))
                 {
-                    if (!_rwD3D9CheckValidTextureFormat(D3DFMT_L8))
-                    {
-                        format &= (~rwRASTERFORMATLUM8);
+                    format &= (~rwRASTERFORMAT888);
+                    format |= rwRASTERFORMAT565;
+                }
+            }
+            else if ((format & rwRASTERFORMATPIXELFORMATMASK) == rwRASTERFORMAT4444)
+            {
+                if (!_rwD3D9CheckValidTextureFormat(D3DFMT_A4R4G4B4))
+                {
+                    format &= (~rwRASTERFORMAT4444);
+                    format |= rwRASTERFORMAT1555;
+                }
+            }
+            else if ((format & rwRASTERFORMATPIXELFORMATMASK) == rwRASTERFORMATLUM8)
+            {
+                if (!_rwD3D9CheckValidTextureFormat(D3DFMT_L8))
+                {
+                    format &= (~rwRASTERFORMATLUM8);
 
-                        if (_rwD3D9CheckValidTextureFormat(D3DFMT_X8R8G8B8))
-                            format |= D3DFMT_X8R8G8B8;
-                        else
-                            format |= rwRASTERFORMAT565;
-                    }
+                    if (_rwD3D9CheckValidTextureFormat(D3DFMT_X8R8G8B8))
+                        format |= D3DFMT_X8R8G8B8;
+                    else
+                        format |= rwRASTERFORMAT565;
                 }
             }
         }
@@ -688,26 +563,6 @@ RwBool Raster::rwD3D9SetRasterFormat(void* rasterIn, RwInt32 flags)
     case rwRASTERTYPETEXTURE:
         if ((format & rwRASTERFORMATPIXELFORMATMASK) == rwRASTERFORMATDEFAULT)
         {
-            ///* Check if we are requesting a default pixel format palette texture */
-            //if (format & rwRASTERFORMATPAL8)
-            //{
-            //    if (_rwD3D9CheckValidTextureFormat(D3DFMT_P8))
-            //    {
-            //        if (_RwD3D9DeviceCaps.TextureCaps & D3DPTEXTURECAPS_ALPHAPALETTE)
-            //            format |= rwRASTERFORMAT8888;
-            //        else
-            //            format |= rwRASTERFORMAT888;
-
-            //        raster->depth = 8;
-            //    }
-            //    else
-            //    {
-            //        return FALSE;
-            //    }
-            //}
-            //else
-
-
             if (_rwD3D9CheckValidTextureFormat(D3DFMT_A8R8G8B8))
             {
                 format |= rwRASTERFORMAT8888;
@@ -730,34 +585,21 @@ RwBool Raster::rwD3D9SetRasterFormat(void* rasterIn, RwInt32 flags)
                 return FALSE;
             else
             {
-                /* if (format & rwRASTERFORMATPAL8)
-                 {
-                     if (_rwD3D9CheckValidTextureFormat(D3DFMT_P8) &&
-                         (((format & rwRASTERFORMATPIXELFORMATMASK) == rwRASTERFORMAT888) ||
-                         (((format & rwRASTERFORMATPIXELFORMATMASK) == rwRASTERFORMAT8888) &&
-                             (_RwD3D9DeviceCaps.TextureCaps & D3DPTEXTURECAPS_ALPHAPALETTE))))
-                         raster->depth = 8;
-                     else
-                         return FALSE;
-                 }
-                 else*/
-                {
-                    auto d3dFormat = _rwRasterConvTable[FMT2TBL(format)].format;
+                auto d3dFormat = _rwRasterConvTable[FMT2TBL(format)].format;
 
-                    if (IS_D3DFORMAT_ZBUFFER(d3dFormat))
-                    {
-                        if (_rwD3D9CheckValidZBufferTextureFormat(d3dFormat))
-                            raster->depth = _rwRasterConvTable[FMT2TBL(format)].depth;
-                        else
-                            return FALSE;
-                    }
+                if (IS_D3DFORMAT_ZBUFFER(d3dFormat))
+                {
+                    if (_rwD3D9CheckValidZBufferTextureFormat(d3dFormat))
+                        raster->depth = _rwRasterConvTable[FMT2TBL(format)].depth;
                     else
-                    {
-                        if (_rwD3D9CheckValidTextureFormat(d3dFormat))
-                            raster->depth = _rwRasterConvTable[FMT2TBL(format)].depth;
-                        else
-                            return FALSE;
-                    }
+                        return FALSE;
+                }
+                else
+                {
+                    if (_rwD3D9CheckValidTextureFormat(d3dFormat))
+                        raster->depth = _rwRasterConvTable[FMT2TBL(format)].depth;
+                    else
+                        return FALSE;
                 }
             }
         }
@@ -836,135 +678,66 @@ RwUInt32 Raster::_rwD3D9ImageFindFormat(RwImage* image)
 
     auto depth = RwImageGetDepth(image);
 
-    //if (depth == 4 || depth == 8)
-    //{
-    //    const RwInt32   width = RwImageGetWidth(image);
-    //    const RwInt32   height = RwImageGetHeight(image);
-    //    const RwUInt8* cpIn = image->cpPixels;
-    //    const RwRGBA* rpPal = image->palette;
-    //    RwInt32         y;
-    //    RwBool          paletteHasAlpha;
 
-    //    /* First: check palette for transparent colors */
-    //    paletteHasAlpha = FALSE;
-    //    if (depth == 4)
-    //    {
-    //        for (y = 0; y < 16; y++)
-    //        {
-    //            if (0xFF != rpPal[y].alpha)
-    //            {
-    //                paletteHasAlpha = TRUE;
-    //                break;
-    //            }
-    //        }
-    //    }
-    //    else
-    //    {
-    //        for (y = 0; y < 256; y++)
-    //        {
-    //            if (0xFF != rpPal[y].alpha)
-    //            {
-    //                paletteHasAlpha = TRUE;
-    //                break;
-    //            }
-    //        }
-    //    }
 
-    //    if (paletteHasAlpha)
-    //    {
-    //        for (y = 0; y < height; y++)
-    //        {
-    //            const RwUInt8* cpInCur = cpIn;
-    //            RwInt32         x;
+    const RwInt32   width = RwImageGetWidth(image);
+    const RwInt32   height = RwImageGetHeight(image);
+    const RwUInt8* cpIn = image->cpPixels;
+    RwInt32         y;
+    RwUInt32        alphaBits = 0;
 
-    //            for (x = 0; x < width; x++)
-    //            {
-    //                /* Is there any alpha */
-    //                if (0xFF != rpPal[*cpInCur].alpha)
-    //                {
-    //                    if (depth == 4)
-    //                        format = rwRASTERFORMAT8888 | rwRASTERFORMATPAL4;
-    //                    else
-    //                        format = rwRASTERFORMAT8888 | rwRASTERFORMATPAL8;
-
-    //                    return format;
-    //                }
-
-    //                /* Next pixel */
-    //                cpInCur++;
-    //            }
-
-    //            cpIn += RwImageGetStride(image);
-    //        }
-    //    }
-
-    //    if (depth == 4)
-    //        format = rwRASTERFORMAT888 | rwRASTERFORMATPAL4;
-    //    else
-    //        format = rwRASTERFORMAT888 | rwRASTERFORMATPAL8;
-    //}
-    //else
+    for (y = 0; y < height; y++)
     {
-        const RwInt32   width = RwImageGetWidth(image);
-        const RwInt32   height = RwImageGetHeight(image);
-        const RwUInt8* cpIn = image->cpPixels;
-        RwInt32         y;
-        RwUInt32        alphaBits = 0;
+        const RwRGBA* rpInCur = (const RwRGBA*)cpIn;
+        RwInt32         x;
 
-        for (y = 0; y < height; y++)
+        for (x = 0; x < width; x++)
         {
-            const RwRGBA* rpInCur = (const RwRGBA*)cpIn;
-            RwInt32         x;
-
-            for (x = 0; x < width; x++)
+            if (rpInCur->alpha < 0xff)
             {
-                if (rpInCur->alpha < 0xff)
+                /* lower 4 bits of the alpha channel are discarded in 4444 */
+                if (rpInCur->alpha > 0xf)
                 {
-                    /* lower 4 bits of the alpha channel are discarded in 4444 */
-                    if (rpInCur->alpha > 0xf)
-                    {
-                        alphaBits = 8;
-                        break;
-                    }
-                    else
-                        alphaBits = 1;
+                    alphaBits = 8;
+                    break;
                 }
-
-                /* Next pixel */
-                rpInCur++;
+                else
+                    alphaBits = 1;
             }
 
-            if (alphaBits >= 8)
-                break;
-
-            cpIn += RwImageGetStride(image);
+            /* Next pixel */
+            rpInCur++;
         }
 
         if (alphaBits >= 8)
-        {
-            if (_rwD3D9CheckValidTextureFormat(D3DFMT_A8R8G8B8))
-                format = rwRASTERFORMAT8888;
-            else if (_rwD3D9CheckValidTextureFormat(D3DFMT_A4R4G4B4))
-                format = rwRASTERFORMAT4444;
-            else
-                format = rwRASTERFORMAT1555;
-        }
-        else if (alphaBits)
-        {
-            if (_rwD3D9CheckValidTextureFormat(D3DFMT_A8R8G8B8))
-                format = rwRASTERFORMAT8888;
-            else
-                format = rwRASTERFORMAT1555;
-        }
-        else
-        {
-            if (_rwD3D9CheckValidTextureFormat(D3DFMT_X8R8G8B8))
-                format = rwRASTERFORMAT888;
-            else
-                format = rwRASTERFORMAT565;
-        }
+            break;
+
+        cpIn += RwImageGetStride(image);
     }
 
+    if (alphaBits >= 8)
+    {
+        if (_rwD3D9CheckValidTextureFormat(D3DFMT_A8R8G8B8))
+            format = rwRASTERFORMAT8888;
+        else if (_rwD3D9CheckValidTextureFormat(D3DFMT_A4R4G4B4))
+            format = rwRASTERFORMAT4444;
+        else
+            format = rwRASTERFORMAT1555;
+    }
+    else if (alphaBits)
+    {
+        if (_rwD3D9CheckValidTextureFormat(D3DFMT_A8R8G8B8))
+            format = rwRASTERFORMAT8888;
+        else
+            format = rwRASTERFORMAT1555;
+    }
+    else
+    {
+        if (_rwD3D9CheckValidTextureFormat(D3DFMT_X8R8G8B8))
+            format = rwRASTERFORMAT888;
+        else
+            format = rwRASTERFORMAT565;
+    }
     return format;
 }
 
@@ -1307,44 +1080,6 @@ RwBool Raster::_rwD3D9NativeTextureRead(void* streamIn, void* textureIn, RwInt32
     {
         RwUInt32    autoMipmap, face, numMipLevels, i;
 
-        ///* Load the palette if palletized */
-        //if (nativeRaster.format & rwRASTERFORMATPAL4)
-        //{
-        //    RwUInt8* palette;
-        //    RwUInt32    size;
-
-        //    palette = RwRasterLockPalette(raster, rwRASTERLOCKWRITE);
-
-        //    size = sizeof(PALETTEENTRY) * 32;
-        //    if (RwStreamRead(stream, (void*)palette, size) != size)
-        //    {
-        //        RwRasterUnlockPalette(raster);
-        //        RwRasterDestroy(raster);
-
-        //        return FALSE;
-        //    }
-
-        //    RwRasterUnlockPalette(raster);
-        //}
-        //else if (nativeRaster.format & rwRASTERFORMATPAL8)
-        //{
-        //    RwUInt8* palette;
-        //    RwUInt32    size;
-
-        //    palette = RwRasterLockPalette(raster, rwRASTERLOCKWRITE);
-
-        //    size = sizeof(PALETTEENTRY) * 256;
-        //    if (RwStreamRead(stream, (void*)palette, size) != size)
-        //    {
-        //        RwRasterUnlockPalette(raster);
-        //        RwRasterDestroy(raster);
-
-        //        return FALSE;
-        //    }
-
-        //    RwRasterUnlockPalette(raster);
-        //}
-
         /* Remove AUTOMIPMAP flag to avoid unlock invoking mipmap create */
         autoMipmap = raster->cFormat & (rwRASTERFORMATAUTOMIPMAP >> 8);
         raster->cFormat &= ~autoMipmap;
@@ -1532,15 +1267,7 @@ void Raster::_rwD3D9CheckRasterSize(RwInt32* width, RwInt32* height, RwUInt32 ra
     }
 
     if (_RwD3D9DeviceCaps.TextureCaps & D3DPTEXTURECAPS_SQUAREONLY)
-    {
-        ///* Make it square of smallest dimension */
-        //if (*width < *height)
-        //    *height = *width;
-        //else
-        //    *width = *height;
-
-        *width = min(*width, *height);
-    }
+        *width = min(*width, *height);  
 
     return;
 }
@@ -1555,26 +1282,8 @@ RwBool  Raster::rwD3D9CreateTextureRaster(RwRaster* raster, _rwD3D9RasterExt* ra
     rasFormat = RwRasterGetFormat(raster);
     pixelFormat = rasFormat & rwRASTERFORMATPIXELFORMATMASK;
 
-    //if ((rasFormat & rwRASTERFORMATPAL4) || (rasFormat & rwRASTERFORMATPAL8))
-    //{
-    //    if (!((rwRASTERFORMAT888 == pixelFormat) ||
-    //        (rwRASTERFORMAT8888 == pixelFormat)))
-    //        return FALSE;
 
-    //    /* Create the palette */
-    //    if (PaletteFreeList == NULL)
-    //        PaletteFreeList = RwFreeListCreate(sizeof(_rwD3D9Palette), 64, 4, rwID_DRIVERMODULE | rwMEMHINTDUR_EVENT);
-
-    //    rasExt->palette = (_rwD3D9Palette*)RwFreeListAlloc(PaletteFreeList, rwID_DRIVERMODULE | rwMEMHINTDUR_EVENT);
-
-    //    if (rasExt->palette)
-    //        rasExt->palette->globalindex = FindAvailablePaletteIndex();
-
-    //    rasExt->d3dFormat = D3DFMT_P8;
-    //    Log::Debug("Raster::rwD3D9CreateTextureRaster - texture has palette");
-    //}
-    //else
-        rasExt->d3dFormat = _rwRasterConvTable[FMT2TBL(rasFormat)].format;
+    rasExt->d3dFormat = _rwRasterConvTable[FMT2TBL(rasFormat)].format;
 
     /* Does this raster format have an alpha component */
     rasExt->alpha = _rwRasterConvTable[FMT2TBL(rasFormat)].alpha;
@@ -1608,23 +1317,7 @@ RwBool  Raster::rwD3D9CreateTextureRaster(RwRaster* raster, _rwD3D9RasterExt* ra
     }
 
     if (FAILED(hr))
-    {
-        /*if (D3DFMT_P8 == rasExt->d3dFormat)
-        {
-            if (rasExt->palette)
-            {
-                AddAvailablePaletteIndex(rasExt->palette->globalindex);
-
-                RwFreeListFree(PaletteFreeList, rasExt->palette);
-                rasExt->palette = NULL;
-            }
-        }*/
-
         return FALSE;
-    }
-
-    //if (rasExt->palette != NULL)
-        rxD3D9VideoMemoryRasterListAdd(raster);
 
     return TRUE;
 }
@@ -1975,24 +1668,6 @@ RwRaster* Raster::RwD3D9RasterCreate(RwUInt32 width,
                 rasExt->alpha = _rwD3D9PixelFormatInfo[d3dFormat].alpha;
                 raster->depth = _rwD3D9PixelFormatInfo[d3dFormat].depth;
                 raster->cFormat |= (_rwD3D9PixelFormatInfo[d3dFormat].rwFormat >> 8);
-
-                //if (d3dFormat == D3DFMT_P8)
-                //{
-                //    /* Create the palette */
-                //    if (PaletteFreeList == NULL)
-                //    {
-                //        PaletteFreeList = RwFreeListCreate(sizeof(_rwD3D9Palette), 64, 4,
-                //            rwID_DRIVERMODULE | rwMEMHINTDUR_EVENT);
-                //    }
-
-                //    rasExt->palette = (_rwD3D9Palette*)RwFreeListAlloc(PaletteFreeList,
-                //        rwID_DRIVERMODULE | rwMEMHINTDUR_EVENT);
-
-                //    if (rasExt->palette)
-                //    {
-                //        rasExt->palette->globalindex = FindAvailablePaletteIndex();
-                //    }
-                //}
             }
         }
     }
@@ -2028,16 +1703,6 @@ RwBool  Raster::_rwD3D9RasterDestroy(void* unused1 __RWUNUSED__, void* raster, R
         {
             if (!(ras->cFlags & rwRASTERDONTALLOCATE))
             {
-              /*  if (rasExt->palette != NULL)
-                {
-                    rxD3D9VideoMemoryRasterListRemove(ras);
-                    AddAvailablePaletteIndex(rasExt->palette->globalindex);
-
-                    RwFreeListFree(PaletteFreeList, rasExt->palette);
-                    rasExt->palette = NULL;
-                }
-                else */
-
                 /* Destroy the texture */
                 if (rasExt->texture)
                     IDirect3DTexture9_Release(rasExt->texture);
@@ -2054,17 +1719,6 @@ RwBool  Raster::_rwD3D9RasterDestroy(void* unused1 __RWUNUSED__, void* raster, R
         {
             if (!(ras->cFlags & rwRASTERDONTALLOCATE))
             {
-               /* if (rasExt->palette != NULL)
-                {
-                    rxD3D9VideoMemoryRasterListRemove(ras);
-
-                    AddAvailablePaletteIndex(rasExt->palette->globalindex);
-
-                    RwFreeListFree(PaletteFreeList, rasExt->palette);
-                    rasExt->palette = NULL;
-                }
-                else */
-
                 /* Destroy the texture */
                 if (rasExt->texture)
                     IDirect3DTexture9_Release(rasExt->texture);
@@ -2219,22 +1873,6 @@ void Raster::_rwD3D9RasterOpen(void)
 void Raster::_rwD3D9RasterClose()
 {
     rxD3D9VideoMemoryRasterListDestroy();
-
-    //NumPaletteIndexFree = 0;
-    //MaxPaletteIndexFree = 0;
-    //MaxPaletteIndex = 0;
-
-    //if (PaletteIndexFree != NULL)
-    //{
-    //    RwFree(PaletteIndexFree);
-    //    PaletteIndexFree = NULL;
-    //}
-
-    //if (PaletteFreeList != NULL)
-    //{
-    //    RwFreeListDestroy(PaletteFreeList);
-    //    PaletteFreeList = NULL;
-    //}
 }
 
 void Raster::rxD3D9VideoMemoryRasterListDestroy()
