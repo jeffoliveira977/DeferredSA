@@ -1157,6 +1157,7 @@ RwBool Raster::_rwD3D9NativeTextureRead(void* streamIn, void* textureIn, RwInt32
         return FALSE;
     }
 
+
     texture = RwTextureCreate(raster);
     if (!texture)
     {
