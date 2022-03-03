@@ -1,6 +1,6 @@
 #include "D3D9CubeMap.h"
-D3D9CubeMap::D3D9CubeMap(RwRaster* raster) :
-    D3D9BaseTexture(raster)
+D3D9CubeMap::D3D9CubeMap(RwRaster* raster, uint32_t levels, uint32_t usage, D3DFORMAT format, D3DPOOL pool) :
+    D3D9BaseTexture(raster, levels, usage, format, pool)
 {
     Initialize();
 }
@@ -13,11 +13,14 @@ D3D9CubeMap::~D3D9CubeMap()
 void D3D9CubeMap::Initialize()
 {
     if (mD3D9Texture)
+    {
+        Log::Warn("D3D9CubeMap::Initialize - texture not released");
         return;
+    }
 
     auto rasExt = RASTEREXTFROMRASTER(mRaster);
-    auto hr = _RwD3DDevice->CreateCubeTexture(mRaster->width, (mRaster->cFormat & rwRASTERFORMATMIPMAP) ? 0 : 1, 
-        (rasExt->automipmapgen ? D3DUSAGE_AUTOGENMIPMAP : 0), rasExt->d3dFormat, D3DPOOL_MANAGED, (IDirect3DCubeTexture9**)&mD3D9Texture, nullptr);
+    auto hr = _RwD3DDevice->CreateCubeTexture(mRaster->width, mLevels, 
+        mUsage, mFormat, mPool, (IDirect3DCubeTexture9**)&mD3D9Texture, nullptr);
 
     if (FAILED(hr) || mD3D9Texture == nullptr)
     {

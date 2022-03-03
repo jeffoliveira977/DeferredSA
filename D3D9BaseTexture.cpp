@@ -5,8 +5,12 @@ IDirect3DTexture9* D3D9BaseTexture::GetObject()
 	return mD3D9Texture;
 }
 
-D3D9BaseTexture::D3D9BaseTexture(RwRaster* raster)
+D3D9BaseTexture::D3D9BaseTexture(RwRaster* raster, uint32_t levels, uint32_t usage, D3DFORMAT format, D3DPOOL pool)
 {
+	mLevels = levels;
+	mUsage = usage;
+	mFormat = format;
+	mPool = pool;
 	mRaster = raster;
 	mD3D9Texture = nullptr;
 }

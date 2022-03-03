@@ -1,6 +1,6 @@
 #pragma once
 #include "CommonD.h"
-#include "RWCommon.h"
+//#include "RWCommon.h"
 
 class Raster
 {

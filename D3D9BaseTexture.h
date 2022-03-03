@@ -1,17 +1,25 @@
 #pragma once
-#include "RWCommon.h"
+#include "CommonD.h"
+
+using namespace DirectX;
+using namespace std;
 
 class D3D9BaseTexture
 {
 protected:
 	RwRaster* mRaster;
 	IDirect3DTexture9* mD3D9Texture;
+
+	uint32_t mLevels;
+	uint32_t mUsage;
+	D3DFORMAT mFormat;
+	D3DPOOL mPool;
 public:
 
 	IDirect3DTexture9* GetObject();
 
-	D3D9BaseTexture(RwRaster* raster);
-	~D3D9BaseTexture();
+	D3D9BaseTexture(RwRaster* raster, uint32_t levels, uint32_t usage, D3DFORMAT format, D3DPOOL pool);
+	virtual ~D3D9BaseTexture();
 
 	virtual void Initialize();
 	virtual void Unitialize();

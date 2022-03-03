@@ -115,32 +115,32 @@ RwUInt8* LockLevel(RwRaster* raster, unsigned int level, unsigned int mode)
 	gCurrentRaster = raster;
 	return RwRasterLock(raster, level, mode);
 }
-
-RwUInt32 ReadLevel(RwStream* stream, void* pbuf, unsigned int size)
-{
-	// if we have a wrong level (and this texture is not corrupted)
-	if(size == 0 && gCurrentLevel != 0)
-	{
-		auto rasterExt = RASTEREXTFROMRASTER(gCurrentRaster);
-
-		// simply copy the data from previous level
-		if(gCurrentRaster->cType == rwRASTERTYPETEXTURE && rasterExt->compressed && rasterExt->texture)
-		{
-			D3DLOCKED_RECT rect;
-			rasterExt->texture->LockRect(gCurrentLevel - 1, &rect, NULL, D3DLOCK_READONLY);
-
-			RwUInt32 sz = 16;
-			if(rasterExt->d3dFormat == D3DFMT_DXT1)
-				sz = 8;
-
-			memcpy(pbuf, rect.pBits, sz);
-
-			rasterExt->texture->UnlockRect(gCurrentLevel - 1);
-			return size;
-		}
-	}
-	return RwStreamRead(stream, pbuf, size);
-}
+//
+//RwUInt32 ReadLevel(RwStream* stream, void* pbuf, unsigned int size)
+//{
+//	// if we have a wrong level (and this texture is not corrupted)
+//	if(size == 0 && gCurrentLevel != 0)
+//	{
+//		auto rasterExt = RASTEREXTFROMRASTER(gCurrentRaster);
+//
+//		// simply copy the data from previous level
+//		if(gCurrentRaster->cType == rwRASTERTYPETEXTURE && rasterExt->compressed && rasterExt->texture)
+//		{
+//			D3DLOCKED_RECT rect;
+//			rasterExt->texture->LockRect(gCurrentLevel - 1, &rect, NULL, D3DLOCK_READONLY);
+//
+//			RwUInt32 sz = 16;
+//			if(rasterExt->d3dFormat == D3DFMT_DXT1)
+//				sz = 8;
+//
+//			memcpy(pbuf, rect.pBits, sz);
+//
+//			rasterExt->texture->UnlockRect(gCurrentLevel - 1);
+//			return size;
+//		}
+//	}
+//	return RwStreamRead(stream, pbuf, size);
+//}
 
 void SetGeometryUsageFlag(RpGeometry* geometry, unsigned int flags)
 {

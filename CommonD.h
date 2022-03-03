@@ -386,7 +386,7 @@ void* RwCreateCompiledVertexShader(string filename);
 void* RwCreateCompiledPixelShader(string filename);
 void rwD3D9Clear(RwRGBA* col, RwInt32 clearFlags);
 void RwD3D9SetPixelShaderConstantB(RwUInt32 registerAddress, const void* constantData, RwUInt32 constantCount);
-RwBool rwD3D9CubeRasterCreate(RwRaster* raster, RwUInt32 d3dformat, RwInt32 mipmapLevels);
+
 XMMATRIX RwMatrixToXMMATRIX(const RwMatrix* mtx);
 
 RwRGBA LerpSkyColor();

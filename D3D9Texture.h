@@ -4,7 +4,7 @@
 class D3D9Texture: public D3D9BaseTexture
 {
 public:
-	D3D9Texture(RwRaster*raster);
+	D3D9Texture(RwRaster*raster, uint32_t levels, uint32_t usage, D3DFORMAT format, D3DPOOL pool);
 	~D3D9Texture();
 
 	void Initialize();

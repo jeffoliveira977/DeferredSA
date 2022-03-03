@@ -1527,8 +1527,7 @@ RwBool Raster::rwD3D9CreateCameraTextureRaster(RwRaster* raster, _rwD3D9RasterEx
     }
     else
     {
-        hr = _RwD3DDevice->CreateTexture(raster->width, raster->height,
-            (rasFormat & rwRASTERFORMATMIPMAP) ? 0 : 1,
+        hr = _RwD3DDevice->CreateTexture(raster->width, raster->height, (rasFormat & rwRASTERFORMATMIPMAP) ? 0 : 1,
             (rasExt->automipmapgen ? D3DUSAGE_AUTOGENMIPMAP : 0) | D3DUSAGE_RENDERTARGET,
             rasExt->d3dFormat, D3DPOOL_DEFAULT, &(rasExt->texture), NULL);
     }

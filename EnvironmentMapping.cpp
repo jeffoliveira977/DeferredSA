@@ -36,7 +36,7 @@ void EnvironmentMapping::InitializeGraphics()
 	m_sphericalRaster = RwRasterCreate(m_weight, m_weight, 32, rwRASTERTYPECAMERATEXTURE);
 
 	m_cubeRaster = RwRasterCreate(m_weight, m_weight, 32, rwRASTERTYPECAMERATEXTURE);
-	rwD3D9CubeRasterCreate(m_cubeRaster, D3DFMT_A16B16G16R16F, 1);
+	_rwD3D9CubeRasterCreate(m_cubeRaster, D3DFMT_A8B8G8R8, 1);
 
 	m_depthRaster = RwRasterCreate(m_weight, m_weight, 32, rwRASTERTYPEZBUFFER);
 

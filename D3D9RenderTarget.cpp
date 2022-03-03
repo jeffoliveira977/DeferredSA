@@ -1,7 +1,7 @@
 #include "D3D9RenderTarget.h"
 
-D3D9RenderTarget::D3D9RenderTarget(RwRaster* raster)  :
-    D3D9BaseTexture(raster)
+D3D9RenderTarget::D3D9RenderTarget(RwRaster* raster, uint32_t levels, uint32_t usage, D3DFORMAT format, D3DPOOL pool)  :
+    D3D9BaseTexture(raster, levels, usage, format, pool)
 {
     Initialize();
 }
@@ -13,8 +13,12 @@ D3D9RenderTarget::~D3D9RenderTarget()
 
 void D3D9RenderTarget::Initialize()
 {
+
     if (mD3D9Texture)
+    {
+        Log::Warn("D3D9RenderTarget::Initialize - texture not released");
         return;
+    }
 
     if (mRaster == nullptr)
         return;
@@ -23,13 +27,13 @@ void D3D9RenderTarget::Initialize()
     auto rasExt = RASTEREXTFROMRASTER(mRaster);
 
     if (rasExt->cube)
-    {     
+    {
         hr = _RwD3DDevice->CreateCubeTexture(mRaster->width, (mRaster->cFormat & rwRASTERFORMATMIPMAP) ? 0 : 1,
             (rasExt->automipmapgen ? D3DUSAGE_AUTOGENMIPMAP : 0) | D3DUSAGE_RENDERTARGET, rasExt->d3dFormat, D3DPOOL_DEFAULT, (IDirect3DCubeTexture9**)&mD3D9Texture, nullptr);
     }
     else
     {
-        hr = _RwD3DDevice->CreateTexture(mRaster->width, mRaster->height, (mRaster->cFormat & rwRASTERFORMATMIPMAP) ? 0 : 1, 
+        hr = _RwD3DDevice->CreateTexture(mRaster->width, mRaster->height, (mRaster->cFormat & rwRASTERFORMATMIPMAP) ? 0 : 1,
             (rasExt->automipmapgen ? D3DUSAGE_AUTOGENMIPMAP : 0) | D3DUSAGE_RENDERTARGET,
             rasExt->d3dFormat, D3DPOOL_DEFAULT, &mD3D9Texture, nullptr);
     }

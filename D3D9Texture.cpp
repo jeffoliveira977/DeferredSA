@@ -1,7 +1,7 @@
 #include "D3D9Texture.h"
 
-D3D9Texture::D3D9Texture(RwRaster* raster) :
-    D3D9BaseTexture(raster)
+D3D9Texture::D3D9Texture(RwRaster* raster, uint32_t levels, uint32_t usage, D3DFORMAT format, D3DPOOL pool) :
+    D3D9BaseTexture(raster, levels, usage, format, pool)
 {
     Initialize();
 }
@@ -14,7 +14,10 @@ D3D9Texture::~D3D9Texture()
 void D3D9Texture::Initialize()
 {
     if (mD3D9Texture)
+    {
+        Log::Warn("D3D9Texture::Initialize - texture not released");
         return;
+    }
     
     if (mRaster == nullptr)
         return;
@@ -28,8 +31,8 @@ void D3D9Texture::Initialize()
     }
     else
     {
-        hr = _RwD3DDevice->CreateTexture(mRaster->width, mRaster->height, (mRaster->cFormat & rwRASTERFORMATMIPMAP) ? 0 : 1, 
-            (rasExt->automipmapgen ? D3DUSAGE_AUTOGENMIPMAP : 0), rasExt->d3dFormat, D3DPOOL_MANAGED, &mD3D9Texture, nullptr);
+        hr = _RwD3DDevice->CreateTexture(mRaster->width, mRaster->height, mLevels, 
+            mUsage, mFormat, mPool, &mD3D9Texture, nullptr);
     }
 
     if (FAILED(hr) || mD3D9Texture == nullptr)
