@@ -1039,7 +1039,7 @@ namespace DeferredRenderingEngine
     {
         if (zRaster)
         {
-            auto zTopRaster = (zRaster)->parent;
+            auto zTopRaster = (zRaster);
             auto zRasterExt = RASTEREXTFROMCONSTRASTER(zTopRaster);
 
             if ((RwRasterGetType(zTopRaster) & rwRASTERTYPEMASK) == rwRASTERTYPEZBUFFER)
@@ -1428,7 +1428,7 @@ namespace DeferredRenderingEngine
         }
 
         raster = RwCameraGetRaster((RwCamera*)camera);
-        topRaster = (raster)->parent;
+        topRaster = (raster);
 
 
         /* Check if the size of the main window has changed */
@@ -1562,7 +1562,7 @@ namespace DeferredRenderingEngine
         RwD3D9SetTransform(D3DTS_PROJECTION, &_RwD3D9D3D9ProjTransform);
 
         raster = RwCameraGetRaster(camera);
-        topRaster = (raster)->parent;
+        topRaster = (raster);
 
         /* Check if the main window has changed its size */
         GetClientRect(*WindowHandle, &rect);

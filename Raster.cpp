@@ -389,8 +389,6 @@ RwInt32 Raster::D3D9FindCorrectRasterFormat(RwRasterType type, RwInt32 flags)
         }
         else
         {
-
-
             if ((format & rwRASTERFORMATPIXELFORMATMASK) == rwRASTERFORMAT8888)
             {
                 if (!_rwD3D9CheckValidTextureFormat(D3DFMT_A8R8G8B8))
@@ -551,7 +549,7 @@ RwBool Raster::D3D9CheckRasterFormat(void* rasterIn, RwInt32 flags)
 RwBool Raster::rwD3D9SetRasterFormat(void* rasterIn, RwInt32 flags)
 {
     auto raster = (RwRaster*)rasterIn;
-    auto    format = flags & rwRASTERFORMATMASK;
+    auto format = flags & rwRASTERFORMATMASK;
 
     /* Copy over types */
     raster->cType = (RwUInt8)(flags & rwRASTERTYPEMASK);
@@ -677,8 +675,6 @@ RwUInt32 Raster::_rwD3D9ImageFindFormat(RwImage* image)
     RwUInt32    format;
 
     auto depth = RwImageGetDepth(image);
-
-
 
     const RwInt32   width = RwImageGetWidth(image);
     const RwInt32   height = RwImageGetHeight(image);
@@ -1539,10 +1535,7 @@ RwBool Raster::rwD3D9CreateCameraTextureRaster(RwRaster* raster, _rwD3D9RasterEx
     return SUCCEEDED(hr);
 }
 
-RwRaster* Raster::RwD3D9RasterCreate(RwUInt32 width,
-    RwUInt32 height,
-    RwUInt32 d3dFormat,
-    RwUInt32 flags)
+RwRaster* Raster::RwD3D9RasterCreate(RwUInt32 width, RwUInt32 height, RwUInt32 d3dFormat, RwUInt32 flags)
 {
     RwRaster* raster = NULL;
     _rwD3D9RasterExt* rasExt;
@@ -1631,9 +1624,7 @@ RwRaster* Raster::RwD3D9RasterCreate(RwUInt32 width,
     else
     {
         if (pool == D3DPOOL_DEFAULT)
-        {
             rxD3D9VideoMemoryRasterListAdd(raster);
-        }
 
         /* Remove the rwRASTERDONTALLOCATE flag so it will get destroyed */
         raster->cFlags &= ~rwRASTERDONTALLOCATE;
@@ -1703,14 +1694,10 @@ RwBool  Raster::_rwD3D9RasterDestroy(void* unused1 __RWUNUSED__, void* raster, R
         {
             if (!(ras->cFlags & rwRASTERDONTALLOCATE))
             {
-                /* Destroy the texture */
-                if (rasExt->texture)
-                    IDirect3DTexture9_Release(rasExt->texture);
-
+                SAFE_RELEASE(rasExt->texture);
+               
                 if (IS_D3DFORMAT_ZBUFFER(rasExt->d3dFormat))
-                {
                     rxD3D9VideoMemoryRasterListRemove(ras);
-                }
             }
         }
         break;
@@ -1719,12 +1706,10 @@ RwBool  Raster::_rwD3D9RasterDestroy(void* unused1 __RWUNUSED__, void* raster, R
         {
             if (!(ras->cFlags & rwRASTERDONTALLOCATE))
             {
-                /* Destroy the texture */
-                if (rasExt->texture)
-                    IDirect3DTexture9_Release(rasExt->texture);
+                SAFE_RELEASE(rasExt->texture);
 
                 if (IS_D3DFORMAT_ZBUFFER(rasExt->d3dFormat))
-                rxD3D9VideoMemoryRasterListRemove(ras);
+                    rxD3D9VideoMemoryRasterListRemove(ras);
 
             }
         }
@@ -1734,10 +1719,7 @@ RwBool  Raster::_rwD3D9RasterDestroy(void* unused1 __RWUNUSED__, void* raster, R
         {
             if (!(ras->cFlags & rwRASTERDONTALLOCATE))
             {
-                /* Destroy the texture */
-                if (rasExt->texture)
-                    IDirect3DTexture9_Release(rasExt->texture);
-
+                SAFE_RELEASE(rasExt->texture);
                 rxD3D9VideoMemoryRasterListRemove(ras);
 
             }
@@ -1748,12 +1730,9 @@ RwBool  Raster::_rwD3D9RasterDestroy(void* unused1 __RWUNUSED__, void* raster, R
         {
             if (!(ras->cFlags & rwRASTERDONTALLOCATE))
             {
-                /* Destroy the surface */
                 if ((LPSURFACE)rasExt->texture != RwD3D9DepthStencilSurface)
-                {
-                    if (rasExt->texture)
-                        IDirect3DSurface9_Release((LPSURFACE)rasExt->texture);
-                }
+                    SAFE_RELEASE(rasExt->texture);
+
                 rxD3D9VideoMemoryRasterListRemove(ras);
 
             }
@@ -1898,8 +1877,7 @@ void Raster::_rxD3D9VideoMemoryRasterListRelease()
             {
                 if (IS_D3DFORMAT_ZBUFFER(rasExt->d3dFormat))
                 {
-                    IDirect3DTexture9_Release(rasExt->texture);
-                    rasExt->texture = NULL;
+                    SAFE_RELEASE(rasExt->texture);
                 }
             }
         }
@@ -1909,8 +1887,7 @@ void Raster::_rxD3D9VideoMemoryRasterListRelease()
         {
             if (rasExt->texture)
             {
-                IDirect3DTexture9_Release(rasExt->texture);
-                rasExt->texture = NULL;
+                SAFE_RELEASE(rasExt->texture);
             }
         }
         break;
@@ -1921,8 +1898,7 @@ void Raster::_rxD3D9VideoMemoryRasterListRelease()
             {
                 if ((LPSURFACE)rasExt->texture != RwD3D9DepthStencilSurface)
                 {
-                    IDirect3DSurface9_Release((LPSURFACE)rasExt->texture);
-                    rasExt->texture = NULL;
+                    SAFE_RELEASE(rasExt->texture);
                 }
             }
         }
@@ -1930,8 +1906,7 @@ void Raster::_rxD3D9VideoMemoryRasterListRelease()
 
         case rwRASTERTYPECAMERA:
         {
-            if (rasExt->swapChain)
-                IDirect3DSwapChain9_Release(rasExt->swapChain);
+            SAFE_RELEASE(rasExt->swapChain);
         }
         break;
 
