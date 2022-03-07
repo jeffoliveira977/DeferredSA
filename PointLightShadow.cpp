@@ -38,10 +38,12 @@ PointLightShadow::~PointLightShadow()
 void PointLightShadow::Initialize()
 {
 	m_nShadowSize = 512;
+	Log::Debug("PointLightShadow::Initialize");
 
 	for (size_t i = 0; i < 30; i++)
 	{
-		mColorRaster[i] = RwD3D9RasterCreate(m_nShadowSize, m_nShadowSize, D3DFMT_R32F, rwRASTERTYPECAMERATEXTURE);
+		//mColorRaster[i] = RwD3D9RasterCreate(m_nShadowSize, m_nShadowSize, D3DFMT_R32F, rwRASTERTYPECAMERATEXTURE | rwRASTERDONTALLOCATE);
+		mColorRaster[i] = RwRasterCreate(m_nShadowSize, m_nShadowSize, 32, rwRASTERTYPECAMERATEXTURE);
 		_rwD3D9CubeRasterCreate(mColorRaster[i], D3DFMT_R32F, 1);
 
 		//mColorCube[i] = RwD3D9RasterCreate(m_nShadowSize*6, m_nShadowSize, D3DFMT_G32R32F, rwRASTERTYPECAMERATEXTURE);

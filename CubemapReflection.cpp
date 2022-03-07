@@ -22,8 +22,10 @@ std::vector<CEntity*> CubemapReflection::m_renderableList[6];
 
 void CubemapReflection::Initialize()
 {
+	Log::Debug("CubemapReflection::Initialize");
+
 	m_size = 1024;
-	m_cubeRaster = RwRasterCreate(1024, 1024, 32, rwRASTERTYPECAMERATEXTURE);
+	m_cubeRaster = RwRasterCreate(1024, 1024, 32, rwRASTERTYPECAMERATEXTURE | rwRASTERDONTALLOCATE);
 	_rwD3D9CubeRasterCreate(m_cubeRaster, D3DFMT_A8R8G8B8, 1);
 
 	m_depthRaster = RwRasterCreate(1024, 1024, 32, rwRASTERTYPEZBUFFER); 

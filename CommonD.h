@@ -136,6 +136,7 @@ struct RpSkin
     void* field_3C;
 };
 
+HRESULT CheckError(HRESULT callResult, const std::string& errorMessage);
 std::vector<BYTE> readFile(std::string filename);
 void rwD3D9SetRenderTargets(RwRaster* rasters[], int rasterCount, RwUInt32 startIndex);
 #define rpD3D9SkinVertexShaderMatrixUpdate(matrices, atomic, skin) ((void( __cdecl*)(RwMatrix*, RpAtomic*, RpSkin*))0x7C78A0)(matrices, atomic, skin)
@@ -183,15 +184,7 @@ enum eZoneAttributes : uint16_t
 // Releases a COM pointer if the pointer is not NULL, and sets the pointer to NULL.
 
 #ifndef SAFE_RELEASE
-template <class T>
-inline void SAFE_RELEASE(T*& p)
-{
-    if (p)
-    {
-        p->Release();
-        p = NULL;
-    }
-}
+#define SAFE_RELEASE(x) if (x) {x->Release(); x = NULL; }
 #endif
 
 // SAFE_ADDREF macro.

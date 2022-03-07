@@ -406,6 +406,7 @@ struct _rwD3D9Palette
 typedef LPDIRECT3DSURFACE9 LPSURFACE;
 typedef LPDIRECT3DTEXTURE9 LPTEXTURE;
 
+class D3D9BaseTexture;
 struct _rwD3D9RasterExt
 {
     LPTEXTURE               texture;

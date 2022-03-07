@@ -1,12 +1,15 @@
 #include "D3D9CubeMap.h"
-D3D9CubeMap::D3D9CubeMap(RwRaster* raster, uint32_t levels, uint32_t usage, D3DFORMAT format, D3DPOOL pool) :
-    D3D9BaseTexture(raster, levels, usage, format, pool)
+D3D9CubeMap::D3D9CubeMap(RwRaster* raster, uint32_t levels, uint32_t usage, D3DFORMAT format, D3DPOOL pool) /*:
+    D3D9BaseTexture(raster, levels, usage, format, pool)*/
 {
     Initialize();
+    mTextureType = rwRASTERTYPETEXTURE;
+
 }
 
 D3D9CubeMap::~D3D9CubeMap()
 {
+    Log::Debug("D3D9CubeMap::~D3D9CubeMap");
     Unitialize();
 }
 
@@ -18,20 +21,30 @@ void D3D9CubeMap::Initialize()
         return;
     }
 
+    if (mRaster == nullptr)
+    {
+        Log::Warn("D3D9CubeMap::Initialize - invalid raster pointer");
+        return;
+    }
+
     auto rasExt = RASTEREXTFROMRASTER(mRaster);
-    auto hr = _RwD3DDevice->CreateCubeTexture(mRaster->width, mLevels, 
-        mUsage, mFormat, mPool, (IDirect3DCubeTexture9**)&mD3D9Texture, nullptr);
+    auto hr = CheckError(_RwD3DDevice->CreateCubeTexture(mRaster->width, mLevels,
+        mUsage, mFormat, mPool, (IDirect3DCubeTexture9**)&mD3D9Texture, nullptr),
+        "D3D9CubeMap::Initialize - failed to create d3d9 cube texture");
 
     if (FAILED(hr) || mD3D9Texture == nullptr)
     {
         Log::Fatal("D3D9CubeMap::Initialize - failed to create d3d9 cube texture");
         throw std::runtime_error("failed to create d3d9 cube texture");
     }
+    Log::Debug("D3D9CubeMap::Initialize");
 }
 
 void D3D9CubeMap::Unitialize()
 {
-    SAFE_RELEASE(mD3D9Texture);
+    auto cubemap = (IDirect3DCubeTexture9*)mD3D9Texture;
+    SAFE_RELEASE(cubemap);
+   Log::Debug("D3D9CubeMap::Unitialize");
 }
 
 void D3D9CubeMap::Lock(uint flags, uint level, void* pixelsIn)

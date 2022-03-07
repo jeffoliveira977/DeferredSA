@@ -1,19 +1,20 @@
 #include "D3D9RenderTarget.h"
 
-D3D9RenderTarget::D3D9RenderTarget(RwRaster* raster, uint32_t levels, uint32_t usage, D3DFORMAT format, D3DPOOL pool)  :
-    D3D9BaseTexture(raster, levels, usage, format, pool)
+D3D9RenderTarget::D3D9RenderTarget(RwRaster* raster, uint32_t levels, uint32_t usage, D3DFORMAT format, D3DPOOL pool)  /*:
+    D3D9BaseTexture(raster, levels, usage, format, pool)*/
 {
     Initialize();
+    mTextureType = rwRASTERTYPECAMERATEXTURE;
 }
 
 D3D9RenderTarget::~D3D9RenderTarget()
 {
+    Log::Debug("D3D9RenderTarget::~D3D9RenderTarget");
     Unitialize();
 }
 
 void D3D9RenderTarget::Initialize()
 {
-
     if (mD3D9Texture)
     {
         Log::Warn("D3D9RenderTarget::Initialize - texture not released");
@@ -21,21 +22,26 @@ void D3D9RenderTarget::Initialize()
     }
 
     if (mRaster == nullptr)
+    {
+        Log::Warn("D3D9RenderTarget::Initialize - invalid raster pointer");
         return;
+    }
 
     HRESULT hr;
     auto rasExt = RASTEREXTFROMRASTER(mRaster);
 
     if (rasExt->cube)
     {
-        hr = _RwD3DDevice->CreateCubeTexture(mRaster->width, (mRaster->cFormat & rwRASTERFORMATMIPMAP) ? 0 : 1,
-            (rasExt->automipmapgen ? D3DUSAGE_AUTOGENMIPMAP : 0) | D3DUSAGE_RENDERTARGET, rasExt->d3dFormat, D3DPOOL_DEFAULT, (IDirect3DCubeTexture9**)&mD3D9Texture, nullptr);
+        hr = CheckError(_RwD3DDevice->CreateCubeTexture(mRaster->width, mLevels,
+            mUsage, mFormat, mPool, (IDirect3DCubeTexture9**)&mD3D9Texture, nullptr),
+            "D3D9RenderTarget::Initialize - failed to create d3d9 texture");
     }
     else
     {
-        hr = _RwD3DDevice->CreateTexture(mRaster->width, mRaster->height, (mRaster->cFormat & rwRASTERFORMATMIPMAP) ? 0 : 1,
-            (rasExt->automipmapgen ? D3DUSAGE_AUTOGENMIPMAP : 0) | D3DUSAGE_RENDERTARGET,
-            rasExt->d3dFormat, D3DPOOL_DEFAULT, &mD3D9Texture, nullptr);
+        hr = CheckError(_RwD3DDevice->CreateTexture(mRaster->width, mRaster->height,mLevels,
+           mUsage,
+            mFormat, mPool, &mD3D9Texture, nullptr),
+            "D3D9RenderTarget::Initialize - failed to create d3d9 texture");
     }
 
     if (FAILED(hr) || mD3D9Texture == nullptr)
@@ -43,11 +49,27 @@ void D3D9RenderTarget::Initialize()
         Log::Fatal("D3D9RenderTarget::Initialize - failed to create d3d9 texture");
         throw std::runtime_error("failed to create d3d9 texture");
     }
+    Log::Debug("D3D9RenderTarget::Initialize");
 }
 
 void D3D9RenderTarget::Unitialize()
 {
-    SAFE_RELEASE(mD3D9Texture);
+    Log::Debug("D3D9RenderTarget::Unitialize");
+    if (mRaster == nullptr)
+    {
+        Log::Warn("D3D9RenderTarget::Unitialize - invalid raster pointer");
+        return;
+    }
+    auto rasExt = RASTEREXTFROMRASTER(mRaster);
+
+    if (rasExt->cube)
+    {
+        auto cubemap = (IDirect3DCubeTexture9*)mD3D9Texture;
+        SAFE_RELEASE(cubemap);
+    }
+    else
+        SAFE_RELEASE(mD3D9Texture);
+   // Log::Debug("D3D9RenderTarget::Initialize");
 }
 
 void D3D9RenderTarget::Lock(uint flags, uint level, void* pixelsIn)

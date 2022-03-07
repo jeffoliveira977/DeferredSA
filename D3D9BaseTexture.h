@@ -4,9 +4,9 @@
 using namespace DirectX;
 using namespace std;
 
-class D3D9BaseTexture
+class D3D9BaseTexture 
 {
-protected:
+public:
 	RwRaster* mRaster;
 	IDirect3DTexture9* mD3D9Texture;
 
@@ -14,17 +14,23 @@ protected:
 	uint32_t mUsage;
 	D3DFORMAT mFormat;
 	D3DPOOL mPool;
-public:
+	uint32_t mTextureType;
+
 
 	IDirect3DTexture9* GetObject();
 
-	D3D9BaseTexture(RwRaster* raster, uint32_t levels, uint32_t usage, D3DFORMAT format, D3DPOOL pool);
-	virtual ~D3D9BaseTexture();
+	uint32_t GetTextureType() { return mTextureType; }
 
-	virtual void Initialize();
-	virtual void Unitialize();
 
-	virtual void Lock(uint flags, uint level, void* pixelsIn);
-	virtual void Unlock();
+	//D3D9BaseTexture(RwRaster* raster, uint32_t levels, uint32_t usage, D3DFORMAT format, D3DPOOL pool);
+
+	
+	//virtual ~D3D9BaseTexture();
+
+	//virtual void Initialize();
+	//virtual void Unitialize();
+
+	//virtual void Lock(uint flags, uint level, void* pixelsIn);
+	//virtual void Unlock();
 };
 

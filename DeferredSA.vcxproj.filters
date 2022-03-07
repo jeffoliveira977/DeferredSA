@@ -144,6 +144,7 @@
     <ClCompile Include="D3D9BaseTexture.cpp">
       <Filter>Engine</Filter>
     </ClCompile>
+    <ClCompile Include="dxerr.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="GTADef.h" />
@@ -284,6 +285,7 @@
     <ClInclude Include="D3D9BaseTexture.h">
       <Filter>Engine</Filter>
     </ClInclude>
+    <ClInclude Include="dxerr.h" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="imgui">

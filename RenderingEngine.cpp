@@ -1505,7 +1505,7 @@ namespace DeferredRenderingEngine
             _RwD3DDevice->Clear(0, NULL, d3d9ClearFlags, packedColor, 1, 0);
         }
 
-       // bWindowIconic = bCurrIconic;
+        // bWindowIconic = bCurrIconic;
 
         return true;
     }
@@ -1860,7 +1860,7 @@ namespace DeferredRenderingEngine
 
         mDisplayModes[0].flags = 0;
         numDisplaymodes = 1;
-        
+
         for (format = 0; format < MAX_BACKBUFFER_FORMATS; format++)
         {
             maxmodesformat = _RwDirect3DObject->GetAdapterModeCount(_RwD3DAdapterIndex, BackBufferFormats[format]);
@@ -2112,21 +2112,21 @@ namespace DeferredRenderingEngine
         _RwD3DAdapterType = D3DDEVTYPE_HAL;
         _RwDirect3DObject->GetDeviceCaps(_RwD3DAdapterIndex, _RwD3DAdapterType, &_RwD3D9DeviceCaps);
 
-       /* while (_RwD3DAdapterIndex < numAdapters)
-        {
-            if (SUCCEEDED(_RwDirect3DObject->GetDeviceCaps(_RwD3DAdapterIndex, _RwD3DAdapterType, &_RwD3D9DeviceCaps)))
-                break;
+         while (_RwD3DAdapterIndex < numAdapters)
+         {
+             if (SUCCEEDED(_RwDirect3DObject->GetDeviceCaps(_RwD3DAdapterIndex, _RwD3DAdapterType, &_RwD3D9DeviceCaps)))
+                 break;
 
-            _RwD3DAdapterIndex++;
-        }
+             _RwD3DAdapterIndex++;
+         }
 
-        if (_RwD3DAdapterIndex >= numAdapters)
-        {
-            SAFE_RELEASE(_RwDirect3DObject);
-            return FALSE;
-        }*/
+         if (_RwD3DAdapterIndex >= numAdapters)
+         {
+             SAFE_RELEASE(_RwDirect3DObject);
+             return FALSE;
+         }
 
-        /* Mode count */
+         /* Mode count */
         _RwD3D9AdapterInformation.modeCount = 0;
         for (i = 0; i < MAX_BACKBUFFER_FORMATS; i++)
         {
@@ -2169,13 +2169,13 @@ namespace DeferredRenderingEngine
 
         memset(&Present, 0, sizeof(D3DPRESENT_PARAMETERS));
         D3D9SetPresentParameters(&_RwD3D9AdapterInformation.mode, _RwD3D9AdapterInformation.flags, adapterDisplayMode.Format);
-       
+
         Present.hDeviceWindow = *WindowHandle;
-                Present.Flags = 0;
+        Present.Flags = 0;
 
         SetWindowLong(Present.hDeviceWindow, GWL_STYLE, NULL);
         SetWindowPos(Present.hDeviceWindow, HWND_NOTOPMOST, 0, 0, Present.BackBufferWidth, Present.BackBufferHeight, SWP_NOACTIVATE | SWP_NOZORDER);
-       
+
 
 
         //_RwDirect3DObject->GetDeviceCaps(_RwD3DAdapterIndex, _RwD3DAdapterType, &_RwD3D9DeviceCaps);
@@ -2221,7 +2221,7 @@ namespace DeferredRenderingEngine
 
         return TRUE;
     }
-   
+
     RwBool RenderingEngine::D3D9DeviceSystemFinalizeStart(void* out __RWUNUSED__, void* inOut __RWUNUSED__, RwInt32 in __RWUNUSED__)
     {
         Log::Debug("RenderingEngine::D3D9DeviceSystemFinalizeStart");
@@ -2299,7 +2299,7 @@ namespace DeferredRenderingEngine
         for (auto matrix : LastMatrixUsed)
             SAFE_DELETE(matrix.second);
         LastMatrixUsed.clear();
-        
+
         MaxNumLights = 0;
         if (LightsCache != NULL)
         {
@@ -2338,7 +2338,7 @@ namespace DeferredRenderingEngine
         return true;
     }
 
-    RwBool  D3D9NullStandard(void* pOut,  void* pInOut, RwInt32 nIn)
+    RwBool  D3D9NullStandard(void* pOut, void* pInOut, RwInt32 nIn)
     {
         return FALSE;
     }
@@ -2393,7 +2393,7 @@ namespace DeferredRenderingEngine
         {
             if ((rwD3D9Standards->nStandard < numStandardsFunctions) &&
                 (rwD3D9Standards->nStandard >= 0))
-                standardFunctions[rwD3D9Standards[numDriverFunctions]. nStandard] = rwD3D9Standards[numDriverFunctions].fpStandard;     
+                standardFunctions[rwD3D9Standards[numDriverFunctions].nStandard] = rwD3D9Standards[numDriverFunctions].fpStandard;
         }
 
         return true;

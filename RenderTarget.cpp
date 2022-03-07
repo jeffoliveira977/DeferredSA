@@ -31,10 +31,13 @@ void RenderTarget::Release()
 	RwRasterDestroy(mRaster);
 	mRaster = nullptr;
 }
-
+#include "D3D9BaseTexture.h"
 void RenderTarget::CopyFromSurface(LPSURFACE surface)
 {
 	auto texture = RASTEREXTFROMRASTER(mRaster)->texture;
+	/*if (texture == nullptr)
+		return;*/
+
 	texture->GetSurfaceLevel(0, &mSurface);
 
 	RwD3DDevice->StretchRect(surface == nullptr ? RwD3D9RenderSurface : surface, NULL, mSurface, NULL, D3DTEXF_NONE);
@@ -50,6 +53,9 @@ RwRaster* RenderTarget::GetRaster()
 LPSURFACE RenderTarget::GetSurface()
 {
 	auto texture = RASTEREXTFROMRASTER(mRaster)->texture;
+	/*if (texture == nullptr)
+		return nullptr;*/
+
 	texture->GetSurfaceLevel(0, &mSurface);
 
 	// Release after GetSurfaceLevel to decrease reference count.

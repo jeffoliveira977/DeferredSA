@@ -53,7 +53,7 @@ void Initialize()
 	PointShadow->Initialize();
 
 	CWaterLevel::InitShaders();
-	EnvironmentMapping::InitializeGraphics();
+	//EnvironmentMapping::InitializeGraphics();
 	CubemapReflection::Initialize();
 	DualParaboloidReflection::Initialize();
 
@@ -71,10 +71,12 @@ void Initialize()
 	ImguiManager::Initialize();
 }
 
+#include "D3D9BaseTexture.h"
 void SetSurfaceD(int id)
 {
 	auto rasterCube = RASTEREXTFROMCONSTRASTER(CubemapReflection::m_cubeRaster);
 	auto rasterTex = RASTEREXTFROMCONSTRASTER(EnvironmentMapping::m_paraboloidRaster[1]);
+
 
 	LPDIRECT3DCUBETEXTURE9 cube = (LPDIRECT3DCUBETEXTURE9)rasterCube->texture;
 

@@ -46,7 +46,7 @@ RwBool Raster::D3D9RasterLock(void* pixelsIn, void* rasterIn, RwInt32 accessMode
 
     /* Get the top level raster as this is the only one with a valid texture */
     topRaster = raster;
-    //while ((topRaster = topRaster->parent) != topRaster->parent) {};
+    while ((topRaster = topRaster->parent) != topRaster->parent) {};
 
     topRasExt = RASTEREXTFROMRASTER(topRaster);
 
@@ -70,30 +70,30 @@ RwBool Raster::D3D9RasterLock(void* pixelsIn, void* rasterIn, RwInt32 accessMode
 
         if (SUCCEEDED(hr))
         {
-           // if (topRaster == raster)
-                hr = rasExt->lockedSurface->LockRect(&rasExt->lockedRect, NULL, flags);
-           /* else
-            {
-                RECT rect;
+             if (topRaster == raster)
+            hr = rasExt->lockedSurface->LockRect(&rasExt->lockedRect, NULL, flags);
+             else
+             {
+                 RECT rect;
 
-                rect.left = raster->nOffsetX;
-                rect.top = raster->nOffsetY;
-                rect.right = raster->nOffsetX + raster->width;
-                rect.bottom = raster->nOffsetY + raster->height;
-                hr = rasExt->lockedSurface->LockRect(&rasExt->lockedRect, &rect, flags);
-            }*/
+                 rect.left = raster->nOffsetX;
+                 rect.top = raster->nOffsetY;
+                 rect.right = raster->nOffsetX + raster->width;
+                 rect.bottom = raster->nOffsetY + raster->height;
+                 hr = rasExt->lockedSurface->LockRect(&rasExt->lockedRect, &rect, flags);
+             }
         }
 
-       /* if (SUCCEEDED(hr))
-        {
-            if (accessMode & rwRASTERLOCKREAD)
-                raster->privateFlags |= rwRASTERPIXELLOCKEDREAD;
+         if (SUCCEEDED(hr))
+         {
+             if (accessMode & rwRASTERLOCKREAD)
+                 raster->privateFlags |= rwRASTERPIXELLOCKEDREAD;
 
-            if (accessMode & rwRASTERLOCKWRITE)
-                raster->privateFlags |= rwRASTERPIXELLOCKEDWRITE;
-        }
-        else
-            return FALSE;*/
+             if (accessMode & rwRASTERLOCKWRITE)
+                 raster->privateFlags |= rwRASTERPIXELLOCKEDWRITE;
+         }
+         else
+             return FALSE;
     }
     break;
 
@@ -212,7 +212,7 @@ RwBool Raster::D3D9RasterLock(void* pixelsIn, void* rasterIn, RwInt32 accessMode
 
 RwBool Raster::D3D9RasterUnlock(void* unused1, void* rasterIn, RwInt32 unused3)
 {
-   auto raster = (RwRaster*)rasterIn;
+    auto raster = (RwRaster*)rasterIn;
 
     /* Can't unlock rasters that have not been locked */
     if (raster->cpPixels == NULL)
@@ -235,24 +235,24 @@ RwBool Raster::D3D9RasterUnlock(void* unused1, void* rasterIn, RwInt32 unused3)
         raster->stride = 0;
         raster->cpPixels = NULL;
 
-        //if (/*(raster->privateFlags & rwRASTERPIXELLOCKEDWRITE) &&*/
-        //    (raster->cFormat & (rwRASTERFORMATAUTOMIPMAP >> 8)) &&
-        //    (rasExt->lockedMipLevel == 0) &&
-        //    (rasExt->automipmapgen == 0))
-        //{
-        //    RwRaster* topRaster;
+        if ((raster->privateFlags & rwRASTERPIXELLOCKEDWRITE) &&
+            (raster->cFormat & (rwRASTERFORMATAUTOMIPMAP >> 8)) &&
+            (rasExt->lockedMipLevel == 0) &&
+            (rasExt->automipmapgen == 0))
+        {
+            RwRaster* topRaster;
 
-        //    raster->privateFlags = (RwUInt8)(raster->privateFlags & ~rwRASTERPIXELLOCKED);
-        //    rasExt->lockedMipLevel = (RwUInt8)-1;
+            raster->privateFlags = (RwUInt8)(raster->privateFlags & ~rwRASTERPIXELLOCKED);
+            rasExt->lockedMipLevel = (RwUInt8)-1;
 
-        //    /* Get the top level raster as this is the only one with a valid texture */
-        //    topRaster = raster;
-        //   // while ((topRaster = topRaster->parent) != topRaster->parent) {};
+            /* Get the top level raster as this is the only one with a valid texture */
+            topRaster = raster;
+            while ((topRaster = topRaster->parent) != topRaster->parent) {};
 
-        //    RwTextureRasterGenerateMipmaps(topRaster, NULL);
-        //}
-        //else
-        //    raster->privateFlags = (RwUInt8)(raster->privateFlags & ~rwRASTERPIXELLOCKED);
+            RwTextureRasterGenerateMipmaps(topRaster, NULL);
+        }
+        else
+            raster->privateFlags = (RwUInt8)(raster->privateFlags & ~rwRASTERPIXELLOCKED);
     }
     break;
 
@@ -270,79 +270,79 @@ RwBool Raster::D3D9RasterUnlock(void* unused1, void* rasterIn, RwInt32 unused3)
         rasExt->lockedSurface->UnlockRect();
 
         /* Update video memory surface if needed */
-        //if (raster->privateFlags & rwRASTERPIXELLOCKEDWRITE)
-        //{
-        //    LPSURFACE           surface;
-        //    HRESULT             hr;
-        //    RwRaster* topRaster;
-        //    _rwD3D9RasterExt* topRasExt;
+        if (raster->privateFlags & rwRASTERPIXELLOCKEDWRITE)
+        {
+            LPSURFACE           surface;
+            HRESULT             hr;
+            RwRaster* topRaster;
+            _rwD3D9RasterExt* topRasExt;
 
 
-        //    /* Get the top level raster as this is the only one with a valid texture */
-        //    topRaster = raster;
-        //    while ((topRaster = topRaster->parent) != topRaster->parent) {};
+            /* Get the top level raster as this is the only one with a valid texture */
+            topRaster = raster;
+            while ((topRaster = topRaster->parent) != topRaster->parent) {};
 
-        //    topRasExt = RASTEREXTFROMRASTER(topRaster);
+            topRasExt = RASTEREXTFROMRASTER(topRaster);
 
-        //    if ((raster->cType & rwRASTERTYPEMASK) == rwRASTERTYPECAMERATEXTURE)
-        //    {
-        //        if (topRasExt->cube)
-        //            hr = reinterpret_cast<LPDIRECT3DCUBETEXTURE9>(topRasExt->texture)->GetCubeMapSurface((D3DCUBEMAP_FACES)topRasExt->face, rasExt->lockedMipLevel, &surface);
-        //        else
-        //            hr = topRasExt->texture->GetSurfaceLevel(rasExt->lockedMipLevel, &surface);
-        //    }
-        //    else
-        //    {
-        //        if (topRasExt->swapChain)
-        //            surface = (LPSURFACE)topRasExt->texture;
-        //        else
-        //            surface = RwD3D9RenderSurface;
+            if ((raster->cType & rwRASTERTYPEMASK) == rwRASTERTYPECAMERATEXTURE)
+            {
+                if (topRasExt->cube)
+                    hr = reinterpret_cast<LPDIRECT3DCUBETEXTURE9>(topRasExt->texture)->GetCubeMapSurface((D3DCUBEMAP_FACES)topRasExt->face, rasExt->lockedMipLevel, &surface);
+                else
+                    hr = topRasExt->texture->GetSurfaceLevel(rasExt->lockedMipLevel, &surface);
+            }
+            else
+            {
+                if (topRasExt->swapChain)
+                    surface = (LPSURFACE)topRasExt->texture;
+                else
+                    surface = RwD3D9RenderSurface;
 
-        //        hr = D3D_OK;
-        //    }
+                hr = D3D_OK;
+            }
 
-        //    if (SUCCEEDED(hr))
-        //    {
-        //        if (topRaster == raster)
-        //        {
-        //            hr = _RwD3DDevice->UpdateSurface(rasExt->lockedSurface, NULL, surface, NULL);
-        //        }
-        //        else
-        //        {
-        //            RECT rect;
-        //            POINT pt;
+            if (SUCCEEDED(hr))
+            {
+                if (topRaster == raster)
+                {
+                    hr = _RwD3DDevice->UpdateSurface(rasExt->lockedSurface, NULL, surface, NULL);
+                }
+                else
+                {
+                    RECT rect;
+                    POINT pt;
 
-        //            rect.left = raster->nOffsetX;
-        //            rect.top = raster->nOffsetY;
-        //            rect.right = rect.left + raster->width;
-        //            rect.bottom = rect.top + raster->height;
+                    rect.left = raster->nOffsetX;
+                    rect.top = raster->nOffsetY;
+                    rect.right = rect.left + raster->width;
+                    rect.bottom = rect.top + raster->height;
 
-        //            pt.x = raster->nOffsetX;
-        //            pt.y = raster->nOffsetY;
+                    pt.x = raster->nOffsetX;
+                    pt.y = raster->nOffsetY;
 
-        //            hr = _RwD3DDevice->UpdateSurface(rasExt->lockedSurface, &rect, surface, &pt);
-        //        }
+                    hr = _RwD3DDevice->UpdateSurface(rasExt->lockedSurface, &rect, surface, &pt);
+                }
 
-        //        if ((raster->cType & rwRASTERTYPEMASK) == rwRASTERTYPECAMERATEXTURE)
-        //            surface->Release();
-        //    }
+                if ((raster->cType & rwRASTERTYPEMASK) == rwRASTERTYPECAMERATEXTURE)
+                    surface->Release();
+            }
 
-        //    rasExt->lockedSurface->Release();
+            rasExt->lockedSurface->Release();
 
-        //    raster->privateFlags = (RwUInt8)(raster->privateFlags & ~rwRASTERPIXELLOCKED);
+            raster->privateFlags = (RwUInt8)(raster->privateFlags & ~rwRASTERPIXELLOCKED);
 
-        //    if ((raster->cType & rwRASTERTYPEMASK) == rwRASTERTYPECAMERATEXTURE)
-        //    {
-        //        if ((raster->cFormat & (rwRASTERFORMATAUTOMIPMAP >> 8)) &&
-        //            (rasExt->lockedMipLevel == 0))
-        //        {
-        //            rasExt->lockedMipLevel = (RwUInt8)-1;
+            if ((raster->cType & rwRASTERTYPEMASK) == rwRASTERTYPECAMERATEXTURE)
+            {
+                if ((raster->cFormat & (rwRASTERFORMATAUTOMIPMAP >> 8)) &&
+                    (rasExt->lockedMipLevel == 0))
+                {
+                    rasExt->lockedMipLevel = (RwUInt8)-1;
 
-        //            RwTextureRasterGenerateMipmaps(topRaster, NULL);
-        //        }
-        //    }
-        //}
-        //else
+                    RwTextureRasterGenerateMipmaps(topRaster, NULL);
+                }
+            }
+        }
+        else
         {
             rasExt->lockedSurface->Release();
             raster->privateFlags = (RwUInt8)(raster->privateFlags & ~rwRASTERPIXELLOCKED);
@@ -375,7 +375,9 @@ RwInt32 Raster::D3D9FindCorrectRasterFormat(RwRasterType type, RwInt32 flags)
                  * By default textures are 8888, but make mipmap generation flag and
                  * palletized flags persist
                  */
-                if (_rwD3D9CheckValidTextureFormat(D3DFMT_A8R8G8B8))
+                if (_rwD3D9CheckValidTextureFormat(D3DFMT_A16B16G16R16F))
+                    format |= rwRASTERFORMAT8888;
+                else if (_rwD3D9CheckValidTextureFormat(D3DFMT_A8R8G8B8))
                     format |= rwRASTERFORMAT8888;
                 else
                 {
@@ -501,7 +503,12 @@ RwInt32 Raster::D3D9FindCorrectRasterFormat(RwRasterType type, RwInt32 flags)
 
             if ((format & rwRASTERFORMATPIXELFORMATMASK) == rwRASTERFORMAT8888)
             {
-                if (!_rwD3D9CheckValidCameraTextureFormat(D3DFMT_A8R8G8B8))
+                if (!_rwD3D9CheckValidCameraTextureFormat(D3DFMT_A16B16G16R16F))
+                {
+                    format &= (~rwRASTERFORMAT8888);
+                    format |= rwRASTERFORMAT888;
+                }
+                else if (!_rwD3D9CheckValidCameraTextureFormat(D3DFMT_A8R8G8B8))
                 {
                     format &= (~rwRASTERFORMAT8888);
                     format |= rwRASTERFORMAT888;
@@ -561,7 +568,12 @@ RwBool Raster::rwD3D9SetRasterFormat(void* rasterIn, RwInt32 flags)
     case rwRASTERTYPETEXTURE:
         if ((format & rwRASTERFORMATPIXELFORMATMASK) == rwRASTERFORMATDEFAULT)
         {
-            if (_rwD3D9CheckValidTextureFormat(D3DFMT_A8R8G8B8))
+            if (_rwD3D9CheckValidTextureFormat(D3DFMT_A16B16G16R16F))
+            {
+                format |= rwRASTERFORMAT8888;
+                raster->depth = 32;
+            }
+            else if (_rwD3D9CheckValidTextureFormat(D3DFMT_A8R8G8B8))
             {
                 format |= rwRASTERFORMAT8888;
                 raster->depth = 32;
@@ -656,8 +668,8 @@ RwBool Raster::rwD3D9SetRasterFormat(void* rasterIn, RwInt32 flags)
         break;
 
     case rwRASTERTYPEZBUFFER:
-            raster->depth = 32;
-            format = rwRASTERFORMAT32;
+        raster->depth = 32;
+        format = rwRASTERFORMAT32;
         break;
 
     default:
@@ -713,7 +725,9 @@ RwUInt32 Raster::_rwD3D9ImageFindFormat(RwImage* image)
 
     if (alphaBits >= 8)
     {
-        if (_rwD3D9CheckValidTextureFormat(D3DFMT_A8R8G8B8))
+        if (_rwD3D9CheckValidTextureFormat(D3DFMT_A16B16G16R16F))
+            format = rwRASTERFORMAT8888;
+        else if (_rwD3D9CheckValidTextureFormat(D3DFMT_A8R8G8B8))
             format = rwRASTERFORMAT8888;
         else if (_rwD3D9CheckValidTextureFormat(D3DFMT_A4R4G4B4))
             format = rwRASTERFORMAT4444;
@@ -744,20 +758,20 @@ RwUInt32 Raster::rwD3D9FindRwFormat(D3DFORMAT d3dFormat)
 
 RwBool Raster::_rwD3D9CheckValidTextureFormat(RwInt32 format)
 {
-    return SUCCEEDED(_RwDirect3DObject->CheckDeviceFormat(_RwD3DAdapterIndex, _RwD3DAdapterType, _RwD3D9AdapterInformation.mode.Format, 0, 
+    return SUCCEEDED(_RwDirect3DObject->CheckDeviceFormat(_RwD3DAdapterIndex, _RwD3DAdapterType, _RwD3D9AdapterInformation.mode.Format, 0,
         D3DRTYPE_TEXTURE, (D3DFORMAT)format));
 }
 
 RwBool Raster::_rwD3D9CheckValidCameraTextureFormat(RwInt32 format)
 {
     auto adapterFormat = _RwD3D9AdapterInformation.mode.Format;
-    auto hr = _RwDirect3DObject->CheckDeviceFormat(_RwD3DAdapterIndex, _RwD3DAdapterType, adapterFormat, D3DUSAGE_RENDERTARGET, 
+    auto hr = _RwDirect3DObject->CheckDeviceFormat(_RwD3DAdapterIndex, _RwD3DAdapterType, adapterFormat, D3DUSAGE_RENDERTARGET,
         D3DRTYPE_TEXTURE, (D3DFORMAT)format);
 
     if (SUCCEEDED(hr))
-        hr = _RwDirect3DObject->CheckDepthStencilMatch(_RwD3DAdapterIndex, _RwD3DAdapterType, adapterFormat, 
+        hr = _RwDirect3DObject->CheckDepthStencilMatch(_RwD3DAdapterIndex, _RwD3DAdapterType, adapterFormat,
         (D3DFORMAT)format, Present.AutoDepthStencilFormat);
-    
+
     return SUCCEEDED(hr);
 }
 
@@ -765,12 +779,12 @@ RwBool Raster::_rwD3D9CheckValidZBufferTextureFormat(RwInt32 format)
 {
     auto  adapterFormat = _RwD3D9AdapterInformation.mode.Format;
 
-    auto hr = _RwDirect3DObject->CheckDeviceFormat(_RwD3DAdapterIndex, _RwD3DAdapterType, adapterFormat, D3DUSAGE_DEPTHSTENCIL, 
+    auto hr = _RwDirect3DObject->CheckDeviceFormat(_RwD3DAdapterIndex, _RwD3DAdapterType, adapterFormat, D3DUSAGE_DEPTHSTENCIL,
         D3DRTYPE_TEXTURE, (D3DFORMAT)format);
 
     if (SUCCEEDED(hr))
-        hr = _RwDirect3DObject->CheckDepthStencilMatch(_RwD3DAdapterIndex, _RwD3DAdapterType,  adapterFormat, adapterFormat, (D3DFORMAT)format);
-    
+        hr = _RwDirect3DObject->CheckDepthStencilMatch(_RwD3DAdapterIndex, _RwD3DAdapterType, adapterFormat, adapterFormat, (D3DFORMAT)format);
+
     return SUCCEEDED(hr);
 }
 
@@ -799,7 +813,7 @@ RwBool Raster::_rwD3D9CheckAutoMipmapGenCubeTextureFormat(RwInt32 format)
 {
     if (_RwD3D9DeviceCaps.Caps2 & D3DCAPS2_CANAUTOGENMIPMAP)
     {
-        auto hr = _RwDirect3DObject->CheckDeviceFormat(_RwD3DAdapterIndex, _RwD3DAdapterType, _RwD3D9AdapterInformation.mode.Format, D3DUSAGE_AUTOGENMIPMAP, 
+        auto hr = _RwDirect3DObject->CheckDeviceFormat(_RwD3DAdapterIndex, _RwD3DAdapterType, _RwD3D9AdapterInformation.mode.Format, D3DUSAGE_AUTOGENMIPMAP,
             D3DRTYPE_CUBETEXTURE, (D3DFORMAT)format);
 
         return hr == D3D_OK;
@@ -825,7 +839,7 @@ RwBool Raster::_rwD3D9CheckValidZBufferFormat(RwInt32 format)
 {
     auto adapterFormat = _RwD3D9AdapterInformation.mode.Format;
 
-    auto hr = _RwDirect3DObject->CheckDeviceFormat(_RwD3DAdapterIndex, _RwD3DAdapterType, adapterFormat, D3DUSAGE_DEPTHSTENCIL, 
+    auto hr = _RwDirect3DObject->CheckDeviceFormat(_RwD3DAdapterIndex, _RwD3DAdapterType, adapterFormat, D3DUSAGE_DEPTHSTENCIL,
         D3DRTYPE_SURFACE, (D3DFORMAT)format);
 
     if (SUCCEEDED(hr))
@@ -841,9 +855,9 @@ RwBool  Raster::_rwD3D9CheckAutoMipmapGenTextureFormat(RwInt32 format)
     {
         auto adapterFormat = _RwD3D9AdapterInformation.mode.Format;
 
-        auto hr = _RwDirect3DObject->CheckDeviceFormat(_RwD3DAdapterIndex, _RwD3DAdapterType, adapterFormat, D3DUSAGE_AUTOGENMIPMAP, 
+        auto hr = _RwDirect3DObject->CheckDeviceFormat(_RwD3DAdapterIndex, _RwD3DAdapterType, adapterFormat, D3DUSAGE_AUTOGENMIPMAP,
             D3DRTYPE_TEXTURE, (D3DFORMAT)format);
-       
+
         return hr == D3D_OK;
     }
     else
@@ -1047,7 +1061,7 @@ RwBool Raster::_rwD3D9NativeTextureRead(void* streamIn, void* textureIn, RwInt32
     else
     {
         /* Create a raster */
-        raster = RwD3D9RasterCreate(nativeRaster.width, nativeRaster.height, nativeRaster.d3dFormat, 
+        raster = RwD3D9RasterCreate(nativeRaster.width, nativeRaster.height, nativeRaster.d3dFormat,
             nativeRaster.type | (nativeRaster.format & (rwRASTERFORMATAUTOMIPMAP | rwRASTERFORMATMIPMAP)));
 
         if (!raster)
@@ -1191,24 +1205,41 @@ RwBool Raster::_rwD3D9CubeRasterCreate(RwRaster* raster, RwUInt32 d3dformat, RwI
     else
         levels = 1;
 
+    if (rasExt->texture)
+    {
+        SAFE_RELEASE(rasExt->texture);
+        Log::Warn("Raster::_rwD3D9CubeRasterCreate - texture not released propertly");
+    }
+
+    static int cubemapcount = 0;
     if ((raster->cType & rwRASTERTYPEMASK) != rwRASTERTYPECAMERATEXTURE)
     {
         hr =
-            _RwD3DDevice->CreateCubeTexture(raster->width, levels,
-            (rasExt->automipmapgen ? D3DUSAGE_AUTOGENMIPMAP : 0), rasExt->d3dFormat, D3DPOOL_MANAGED, (LPDIRECT3DCUBETEXTURE9*)&(rasExt->texture), NULL);
+            CheckError(_RwD3DDevice->CreateCubeTexture(raster->width, levels,
+            (rasExt->automipmapgen ? D3DUSAGE_AUTOGENMIPMAP : 0), rasExt->d3dFormat, D3DPOOL_MANAGED, (LPDIRECT3DCUBETEXTURE9*)&(rasExt->texture), NULL),
+                "Raster::_rwD3D9CubeRasterCreate - CreateCubeTexture: failed to create cubemap ");
     }
     else
     {
         hr =
-            _RwD3DDevice->CreateCubeTexture(raster->width, levels,
-            (rasExt->automipmapgen ? D3DUSAGE_AUTOGENMIPMAP : 0) | D3DUSAGE_RENDERTARGET, rasExt->d3dFormat, D3DPOOL_DEFAULT, (LPDIRECT3DCUBETEXTURE9*)&(rasExt->texture), NULL);
+            CheckError(_RwD3DDevice->CreateCubeTexture(raster->width, levels,
+            (rasExt->automipmapgen ? D3DUSAGE_AUTOGENMIPMAP : 0) | D3DUSAGE_RENDERTARGET, rasExt->d3dFormat, D3DPOOL_DEFAULT, (LPDIRECT3DCUBETEXTURE9*)&(rasExt->texture), NULL),
+                "Raster::_rwD3D9CubeRasterCreate - CreateCubeTexture: failed to create rendertarget cubemap ");
 
         if (SUCCEEDED(hr))
+        {
             rxD3D9VideoMemoryRasterListAdd(raster);
+            cubemapcount++;
+        }
     }
 
+
+    Log::Info("Cubemap rendertarget count: %i", cubemapcount);
+
     if (FAILED(hr))
+    {
         return FALSE;
+    }
 
     /* Remove the rwRASTERDONTALLOCATE flag so it will get destroyed */
     raster->cFlags &= ~rwRASTERDONTALLOCATE;
@@ -1264,7 +1295,7 @@ void Raster::_rwD3D9CheckRasterSize(RwInt32* width, RwInt32* height, RwUInt32 ra
     }
 
     if (_RwD3D9DeviceCaps.TextureCaps & D3DPTEXTURECAPS_SQUAREONLY)
-        *width = min(*width, *height);  
+        *width = min(*width, *height);
 
     return;
 }
@@ -1291,25 +1322,28 @@ RwBool  Raster::rwD3D9CreateTextureRaster(RwRaster* raster, _rwD3D9RasterExt* ra
     /* Create the texture, if mipped 0 gets all the mip levels */
     if (rasExt->cube)
     {
-        hr = _RwD3DDevice->CreateCubeTexture(raster->width,
+        hr = CheckError(_RwD3DDevice->CreateCubeTexture(raster->width,
             (rasFormat & rwRASTERFORMATMIPMAP) ? 0 : 1, (rasExt->automipmapgen ? D3DUSAGE_AUTOGENMIPMAP : 0),
-            rasExt->d3dFormat, D3DPOOL_MANAGED, (LPDIRECT3DCUBETEXTURE9*)&(rasExt->texture), NULL);
+            rasExt->d3dFormat, D3DPOOL_MANAGED, (LPDIRECT3DCUBETEXTURE9*)&(rasExt->texture), NULL), 
+            "Raster::rwD3D9CreateTextureRaster - CreateCubeTexture: failed to create cubemap");
     }
     else
     {
         if (IS_D3DFORMAT_ZBUFFER(rasExt->d3dFormat))
         {
-            hr = _RwD3DDevice->CreateTexture(raster->width, raster->height, 1,
-                D3DUSAGE_DEPTHSTENCIL, rasExt->d3dFormat, D3DPOOL_DEFAULT, &(rasExt->texture), NULL);
+            hr = CheckError(_RwD3DDevice->CreateTexture(raster->width, raster->height, 1,
+                D3DUSAGE_DEPTHSTENCIL, rasExt->d3dFormat, D3DPOOL_DEFAULT, &(rasExt->texture), NULL),
+                "Raster::rwD3D9CreateTextureRaster - CreateTexture: failed to create depth stencil texture");
 
             if (SUCCEEDED(hr))
                 rxD3D9VideoMemoryRasterListAdd(raster);
         }
         else
         {
-            hr = _RwD3DDevice->CreateTexture(raster->width, raster->height,
+            hr = CheckError(_RwD3DDevice->CreateTexture(raster->width, raster->height,
                 (rasFormat & rwRASTERFORMATMIPMAP) ? 0 : 1, (rasExt->automipmapgen ? D3DUSAGE_AUTOGENMIPMAP : 0),
-                rasExt->d3dFormat, D3DPOOL_MANAGED, &(rasExt->texture), NULL);
+                rasExt->d3dFormat, D3DPOOL_MANAGED, &(rasExt->texture), NULL),
+                "Raster::rwD3D9CreateTextureRaster - CreateTexture: failed to create texture");
         }
     }
 
@@ -1481,8 +1515,9 @@ RwBool Raster::rwD3D9CreateZBufferRaster(RwRaster* raster, _rwD3D9RasterExt* ras
         /* Remove managed resources from memory when creating a video memory resource */
         _RwD3DDevice->EvictManagedResources();
 
-        hr = _RwD3DDevice->CreateDepthStencilSurface(raster->width, raster->height, rasExt->d3dFormat,
-            Present.MultiSampleType, Present.MultiSampleQuality, FALSE, (LPSURFACE*)&(rasExt->texture), NULL);
+        hr = CheckError(_RwD3DDevice->CreateDepthStencilSurface(raster->width, raster->height, rasExt->d3dFormat,
+            Present.MultiSampleType, Present.MultiSampleQuality, FALSE, (LPSURFACE*)&(rasExt->texture), NULL),
+            "Raster::rwD3D9CreateZBufferRaster - CreateDepthStencilSurface: failed to create depth stencil surface");
 
         if (hr == D3DERR_OUTOFVIDEOMEMORY)
             return FALSE;
@@ -1522,14 +1557,16 @@ RwBool Raster::rwD3D9CreateCameraTextureRaster(RwRaster* raster, _rwD3D9RasterEx
     /* Create the texture, if mipped 0 gets all the mip levels */
     if (rasExt->cube)
     {
-        hr = _RwD3DDevice->CreateCubeTexture(raster->width, (rasFormat & rwRASTERFORMATMIPMAP) ? 0 : 1,
-            (rasExt->automipmapgen ? D3DUSAGE_AUTOGENMIPMAP : 0) | D3DUSAGE_RENDERTARGET, rasExt->d3dFormat, D3DPOOL_DEFAULT, (LPDIRECT3DCUBETEXTURE9*)&(rasExt->texture), NULL);
+        hr = CheckError(_RwD3DDevice->CreateCubeTexture(raster->width, (rasFormat & rwRASTERFORMATMIPMAP) ? 0 : 1,
+            (rasExt->automipmapgen ? D3DUSAGE_AUTOGENMIPMAP : 0) | D3DUSAGE_RENDERTARGET, rasExt->d3dFormat, D3DPOOL_DEFAULT, (LPDIRECT3DCUBETEXTURE9*)&(rasExt->texture), NULL),
+            "Raster::rwD3D9CreateCameraTextureRaster - CreateCubeTexture: failed to create rendertarget cubemap");
     }
     else
     {
-        hr = _RwD3DDevice->CreateTexture(raster->width, raster->height, (rasFormat & rwRASTERFORMATMIPMAP) ? 0 : 1,
+        hr = CheckError(_RwD3DDevice->CreateTexture(raster->width, raster->height, (rasFormat & rwRASTERFORMATMIPMAP) ? 0 : 1,
             (rasExt->automipmapgen ? D3DUSAGE_AUTOGENMIPMAP : 0) | D3DUSAGE_RENDERTARGET,
-            rasExt->d3dFormat, D3DPOOL_DEFAULT, &(rasExt->texture), NULL);
+            rasExt->d3dFormat, D3DPOOL_DEFAULT, &(rasExt->texture), NULL),
+            "Raster::rwD3D9CreateCameraTextureRaster - CreateTexture: failed to create rendertarget teture");
     }
 
     return SUCCEEDED(hr);
@@ -1550,7 +1587,7 @@ RwRaster* Raster::RwD3D9RasterCreate(RwUInt32 width, RwUInt32 height, RwUInt32 d
     }
 
     /* Create a raster */
-    raster = RwRasterCreate(width, height, 0,  flags | rwRASTERDONTALLOCATE);
+    raster = RwRasterCreate(width, height, 0, flags | rwRASTERDONTALLOCATE);
     if (raster == nullptr)
         return nullptr;
 
@@ -1608,18 +1645,19 @@ RwRaster* Raster::RwD3D9RasterCreate(RwUInt32 width, RwUInt32 height, RwUInt32 d
     if (FAILED(hr))
     {
         RwRasterDestroy(raster);
-       return nullptr;
+        return nullptr;
     }
 
-    hr = _RwD3DDevice->CreateTexture(raster->width, raster->height, (flags & rwRASTERFORMATMIPMAP) ? 0 : 1,
-        usage, (D3DFORMAT)d3dFormat, (D3DPOOL)pool, &(rasExt->texture), NULL);
+    hr = CheckError(_RwD3DDevice->CreateTexture(raster->width, raster->height, (flags & rwRASTERFORMATMIPMAP) ? 0 : 1,
+        usage, (D3DFORMAT)d3dFormat, (D3DPOOL)pool, &(rasExt->texture), NULL),
+        "Raster::RwD3D9RasterCreate - CreateTexture: failed to create teture");
 
     /* Create the texture, if mipped 0 gets all the mip levels */
     if (FAILED(hr))
     {
         RwRasterDestroy(raster);
 
-       return nullptr;
+        return nullptr;
     }
     else
     {
@@ -1695,7 +1733,7 @@ RwBool  Raster::_rwD3D9RasterDestroy(void* unused1 __RWUNUSED__, void* raster, R
             if (!(ras->cFlags & rwRASTERDONTALLOCATE))
             {
                 SAFE_RELEASE(rasExt->texture);
-               
+
                 if (IS_D3DFORMAT_ZBUFFER(rasExt->d3dFormat))
                     rxD3D9VideoMemoryRasterListRemove(ras);
             }
@@ -1770,7 +1808,7 @@ void* Raster::rwD3D9RasterCtor(void* object, RwInt32 offsetInObject __RWUNUSED__
     return(object);
 }
 
-void* Raster::rwD3D9RasterDtor(void* object, RwInt32 offsetInObject __RWUNUSED__,  RwInt32 sizeInObject __RWUNUSED__)
+void* Raster::rwD3D9RasterDtor(void* object, RwInt32 offsetInObject __RWUNUSED__, RwInt32 sizeInObject __RWUNUSED__)
 {
     _rwD3D9RasterExt* rasExt = RASTEREXTFROMRASTER(object);
 
@@ -1835,10 +1873,10 @@ RwBool Raster::_rwD3D9RasterPluginAttach()
     SETFORMATINFO(D3DFMT_Q16W16V16U16, FALSE, 64, 0);
     SETFORMATINFO(D3DFMT_R16F, FALSE, 16, 0);
     SETFORMATINFO(D3DFMT_G16R16F, FALSE, 32, 0);
-    SETFORMATINFO(D3DFMT_A16B16G16R16F, TRUE, 64, 0);
-    SETFORMATINFO(D3DFMT_R32F, FALSE, 32, 0);
+    SETFORMATINFO(D3DFMT_A16B16G16R16F, TRUE, 64, rwRASTERFORMAT8888);
+    SETFORMATINFO(D3DFMT_R32F, FALSE, 32, rwRASTERFORMAT32);
     SETFORMATINFO(D3DFMT_G32R32F, FALSE, 64, 0);
-    SETFORMATINFO(D3DFMT_A32B32G32R32F, TRUE, 128, 0);
+    SETFORMATINFO(D3DFMT_A32B32G32R32F, TRUE, 128, rwRASTERFORMAT8888);
     SETFORMATINFO(D3DFMT_CxV8U8, FALSE, 16, 0);
 
     return TRUE;
@@ -1937,8 +1975,9 @@ RwBool Raster::_rxD3D9VideoMemoryRasterListRestore()
         {
             if (IS_D3DFORMAT_ZBUFFER(rasExt->d3dFormat))
             {
-                hr = _RwD3DDevice->CreateTexture(raster->width, raster->height, 1,
-                    D3DUSAGE_DEPTHSTENCIL, rasExt->d3dFormat, D3DPOOL_DEFAULT, &(rasExt->texture), NULL);
+                hr = CheckError(_RwD3DDevice->CreateTexture(raster->width, raster->height, 1,
+                    D3DUSAGE_DEPTHSTENCIL, rasExt->d3dFormat, D3DPOOL_DEFAULT, &(rasExt->texture), NULL),
+                    "Raster::_rxD3D9VideoMemoryRasterListRestore - CreateTexture: failed to create depth stencil texture");
             }
         }
         break;
@@ -1953,13 +1992,15 @@ RwBool Raster::_rxD3D9VideoMemoryRasterListRestore()
 
                 if (rasExt->cube)
                 {
-                    hr = _RwD3DDevice->CreateCubeTexture(raster->width, levels,
-                        mipmap | D3DUSAGE_RENDERTARGET, rasExt->d3dFormat, D3DPOOL_DEFAULT, (LPDIRECT3DCUBETEXTURE9*)&(rasExt->texture), NULL);
+                    hr = CheckError(_RwD3DDevice->CreateCubeTexture(raster->width, levels,
+                      /*  mipmap |*/ D3DUSAGE_RENDERTARGET, rasExt->d3dFormat, D3DPOOL_DEFAULT, (LPDIRECT3DCUBETEXTURE9*)&(rasExt->texture), NULL),
+                        "Raster::_rxD3D9VideoMemoryRasterListRestore - CreateCubeTexture: failed to create rendertarget cubemap");
                 }
                 else
                 {
-                    hr = _RwD3DDevice->CreateTexture(raster->width, raster->height, levels,
-                        mipmap | D3DUSAGE_RENDERTARGET, rasExt->d3dFormat, D3DPOOL_DEFAULT, &(rasExt->texture), NULL);
+                    hr = CheckError(_RwD3DDevice->CreateTexture(raster->width, raster->height, levels,
+                        mipmap | D3DUSAGE_RENDERTARGET, rasExt->d3dFormat, D3DPOOL_DEFAULT, &(rasExt->texture), NULL),
+                        "Raster::_rxD3D9VideoMemoryRasterListRestore - CreateTexture: failed to create rendertarg texture");
                 }
             }
         }
@@ -1978,8 +2019,9 @@ RwBool Raster::_rxD3D9VideoMemoryRasterListRestore()
                 else
                     rasExt->d3dFormat = D3DFMT_D24X8;
 
-                hr = _RwD3DDevice->CreateDepthStencilSurface( max(1, raster->width), max(1, raster->height),
-                    rasExt->d3dFormat, Present.MultiSampleType, Present.MultiSampleQuality, FALSE, (LPSURFACE*)&(rasExt->texture), NULL);
+                hr = CheckError(_RwD3DDevice->CreateDepthStencilSurface(max(1, raster->width), max(1, raster->height),
+                    rasExt->d3dFormat, Present.MultiSampleType, Present.MultiSampleQuality, FALSE, (LPSURFACE*)&(rasExt->texture), NULL),
+                    "Raster::_rxD3D9VideoMemoryRasterListRestore - CreateDepthStencilSurface : failed to create depth stencil surface");
             }
             else
             {
@@ -2065,7 +2107,7 @@ void Raster::rxD3D9VideoMemoryRasterListRemove(RwRaster* raster)
 
 void Raster::rxD3D9VideoMemoryRasterListAdd(RwRaster* raster)
 {
-   RasterList.push_back(raster);
+    RasterList.push_back(raster);
 }
 
 RwBool Raster::rxD3D9VideoMemoryRasterListCreate()
@@ -2094,20 +2136,20 @@ RwRaster* Raster::RwD3D9RasterStreamReadDDS(RwStream* stream)
 
     size = sizeof(RwUInt32);
     if (RwStreamRead(stream, (void*)&magic, size) != size)
-       return nullptr;
+        return nullptr;
 
     /* Check it's a "DDS " file */
     if (0x20534444 != magic)
-       return nullptr;
+        return nullptr;
 
     /* Read the header */
     size = sizeof(DDS_HEADER);
     if (RwStreamRead(stream, (void*)&header, size) != size)
-       return nullptr;
+        return nullptr;
 
     /* Is it a texture ? */
     if (!(header.dwHeaderFlags & DDS_HEADER_FLAGS_TEXTURE))
-       return nullptr;
+        return nullptr;
 
     /* Is this texture mipmapped? */
     mipMapped = header.dwHeaderFlags & DDS_HEADER_FLAGS_MIPMAP ? rwRASTERFORMATMIPMAP : 0;
@@ -2131,7 +2173,7 @@ RwRaster* Raster::RwD3D9RasterStreamReadDDS(RwStream* stream)
             convert = (_rwD3D9CheckValidCubeTextureFormat(header.ddspf.dwFourCC) == FALSE);
 
             if (convert)
-               return nullptr;
+                return nullptr;
         }
         else
             convert = (_rwD3D9CheckValidTextureFormat(header.ddspf.dwFourCC) == FALSE);
@@ -2145,7 +2187,7 @@ RwRaster* Raster::RwD3D9RasterStreamReadDDS(RwStream* stream)
                 rwRASTERTYPETEXTURE | rwRASTERDONTALLOCATE | mipMapped);
 
             if (raster == nullptr)
-               return nullptr;
+                return nullptr;
 
             /* Remove the rwRASTERDONTALLOCATE flag so it will get destroyed */
             raster->cFlags &= ~rwRASTERDONTALLOCATE;
@@ -2173,18 +2215,18 @@ RwRaster* Raster::RwD3D9RasterStreamReadDDS(RwStream* stream)
                 rasExt->cube = TRUE;
 
                 hr = _RwD3DDevice->CreateCubeTexture(raster->width, levels,
-                    0,(D3DFORMAT)rasExt->d3dFormat, D3DPOOL_MANAGED, (LPDIRECT3DCUBETEXTURE9*)&(rasExt->texture), NULL);
+                    0, (D3DFORMAT)rasExt->d3dFormat, D3DPOOL_MANAGED, (LPDIRECT3DCUBETEXTURE9*)&(rasExt->texture), NULL);
             }
             else
             {
                 levels = ((header.dwHeaderFlags & DDS_HEADER_FLAGS_MIPMAP) ? header.dwMipMapCount : 1);
 
-                hr = _RwD3DDevice->CreateTexture(raster->width,  raster->height, levels,
-                    0, (D3DFORMAT)rasExt->d3dFormat, D3DPOOL_MANAGED, &(rasExt->texture),NULL);
+                hr = _RwD3DDevice->CreateTexture(raster->width, raster->height, levels,
+                    0, (D3DFORMAT)rasExt->d3dFormat, D3DPOOL_MANAGED, &(rasExt->texture), NULL);
             }
 
             if (FAILED(hr))
-               return nullptr;
+                return nullptr;
         }
     }
     else if (DDS_RGB == header.ddspf.dwFlags)
@@ -2202,7 +2244,7 @@ RwRaster* Raster::RwD3D9RasterStreamReadDDS(RwStream* stream)
                 if (_rwD3D9CheckValidCubeTextureFormat(D3DFMT_R8G8B8))
                     rasFormat = rwRASTERFORMAT888;
                 else
-                   return nullptr;
+                    return nullptr;
             }
             else if (0x00ff0000 == header.ddspf.dwRBitMask)
             {
@@ -2211,7 +2253,7 @@ RwRaster* Raster::RwD3D9RasterStreamReadDDS(RwStream* stream)
                 if (_rwD3D9CheckValidCubeTextureFormat(D3DFMT_X8R8G8B8))
                     rasFormat = rwRASTERFORMAT888;
                 else
-                   return nullptr;
+                    return nullptr;
             }
             else if (0x0000f800 == header.ddspf.dwRBitMask)
             {
@@ -2220,10 +2262,10 @@ RwRaster* Raster::RwD3D9RasterStreamReadDDS(RwStream* stream)
                 if (_rwD3D9CheckValidCubeTextureFormat(D3DFMT_R5G6B5))
                     rasFormat = rwRASTERFORMAT565;
                 else
-                   return nullptr;
+                    return nullptr;
             }
             else
-               return nullptr;
+                return nullptr;
 
             if (!convert)
             {
@@ -2237,14 +2279,14 @@ RwRaster* Raster::RwD3D9RasterStreamReadDDS(RwStream* stream)
 
                 if (header.dwWidth != width ||
                     header.dwHeight != height)
-                   return nullptr;
+                    return nullptr;
                 else
                 {
-                    raster = RwRasterCreate(header.dwWidth, header.dwHeight, 0,  rwRASTERTYPETEXTURE | rwRASTERDONTALLOCATE |
+                    raster = RwRasterCreate(header.dwWidth, header.dwHeight, 0, rwRASTERTYPETEXTURE | rwRASTERDONTALLOCATE |
                         rasFormat | mipMapped);
 
                     if (raster == nullptr)
-                       return nullptr;
+                        return nullptr;
                     else
                     {
                         RwUInt32 levels;
@@ -2260,11 +2302,11 @@ RwRaster* Raster::RwD3D9RasterStreamReadDDS(RwStream* stream)
 
                         hr =
                             _RwD3DDevice->CreateCubeTexture(raster->width, levels,
-                                0,(D3DFORMAT)d3dFormat, D3DPOOL_MANAGED, (LPDIRECT3DCUBETEXTURE9*)
+                                0, (D3DFORMAT)d3dFormat, D3DPOOL_MANAGED, (LPDIRECT3DCUBETEXTURE9*)
                                 &(rasExt->texture), NULL);
 
                         if (FAILED(hr))
-                           return nullptr;
+                            return nullptr;
 
                         /* Remove the rwRASTERDONTALLOCATE flag so it will get destroyed */
                         raster->cFlags &= ~rwRASTERDONTALLOCATE;
@@ -2300,7 +2342,7 @@ RwRaster* Raster::RwD3D9RasterStreamReadDDS(RwStream* stream)
                     convert = TRUE;
             }
             else
-               return nullptr;
+                return nullptr;
 
             if (!convert)
             {
@@ -2320,7 +2362,7 @@ RwRaster* Raster::RwD3D9RasterStreamReadDDS(RwStream* stream)
                     raster = RwD3D9RasterCreate(header.dwWidth, header.dwHeight, d3dFormat, rwRASTERTYPETEXTURE | mipMapped);
 
                     if (raster == nullptr)
-                       return nullptr;
+                        return nullptr;
                 }
             }
         }
@@ -2340,7 +2382,7 @@ RwRaster* Raster::RwD3D9RasterStreamReadDDS(RwStream* stream)
                 if (_rwD3D9CheckValidCubeTextureFormat(D3DFMT_A8R8G8B8))
                     rasFormat = rwRASTERFORMAT8888;
                 else
-                   return nullptr;
+                    return nullptr;
             }
             else if (0x00007c00 == header.ddspf.dwRBitMask)
             {
@@ -2349,7 +2391,7 @@ RwRaster* Raster::RwD3D9RasterStreamReadDDS(RwStream* stream)
                 if (_rwD3D9CheckValidCubeTextureFormat(D3DFMT_A1R5G5B5))
                     rasFormat = rwRASTERFORMAT1555;
                 else
-                   return nullptr;
+                    return nullptr;
             }
             else if (0x00000f00 == header.ddspf.dwRBitMask)
             {
@@ -2358,10 +2400,10 @@ RwRaster* Raster::RwD3D9RasterStreamReadDDS(RwStream* stream)
                 if (_rwD3D9CheckValidCubeTextureFormat(D3DFMT_A4R4G4B4))
                     rasFormat = rwRASTERFORMAT4444;
                 else
-                   return nullptr;
+                    return nullptr;
             }
             else
-               return nullptr;
+                return nullptr;
 
             if (!convert)
             {
@@ -2375,13 +2417,13 @@ RwRaster* Raster::RwD3D9RasterStreamReadDDS(RwStream* stream)
 
                 if (header.dwWidth != width ||
                     header.dwHeight != height)
-                   return nullptr;
+                    return nullptr;
                 else
                 {
                     raster = RwRasterCreate(header.dwWidth, header.dwHeight, 0, rwRASTERTYPETEXTURE | rwRASTERDONTALLOCATE | rasFormat | mipMapped);
 
                     if (raster == nullptr)
-                       return nullptr;
+                        return nullptr;
                     else
                     {
                         RwUInt32 levels;
@@ -2395,11 +2437,11 @@ RwRaster* Raster::RwD3D9RasterStreamReadDDS(RwStream* stream)
                             levels = 1;
 
                         hr =
-                            _RwD3DDevice->CreateCubeTexture(raster->width,levels,
-                                0, (D3DFORMAT)d3dFormat, D3DPOOL_MANAGED,(LPDIRECT3DCUBETEXTURE9*)  &(rasExt->texture),  NULL);
+                            _RwD3DDevice->CreateCubeTexture(raster->width, levels,
+                                0, (D3DFORMAT)d3dFormat, D3DPOOL_MANAGED, (LPDIRECT3DCUBETEXTURE9*)&(rasExt->texture), NULL);
 
                         if (FAILED(hr))
-                           return nullptr;
+                            return nullptr;
 
                         /* Remove the rwRASTERDONTALLOCATE flag so it will get destroyed */
                         raster->cFlags &= ~rwRASTERDONTALLOCATE;
@@ -2450,7 +2492,7 @@ RwRaster* Raster::RwD3D9RasterStreamReadDDS(RwStream* stream)
             }
             else
             {
-               return nullptr;
+                return nullptr;
             }
 
             if (!convert)
@@ -2468,10 +2510,10 @@ RwRaster* Raster::RwD3D9RasterStreamReadDDS(RwStream* stream)
                     convert = TRUE;
                 else
                 {
-                    raster = RwD3D9RasterCreate(header.dwWidth, header.dwHeight, d3dFormat,rwRASTERTYPETEXTURE | mipMapped);
+                    raster = RwD3D9RasterCreate(header.dwWidth, header.dwHeight, d3dFormat, rwRASTERTYPETEXTURE | mipMapped);
 
                     if (raster == nullptr)
-                       return nullptr;
+                        return nullptr;
                 }
             }
         }
@@ -2479,72 +2521,72 @@ RwRaster* Raster::RwD3D9RasterStreamReadDDS(RwStream* stream)
     else
     {
 
-    /* Luminance and palette formats */
-    D3DFORMAT       d3dFormat = D3DFMT_UNKNOWN;
+        /* Luminance and palette formats */
+        D3DFORMAT       d3dFormat = D3DFMT_UNKNOWN;
 
-    if (cubeTexture)
-       return nullptr;
-    else
-    {
-        if (header.ddspf.dwRGBBitCount == 16)
+        if (cubeTexture)
+            return nullptr;
+        else
         {
-            if (0x0000ffff == header.ddspf.dwRBitMask)
+            if (header.ddspf.dwRGBBitCount == 16)
             {
-                if (_rwD3D9CheckValidTextureFormat(D3DFMT_L16))
-                    d3dFormat = D3DFMT_L16;
+                if (0x0000ffff == header.ddspf.dwRBitMask)
+                {
+                    if (_rwD3D9CheckValidTextureFormat(D3DFMT_L16))
+                        d3dFormat = D3DFMT_L16;
+                    else
+                        convert = TRUE;
+                }
+                else if (0x000000ff == header.ddspf.dwRBitMask &&
+                    0x0000ff00 == header.ddspf.dwABitMask)
+                {
+                    if (_rwD3D9CheckValidTextureFormat(D3DFMT_A8L8))
+                        d3dFormat = D3DFMT_A8L8;
+                    else
+                        convert = TRUE;
+                }
                 else
-                    convert = TRUE;
+                    return nullptr;
             }
-            else if (0x000000ff == header.ddspf.dwRBitMask &&
-                0x0000ff00 == header.ddspf.dwABitMask)
+            else if (header.ddspf.dwRGBBitCount == 8)
             {
-                if (_rwD3D9CheckValidTextureFormat(D3DFMT_A8L8))
-                    d3dFormat = D3DFMT_A8L8;
+                if (0x000000ff == header.ddspf.dwRBitMask)
+                {
+                    if (_rwD3D9CheckValidTextureFormat(D3DFMT_L8))
+                        d3dFormat = D3DFMT_L8;
+                    else
+                        convert = TRUE;
+                }
+                else if (0x000000ff == header.ddspf.dwABitMask)
+                {
+                    if (_rwD3D9CheckValidTextureFormat(D3DFMT_A8))
+                        d3dFormat = D3DFMT_A8;
+                    else
+                        convert = TRUE;
+                }
+                else if (0x0000000f == header.ddspf.dwRBitMask &&
+                    0x000000f0 == header.ddspf.dwABitMask)
+                {
+                    if (_rwD3D9CheckValidTextureFormat(D3DFMT_A4L4))
+                        d3dFormat = D3DFMT_A4L4;
+                    else
+                        convert = TRUE;
+                }
+                else if (0 == header.ddspf.dwRBitMask &&
+                    0 == header.ddspf.dwGBitMask &&
+                    0 == header.ddspf.dwBBitMask &&
+                    0 == header.ddspf.dwABitMask)
+                {
+                    if (_rwD3D9CheckValidTextureFormat(D3DFMT_P8))
+                        d3dFormat = D3DFMT_P8;
+                    else
+                        convert = TRUE;
+                }
                 else
-                    convert = TRUE;
-            }
-            else
-               return nullptr;
-        }
-        else if (header.ddspf.dwRGBBitCount == 8)
-        {
-            if (0x000000ff == header.ddspf.dwRBitMask)
-            {
-                if (_rwD3D9CheckValidTextureFormat(D3DFMT_L8))
-                    d3dFormat = D3DFMT_L8;
-                else
-                    convert = TRUE;
-            }
-            else if (0x000000ff == header.ddspf.dwABitMask)
-            {
-                if (_rwD3D9CheckValidTextureFormat(D3DFMT_A8))
-                    d3dFormat = D3DFMT_A8;
-                else
-                    convert = TRUE;
-            }
-            else if (0x0000000f == header.ddspf.dwRBitMask &&
-                0x000000f0 == header.ddspf.dwABitMask)
-            {
-                if (_rwD3D9CheckValidTextureFormat(D3DFMT_A4L4))
-                    d3dFormat = D3DFMT_A4L4;
-                else
-                    convert = TRUE;
-            }
-            else if (0 == header.ddspf.dwRBitMask &&
-                0 == header.ddspf.dwGBitMask &&
-                0 == header.ddspf.dwBBitMask &&
-                0 == header.ddspf.dwABitMask)
-            {
-                if (_rwD3D9CheckValidTextureFormat(D3DFMT_P8))
-                    d3dFormat = D3DFMT_P8;
-                else
-                    convert = TRUE;
+                    return nullptr;
             }
             else
                 return nullptr;
-        }
-        else
-            return nullptr;
 
 
             if (!convert)
@@ -2568,7 +2610,7 @@ RwRaster* Raster::RwD3D9RasterStreamReadDDS(RwStream* stream)
                         rwRASTERTYPETEXTURE | mipMapped);
 
                     if (raster == nullptr)
-                       return nullptr;
+                        return nullptr;
                     else
                     {
                         if (d3dFormat == D3DFMT_P8)
@@ -2583,7 +2625,7 @@ RwRaster* Raster::RwD3D9RasterStreamReadDDS(RwStream* stream)
                                     RwRasterUnlockPalette(raster);
                                     RwRasterDestroy(raster);
 
-                                   return nullptr;
+                                    return nullptr;
                                 }
 
                                 RwRasterUnlockPalette(raster);
@@ -2695,7 +2737,7 @@ RwRaster* Raster::RwD3D9RasterStreamReadDDS(RwStream* stream)
                             size = surfaceDesc.Height * (rasExt->lockedRect.Pitch);
 
                         if (RwStreamRead(stream, (void*)pixels, size) != size)
-                           return nullptr;
+                            return nullptr;
                     }
                     else
                     {
@@ -2709,7 +2751,7 @@ RwRaster* Raster::RwD3D9RasterStreamReadDDS(RwStream* stream)
                         //size = surfaceDesc.Height * (rasExt->lockedRect.Pitch);
 
                         if (RwStreamRead(stream, (void*)pixels, size) != size)
-                           return nullptr;
+                            return nullptr;
                     }
 
                     RwRasterUnlock(raster);
@@ -2879,7 +2921,7 @@ RwRaster* Raster::RwD3D9RasterStreamReadDDS(RwStream* stream)
             {
                 RwFree(palette);
 
-               return nullptr;
+                return nullptr;
             }
         }
 
@@ -2890,7 +2932,7 @@ RwRaster* Raster::RwD3D9RasterStreamReadDDS(RwStream* stream)
         {
             RwFree(pixels);
 
-           return nullptr;
+            return nullptr;
         }
 
         /* Create an image */
@@ -2900,7 +2942,7 @@ RwRaster* Raster::RwD3D9RasterStreamReadDDS(RwStream* stream)
         {
             RwFree(pixels);
 
-           return nullptr;
+            return nullptr;
         }
 
         RwImageAllocatePixels(image);
@@ -3401,7 +3443,7 @@ RwRaster* Raster::RwD3D9RasterStreamReadDDS(RwStream* stream)
         if (raster == nullptr)
         {
             RwImageDestroy(image);
-           return nullptr;
+            return nullptr;
         }
 
         /* Check dimensions */
@@ -3434,7 +3476,7 @@ RwTexture* Raster::rwD3D9DXTTextureRead(const RwChar* name, const RwChar* fullPa
 
     stream = RwStreamOpen(rwSTREAMFILENAME, rwSTREAMREAD, fullPathName);
     if (!stream)
-       return nullptr;
+        return nullptr;
 
     /* Create raster from stream */
     raster = RwD3D9RasterStreamReadDDS(stream);
@@ -3444,12 +3486,12 @@ RwTexture* Raster::rwD3D9DXTTextureRead(const RwChar* name, const RwChar* fullPa
 
     /* Check raster */
     if (raster == NULL)
-       return nullptr;
+        return nullptr;
 
     /* Create the texture */
     texture = RwTextureCreate(raster);
     if (!texture)
-       return nullptr;
+        return nullptr;
 
     if (RwRasterGetFormat(raster) & rwRASTERFORMATMIPMAP)
         RwTextureSetFilterMode(texture, rwFILTERLINEARMIPLINEAR);
@@ -3526,5 +3568,5 @@ RwTexture* Raster::RwD3D9DDSTextureRead(const RwChar* name, const RwChar* maskna
         }
     }
 
-   return nullptr;
+    return nullptr;
 }

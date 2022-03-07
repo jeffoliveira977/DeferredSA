@@ -80,7 +80,7 @@
       <LinkTimeCodeGeneration>
       </LinkTimeCodeGeneration>
       <AdditionalLibraryDirectories>$(PLUGIN_SDK_DIR)\output\lib\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>plugin.lib;d3d9.lib;d3dx9.lib;winmm.lib;D3DCompiler.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>plugin.lib;d3d9.lib;d3dx9.lib;winmm.lib;D3DCompiler.lib;legacy_stdio_definitions.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <SubSystem>Windows</SubSystem>
     </Link>
     <FxCompile>
@@ -125,6 +125,7 @@
     <ClCompile Include="CommonD.cpp" />
     <ClCompile Include="CascadedShadowRendering.cpp" />
     <ClCompile Include="DualParaboloidReflection.cpp" />
+    <ClCompile Include="dxerr.cpp" />
     <ClCompile Include="DynamicVertexBuffer.cpp" />
     <ClCompile Include="Frustum.cpp" />
     <ClCompile Include="GameHooks.cpp" />
@@ -210,6 +211,7 @@
     <ClInclude Include="CommonD.h" />
     <ClInclude Include="CascadedShadowRendering.h" />
     <ClInclude Include="DualParaboloidReflection.h" />
+    <ClInclude Include="dxerr.h" />
     <ClInclude Include="DynamicVertexBuffer.h" />
     <ClInclude Include="Frustum.h" />
     <ClInclude Include="GameHooks.h" />

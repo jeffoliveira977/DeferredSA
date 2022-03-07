@@ -3,7 +3,7 @@
 
 _rwD3D9StateCache _RwD3D9StateCache/* = *(_rwD3D9StateCache*)0xC9A4C0*/;
 
-RwInt32 D3D9AnisotTextureOffset =0;
+RwInt32 D3D9AnisotTextureOffset = 0;
 #define CONSTTEXTUREGETANISOT(tex) \
     (*((const RwUInt8*)(((const RwUInt8*)tex) + D3D9AnisotTextureOffset)))
 
@@ -223,7 +223,7 @@ RwBool RenderStates::rwD3D9RenderStateFogType(RwFogType fogType)
         _RwD3D9StateCache.fogType = fogType;
     }
 
-   return true;
+    return true;
 }
 
 RwBool RenderStates::rwD3D9RenderStateFogDensity(RwReal fogDensity)
@@ -234,7 +234,7 @@ RwBool RenderStates::rwD3D9RenderStateFogDensity(RwReal fogDensity)
         _RwD3D9StateCache.fogDensity = fogDensity;
     }
 
-   return true;
+    return true;
 }
 
 RwBool RenderStates::_rwD3D9RenderStateTextureAddress(RwTextureAddressMode addressMode)
@@ -252,7 +252,7 @@ RwBool RenderStates::_rwD3D9RenderStateTextureAddress(RwTextureAddressMode addre
         SetSamplerState(0, D3DSAMP_ADDRESSV, _RwD3D9AddressConvTable[addressMode]);
     }
 
-   return true;
+    return true;
 }
 
 RwBool  RenderStates::_rwD3D9RenderStateTextureAddressU(RwTextureAddressMode addressMode)
@@ -263,7 +263,7 @@ RwBool  RenderStates::_rwD3D9RenderStateTextureAddressU(RwTextureAddressMode add
         SetSamplerState(0, D3DSAMP_ADDRESSU, _RwD3D9AddressConvTable[addressMode]);
     }
 
-   return true;
+    return true;
 }
 
 RwBool RenderStates::_rwD3D9RenderStateTextureAddressV(RwTextureAddressMode addressMode)
@@ -274,7 +274,7 @@ RwBool RenderStates::_rwD3D9RenderStateTextureAddressV(RwTextureAddressMode addr
         SetSamplerState(0, D3DSAMP_ADDRESSV, _RwD3D9AddressConvTable[addressMode]);
     }
 
-   return true;
+    return true;
 }
 
 RwBool  RenderStates::_rwD3D9RenderStateTextureFilter(RwTextureFilterMode filterMode)
@@ -310,7 +310,7 @@ RwBool RenderStates::_rwD3D9RenderStateSrcBlend(RwBlendFunction srcBlend)
         _RwD3D9StateCache.srcBlend = srcBlend;
     }
 
-   return true;
+    return true;
 }
 
 RwBool  RenderStates::_rwD3D9RenderStateDestBlend(RwBlendFunction dstBlend)
@@ -321,7 +321,7 @@ RwBool  RenderStates::_rwD3D9RenderStateDestBlend(RwBlendFunction dstBlend)
         _RwD3D9StateCache.dstBlend = dstBlend;
     }
 
-   return true;
+    return true;
 }
 
 RwBool RenderStates::_rwD3D9RWSetRasterStage(RwRaster* raster, RwUInt32 stage)
@@ -380,7 +380,7 @@ RwBool RenderStates::_rwD3D9RWSetRasterStage(RwRaster* raster, RwUInt32 stage)
 
     }
 
-   return true;
+    return true;
 }
 
 RwRaster* RenderStates::_rwD3D9RWGetRasterStage(RwUInt32 stage)
@@ -439,7 +439,7 @@ RwBool RenderStates::RwD3D9SetTexture(RwTexture* texture, RwUInt32 stage)
             if (minmag == D3DTEXF_ANISOTROPIC)
             {
                 SetSamplerState(stage, D3DSAMP_MINFILTER, D3DTEXF_ANISOTROPIC);
-                SetSamplerState(stage, D3DSAMP_MAGFILTER, D3DTEXF_ANISOTROPIC);      
+                SetSamplerState(stage, D3DSAMP_MAGFILTER, D3DTEXF_ANISOTROPIC);
             }
             else
             {
@@ -471,11 +471,11 @@ RwBool RenderStates::RwD3D9SetTexture(RwTexture* texture, RwUInt32 stage)
         if (_RwD3D9StateCache.stage[stage].curTexRaster != nullptr)
         {
             _RwD3D9StateCache.stage[stage].curTexRaster = nullptr;
-             _RwD3DDevice->SetTexture(stage, nullptr);
+            _RwD3DDevice->SetTexture(stage, nullptr);
         }
     }
 
-   return true;
+    return true;
 }
 
 RwBool RenderStates::rwD3D9RenderStateZWriteEnable(RwBool enable)
@@ -502,7 +502,7 @@ RwBool RenderStates::rwD3D9RenderStateZWriteEnable(RwBool enable)
             _RwD3D9StateCache.zWriteEnable = false;
         }
     }
-   return true;
+    return true;
 }
 
 RwBool RenderStates::rwD3D9RenderStateZTestEnable(RwBool enable)
@@ -525,13 +525,13 @@ RwBool RenderStates::rwD3D9RenderStateZTestEnable(RwBool enable)
         {
             if (!_RwD3D9StateCache.zWriteEnable)
                 SetRenderState(D3DRS_ZENABLE, false);
-            
+
             SetRenderState(D3DRS_ZFUNC, D3DCMP_ALWAYS);
             _RwD3D9StateCache.zTestEnable = false;
         }
     }
 
-   return true;
+    return true;
 }
 
 RwBool RenderStates::rwD3D9RenderStateShadeMode(RwShadeMode shadeMode)
@@ -542,7 +542,7 @@ RwBool RenderStates::rwD3D9RenderStateShadeMode(RwShadeMode shadeMode)
         _RwD3D9StateCache.shadeMode = shadeMode;
     }
 
-   return true;
+    return true;
 }
 
 RwBool RenderStates::_rwD3D9RenderStateVertexAlphaEnable(RwBool enable)
@@ -574,7 +574,7 @@ RwBool RenderStates::_rwD3D9RenderStateVertexAlphaEnable(RwBool enable)
         }
     }
 
-   return true;
+    return true;
 }
 
 RwBool  RenderStates::_rwD3D9RenderStateIsVertexAlphaEnable()
@@ -590,7 +590,7 @@ RwBool RenderStates::rwD3D9RenderStateBorderColor(RwUInt32 borderColor)
         SetSamplerState(0, D3DSAMP_BORDERCOLOR, borderColor);
     }
 
-   return true;
+    return true;
 }
 
 
@@ -598,10 +598,10 @@ RwBool rwD3D9RenderStateTexturePerspective(RwBool persp)
 {
     if (persp)
     {
-       return true;
+        return true;
     }
 
-   return false;
+    return false;
 }
 
 RwBool RenderStates::rwD3D9RenderStateCullMode(RwCullMode cullMode)
@@ -612,7 +612,7 @@ RwBool RenderStates::rwD3D9RenderStateCullMode(RwCullMode cullMode)
         _RwD3D9StateCache.cullMode = cullMode;
     }
 
-   return true;
+    return true;
 }
 
 RwBool RenderStates::_rwD3D9RenderStateStencilEnable(RwBool enable)
@@ -624,7 +624,7 @@ RwBool RenderStates::_rwD3D9RenderStateStencilEnable(RwBool enable)
         _RwD3D9StateCache.stencilEnable = enable;
     }
 
-   return true;
+    return true;
 }
 
 RwBool RenderStates::_rwD3D9RenderStateStencilFail(RwStencilOperation operation)
@@ -635,7 +635,7 @@ RwBool RenderStates::_rwD3D9RenderStateStencilFail(RwStencilOperation operation)
         _RwD3D9StateCache.stencilFailOp = operation;
     }
 
-   return true;
+    return true;
 }
 
 RwBool  RenderStates::_rwD3D9RenderStateStencilZFail(RwStencilOperation operation)
@@ -646,7 +646,7 @@ RwBool  RenderStates::_rwD3D9RenderStateStencilZFail(RwStencilOperation operatio
         _RwD3D9StateCache.stencilZFailOp = operation;
     }
 
-   return true;
+    return true;
 }
 
 RwBool  RenderStates::_rwD3D9RenderStateStencilPass(RwStencilOperation operation)
@@ -657,7 +657,7 @@ RwBool  RenderStates::_rwD3D9RenderStateStencilPass(RwStencilOperation operation
         _RwD3D9StateCache.stencilPassOp = operation;
     }
 
-   return true;
+    return true;
 }
 
 RwBool RenderStates::_rwD3D9RenderStateStencilFunction(RwStencilFunction function)
@@ -668,7 +668,7 @@ RwBool RenderStates::_rwD3D9RenderStateStencilFunction(RwStencilFunction functio
         _RwD3D9StateCache.stencilFunction = function;
     }
 
-   return true;
+    return true;
 }
 
 RwBool RenderStates::_rwD3D9RenderStateStencilFunctionRef(RwInt32 ref)
@@ -679,7 +679,7 @@ RwBool RenderStates::_rwD3D9RenderStateStencilFunctionRef(RwInt32 ref)
         _RwD3D9StateCache.stencilRef = ref;
     }
 
-   return true;
+    return true;
 }
 
 RwBool RenderStates::_rwD3D9RenderStateStencilFunctionMask(RwInt32 mask)
@@ -690,7 +690,7 @@ RwBool RenderStates::_rwD3D9RenderStateStencilFunctionMask(RwInt32 mask)
         _RwD3D9StateCache.stencilMask = mask;
     }
 
-   return true;
+    return true;
 }
 
 RwBool  RenderStates::_rwD3D9RenderStateStencilFunctionWriteMask(RwInt32 writeMask)
@@ -701,7 +701,7 @@ RwBool  RenderStates::_rwD3D9RenderStateStencilFunctionWriteMask(RwInt32 writeMa
         _RwD3D9StateCache.stencilWriteMask = writeMask;
     }
 
-   return true;
+    return true;
 }
 
 RwBool RenderStates::_rwD3D9RWSetRenderState(RwRenderState state, void* param)
@@ -1139,7 +1139,7 @@ void RenderStates::D3D9RenderStateCacheClear()
         RenderStateCache[state].changed = false;
     }
 
-    NumRenderStateChanges = 0;  
+    NumRenderStateChanges = 0;
 }
 
 void RenderStates::D3D9TextureStageStateCacheClear()
@@ -1158,7 +1158,7 @@ void RenderStates::D3D9TextureStageStateCacheClear()
         }
     }
 
-    NumTextureStageStateChanges = 0;  
+    NumTextureStageStateChanges = 0;
 }
 
 void RenderStates::D3D9SamplerStageStateCacheClear()
@@ -1320,9 +1320,9 @@ void RenderStates::_rwD3D9RenderStateReset()
     D3D9RenderStateCacheClear();
     D3D9TextureStageStateCacheClear();
     D3D9SamplerStageStateCacheClear();
-   // D3D9ClearCacheMaterials();
+    // D3D9ClearCacheMaterials();
 
-    /* Fog */
+     /* Fog */
     SetRenderState(D3DRS_FOGDENSITY, FLOATASDWORD(_RwD3D9StateCache.fogDensity));
 
     SetRenderState(D3DRS_FOGENABLE, _RwD3D9StateCache.fogEnable);
@@ -1377,13 +1377,13 @@ void RenderStates::_rwD3D9RenderStateReset()
         _RwD3D9StateCache.stage[i].curTexRaster = NULL;
 
         /* Texture filter mode - Liner/Trilinear */
-        SetSamplerState(i, D3DSAMP_MINFILTER,  _RwD3D9FilterModeConvTable[_RwD3D9StateCache.stage[i].filterMode].minmag);
+        SetSamplerState(i, D3DSAMP_MINFILTER, _RwD3D9FilterModeConvTable[_RwD3D9StateCache.stage[i].filterMode].minmag);
         SetSamplerState(i, D3DSAMP_MAGFILTER, _RwD3D9FilterModeConvTable[_RwD3D9StateCache.stage[i].filterMode].minmag);
         SetSamplerState(i, D3DSAMP_MIPFILTER, _RwD3D9FilterModeConvTable[_RwD3D9StateCache.stage[i].filterMode].mip);
 
         /* Texture addressing mode */
         SetSamplerState(i, D3DSAMP_ADDRESSU, _RwD3D9AddressConvTable[_RwD3D9StateCache.stage[i].texAddressU]);
-        SetSamplerState(i, D3DSAMP_ADDRESSV,  _RwD3D9AddressConvTable[_RwD3D9StateCache.stage[i].texAddressV]);
+        SetSamplerState(i, D3DSAMP_ADDRESSV, _RwD3D9AddressConvTable[_RwD3D9StateCache.stage[i].texAddressV]);
 
         /* Border color */
         SetSamplerState(i, D3DSAMP_BORDERCOLOR, _RwD3D9StateCache.stage[i].borderColor);

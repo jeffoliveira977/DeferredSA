@@ -1,13 +1,14 @@
 #include "D3D9Texture.h"
 
-D3D9Texture::D3D9Texture(RwRaster* raster, uint32_t levels, uint32_t usage, D3DFORMAT format, D3DPOOL pool) :
-    D3D9BaseTexture(raster, levels, usage, format, pool)
+D3D9Texture::D3D9Texture(RwRaster* raster, uint32_t levels, uint32_t usage, D3DFORMAT format, D3DPOOL pool) /*:
+    D3D9BaseTexture(raster, levels, usage, format, pool)*/
 {
     Initialize();
 }
 
 D3D9Texture::~D3D9Texture()
 {
+    Log::Debug("D3D9Texture::~D3D9Texture");
     Unitialize();
 }
 
@@ -20,19 +21,24 @@ void D3D9Texture::Initialize()
     }
     
     if (mRaster == nullptr)
+    {
+        Log::Warn("D3D9Texture::Initialize - invalid raster pointer");
         return;
+    }
 
     auto rasExt = RASTEREXTFROMRASTER(mRaster);
 
     HRESULT hr;
-    if (IS_D3DFORMAT_ZBUFFER(rasExt->d3dFormat))
+    if (IS_D3DFORMAT_ZBUFFER(mFormat))
     {
-        hr = _RwD3DDevice->CreateTexture(mRaster->width, mRaster->height, 1, D3DUSAGE_DEPTHSTENCIL, rasExt->d3dFormat, D3DPOOL_DEFAULT, &mD3D9Texture, nullptr);
+        hr = CheckError(_RwD3DDevice->CreateTexture(mRaster->width, mRaster->height, 1, D3DUSAGE_DEPTHSTENCIL, mFormat, D3DPOOL_DEFAULT, &mD3D9Texture, nullptr),
+            "D3D9Texture::Initialize - failed to create d3d9 texture");
     }
     else
     {
-        hr = _RwD3DDevice->CreateTexture(mRaster->width, mRaster->height, mLevels, 
-            mUsage, mFormat, mPool, &mD3D9Texture, nullptr);
+        hr = CheckError(_RwD3DDevice->CreateTexture(mRaster->width, mRaster->height, mLevels,
+            mUsage, mFormat, mPool, &mD3D9Texture, nullptr),
+            "D3D9Texture::Initialize - failed to create d3d9 texture");
     }
 
     if (FAILED(hr) || mD3D9Texture == nullptr)
@@ -40,11 +46,15 @@ void D3D9Texture::Initialize()
         Log::Fatal("D3D9Texture::Initialize - failed to create d3d9 texture");
         throw std::runtime_error("failed to create d3d9 texture");
     }
+
+    Log::Debug("D3D9Texture::Initialize");
 }
 
 void D3D9Texture::Unitialize()
 {
+
     SAFE_RELEASE(mD3D9Texture);
+     Log::Debug("D3D9Texture::Unitialize");
 }
 
 void D3D9Texture::Lock(uint flags, uint level, void* pixelsIn)

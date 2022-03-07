@@ -18,6 +18,23 @@ uint16_t& uiTempBufferVerticesStored = *(uint16_t*)0xC4B950;
 RxObjSpace3DVertex(&aTempBufferVertices)[TOTAL_TEMP_BUFFER_VERTICES] = *(RxObjSpace3DVertex(*)[TOTAL_TEMP_BUFFER_VERTICES])0xC4D958;
 RxVertexIndex(&aTempBufferIndices)[TOTAL_TEMP_BUFFER_INDICES] = *(RxVertexIndex(*)[TOTAL_TEMP_BUFFER_INDICES])0xC4B958;
 
+#include "dxerr.h"
+
+HRESULT CheckError(HRESULT callResult, const std::string& errorMessage)
+{
+	if (IS_ERROR(callResult))
+	{
+		auto wstri = std::wstring(DXGetErrorString(callResult));
+
+		std::string str;
+		std::transform(wstri.begin(), wstri.end(), std::back_inserter(str), [](wchar_t c) { return (char)c;});
+
+		Log::Error("ERROR_CODE: " + str + " : " + errorMessage );
+		MessageBox(*WindowHandle, errorMessage.c_str(), "RUNTIME ERROR", 0);
+	}
+	return callResult;
+}
+
 inline bool exists_test0(const std::string& name)
 {
 	ifstream f(name.c_str());
@@ -33,6 +50,7 @@ void rwD3D9SetSamplerState(RwUInt32 stage, RwUInt32 type, RwUInt32 value)
 		RwD3DDevice->SetSamplerState(stage, (D3DSAMPLERSTATETYPE)type, value);
 }
 
+#include "D3D9BaseTexture.h"
 void rwD3D9RWSetRasterStage(RwRaster *raster, RwUInt32 stage)
 {
 	// Renderware has 8 sample state limit

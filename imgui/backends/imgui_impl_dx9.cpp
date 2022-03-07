@@ -319,7 +319,7 @@ void ImGui_ImplDX9_Shutdown()
     IM_DELETE(bd);
 }
 RwRaster* g_FontTexture2;
-
+#include "../D3D9BaseTexture.h"
 static bool ImGui_ImplDX9_CreateFontsTexture()
 {
     // Build texture atlas
@@ -364,7 +364,6 @@ static bool ImGui_ImplDX9_CreateFontsTexture()
     RwRaster* raster = RwD3D9RasterCreate(width, height, D3DFMT_A8R8G8B8, rwRASTERTYPETEXTURE);
 
     auto tex = RASTEREXTFROMRASTER(raster);
-
 
     D3DLOCKED_RECT tex_locked_rect;
     if(tex->texture->LockRect(0, &tex_locked_rect, NULL, 0) != D3D_OK)
