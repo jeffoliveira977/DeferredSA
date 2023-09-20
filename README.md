@@ -8,6 +8,7 @@
 - PBR Materials (Physically Based Rendering)
 - Cubemap Reflections
 - Paraboloid Reflections
+- Spherical Reflection
 - Post Effects (Bloom, HDR, Tonemapping, FXAA)
 - Shading Effects (Cascaded Shadow Maps, Point Light Shadows, Spotlight Shadows)
 - Normal Mapping
