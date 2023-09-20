@@ -12,9 +12,9 @@
 - Shading Effects (Cascaded Shadow Maps, Point Light Shadows, Spotlight Shadows)
 - Normal Mapping
 - Per-Pixel Lighting
-- Realistic water reflection
-- Car reflections
-- Skinned mesh
+- Realistic Water Reflection
+- Car Reflections
+- Skinned Mesh
 - Volumetric Clouds
 - Volumetric Lights
 
