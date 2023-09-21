@@ -18,6 +18,7 @@
 - Skinned Mesh
 - Volumetric Clouds
 - Volumetric Lights
+- New RenderWare Immediate3D with pixel shaders
 
 ## Project Status
 
