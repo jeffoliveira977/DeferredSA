@@ -21,6 +21,6 @@
 
 ## Project Status
 
-I had to discontinue this project due to the significant time investment, with more time spent on reverse engineering than on actual graphics development. My plan is to resume work on this project once the GTA reverse engineering project ([link](https://github.com/gta-reversed/gta-reversed-modern)) is completed.
+I had to discontinue this project due to the significant time investment, with more time spent on reverse engineering than on actual graphics development. My plan is to resume work on this project once the [GTA reverse engineering project](https://github.com/gta-reversed/gta-reversed-modern) is completed.
 
 Special thanks to PetkaGtA for RenderHook project
