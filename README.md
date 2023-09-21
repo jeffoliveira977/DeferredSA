@@ -13,7 +13,7 @@
 - Shading Effects (Cascaded Shadow Maps, Point Light Shadows, Spotlight Shadows)
 - Normal Mapping
 - Per-Pixel Lighting
-- Realistic Water Reflection
+- Realistic Water Reflection and Refraction
 - Car Reflections
 - Skinned Mesh
 - Volumetric Clouds
