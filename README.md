@@ -1,6 +1,6 @@
 # DeferredSA
 
-**DeferredSA** is an unfinished project with the primary goal of overhauling the graphical aspect of the RenderWare engine and GTA San Andreas. Currently, it is under development using DirectX 9 with Shader Model 3. However, there are future plans to port it to DirectX 10 and Vulkan for enhanced graphics capabilities.
+**DeferredSA** is an unfinished project with the aim of recreating the graphical engine of RenderWare and GTA San Andreas. Currently, it utilizes DirectX 9 with Shader Model 3 as part of its rendering process. However, there are future plans to port it to DirectX 10 and Vulkan in order to enhance its graphical capabilities..
 
 ## Project Features
 
